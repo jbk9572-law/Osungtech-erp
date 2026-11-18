@@ -1,3 +1,4 @@
+import { selectInChunks } from "@/lib/fetch-all-rows";
 import Link from "next/link";
 import { GridBadge } from "@/components/grid/badge";
 import { requirePlatformAdmin } from "@/lib/require-platform-admin";
@@ -78,7 +79,7 @@ export async function TenantDetailPanel({ tenantId, closeHref }: { tenantId: str
   const userIds = (members ?? []).map((m) => m.user_id);
 
   const { data: users } = userIds.length
-    ? await admin.from("profiles").select("id, username, full_name, role, is_demo").in("id", userIds).limit(1000)
+    ? await selectInChunks(userIds, (idChunk) => admin.from("profiles").select("id, username, full_name, role, is_demo").in("id", idChunk))
     : { data: [] };
 
   // 회사별 사용 현황 — 실제 업무 데이터 내용은 안 보여주고(플랫폼 운영자가

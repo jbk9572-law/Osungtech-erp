@@ -14,7 +14,7 @@ import { matchesSearch } from "@/lib/search-match";
 import { requireFeatureEnabled } from "@/lib/require-feature-enabled";
 import { formatNumber } from "@/lib/format-number";
 import { buildFirstStepIsSubcontractorMap } from "@/lib/work-order-steps";
-import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { fetchAllRows, selectInChunks } from "@/lib/fetch-all-rows";
 
 export default async function ProductionPage({
   searchParams,
@@ -56,11 +56,13 @@ export default async function ProductionPage({
   // 오히려 잡음이다).
   const workOrderIds = rows.map((r) => r.id);
   const { data: stepRows } = workOrderIds.length
-    ? await supabase
-        .from("work_order_process_steps")
-        .select("work_order_id, status, sort_order, assignee_kind")
-        .in("work_order_id", workOrderIds)
-        .order("sort_order", { ascending: true })
+    ? await selectInChunks(workOrderIds, (idChunk) =>
+        supabase
+          .from("work_order_process_steps")
+          .select("work_order_id, status, sort_order, assignee_kind")
+          .in("work_order_id", idChunk)
+          .order("sort_order", { ascending: true }),
+      )
     : { data: [] as { work_order_id: string; status: string; sort_order: number; assignee_kind: string }[] };
   const stepProgressByOrder = new Map<string, { done: number; total: number }>();
   for (const s of stepRows ?? []) {

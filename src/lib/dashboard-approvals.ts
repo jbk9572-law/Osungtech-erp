@@ -1,3 +1,4 @@
+import { selectInChunks } from "@/lib/fetch-all-rows";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database.types";
 import type { ApprovalQueueItem } from "@/lib/dashboard-todo";
@@ -31,22 +32,28 @@ export async function getMyApprovalQueue(
   const docIds = [...new Set((mySteps ?? []).map((s) => s.document_id))];
   if (!docIds.length) return [];
 
-  const [{ data: docs }, { data: pendingSteps }] = await Promise.all([
-    supabase
-      .from("approval_documents")
-      .select("id, title, created_at, profiles!created_by(full_name)")
-      .eq("status", "pending")
-      .in("id", docIds)
-      .order("created_at", { ascending: true })
-      .limit(200),
-    supabase
-      .from("approval_steps")
-      .select("document_id, step_order")
-      .eq("role", "approver")
-      .eq("status", "pending")
-      .in("document_id", docIds)
-      .limit(1000),
+  // docIds 가 200개까지 커질 수 있어 주소가 길어지지 않게 나눠 조회하고, 나눠 받은 문서는 전체 기준 오래된 순으로 다시 정렬한다.
+  const [{ data: docsRaw }, { data: pendingSteps }] = await Promise.all([
+    selectInChunks(docIds, (idChunk) =>
+      supabase
+        .from("approval_documents")
+        .select("id, title, created_at, profiles!created_by(full_name)")
+        .eq("status", "pending")
+        .in("id", idChunk)
+        .order("created_at", { ascending: true })
+        .limit(200),
+    ),
+    selectInChunks(docIds, (idChunk) =>
+      supabase
+        .from("approval_steps")
+        .select("document_id, step_order")
+        .eq("role", "approver")
+        .eq("status", "pending")
+        .in("document_id", idChunk)
+        .limit(1000),
+    ),
   ]);
+  const docs = [...docsRaw].sort((a, b) => (a.created_at < b.created_at ? -1 : a.created_at > b.created_at ? 1 : 0)).slice(0, 200);
 
   const firstPending = new Map<string, number>();
   for (const s of pendingSteps ?? []) {

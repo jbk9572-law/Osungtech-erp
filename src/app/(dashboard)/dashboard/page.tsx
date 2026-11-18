@@ -9,7 +9,7 @@ import { mergePaperCalcInputItems, type PaperCalcSizeRow } from "@/modules/paper
 import { PAPER_STOCK_SKU, isPaperCalcEnabled } from "@/modules/paper-calc/public";
 import { nowInKst, toKstDateStr } from "@/lib/kst-date";
 import { getCalendarItems, type CalendarItem } from "@/lib/calendar-data";
-import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { fetchAllRows, fetchAllRowsIn } from "@/lib/fetch-all-rows";
 import { getMonthTodosByDate, type MonthTodo } from "@/lib/dashboard-month-todos";
 import { loadDashboardLayouts } from "@/lib/dashboard-layout-load";
 import { loadDashboardMoney } from "@/lib/dashboard-money";
@@ -518,14 +518,14 @@ async function DashboardPage({
 
   const [purchaseConsumptionRows, salesConsumptionRows] = await Promise.all([
     purchaseIds.length
-      ? fetchAllRows((from, to) =>
+      ? fetchAllRowsIn(purchaseIds, (idChunk, from, to) =>
           supabase
             .from("fifo_consumptions")
             .select(
               "purchase_order_item_id, sales_order_item_id, consumed_quantity, sales_order_items!inner(sales_orders!inner(customers(name)))"
             )
             .eq("consumed_by_type", "sale")
-            .in("purchase_order_item_id", purchaseIds)
+            .in("purchase_order_item_id", idChunk)
             .range(from, to),
         )
       : Promise.resolve(
@@ -537,12 +537,12 @@ async function DashboardPage({
           }[]
         ),
     salesIds.length
-      ? fetchAllRows((from, to) =>
+      ? fetchAllRowsIn(salesIds, (idChunk, from, to) =>
           supabase
             .from("fifo_consumptions")
             .select("purchase_order_item_id, sales_order_item_id, consumed_quantity")
             .eq("consumed_by_type", "sale")
-            .in("sales_order_item_id", salesIds)
+            .in("sales_order_item_id", idChunk)
             .range(from, to),
         )
       : Promise.resolve(

@@ -1,5 +1,6 @@
 "use server";
 
+import { selectInChunks, chunkIds } from "@/lib/fetch-all-rows";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient, getUser } from "@/lib/supabase/server";
@@ -472,11 +473,13 @@ export async function bulkDeletePaymentRequests(
   // deletePaymentRequest(단건)와 같은 이유(유령 기안 방지). 회수가 실패한
   // 건(예: 이미 결재가 진행된 경우)은 삭제 대상에서 빼서, 결재가 진행
   // 중인 문서가 조용히 지워지는 일이 없게 한다.
-  const { data: pendingRows } = await supabase
-    .from("payment_requests")
-    .select("id, approval_document_id")
-    .in("id", ids)
-    .eq("status", "pending");
+  const { data: pendingRows } = await selectInChunks(ids, (idChunk) =>
+    supabase
+      .from("payment_requests")
+      .select("id, approval_document_id")
+      .in("id", idChunk)
+      .eq("status", "pending"),
+  );
   // 건마다 따로 회수 RPC를 순서대로 기다리면 N건 삭제에 왕복이 N번
   // 직렬로 쌓인다 — 서로 다른 전표라 완전히 독립적이므로 동시에 보낸다.
   const recallFailedIds = new Set<string>();
@@ -497,16 +500,20 @@ export async function bulkDeletePaymentRequests(
   // 행마다 여전히 개별 판정하므로(본인 작성 또는 관리자만 삭제 가능),
   // 실제로 지워진 id만 select로 돌려받아 그 목록으로 성공/실패를 가른다
   // — deletePaymentRequest(단건)의 wasRowMutated 판정과 같은 기준이다.
-  const { data: receipts } = await supabase
-    .from("payment_request_receipts")
-    .select("payment_request_id, file_path, size_bytes")
-    .in("payment_request_id", idsToDelete);
+  const { data: receipts } = await selectInChunks(idsToDelete, (idChunk) =>
+    supabase.from("payment_request_receipts").select("payment_request_id, file_path, size_bytes").in("payment_request_id", idChunk),
+  );
 
-  const { data: deleted, error: deleteError } = await supabase
-    .from("payment_requests")
-    .delete()
-    .in("id", idsToDelete)
-    .select("id");
+  const deleted: { id: string }[] = [];
+  let deleteError: { message: string } | null = null;
+  for (const idChunk of chunkIds(idsToDelete)) {
+    const { data: chunkDeleted, error: chunkError } = await supabase.from("payment_requests").delete().in("id", idChunk).select("id");
+    if (chunkError) {
+      deleteError = chunkError;
+      break;
+    }
+    deleted.push(...(chunkDeleted ?? []));
+  }
 
   if (deleteError) {
     return { error: `삭제에 실패했습니다: ${deleteError.message}` };

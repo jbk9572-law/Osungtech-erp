@@ -1,5 +1,6 @@
 "use server";
 
+import { selectInChunks } from "@/lib/fetch-all-rows";
 import { isSaneNumber, MAX_SANE_QUANTITY } from "@/lib/form-number";
 import { revalidatePath } from "next/cache";
 import { createClient, getUser } from "@/lib/supabase/server";
@@ -140,11 +141,9 @@ export async function submitStockCount(
   const locationCodes = [...new Set(candidates.map((r) => r.locationCode).filter((c): c is string => !!c))];
   const locationIdByCode = new Map<string, string>();
   if (locationCodes.length > 0) {
-    const { data: locationRows } = await supabase
-      .from("locations")
-      .select("id, code")
-      .eq("warehouse_id", warehouseId)
-      .in("code", locationCodes);
+    const { data: locationRows } = await selectInChunks(locationCodes, (codeChunk) =>
+      supabase.from("locations").select("id, code").eq("warehouse_id", warehouseId).in("code", codeChunk),
+    );
     for (const row of locationRows ?? []) locationIdByCode.set(row.code, row.id);
   }
 
@@ -182,14 +181,15 @@ export async function submitStockCount(
   const locationIds = [...new Set(locationCandidates.map((r) => locationIdByCode.get(r.locationCode!)!))];
   const { data: liveLocationStock } =
     locationIds.length > 0
-      ? await supabase
-          .from("inventory_locations")
-          .select("product_id, location_id, quantity")
-          .in("location_id", locationIds)
-          .in(
-            "product_id",
-            locationCandidates.map((r) => r.productId),
-          )
+      ? await selectInChunks(
+          locationCandidates.map((r) => r.productId),
+          (idChunk) =>
+            supabase
+              .from("inventory_locations")
+              .select("product_id, location_id, quantity")
+              .in("location_id", locationIds)
+              .in("product_id", idChunk),
+        )
       : { data: [] };
   const liveLocationQtyByKey = new Map(
     (liveLocationStock ?? []).map((row) => [`${row.product_id}:${row.location_id}`, row.quantity]),

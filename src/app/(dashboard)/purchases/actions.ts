@@ -1,5 +1,6 @@
 "use server";
 
+import { selectInChunks } from "@/lib/fetch-all-rows";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { parseOrderItems, type ParsedOrderItem } from "@/lib/order-items-input";
@@ -112,7 +113,7 @@ export async function getPurchaseItemsForDate(date: string): Promise<TodayPurcha
     }));
   // 이미 판매로 불러온 수량은 빼서 같은 입고를 두 번 불러오는 이중 등록을 막는다 — 재고 숫자가 아니라 판매 품목의 연결 기록 기준(lib/purchase-import.ts).
   const { data: links } = rows.length
-    ? await supabase.from("sales_order_items").select("source_purchase_item_id, quantity").in("source_purchase_item_id", rows.map((r) => r.id))
+    ? await selectInChunks(rows.map((r) => r.id), (idChunk) => supabase.from("sales_order_items").select("source_purchase_item_id, quantity").in("source_purchase_item_id", idChunk))
     : { data: [] };
   return pickImportablePurchaseItems(rows, sumLinkedQuantity(links ?? []));
 }
@@ -543,7 +544,7 @@ export async function bulkDeletePurchases(_prevState: FormState, formData: FormD
   const supabase = await createClient();
   const user = await getUser();
 
-  const { data: orders } = await supabase.from("purchase_orders").select("supplier_id").in("id", ids);
+  const { data: orders } = await selectInChunks(ids, (idChunk) => supabase.from("purchase_orders").select("supplier_id").in("id", idChunk));
 
   const results = await Promise.all(
     ids.map((id) => supabase.rpc("delete_purchase_with_items", { p_id: id, p_deleted_by: user?.id ?? null }))

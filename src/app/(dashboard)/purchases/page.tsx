@@ -20,7 +20,7 @@ import {
   mergePaperCalcInputItems,
   type PaperCalcSizeRow,
 } from "@/modules/paper-calc/public";
-import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { fetchAllRows, selectInChunks } from "@/lib/fetch-all-rows";
 import { calcVatForTaxType } from "@/lib/tax";
 import { matchesSearch } from "@/lib/search-match";
 import { formatNumber } from "@/lib/format-number";
@@ -169,10 +169,12 @@ async function PurchasesPage({
     ),
   );
   const { data: paperCalcRows } = orderIdsWithPaperStock.length
-    ? await supabase
-        .from("paper_calculations")
-        .select("purchase_order_id, input_items")
-        .in("purchase_order_id", orderIdsWithPaperStock)
+    ? await selectInChunks(orderIdsWithPaperStock, (idChunk) =>
+        supabase
+          .from("paper_calculations")
+          .select("purchase_order_id, input_items")
+          .in("purchase_order_id", idChunk),
+      )
     : { data: [] as { purchase_order_id: string; input_items: unknown }[] };
   const paperCalcSizesByOrderId = new Map<string, PaperCalcSizeRow[]>();
   for (const calc of paperCalcRows ?? []) {

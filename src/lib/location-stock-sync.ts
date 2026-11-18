@@ -1,3 +1,4 @@
+import { selectInChunks, chunkIds } from "@/lib/fetch-all-rows";
 import type { createClient } from "@/lib/supabase/server";
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
@@ -62,11 +63,13 @@ export async function applyOrderLocationStock(
   if (qtyByProduct.size === 0) return null;
 
   const productIds = [...qtyByProduct.keys()];
-  const { data: existingRows } = await supabase
-    .from("inventory_locations")
-    .select("id, product_id, location_id, quantity, locations!inner(warehouse_id)")
-    .in("product_id", productIds)
-    .eq("locations.warehouse_id", warehouseId);
+  const { data: existingRows } = await selectInChunks(productIds, (idChunk) =>
+    supabase
+      .from("inventory_locations")
+      .select("id, product_id, location_id, quantity, locations!inner(warehouse_id)")
+      .in("product_id", idChunk)
+      .eq("locations.warehouse_id", warehouseId),
+  );
 
   const rowsByProduct = new Map<string, { id: string; location_id: string; quantity: number }[]>();
   for (const row of existingRows ?? []) {
@@ -181,8 +184,10 @@ export async function reverseOrderLocationStock(
   }
 
   if (reversedIds.length > 0) {
-    const { error: cleanupError } = await supabase.from("order_item_location_stock").delete().in("id", reversedIds);
-    if (cleanupError) console.error("위치별 재고 배정 이력 정리 실패:", cleanupError.message);
+    for (const idChunk of chunkIds(reversedIds)) {
+      const { error: cleanupError } = await supabase.from("order_item_location_stock").delete().in("id", idChunk);
+      if (cleanupError) console.error("위치별 재고 배정 이력 정리 실패:", cleanupError.message);
+    }
   }
   // 되돌리지 못한 기록 수(0이면 전부 성공).
   return rows.length - reversedIds.length;

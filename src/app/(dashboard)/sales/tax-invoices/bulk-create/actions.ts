@@ -1,5 +1,6 @@
 "use server";
 
+import { selectInChunks } from "@/lib/fetch-all-rows";
 import { quotaExceededMessage, recordInvoiceIssued, remainingMonthlyQuota } from "@/lib/quota/monthly-quota";
 import { revalidatePath } from "next/cache";
 import { createClient, getUser } from "@/lib/supabase/server";
@@ -48,10 +49,12 @@ export async function bulkCreateTaxInvoices(
   const supabase = await createClient();
   const [actor, user] = await Promise.all([getCurrentActor(supabase), getUser()]);
 
-  const { data: orders } = await supabase
-    .from("sales_orders")
-    .select("id, doc_no, created_by, customer_id, tax_type, evidence_type, is_return, customers(name)")
-    .in("id", salesOrderIds);
+  const { data: orders } = await selectInChunks(salesOrderIds, (idChunk) =>
+    supabase
+      .from("sales_orders")
+      .select("id, doc_no, created_by, customer_id, tax_type, evidence_type, is_return, customers(name)")
+      .in("id", idChunk),
+  );
 
   const skipped: { docNo: number | null; customerName: string | null; reason: string }[] = [];
   let created = 0;

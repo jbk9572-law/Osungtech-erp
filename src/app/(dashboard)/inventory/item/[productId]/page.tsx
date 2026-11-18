@@ -10,7 +10,7 @@ import { CloseButton } from "@/components/erp/close-button";
 import { DateRangeQuickFilters } from "@/components/erp/date-range-quick-filters";
 import { ClickableRow } from "@/components/clickable-row";
 import { QtyWithBoxes } from "@/components/qty-with-boxes";
-import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { fetchAllRows, fetchAllRowsIn } from "@/lib/fetch-all-rows";
 import { GridBadge } from "@/components/grid/badge";
 import { DetailPageHeader } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
@@ -82,38 +82,38 @@ export default async function InventoryProductHistoryPage({
   const authorIds = Array.from(new Set(ledgerRows.map((t) => t.created_by).filter((id): id is string => !!id)));
   const [saleLotRows, purchaseLotRows, saleOrderRows, purchaseOrderRows, authorRows] = await Promise.all([
     saleOrderIds.length
-      ? fetchAllRows<{ sales_order_id: string; lot_number: string | null }>((f, t) =>
+      ? fetchAllRowsIn<{ sales_order_id: string; lot_number: string | null }, string>(saleOrderIds, (idChunk, f, t) =>
           supabase
             .from("sales_order_items")
             .select("sales_order_id, lot_number")
             .eq("product_id", productId)
-            .in("sales_order_id", saleOrderIds)
+            .in("sales_order_id", idChunk)
             .range(f, t),
         )
       : Promise.resolve([]),
     purchaseOrderIds.length
-      ? fetchAllRows<{ purchase_order_id: string; lot_number: string | null }>((f, t) =>
+      ? fetchAllRowsIn<{ purchase_order_id: string; lot_number: string | null }, string>(purchaseOrderIds, (idChunk, f, t) =>
           supabase
             .from("purchase_order_items")
             .select("purchase_order_id, lot_number")
             .eq("product_id", productId)
-            .in("purchase_order_id", purchaseOrderIds)
+            .in("purchase_order_id", idChunk)
             .range(f, t),
         )
       : Promise.resolve([]),
     saleOrderIds.length
-      ? fetchAllRows<{ id: string; customers: { name: string | null } | null }>((f, t) =>
-          supabase.from("sales_orders").select("id, customers(name)").in("id", saleOrderIds).range(f, t),
+      ? fetchAllRowsIn<{ id: string; customers: { name: string | null } | null }, string>(saleOrderIds, (idChunk, f, t) =>
+          supabase.from("sales_orders").select("id, customers(name)").in("id", idChunk).range(f, t),
         )
       : Promise.resolve([]),
     purchaseOrderIds.length
-      ? fetchAllRows<{ id: string; suppliers: { name: string | null } | null }>((f, t) =>
-          supabase.from("purchase_orders").select("id, suppliers(name)").in("id", purchaseOrderIds).range(f, t),
+      ? fetchAllRowsIn<{ id: string; suppliers: { name: string | null } | null }, string>(purchaseOrderIds, (idChunk, f, t) =>
+          supabase.from("purchase_orders").select("id, suppliers(name)").in("id", idChunk).range(f, t),
         )
       : Promise.resolve([]),
     authorIds.length
-      ? fetchAllRows<{ id: string; full_name: string | null }>((f, t) =>
-          supabase.from("profiles").select("id, full_name").in("id", authorIds).range(f, t),
+      ? fetchAllRowsIn<{ id: string; full_name: string | null }, string>(authorIds, (idChunk, f, t) =>
+          supabase.from("profiles").select("id, full_name").in("id", idChunk).range(f, t),
         )
       : Promise.resolve([]),
   ]);

@@ -93,3 +93,45 @@ export async function fetchLimitedRows<T>(
   const { data: probe } = await fetchPageWithRetry(fetchPage, from, from);
   return { rows, hasMore: (probe ?? []).length > 0 };
 }
+
+// ── .in() 목록이 길어지는 조회 ─────────────────────────────────────────────
+// PostgREST 는 .in(컬럼, ids) 를 요청 주소(URL)에 그대로 이어 붙인다. UUID 수백 개면 주소가 수십 KB 가 되어 서버/프록시가
+// 연결을 끊고, 서버 화면은 "TypeError: fetch failed" → "일시적인 오류로 화면을 불러오지 못했습니다"가 된다
+// (샌드박스 더미 데이터로 오늘 작업분이 많아진 메인 대시보드에서 실제로 발생). 데이터가 늘수록 비례해 터지므로,
+// id 목록을 IN_FILTER_CHUNK 개씩 나눠 조회하고 합친다. 새 .in() 은 반드시 이 함수들을 쓴다(scripts/check-in-chunk.mjs 가 검사).
+export const IN_FILTER_CHUNK = 80; // UUID(36자) 80개 ≈ 3KB
+const IN_FILTER_PARALLEL = 4;
+
+export function chunkIds<T>(ids: readonly T[], size = IN_FILTER_CHUNK): T[][] {
+  const unique = [...new Set(ids)];
+  const chunks: T[][] = [];
+  for (let i = 0; i < unique.length; i += size) chunks.push(unique.slice(i, i + size));
+  return chunks;
+}
+
+async function runChunks<R>(chunks: unknown[][], run: (chunk: never) => Promise<R>): Promise<R[]> {
+  const results: R[] = [];
+  for (let i = 0; i < chunks.length; i += IN_FILTER_PARALLEL) {
+    const group = chunks.slice(i, i + IN_FILTER_PARALLEL);
+    results.push(...(await Promise.all(group.map((c) => run(c as never)))));
+  }
+  return results;
+}
+
+// fetchAllRows(페이지 나눠 끝까지) + id 목록 나누기. 예: fetchAllRowsIn(ids, (chunk, f, t) => q.in(컬럼, chunk).range(f, t))
+export async function fetchAllRowsIn<T, K extends string | number>(
+  ids: readonly K[],
+  fetchPage: (chunk: K[], from: number, to: number) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>,
+): Promise<T[]> {
+  const parts = await runChunks(chunkIds(ids), (chunk: K[]) => fetchAllRows<T>((from, to) => fetchPage(chunk, from, to)));
+  return parts.flat();
+}
+
+// 범위(.range) 없이 한 번에 받는 조회용. { data, error } 모양을 그대로 돌려줘서 기존 구조분해를 유지한다(오류는 첫 번째 것).
+export async function selectInChunks<T, K extends string | number>(
+  ids: readonly K[],
+  run: (chunk: K[]) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>,
+): Promise<{ data: T[]; error: { message: string } | null }> {
+  const parts = await runChunks(chunkIds(ids), async (chunk: K[]) => await run(chunk));
+  return { data: parts.flatMap((p) => p.data ?? []), error: parts.find((p) => p.error)?.error ?? null };
+}
