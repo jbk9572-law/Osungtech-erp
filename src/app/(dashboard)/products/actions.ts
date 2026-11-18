@@ -6,7 +6,7 @@ import { createClient, getUser } from "@/lib/supabase/server";
 import type { FormState } from "@/components/form-message";
 import { readExcelRows, cell, cellNumber, summarize, type ImportRowError } from "@/lib/excel-import";
 import { MAX_SANE_QUANTITY, isSaneNumber, numberOrDefault, numberOrNull } from "@/lib/form-number";
-import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { fetchAllRows, fetchAllRowsIn } from "@/lib/fetch-all-rows";
 import { requireMutatedRow } from "@/lib/require-mutated-row";
 
 // 카테고리는 대시보드 매입-매출 매칭 추적 기준(isTrackedCategory)이기도
@@ -290,7 +290,7 @@ export async function importProductsExcel(_prevState: FormState, formData: FormD
   // 유지"되게 한다.
   const skusInFile = parsedRows.map((r) => r.payload.sku);
   const existingProducts = skusInFile.length
-    ? await fetchAllRows<{
+    ? await fetchAllRowsIn<{
         sku: string;
         spec: string | null;
         unit: string;
@@ -300,11 +300,11 @@ export async function importProductsExcel(_prevState: FormState, formData: FormD
         supplier_id: string | null;
         category_id: string | null;
         label_direction: string;
-      }>((from, to) =>
+      }, string>(skusInFile, (skuChunk, from, to) =>
         supabase
           .from("products")
           .select("sku, spec, unit, cost, price, base_package_qty, supplier_id, category_id, label_direction")
-          .in("sku", skusInFile)
+          .in("sku", skuChunk)
           .range(from, to),
       )
     : [];

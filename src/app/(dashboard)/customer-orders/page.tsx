@@ -1,3 +1,4 @@
+import { selectInChunks } from "@/lib/fetch-all-rows";
 import { createClient } from "@/lib/supabase/server";
 import { GridBadge } from "@/components/grid/badge";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
@@ -52,7 +53,7 @@ export default async function CustomerOrdersPage({
     new Set((orders ?? []).flatMap((o) => (o.customer_order_items ?? []).map((i) => i.product_id))),
   );
   const { data: bomRows } = productIds.length
-    ? await supabase.from("bom_items").select("parent_product_id").in("parent_product_id", productIds)
+    ? await selectInChunks(productIds, (idChunk) => supabase.from("bom_items").select("parent_product_id").in("parent_product_id", idChunk))
     : { data: [] as { parent_product_id: string }[] };
   const manufacturedProductIds = new Set((bomRows ?? []).map((b) => b.parent_product_id));
 

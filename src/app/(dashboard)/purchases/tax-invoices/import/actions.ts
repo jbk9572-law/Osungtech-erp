@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient, getUser } from "@/lib/supabase/server";
-import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { fetchAllRows, fetchAllRowsIn } from "@/lib/fetch-all-rows";
 import { readExcelRows } from "@/lib/excel-import";
 import { parseHometaxReceivedInvoiceRows, type ParsedReceivedInvoiceRow } from "@/lib/hometax-purchase-import";
 import { calcVat } from "@/lib/tax";
@@ -64,11 +64,11 @@ export async function importHometaxReceivedInvoices(_prevState: ImportResult, fo
   const user = await getUser();
 
   const approvalNumbers = parsed.map((p) => p.approvalNumber);
-  const existingRows = await fetchAllRows<{ hometax_approval_number: string }>((from, to) =>
+  const existingRows = await fetchAllRowsIn<{ hometax_approval_number: string }, string>(approvalNumbers, (numberChunk, from, to) =>
     supabase
       .from("purchase_received_invoices")
       .select("hometax_approval_number")
-      .in("hometax_approval_number", approvalNumbers)
+      .in("hometax_approval_number", numberChunk)
       .range(from, to),
   );
   const existingApprovalNumbers = new Set(existingRows.map((r) => r.hometax_approval_number));

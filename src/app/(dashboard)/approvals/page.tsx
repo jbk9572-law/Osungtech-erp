@@ -15,7 +15,7 @@ import {
   saveApprovalDraft,
 } from "@/app/(dashboard)/approvals/actions";
 import { requireFeatureEnabled } from "@/lib/require-feature-enabled";
-import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { fetchAllRows, selectInChunks } from "@/lib/fetch-all-rows";
 import { buildOrgTree } from "@/lib/org-chart";
 import { isUuid } from "@/lib/is-uuid";
 import { formatNumber } from "@/lib/format-number";
@@ -224,12 +224,14 @@ export default async function ApprovalsPage({
 
   const docIds = (docs ?? []).map((d) => d.id);
   const { data: steps } = docIds.length
-    ? await supabase
-        .from("approval_steps")
-        .select("document_id, step_order, approver_id, status, role")
-        .eq("role", "approver")
-        .in("document_id", docIds)
-        .order("step_order", { ascending: true })
+    ? await selectInChunks(docIds, (idChunk) =>
+        supabase
+          .from("approval_steps")
+          .select("document_id, step_order, approver_id, status, role")
+          .eq("role", "approver")
+          .in("document_id", idChunk)
+          .order("step_order", { ascending: true }),
+      )
     : { data: [] as { document_id: string; step_order: number; approver_id: string; status: string; role: string }[] };
 
   // 문서별 "지금 결재할 차례인 사람"을 구한다 — 순서대로 처리되므로

@@ -1,3 +1,4 @@
+import { selectInChunks } from "@/lib/fetch-all-rows";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ListPageHeader, SplitDetailEmpty } from "@/components/erp/page-header";
@@ -132,12 +133,14 @@ export default async function BoardPage({
           ]);
           const receivedIds = Array.from(new Set((recipientRows ?? []).map((r) => r.official_document_id)));
           const { data: receivedDocs } = receivedIds.length
-            ? await supabase
-                .from("official_documents")
-                .select("id, title, status, created_at")
-                .in("id", receivedIds)
-                .order("created_at", { ascending: false })
-                .limit(PER_CATEGORY_LIMIT)
+            ? await selectInChunks(receivedIds, (idChunk) =>
+                supabase
+                  .from("official_documents")
+                  .select("id, title, status, created_at")
+                  .in("id", idChunk)
+                  .order("created_at", { ascending: false })
+                  .limit(PER_CATEGORY_LIMIT),
+              ).then((r) => ({ data: [...r.data].sort((a, b) => (a.created_at < b.created_at ? 1 : -1)).slice(0, PER_CATEGORY_LIMIT) }))
             : { data: [] as { id: string; title: string; status: string; created_at: string }[] };
           const officialById = new Map<string, { id: string; title: string; status: string; created_at: string }>();
           for (const d of [...(mineDocs ?? []), ...(receivedDocs ?? [])]) officialById.set(d.id, d);

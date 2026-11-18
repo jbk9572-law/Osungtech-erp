@@ -1,3 +1,4 @@
+import { selectInChunks } from "@/lib/fetch-all-rows";
 import webpush from "web-push";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database.types";
@@ -87,10 +88,9 @@ async function sendPush(
 ) {
   if (!configureWebPush()) return;
 
-  const { data: subs } = await admin
-    .from("push_subscriptions")
-    .select("id, endpoint, p256dh, auth")
-    .in("user_id", userIds);
+  const { data: subs } = await selectInChunks(userIds, (idChunk) =>
+    admin.from("push_subscriptions").select("id, endpoint, p256dh, auth").in("user_id", idChunk),
+  );
   if (!subs?.length) return;
 
   const body = JSON.stringify(payload);

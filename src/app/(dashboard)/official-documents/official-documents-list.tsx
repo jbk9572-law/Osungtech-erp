@@ -9,7 +9,7 @@ import { OfficialDocumentForm } from "@/components/official-document-form";
 import { FormSection, SplitListFiller } from "@/components/erp/page-header";
 import { DocumentIcon } from "@/components/erp/groupware-icons";
 import { createOfficialDocument } from "@/app/(dashboard)/official-documents/actions";
-import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { fetchAllRows, fetchAllRowsIn } from "@/lib/fetch-all-rows";
 import { requireFeatureEnabled } from "@/lib/require-feature-enabled";
 import { isUuid } from "@/lib/is-uuid";
 import { formatNumber } from "@/lib/format-number";
@@ -67,14 +67,16 @@ export async function OfficialDocumentsList({ box, id }: { box: "mine" | "receiv
     );
     const ids = Array.from(new Set(recipientRows.map((r) => r.official_document_id)));
     rows = ids.length
-      ? await fetchAllRows((from, to) =>
-          supabase
-            .from("official_documents")
-            .select("id, title, status, doc_no, doc_no_year, disclosure, created_at")
-            .in("id", ids)
-            .order("created_at", { ascending: false })
-            .range(from, to),
-        )
+      ? (
+          await fetchAllRowsIn(ids, (idChunk, from, to) =>
+            supabase
+              .from("official_documents")
+              .select("id, title, status, doc_no, doc_no_year, disclosure, created_at")
+              .in("id", idChunk)
+              .order("created_at", { ascending: false })
+              .range(from, to),
+          )
+        ).sort((a, b) => (a.created_at < b.created_at ? 1 : a.created_at > b.created_at ? -1 : 0)) // 나눠 받았으므로 전체 기준 최신순으로 다시 정렬
       : [];
   }
 

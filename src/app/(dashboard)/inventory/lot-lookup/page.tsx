@@ -6,7 +6,7 @@ import { ListPageHeader } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
 import { GridBadge } from "@/components/grid/badge";
 import { LotLookupSearchForm } from "@/components/lot-lookup-search-form";
-import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { fetchAllRows, fetchAllRowsIn } from "@/lib/fetch-all-rows";
 import { normalizeLotNumber } from "@/lib/lot-number";
 import { formatNumber } from "@/lib/format-number";
 import { buildBackHref } from "@/lib/list-return";
@@ -121,14 +121,16 @@ export default async function LotLookupPage({
         ? [productId]
         : [...new Set([...purchaseHits, ...saleHits].map((h) => h.product_id).filter((id): id is string => !!id))];
       if (targetProductIds.length > 0) {
-        workOrderHits = await fetchAllRows<WorkOrderHit>((from, to) =>
+        workOrderHits = await fetchAllRowsIn<WorkOrderHit, string>(targetProductIds, (idChunk, from, to) =>
           supabase
             .from("work_orders")
             .select("id, doc_no, order_date, quantity, status, products(sku, name, unit)")
-            .in("product_id", targetProductIds)
+            .in("product_id", idChunk)
             .order("order_date", { ascending: false })
             .range(from, to),
         );
+        // id 목록을 나눠 받았으므로 전체 기준 최신순으로 다시 정렬한다.
+        workOrderHits.sort((a, b) => (a.order_date < b.order_date ? 1 : a.order_date > b.order_date ? -1 : 0));
         workOrderMatchMode = "product";
       }
     }

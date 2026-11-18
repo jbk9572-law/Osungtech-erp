@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database.types";
 import { toKstDateStr } from "@/lib/kst-date";
-import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { fetchAllRows, selectInChunks } from "@/lib/fetch-all-rows";
 import { safeQuery } from "@/lib/safe-query";
 
 export type AnnouncementNotice = { id: string; title: string; pinned: boolean };
@@ -96,12 +96,12 @@ export async function getNotificationSummary(
   // 있다.
   const announcementIds = (announcements ?? []).map((a) => a.id);
   const { data: reads } = announcementIds.length
-    ? await safeQuery<{ announcement_id: string }[]>(
+    ? await selectInChunks<{ announcement_id: string }, string>(announcementIds, (idChunk) =>
         supabase
           .from("announcement_reads")
           .select("announcement_id")
           .eq("user_id", userId)
-          .in("announcement_id", announcementIds),
+          .in("announcement_id", idChunk),
       )
     : { data: [] as { announcement_id: string }[] };
 

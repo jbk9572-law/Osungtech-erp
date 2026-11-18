@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentActor } from "@/lib/current-actor";
-import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { fetchAllRows, fetchAllRowsIn } from "@/lib/fetch-all-rows";
 import { ListPageHeader } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
@@ -43,11 +43,11 @@ export default async function BulkTaxInvoicePage({
 
   const candidateIds = orders.map((o) => o.id);
   const issuedRows = candidateIds.length
-    ? await fetchAllRows((pageFrom, pageTo) =>
+    ? await fetchAllRowsIn(candidateIds, (idChunk, pageFrom, pageTo) =>
         supabase
           .from("tax_invoices")
           .select("sales_order_id")
-          .in("sales_order_id", candidateIds)
+          .in("sales_order_id", idChunk)
           .is("original_invoice_id", null)
           .range(pageFrom, pageTo),
       )
@@ -61,11 +61,11 @@ export default async function BulkTaxInvoicePage({
 
   const eligibleIds = eligibleOrders.map((o) => o.id);
   const itemRows = eligibleIds.length
-    ? await fetchAllRows((pageFrom, pageTo) =>
+    ? await fetchAllRowsIn(eligibleIds, (idChunk, pageFrom, pageTo) =>
         supabase
           .from("sales_order_items")
           .select("sales_order_id, quantity, unit_price")
-          .in("sales_order_id", eligibleIds)
+          .in("sales_order_id", idChunk)
           .range(pageFrom, pageTo),
       )
     : [];
