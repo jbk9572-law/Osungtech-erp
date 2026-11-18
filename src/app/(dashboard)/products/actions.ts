@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createClient, getUser } from "@/lib/supabase/server";
 import type { FormState } from "@/components/form-message";
 import { readExcelRows, cell, cellNumber, summarize, type ImportRowError } from "@/lib/excel-import";
-import { numberOrDefault, numberOrNull } from "@/lib/form-number";
+import { MAX_SANE_QUANTITY, isSaneNumber, numberOrDefault, numberOrNull } from "@/lib/form-number";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { requireMutatedRow } from "@/lib/require-mutated-row";
 
@@ -443,8 +443,8 @@ export async function addBomItem(_prevState: FormState, formData: FormData): Pro
   if (parentProductId === componentProductId) {
     return { error: "완제품과 같은 품목은 구성품으로 등록할 수 없습니다." };
   }
-  if (!(quantityPerUnit > 0)) {
-    return { error: "단위당 소요량은 0보다 커야 합니다." };
+  if (!(quantityPerUnit > 0) || !isSaneNumber(quantityPerUnit, MAX_SANE_QUANTITY)) {
+    return { error: "단위당 소요량은 0보다 크고 너무 크지 않은 숫자여야 합니다." };
   }
 
   const supabase = await createClient();
