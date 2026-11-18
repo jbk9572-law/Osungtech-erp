@@ -1,4 +1,5 @@
 import { reportServerError } from "@/lib/error-tracking";
+import { recordPerfEvent } from "@/lib/server-error-log";
 import { runWithDbStats } from "@/lib/db-call-stats";
 import { PERF_BUDGET } from "@/lib/perf-budget";
 
@@ -30,6 +31,7 @@ export function withPageTiming<Props>(
           // dbCalls/dbMs: 이 화면이 Supabase를 몇 번 불렀고 호출별 시간의 합이 얼마인지(병렬이면 실제 대기보다 큼)
           const detail = { label, durationMs, dbCalls: db.calls, dbMs: Math.round(db.ms) };
           console.error(JSON.stringify({ tag: "slowPage", ...detail }));
+          await recordPerfEvent({ kind: "slow_page", route: label, durationMs, dbCalls: db.calls, dbMs: Math.round(db.ms) });
           await reportServerError(
             Object.assign(new Error(`page ${label} took ${durationMs}ms (DB ${db.calls}번, 합 ${Math.round(db.ms)}ms)`), { name: "SlowPageWarning" }),
             detail,

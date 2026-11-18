@@ -4339,6 +4339,10 @@ export type Database = {
           error_name: string | null;
           message: string | null;
           stack: string | null;
+          kind: string;
+          duration_ms: number | null;
+          db_calls: number | null;
+          db_ms: number | null;
         };
         Insert: {
           id?: string;
@@ -4350,6 +4354,10 @@ export type Database = {
           error_name?: string | null;
           message?: string | null;
           stack?: string | null;
+          kind?: string;
+          duration_ms?: number | null;
+          db_calls?: number | null;
+          db_ms?: number | null;
         };
         Update: {
           id?: string;
@@ -4361,6 +4369,10 @@ export type Database = {
           error_name?: string | null;
           message?: string | null;
           stack?: string | null;
+          kind?: string;
+          duration_ms?: number | null;
+          db_calls?: number | null;
+          db_ms?: number | null;
         };
         Relationships: [];
       };

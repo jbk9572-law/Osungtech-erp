@@ -3,11 +3,10 @@ import { createClient } from "@/lib/supabase/server";
 import { getServerEnv } from "@/lib/server-env";
 
 // 아이디/비밀번호 입력 없이 곧바로 데모 계정으로 로그인시키는 진입점.
-// 미리 만들어둔 데모 계정(설정 > 계정관리에서 "테스트(데모) 계정으로
-// 만들기"로 생성, is_demo=true)의 자격증명을 서버 환경변수로만 들고
-// 있다가 대신 로그인해주고 /dashboard로 보낸다 — 그 이후 화면은 이미
-// DB 레벨로 격리된 데모 데이터만 보고/쓰게 된다(demo_account_isolation
-// 마이그레이션 참고). 자격증명이 브라우저로 노출되는 지점은 없다.
+// 미리 만들어둔 데모 계정의 자격증명을 서버 환경변수로만 들고 있다가 대신 로그인해주고 /dashboard로 보낸다.
+// 데모는 실제 회사 안에 따로 만든 계정이 아니라 **샌드박스 회사**(설정 > 샌드박스)의 계정을 쓴다 — 샌드박스가 회사째
+// 분리돼 있어 격리가 확실하고, 초기화·업종별 예시 데이터도 이미 있다. (예전에 만든 is_demo 계정은 계속 동작한다.)
+// 자격증명이 브라우저로 노출되는 지점은 없다.
 export async function GET(request: NextRequest) {
   const email = getServerEnv("DEMO_LOGIN_EMAIL");
   const password = getServerEnv("DEMO_LOGIN_PASSWORD");

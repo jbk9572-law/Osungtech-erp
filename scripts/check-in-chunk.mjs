@@ -21,6 +21,7 @@ const ALLOWLIST = {
   "lib/dev-seed/employees.ts::ids": "개발용 더미 데이터(운영 경로 아님)",
   "lib/dev-seed/master-data.ts::targetCustomers": "개발용 더미 데이터(운영 경로 아님)",
   "lib/mail/sync-all.ts::accounts": "메일 계정을 연동한 직원 수",
+  "lib/server-error-log.ts::ids": "플랫폼 관리자 수(조회에 limit 50)",
   "lib/notifications.ts::types": "고정된 알림 종류 목록",
 };
 const SKIP = /(\.test\.tsx?$|database\.types\.ts$)/;
