@@ -6591,6 +6591,10 @@ export type Database = {
         Args: Record<string, never>;
         Returns: number;
       };
+      my_tenant_block_reason: {
+        Args: Record<string, never>;
+        Returns: string | null;
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

@@ -96,11 +96,20 @@ export async function saveMailAccount(_prevState: FormState, formData: FormData)
   } else {
     const { data: existing } = await supabase
       .from("mail_accounts")
-      .select("encrypted_app_password")
+      .select("encrypted_app_password, imap_host, imap_port, smtp_host, smtp_port, username")
       .eq("user_id", user.id)
       .maybeSingle();
     if (!existing) {
       return { error: "앱 비밀번호를 입력해주세요." };
+    }
+    // 서버 주소·포트·아이디가 바뀌면 저장된 비밀번호를 그대로 새 서버로 보내게 되므로(자격증명 탈취 경로)
+    // 이 경우에는 비밀번호를 반드시 다시 입력받는다.
+    if (
+      existing.imap_host !== input.imapHost || existing.imap_port !== input.imapPort ||
+      existing.smtp_host !== input.smtpHost || existing.smtp_port !== input.smtpPort ||
+      existing.username !== input.username
+    ) {
+      return { error: "서버 주소·포트·아이디를 바꿀 때는 앱 비밀번호를 다시 입력해주세요." };
     }
     encryptedAppPassword = existing.encrypted_app_password;
   }
