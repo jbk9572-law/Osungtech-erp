@@ -203,8 +203,8 @@ export function WorkOrderForm({
           </div>
           {hasShortage && (
             <PageGuide tone="warning" className="mt-2 font-medium">
-              ⚠ 구성품 재고가 부족합니다. 그래도 등록하면 해당 구성품 재고가
-              음수가 될 수 있습니다.
+              ⚠ 구성품 재고가 부족합니다. 생산지시는 등록되지만, 부족한 구성품을 입고하기 전에는
+              자재투입을 할 수 없습니다.
             </PageGuide>
           )}
         </div>

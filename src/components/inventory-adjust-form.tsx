@@ -139,12 +139,10 @@ export function InventoryAdjustForm({
             현재 재고: {formatNumber(currentStock)}개 → 조정 후: {formatNumber(projectedStock)}개
             {projectedStock < 0 && " (재고 부족)"}
           </p>
-          {/* 매출/매입/생산지시 등록 화면과 같은 소프트 경고 — 등록 자체를
-              막지는 않는다(재고가 0 밑으로 내려가도 DB에서 막지 않는
-              기존 정책과 동일). */}
+          {/* 재고가 0 밑으로 내려가는 차감은 DB가 거절한다(migration 266, 회사 설정으로만 예외) — 미리 알려 준다. */}
           {projectedStock < 0 && (
             <PageGuide tone="warning" className="md:col-span-4">
-              ⚠ 조정 후 재고가 음수가 됩니다. 그래도 등록하면 재고가 음수로 저장됩니다.
+              ⚠ 조정 후 재고가 음수가 되어 등록할 수 없습니다. 차감 수량을 줄여주세요.
             </PageGuide>
           )}
         </>
