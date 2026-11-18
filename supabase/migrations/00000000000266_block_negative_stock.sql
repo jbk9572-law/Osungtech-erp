@@ -52,7 +52,57 @@ begin
 end;
 $$;
 
--- 더미 데이터 생성 함수 실행 중에만 켜지는 설정(함수 단위 설정이라 호출이 끝나면 자동으로 풀린다).
-alter function public.sandbox_seed_stage(int) set app.seed_mode = 'on';
-alter function public.sandbox_seed() set app.seed_mode = 'on';
-alter function public.sandbox_seed_industry(text) set app.seed_mode = 'on';
+-- 더미 데이터 생성 함수 실행 중에만 켜지는 설정. (Supabase 는 ALTER FUNCTION ... SET app.* 를 허용하지 않아, 원래 함수를 *_impl 로 이름을 바꾸고
+-- 같은 이름의 얇은 함수가 set_config 로 설정을 켠 뒤 호출하는 방식을 쓴다. 더미 생성 함수를 고칠 때는 *_impl 을 고친다.)
+alter function public.sandbox_seed_stage(int) rename to sandbox_seed_stage_impl;
+alter function public.sandbox_seed() rename to sandbox_seed_impl;
+alter function public.sandbox_seed_industry(text) rename to sandbox_seed_industry_impl;
+
+create function public.sandbox_seed_stage(p_stage int)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  perform set_config('app.seed_mode', 'on', true);
+  perform public.sandbox_seed_stage_impl(p_stage);
+end;
+$$;
+
+create function public.sandbox_seed()
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  perform set_config('app.seed_mode', 'on', true);
+  perform public.sandbox_seed_impl();
+end;
+$$;
+
+create function public.sandbox_seed_industry(p_industry text)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_result text;
+begin
+  perform set_config('app.seed_mode', 'on', true);
+  v_result := public.sandbox_seed_industry_impl(p_industry);
+  return v_result;
+end;
+$$;
+
+revoke all on function public.sandbox_seed_stage_impl(int) from public, anon, authenticated;
+revoke all on function public.sandbox_seed_impl() from public, anon, authenticated;
+revoke all on function public.sandbox_seed_industry_impl(text) from public, anon, authenticated;
+revoke all on function public.sandbox_seed_stage(int) from public;
+grant execute on function public.sandbox_seed_stage(int) to authenticated;
+revoke all on function public.sandbox_seed() from public;
+grant execute on function public.sandbox_seed() to authenticated;
+revoke all on function public.sandbox_seed_industry(text) from public;
+grant execute on function public.sandbox_seed_industry(text) to authenticated;
