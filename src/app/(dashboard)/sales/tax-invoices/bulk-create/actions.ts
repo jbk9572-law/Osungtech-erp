@@ -1,5 +1,6 @@
 "use server";
 
+import { quotaExceededMessage, recordInvoiceIssued, remainingMonthlyQuota } from "@/lib/quota/monthly-quota";
 import { revalidatePath } from "next/cache";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { getCurrentActor } from "@/lib/current-actor";
@@ -54,11 +55,17 @@ export async function bulkCreateTaxInvoices(
 
   const skipped: { docNo: number | null; customerName: string | null; reason: string }[] = [];
   let created = 0;
+  // 이번 달 남은 세금계산서 발행 한도 — 다 쓰면 나머지 건은 발행하지 않고 사유와 함께 건너뛴다.
+  const quotaInfo = await remainingMonthlyQuota(supabase, "invoice");
 
   for (const orderId of salesOrderIds) {
     const order = orders?.find((o) => o.id === orderId);
     if (!order) {
       skipped.push({ docNo: null, customerName: null, reason: "매출 건을 찾을 수 없습니다." });
+      continue;
+    }
+    if (quotaInfo && created >= quotaInfo.remaining) {
+      skipped.push({ docNo: order.doc_no, customerName: order.customers?.name ?? null, reason: quotaExceededMessage("invoice", quotaInfo.quota) });
       continue;
     }
     const label = { docNo: order.doc_no ?? null, customerName: order.customers?.name ?? null };
@@ -170,8 +177,7 @@ export async function bulkCreateTaxInvoices(
       .eq("id", orderId);
     if (syncError) console.error("sales_orders.invoice_status 동기화 실패:", syncError);
 
-    const { error: invoiceUsageError } = await supabase.rpc("increment_tenant_invoice_usage");
-    if (invoiceUsageError) console.error("계산서 쿼터 사용량 갱신 실패:", invoiceUsageError.message);
+    await recordInvoiceIssued(supabase);
 
     created++;
   }

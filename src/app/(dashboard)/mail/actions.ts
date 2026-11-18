@@ -1,5 +1,6 @@
 "use server";
 
+import { checkMonthlyQuota, recordEmailSent } from "@/lib/quota/monthly-quota";
 import { revalidatePath } from "next/cache";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { decryptSecret } from "@/lib/mail/crypto";
@@ -83,6 +84,9 @@ export async function sendMailAction(_prevState: FormState, formData: FormData):
     return { error: "연동된 메일 계정이 없습니다. 환경설정 > 메일 계정 연동에서 먼저 등록해주세요." };
   }
 
+  const quotaError = await checkMonthlyQuota(supabase, "email");
+  if (quotaError) return { error: quotaError };
+
   const files = formData.getAll("attachments").filter((f): f is File => f instanceof File && f.size > 0);
   const attachments: SendMailAttachment[] = [];
   for (const file of files) {
@@ -118,10 +122,7 @@ export async function sendMailAction(_prevState: FormState, formData: FormData):
   // (요금제 월 100건 쿼터 — 기획서 2026-10-27). 집계 실패로 방금 보낸
   // 메일 자체를 실패 처리하면 안 되므로 로그만 남기고 넘어간다
   // (upload-attachment.ts의 trackFileUsage와 같은 패턴).
-  const { error: usageError } = await supabase.rpc("increment_tenant_email_usage");
-  if (usageError) {
-    console.error("[mail] failed to track email usage:", usageError);
-  }
+  await recordEmailSent(supabase);
 
   // 발송 성공 후 "보낸편지함"에 로컬 기록을 남긴다 — 다음 서버의 실제
   // 보낸편지함을 다시 IMAP으로 읽어오지 않고, 우리가 방금 보낸 내용을
