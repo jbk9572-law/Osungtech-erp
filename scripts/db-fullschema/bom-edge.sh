@@ -70,3 +70,9 @@ echo "   업체 보유(C1): $($P -c "select quantity from public.subcontractor_i
 echo "   삭제 시도(거절 기대): $(as $A "select public.delete_work_order('$WO')")"
 $P -c "insert into public.subcontractor_inventory_transactions (subcontractor_id,product_id,type,quantity,work_order_id,tenant_id) select '$S',product_id,'consumed',quantity,work_order_id,tenant_id from public.subcontractor_inventory_transactions where work_order_id='$WO' and type='issued'" >/dev/null
 echo "   소비 처리 후 삭제(성공 기대): $(as $A "select public.delete_work_order('$WO')")"; echo "   우리 C1=$(qty $C1) (1000 기대)"
+
+echo "== 10) 재고 부족 자재투입 거절 (265): C1 필요 20 > 재고 5 → 거절, 상태/재고 불변"
+new_fixture; mk_wo
+$P -c "update public.inventory set quantity=5 where product_id='$C1' and warehouse_id='$W'" >/dev/null
+echo "   결과: $(as $A "select public.issue_work_order_materials('$WO')")"
+echo "   재고(C1=5 유지 기대): $(qty $C1)  상태(pending 기대): $($P -c "select status from public.work_orders where id='$WO'")"

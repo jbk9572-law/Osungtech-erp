@@ -6627,6 +6627,10 @@ export type Database = {
         Args: Record<string, never>;
         Returns: number;
       };
+      get_monthly_quota_status: {
+        Args: Record<string, never>;
+        Returns: Json;
+      };
       my_tenant_block_reason: {
         Args: Record<string, never>;
         Returns: string | null;

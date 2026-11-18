@@ -1,5 +1,6 @@
 "use server";
 
+import { checkMonthlyQuota, recordInvoiceIssued } from "@/lib/quota/monthly-quota";
 import { MAX_SANE_AMOUNT } from "@/lib/form-number";
 import { todayKstStr } from "@/lib/kst-date";
 import { redirect } from "next/navigation";
@@ -118,6 +119,8 @@ export async function createTaxInvoice(_prevState: FormState, formData: FormData
   if (amountError) return { error: amountError };
 
   const supabase = await createClient();
+  const quotaError = await checkMonthlyQuota(supabase, "invoice");
+  if (quotaError) return { error: quotaError };
   if (!(await canManageOrder(supabase, "sales_orders", salesOrderId))) {
     return { error: "본인이 등록한 매출 건에만 세금계산서를 발행할 수 있습니다." };
   }
@@ -221,8 +224,7 @@ export async function createTaxInvoice(_prevState: FormState, formData: FormData
   // 요금제 "월 계산서 발행 쿼터" 집계 — increment_tenant_email_usage와
   // 같은 패턴(발행 자체가 끝난 뒤의 부가 기록이라 실패해도 이미 끝난
   // 발행을 되돌리지 않는다).
-  const { error: invoiceUsageError } = await supabase.rpc("increment_tenant_invoice_usage");
-  if (invoiceUsageError) console.error("계산서 쿼터 사용량 갱신 실패:", invoiceUsageError.message);
+  await recordInvoiceIssued(supabase);
 
   // 목록 화면(sales/page.tsx)이 여전히 sales_orders.invoice_status만
   // 보고 "계산서 발행완료" 배지를 그리므로, 상세 데이터와 어긋나지 않게
@@ -254,6 +256,8 @@ export async function issueTaxInvoiceViaMockApi(_prevState: FormState, formData:
   if (!salesOrderId) return { error: "잘못된 요청입니다." };
 
   const supabase = await createClient();
+  const quotaError = await checkMonthlyQuota(supabase, "invoice");
+  if (quotaError) return { error: quotaError };
   // 버튼은 샌드박스 테넌트에서만 보이지만(tax-invoice/page.tsx), 주소를
   // 직접 조작해 호출하는 경로까지 막기 위해 서버 액션에서도 한 번 더
   // 확인한다 — sandbox-tools.tsx의 초기화/더미 데이터 생성 버튼과 같은
@@ -347,8 +351,7 @@ export async function issueTaxInvoiceViaMockApi(_prevState: FormState, formData:
     return { error: `품목 저장에 실패했습니다: ${itemsError.message}` };
   }
 
-  const { error: invoiceUsageError } = await supabase.rpc("increment_tenant_invoice_usage");
-  if (invoiceUsageError) console.error("계산서 쿼터 사용량 갱신 실패:", invoiceUsageError.message);
+  await recordInvoiceIssued(supabase);
 
   const { error: syncError } = await supabase
     .from("sales_orders")
@@ -457,6 +460,8 @@ export async function createTaxInvoiceCorrection(_prevState: FormState, formData
   }
 
   const supabase = await createClient();
+  const quotaError = await checkMonthlyQuota(supabase, "invoice");
+  if (quotaError) return { error: quotaError };
   if (!(await canManageOrder(supabase, "sales_orders", salesOrderId))) {
     return { error: "본인이 등록한 매출 건에만 수정세금계산서를 발행할 수 있습니다." };
   }
@@ -519,8 +524,7 @@ export async function createTaxInvoiceCorrection(_prevState: FormState, formData
     return { error: `품목 저장에 실패했습니다: ${itemsError.message}` };
   }
 
-  const { error: invoiceUsageError } = await supabase.rpc("increment_tenant_invoice_usage");
-  if (invoiceUsageError) console.error("계산서 쿼터 사용량 갱신 실패:", invoiceUsageError.message);
+  await recordInvoiceIssued(supabase);
 
   revalidatePath(`/sales/${salesOrderId}`);
   revalidatePath(`/sales/${salesOrderId}/tax-invoice`);

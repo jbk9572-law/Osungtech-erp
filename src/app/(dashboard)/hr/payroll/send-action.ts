@@ -15,6 +15,7 @@
 // not supported" — official-documents 발송 액션에서 실제 발생 확인).
 // api/cron/mail-sync/route.ts와 같은 이유로 sendMail import를 함수 본문
 // 안 동적 import로 미룬다.
+import { checkMonthlyQuota, recordEmailSent } from "@/lib/quota/monthly-quota";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { getCurrentActor } from "@/lib/current-actor";
 import { decryptSecret } from "@/lib/mail/crypto";
@@ -90,6 +91,9 @@ export async function sendPayslip(_prevState: FormState, formData: FormData): Pr
     .filter(Boolean)
     .join("\n");
 
+  const quotaError = await checkMonthlyQuota(supabase, "email");
+  if (quotaError) return { error: quotaError };
+
   try {
     const password = await decryptSecret(account.encrypted_app_password);
     const { sendMail } = await import("@/lib/mail/smtp-send");
@@ -107,6 +111,8 @@ export async function sendPayslip(_prevState: FormState, formData: FormData): Pr
   } catch (err) {
     return { error: `이메일 발송에 실패했습니다: ${err instanceof Error ? err.message : String(err)}` };
   }
+
+  await recordEmailSent(supabase);
 
   return { success: `${employeeEmail} 앞으로 급여명세서를 이메일 발송했습니다.` };
 }
