@@ -3,6 +3,7 @@
 import { getUser } from "@/lib/supabase/server";
 import { reportServerError } from "@/lib/error-tracking";
 import { PERF_BUDGET } from "@/lib/perf-budget";
+import { recordPerfEvent } from "@/lib/server-error-log";
 
 // 브라우저가 잰 "클릭 → 내용이 보이기까지" 시간을 느림 기록(Sentry)으로 남긴다. 로그인한 사용자만, 숫자·주소만 받는다.
 export async function reportSlowNavigation(path: string, ms: number): Promise<void> {
@@ -15,6 +16,7 @@ export async function reportSlowNavigation(path: string, ms: number): Promise<vo
     .slice(0, 120)
     .replace(/[0-9a-f]{8}-[0-9a-f-]{27}/gi, ":id")
     .replace(/\/\d+(?=\/|$)/g, "/:n");
+  await recordPerfEvent({ kind: "slow_nav", route, durationMs: ms });
   await reportServerError(
     Object.assign(new Error(`navigation ${route} took ${Math.round(ms)}ms`), { name: "SlowNavigationWarning" }),
     { route, ms: Math.round(ms) },
