@@ -7,7 +7,6 @@ import { EditCompanyForm } from "@/components/edit-company-form";
 import { TenantStatusControls } from "@/components/tenant-status-controls";
 import { TenantPointsPanel } from "@/components/tenant-points-panel";
 import { ResetTenantUserPasswordForm } from "@/components/reset-tenant-user-password-form";
-import { CreateTenantDemoAccountForm } from "@/components/create-tenant-demo-account-form";
 import { TenantQuotaPanel } from "@/components/tenant-quota-panel";
 import { TenantAddonPanel } from "@/components/tenant-addon-panel";
 import { DeleteTenantForm } from "@/components/delete-tenant-form";
@@ -233,9 +232,9 @@ export async function TenantDetailPanel({ tenantId, closeHref }: { tenantId: str
           <span className="erp-detail-tab active">소속 계정 ({(users ?? []).length})</span>
         </div>
         <div className="erp-detail-body">
-          <div className="erp-u-mb-s4">
-            <CreateTenantDemoAccountForm tenantId={tenant.id} />
-          </div>
+          <p className="erp-u-muted erp-u-mb-s4">
+            체험·시연용 데모 계정은 이 회사 안에 따로 만들지 않고, 샌드박스 회사(설정 &gt; 샌드박스)에서 진행합니다.
+          </p>
           {!users?.length ? (
             <p className="erp-grid-empty">소속 계정이 없습니다.</p>
           ) : (
