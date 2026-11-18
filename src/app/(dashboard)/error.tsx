@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { reportClientError } from "@/lib/report-client-error";
 import Link from "next/link";
 
 // (dashboard) 레이아웃(타이틀바/트리메뉴) 아래 화면 하나가 렌더링 중
@@ -20,6 +21,7 @@ export default function DashboardError({
 }) {
   useEffect(() => {
     console.error(error);
+    reportClientError(error);
   }, [error]);
 
   return (
