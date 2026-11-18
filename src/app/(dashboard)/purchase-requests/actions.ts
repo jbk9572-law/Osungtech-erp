@@ -181,12 +181,23 @@ export async function convertPurchaseRequestToPurchaseOrder(
     return { error: `구매발주 전환에 실패했습니다: ${createError?.message ?? "알 수 없는 오류"}` };
   }
 
-  const { error: linkError } = await supabase
+  // 동시에 두 번 전환되면 매입이 이중으로 생긴다 — 아직 연결 전일 때만 링크를 남기고,
+  // 먼저 연결한 요청이 있으면(0행) 방금 만든 매입을 되돌린다.
+  const { data: linked, error: linkError } = await supabase
     .from("purchase_requests")
     .update({ converted_purchase_order_id: purchaseOrderId })
-    .eq("id", requestId);
+    .eq("id", requestId)
+    .is("converted_purchase_order_id", null)
+    .select("id");
   if (linkError) {
     console.error("구매요청 전환 링크 갱신 실패:", linkError.message);
+  } else if (!linked || linked.length === 0) {
+    const { error: rollbackError } = await supabase.rpc("delete_purchase_with_items", {
+      p_id: purchaseOrderId,
+      p_deleted_by: actor?.id ?? null,
+    });
+    if (rollbackError) console.error("구매요청 중복 전환 매입 되돌리기 실패:", rollbackError.message);
+    return { error: "이미 구매발주로 전환된 요청입니다. (동시에 두 번 처리되어 중복 매입은 취소했습니다.)" };
   }
 
   revalidatePath("/purchase-requests");

@@ -52,11 +52,27 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 백업 시점 파일 추출
+        env:
+          BACKUP_PASSPHRASE: ${{ secrets.DB_BACKUP_PASSPHRASE }}
         run: |
           set -euo pipefail
           git fetch origin db-backups
           mkdir -p /tmp/restore
-          git show "origin/db-backups:backups/${{ inputs.snapshot }}" > /tmp/restore/target.dump
+          case "${{ inputs.snapshot }}" in
+            *.dump.enc)
+              if [ -z "${BACKUP_PASSPHRASE:-}" ]; then
+                echo "::error::암호화된 백업(.dump.enc)을 복원하려면 secret DB_BACKUP_PASSPHRASE 가 필요합니다."
+                exit 1
+              fi
+              git show "origin/db-backups:backups/${{ inputs.snapshot }}" > /tmp/restore/target.dump.enc
+              openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 -pass env:BACKUP_PASSPHRASE -in /tmp/restore/target.dump.enc -out /tmp/restore/target.dump
+              rm -f /tmp/restore/target.dump.enc ;;
+            *.dump)
+              git show "origin/db-backups:backups/${{ inputs.snapshot }}" > /tmp/restore/target.dump ;;
+            *)
+              echo "::error::지원하지 않는 파일 형식입니다(.dump 또는 .dump.enc)."
+              exit 1 ;;
+          esac
 
       - name: DB 복원 (pg_restore --clean, 요청자 ${{ inputs.requested_by }})
         env:

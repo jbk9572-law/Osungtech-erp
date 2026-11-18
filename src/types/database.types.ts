@@ -4328,6 +4328,42 @@ export type Database = {
           },
         ];
       };
+      server_error_logs: {
+        Row: {
+          id: string;
+          created_at: string;
+          digest: string | null;
+          path: string | null;
+          route_path: string | null;
+          route_type: string | null;
+          error_name: string | null;
+          message: string | null;
+          stack: string | null;
+        };
+        Insert: {
+          id?: string;
+          created_at?: string;
+          digest?: string | null;
+          path?: string | null;
+          route_path?: string | null;
+          route_type?: string | null;
+          error_name?: string | null;
+          message?: string | null;
+          stack?: string | null;
+        };
+        Update: {
+          id?: string;
+          created_at?: string;
+          digest?: string | null;
+          path?: string | null;
+          route_path?: string | null;
+          route_type?: string | null;
+          error_name?: string | null;
+          message?: string | null;
+          stack?: string | null;
+        };
+        Relationships: [];
+      };
       failure_logs: {
         Row: {
           id: string;
@@ -6590,6 +6626,10 @@ export type Database = {
       get_platform_r2_ops_usage: {
         Args: Record<string, never>;
         Returns: number;
+      };
+      my_tenant_block_reason: {
+        Args: Record<string, never>;
+        Returns: string | null;
       };
     };
     Enums: Record<string, never>;

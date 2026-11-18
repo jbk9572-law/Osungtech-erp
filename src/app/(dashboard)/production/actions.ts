@@ -1,5 +1,6 @@
 "use server";
 
+import { isSaneNumber, MAX_SANE_QUANTITY } from "@/lib/form-number";
 import { reverseOrderLocationStock } from "@/lib/location-stock-sync";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
@@ -56,8 +57,8 @@ export async function createWorkOrder(_prevState: FormState, formData: FormData)
   if (!productId || !warehouseId || !orderDate) {
     return { error: "완제품, 창고, 지시일자를 모두 입력해주세요." };
   }
-  if (!(quantity > 0)) {
-    return { error: "생산 수량은 0보다 커야 합니다." };
+  if (!(quantity > 0) || !isSaneNumber(quantity, MAX_SANE_QUANTITY)) {
+    return { error: "생산 수량은 0보다 크고 너무 크지 않은 숫자여야 합니다." };
   }
 
   const supabase = await createClient();

@@ -36,6 +36,7 @@ const ALLOWLIST = {
   "lib/mail/sync-all.ts": ["system", "메일 동기화 크론"],
   "lib/messenger-system-alerts.ts": ["system", "메신저 알림 크론"],
   "lib/notify.ts": ["system", "푸시 알림"],
+  "lib/server-error-log.ts": ["system", "서버 렌더 오류 기록(onRequestError, 쓰기 전용 — 조회는 플랫폼 관리자 RLS)"],
   "lib/portal-account-actions.ts": ["user", "포털 계정 관리(직원)"],
   "lib/supabase/admin.ts": ["system", "서비스 키 클라이언트 정의"],
 };

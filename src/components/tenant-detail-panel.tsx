@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { GridBadge } from "@/components/grid/badge";
+import { requirePlatformAdmin } from "@/lib/require-platform-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { EditCompanyForm } from "@/components/edit-company-form";
 import { TenantStatusControls } from "@/components/tenant-status-controls";
@@ -26,6 +27,9 @@ export async function TenantDetailPanel({ tenantId, closeHref }: { tenantId: str
   // 수 없다 — 대신 상위 platform-admin/layout.tsx에서 이미 플랫폼 운영자
   // 권한을 확인했으므로, 여기서는 service_role 클라이언트로 직접
   // 조회한다(플랫폼 관리자 화면 전용 패턴).
+  // 레이아웃 가드와 병렬로 렌더링되므로, service_role을 쓰기 전에 여기서도 한 번 더 확인한다.
+  const { isPlatformAdmin } = await requirePlatformAdmin();
+  if (!isPlatformAdmin) return null;
   const admin = createAdminClient();
 
   const [{ data: tenant }, { data: plans }, { data: pointTransactions }, { data: members }] = await Promise.all([

@@ -62,7 +62,7 @@ create or replace function auth.role() returns text language sql stable as $$ se
 create table public.tenants (id uuid primary key default gen_random_uuid(), closing_date date, disabled_features text[] not null default '{}');
 create table public.profiles (id uuid primary key, role text not null default 'staff');
 create table public.tenant_members (user_id uuid primary key, tenant_id uuid not null references public.tenants(id));
-create table public.platform_admin_impersonations (admin_user_id uuid, tenant_id uuid, ended_at timestamptz);
+create table public.platform_admin_impersonations (admin_user_id uuid, tenant_id uuid, started_at timestamptz not null default now(), ended_at timestamptz);
 
 create function public.current_tenant_id() returns uuid language sql stable as $$
   select (select tenant_id from public.tenant_members where user_id = auth.uid())

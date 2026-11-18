@@ -7,6 +7,7 @@ import { ttlCached } from "@/lib/ttl-cache";
 import { ErpShell } from "@/components/erp/erp-shell";
 import { TenantUsageWidget } from "@/components/erp/tenant-usage-widget";
 import { NotificationBellPanel } from "@/components/erp/notification-bell-panel";
+import { TenantBlockedScreen } from "@/components/erp/tenant-blocked-screen";
 import { MaintenanceScreen } from "@/components/erp/maintenance-screen";
 import { BellIcon } from "@/components/erp/groupware-icons";
 import { quotaStatusFromRpcRow, buildQuotaBannerMessage } from "@/lib/quota/tenant-quota";
@@ -126,6 +127,13 @@ export default async function DashboardLayout({
 
   const quotaStatus = quotaRow ? quotaStatusFromRpcRow(quotaRow) : null;
   const quotaBanner = quotaStatus ? buildQuotaBannerMessage(quotaStatus, isAdmin) : null;
+
+  // 회사가 정지·만료됐거나 소속을 알 수 없으면(current_tenant_id() = null) 업무 화면 대신 안내만 보여준다.
+  // 데이터 접근은 DB가 이미 막고 있어(migration 261) 이 화면은 사용자에게 이유를 알려주는 용도다.
+  if (!tenant && !isPlatformAdmin) {
+    const { data: blockReason } = await safeQuery(supabase.rpc("my_tenant_block_reason"));
+    return <TenantBlockedScreen reason={blockReason === "disabled" || blockReason === "expired" ? blockReason : null} />;
+  }
 
   if (platformSettings?.maintenance_mode && isPlatformAdmin !== true) {
     return <MaintenanceScreen message={platformSettings.maintenance_message} />;

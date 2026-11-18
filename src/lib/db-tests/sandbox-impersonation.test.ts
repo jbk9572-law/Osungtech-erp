@@ -7,10 +7,12 @@ describe("운영자 회사 전환과 샌드박스 초기화", () => {
     await h.db.exec(`
       alter table public.tenants add column is_sandbox boolean not null default false;
       alter table public.tenants add column name text;
+      alter table public.tenants add column disabled_at timestamptz;
+      alter table public.tenants add column plan_expires_at timestamptz;
       create table public.platform_admins (user_id uuid primary key);
     `);
-    await h.db.exec(latestFunctionSql("current_tenant_id").replace("create or replace function public.current_tenant_id()", "create or replace function public.current_tenant_id()"));
     await h.db.exec(`create or replace function public.is_platform_admin() returns boolean language sql stable as $$ select exists (select 1 from public.platform_admins where user_id = auth.uid()) $$;`);
+    await h.db.exec(latestFunctionSql("current_tenant_id").replace("create or replace function public.current_tenant_id()", "create or replace function public.current_tenant_id()"));
     await h.db.exec(latestFunctionSql("is_sandbox_tenant"));
     await h.db.exec(latestFunctionSql("sandbox_reset"));
     const sandbox = crypto.randomUUID();

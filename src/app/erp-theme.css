@@ -36,6 +36,7 @@
 .erp-u-overflow-y-auto { overflow-y: auto !important; }
 .erp-u-self-start { align-self: flex-start !important; }
 .erp-u-nowrap { white-space: nowrap !important; }
+.erp-u-pre-wrap { white-space: pre-wrap !important; }
 .erp-u-h-full { height: 100% !important; }
 .erp-u-h-34 { height: 34px !important; }
 .erp-u-h-30 { height: var(--erp-control-h-cell) !important; }

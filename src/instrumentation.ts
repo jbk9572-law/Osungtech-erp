@@ -1,4 +1,5 @@
 import { reportServerError } from "@/lib/error-tracking";
+import { recordServerError } from "@/lib/server-error-log";
 
 // Next.js는 프로덕션 빌드에서 서버 렌더링 중 예외가 나면 클라이언트로
 // 내려주는 digest뿐 아니라 서버 자체 로그(Cloudflare Workers Logs 포함)
@@ -33,6 +34,12 @@ export async function onRequestError(
       stack: error instanceof Error ? error.stack : undefined,
     })
   );
+
+  await recordServerError(error, {
+    path: request.path,
+    routePath: context.routePath,
+    routeType: context.routeType,
+  });
 
   await reportServerError(error, {
     path: request.path,

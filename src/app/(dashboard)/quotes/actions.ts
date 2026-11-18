@@ -147,12 +147,23 @@ export async function convertQuoteToSale(_prevState: FormState, formData: FormDa
     return { error: `매출 전환에 실패했습니다: ${createError?.message ?? "알 수 없는 오류"}` };
   }
 
-  const { error: linkError } = await supabase
+  // 같은 견적서를 동시에 두 번 전환하면 매출이 이중으로 생긴다 — 아직 연결 전인 경우에만 링크를 남기고,
+  // 이미 다른 요청이 먼저 연결했다면(0행) 방금 만든 매출을 되돌리고 알린다.
+  const { data: linked, error: linkError } = await supabase
     .from("quotes")
     .update({ status: "accepted", converted_sales_order_id: salesOrderId })
-    .eq("id", quoteId);
+    .eq("id", quoteId)
+    .is("converted_sales_order_id", null)
+    .select("id");
   if (linkError) {
     console.error("견적 전환 링크 갱신 실패:", linkError.message);
+  } else if (!linked || linked.length === 0) {
+    const { error: rollbackError } = await supabase.rpc("delete_sale_with_items", {
+      p_id: salesOrderId,
+      p_deleted_by: actor?.id ?? null,
+    });
+    if (rollbackError) console.error("견적 중복 전환 매출 되돌리기 실패:", rollbackError.message);
+    return { error: "이미 매출로 전환된 견적서입니다. (동시에 두 번 처리되어 중복 매출은 취소했습니다.)" };
   }
 
   revalidatePath("/quotes");

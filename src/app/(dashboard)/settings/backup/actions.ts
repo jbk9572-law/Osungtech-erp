@@ -11,7 +11,7 @@ import { getUser } from "@/lib/supabase/server";
 
 // db-backups 브랜치의 파일명은 항상 이 형식의 UTC 타임스탬프다
 // (.github/workflows/db-backup.yml의 `date -u +%Y-%m-%dT%H%M%SZ`).
-const SNAPSHOT_FILENAME_RE = /^\d{4}-\d{2}-\d{2}T\d{6}Z\.dump$/;
+const SNAPSHOT_FILENAME_RE = /^\d{4}-\d{2}-\d{2}T\d{6}Z\.dump(\.enc)?$/;
 
 function chunk<T>(items: T[], size: number): T[][] {
   const out: T[][] = [];

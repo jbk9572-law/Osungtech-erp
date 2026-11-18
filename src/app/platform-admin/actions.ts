@@ -5,6 +5,7 @@ import { refreshLayout } from "@/lib/layout-cache";
 import { isPasswordLongEnough, PASSWORD_TOO_SHORT_MESSAGE } from "@/lib/password-policy";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { reasonTenantCannotBeDisabled } from "@/lib/platform-admin-guards";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requirePlatformAdmin } from "@/lib/require-platform-admin";
 import { ROLE_LABELS } from "@/lib/user-roles";
@@ -213,8 +214,7 @@ export async function updateCompanyTenant(_prevState: FormState, formData: FormD
   return { success: "회사 정보를 저장했습니다." };
 }
 
-// 비활성화/재활성화 토글. 삭제와 달리 되돌릴 수 있어서 DeleteButton의
-// 확인코드 절차 없이 바로 처리한다 — 화면에서 누른 즉시 반영된다.
+// 비활성화/재활성화 토글. 되돌릴 수 있어 확인코드 없이 즉시 반영한다.
 export async function toggleTenantActive(_prevState: FormState, formData: FormData): Promise<FormState> {
   const { isPlatformAdmin } = await requirePlatformAdmin();
   if (!isPlatformAdmin) return { error: "플랫폼 운영자만 변경할 수 있습니다." };
@@ -230,6 +230,8 @@ export async function toggleTenantActive(_prevState: FormState, formData: FormDa
     return { error: e instanceof Error ? e.message : "관리자 클라이언트 초기화에 실패했습니다." };
   }
 
+  const blocked = nextDisabled ? await reasonTenantCannotBeDisabled(admin, tenantId) : null;
+  if (blocked) return { error: blocked };
   const { error } = await admin
     .from("tenants")
     .update({ disabled_at: nextDisabled ? new Date().toISOString() : null })
