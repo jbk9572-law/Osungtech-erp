@@ -1,5 +1,6 @@
 "use server";
 
+import { MAX_SANE_AMOUNT } from "@/lib/form-number";
 import { todayKstStr } from "@/lib/kst-date";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
@@ -389,6 +390,16 @@ export async function cancelTaxInvoice(_prevState: FormState, formData: FormData
     }
   }
 
+  // 이미 홈택스에 올린(업로드 표시된) 계산서는 우리 쪽 기록만 지우면 실제 신고와 어긋난다 — 되돌릴 수 없다.
+  const { count: uploadedCount } = await supabase
+    .from("tax_invoices")
+    .select("id", { count: "exact", head: true })
+    .eq("sales_order_id", salesOrderId)
+    .not("hometax_uploaded_at", "is", null);
+  if (uploadedCount && uploadedCount > 0) {
+    return { error: "이미 홈택스에 업로드된 세금계산서는 미발행으로 되돌릴 수 없습니다. 수정세금계산서를 발행해주세요." };
+  }
+
   const { error: deleteError } = await supabase.from("tax_invoices").delete().eq("sales_order_id", salesOrderId);
   if (deleteError) {
     return { error: `처리에 실패했습니다: ${deleteError.message}` };
@@ -426,6 +437,13 @@ export async function createTaxInvoiceCorrection(_prevState: FormState, formData
   }
   if (!(MODIFICATION_REASONS as readonly string[]).includes(modificationReason)) {
     return { error: "수정 사유를 선택해주세요." };
+  }
+  // 금액은 유한한 숫자여야 하고(수정분은 감액이라 음수 허용), 공급가액 + 세액 = 합계여야 한다.
+  if (
+    ![supplyAmount, taxAmount, totalAmount].every((n) => Number.isFinite(n) && Math.abs(n) <= MAX_SANE_AMOUNT) ||
+    Math.abs(supplyAmount + taxAmount - totalAmount) > 1
+  ) {
+    return { error: "금액이 올바르지 않습니다. 공급가액 + 세액 = 합계금액이어야 합니다." };
   }
 
   let items: ItemInput[];
