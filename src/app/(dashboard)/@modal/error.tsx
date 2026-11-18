@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { reportClientError } from "@/lib/report-client-error";
 
 // @modal 병렬 라우트 슬롯 전용 에러 경계. (dashboard)/error.tsx는 children
 // 슬롯(본문 화면)에서 난 예외만 잡아주고, @modal 슬롯(목록 위에 뜨는 상세/
@@ -28,6 +29,7 @@ export default function ModalError({
 
   useEffect(() => {
     console.error(error);
+    reportClientError(error);
   }, [error]);
 
   return (

@@ -34,7 +34,7 @@ import { decideMaintenance, getMaintenanceFlag, type MaintenanceDecision } from 
 // (user가 없고 PUBLIC_PATHS에도 없어서) 엉뚱하게 직원용 /login으로
 // 튕겨나가는 버그가 난다 — 이 세션 안에서는 계속 직원으로 로그인된 채
 // 테스트해서 못 보고 지나갔던 경로다.
-const PUBLIC_PATHS = ["/login", "/signup", "/auth", "/demo", "/api/calendar/feed", "/api/cron", "/api/csp-report", "/terms", "/privacy", "/portal", "/maintenance"];
+const PUBLIC_PATHS = ["/login", "/signup", "/auth", "/demo", "/api/calendar/feed", "/api/cron", "/api/csp-report", "/api/client-error", "/terms", "/privacy", "/portal", "/maintenance"];
 
 // 점검 모드: 안내 화면은 503으로 바꿔 보여 주고, 화면 이동·저장 요청은 503으로 거절한다(lib/maintenance.ts).
 function maintenanceResponse(decision: MaintenanceDecision, request: NextRequest): NextResponse | null {

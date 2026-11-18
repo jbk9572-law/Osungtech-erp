@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { reportClientError } from "@/lib/report-client-error";
 import Link from "next/link";
 
 // (dashboard) 밖(로그인/회원가입/약관 등)에서 예외가 나면 여기가 대신
@@ -15,6 +16,7 @@ export default function RootError({
 }) {
   useEffect(() => {
     console.error(error);
+    reportClientError(error);
   }, [error]);
 
   return (

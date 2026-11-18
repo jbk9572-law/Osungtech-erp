@@ -158,3 +158,24 @@ export async function alertIfErrorsRepeat(routePath: string): Promise<void> {
     // 조용히 무시
   }
 }
+
+// 브라우저의 오류 화면(error.tsx)이 보고한 오류. 로그인 전에도 올 수 있는 공개 경로라 길이·빈도를 제한하고, 값은 짧게 자른다.
+export async function recordClientError(ev: { message: string; digest?: string; path?: string; userAgent?: string }): Promise<void> {
+  try {
+    const message = String(ev.message ?? "").slice(0, 1000);
+    const path = String(ev.path ?? "").split("?")[0].slice(0, 200);
+    if (!allow(`client|${message}|${path}`, Date.now())) return;
+    const admin = createAdminClient();
+    const { error } = await admin.from("server_error_logs").insert({
+      kind: "client_error",
+      route_path: path || null,
+      error_name: "ClientError",
+      digest: ev.digest ? String(ev.digest).slice(0, 64) : null,
+      message,
+      stack: ev.userAgent ? `브라우저: ${String(ev.userAgent).slice(0, 200)}` : null,
+    });
+    if (error) console.error("server_error_logs(브라우저) 기록 실패:", error.message);
+  } catch {
+    // 조용히 무시
+  }
+}

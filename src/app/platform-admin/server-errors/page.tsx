@@ -13,8 +13,9 @@ const KINDS = [
   { key: "error", label: "서버 오류" },
   { key: "slow_page", label: "느린 서버 화면" },
   { key: "slow_nav", label: "느린 이동(체감)" },
+  { key: "client_error", label: "브라우저 오류 화면" },
 ] as const;
-const KIND_LABEL: Record<string, string> = { error: "오류", slow_page: "서버 느림", slow_nav: "이동 느림" };
+const KIND_LABEL: Record<string, string> = { error: "오류", slow_page: "서버 느림", slow_nav: "이동 느림", client_error: "브라우저" };
 
 type Row = {
   id: string;
@@ -89,7 +90,7 @@ export default async function PlatformServerErrorsPage({
       </PageGuide>
 
       <p className="erp-u-text-base">
-        <strong>최근 24시간</strong> · 서버 오류 {count("error")}건 · 느린 서버 화면 {count("slow_page")}건 · 느린 이동 {count("slow_nav")}건
+        <strong>최근 24시간</strong> · 서버 오류 {count("error")}건 · 브라우저 오류 화면 {count("client_error")}건 · 느린 서버 화면 {count("slow_page")}건 · 느린 이동 {count("slow_nav")}건
       </p>
       {topSlow.length > 0 && (
         <ul className="erp-u-muted">
@@ -126,12 +127,12 @@ export default async function PlatformServerErrorsPage({
         {((rows ?? []) as Row[]).map((r) => (
           <details key={r.id} className="erp-detail">
             <summary>
-              <GridBadge tone={r.kind === "error" ? "danger" : "warn"}>{KIND_LABEL[r.kind] ?? r.kind}</GridBadge>{" "}
+              <GridBadge tone={r.kind === "error" || r.kind === "client_error" ? "danger" : "warn"}>{KIND_LABEL[r.kind] ?? r.kind}</GridBadge>{" "}
               {formatKstDateTime(r.created_at)} · {r.route_path ?? r.path}
               {r.digest ? ` · digest ${r.digest}` : ""}
               {r.duration_ms != null ? ` · ${(r.duration_ms / 1000).toFixed(1)}초` : ""}
               {r.db_calls != null ? ` · DB ${r.db_calls}번` : ""}
-              {r.kind === "error" ? ` · ${r.error_name}: ${(r.message ?? "").slice(0, 120)}` : ""}
+              {r.kind === "error" || r.kind === "client_error" ? ` · ${r.error_name}: ${(r.message ?? "").slice(0, 120)}` : ""}
             </summary>
             <pre className="erp-u-pre-wrap erp-u-break-word">{r.message}{r.stack ? `\n\n${r.stack}` : ""}</pre>
           </details>

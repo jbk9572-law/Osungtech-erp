@@ -1,15 +1,23 @@
 "use client";
 
+import { useEffect } from "react";
+import { reportClientError } from "@/lib/report-client-error";
+
 // 루트 레이아웃(app/layout.tsx) 자체가 렌더링 중 던지는, 정말 최후의
 // 예외만 여기서 잡는다 — 이 경우 layout.tsx도 같이 무효화되므로
 // <html>/<body>를 직접 새로 그려야 한다(Next.js 요구사항). 극히 드물게만
 // 발생해야 하는 경로라 스타일은 최소한으로만 인라인 처리한다.
 export default function GlobalError({
+  error,
   reset,
 }: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  useEffect(() => {
+    reportClientError(error);
+  }, [error]);
+
   return (
     <html lang="ko">
       <body className="erp-u-flex erp-u-items-center erp-u-text-center erp-u-col erp-u-justify-center erp-u-p-24"
