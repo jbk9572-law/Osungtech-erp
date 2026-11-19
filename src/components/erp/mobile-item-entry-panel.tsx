@@ -182,7 +182,6 @@ export function MobileItemEntryPanel({
                   <NumberInput
                     value={item.quantity}
                     onChange={(n) => onUpdateQuantity(item.key, n)}
-                    allowFormula
                     placeholder="수량"
                     className="erp-input"
                   />
@@ -248,7 +247,6 @@ export function MobileItemEntryPanel({
                   <NumberInput
                     value={draftQuantity}
                     onChange={setDraftQuantity}
-                    allowFormula
                     placeholder="수량"
                     className="erp-input"
                   />

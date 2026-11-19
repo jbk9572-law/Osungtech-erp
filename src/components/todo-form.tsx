@@ -47,12 +47,14 @@ type Row = {
   manualSpec: boolean;
   lotNumber: string;
   quantity: number;
+  quantityFormula?: string | null; // 엑셀식 입력("=600*2") 저장용 — lib/item-formulas
 };
 
 export type TodoInitialItem = {
   productId: string;
   spec?: string | null;
   quantity: number;
+  quantityFormula?: string | null;
   lotNumber?: string | null;
 };
 
@@ -103,6 +105,7 @@ export function TodoForm({
           manualSpec: Boolean(item.spec),
           lotNumber: item.lotNumber ?? "",
           quantity: item.quantity,
+          quantityFormula: item.quantityFormula ?? null,
         }))
       : []
   );
@@ -228,6 +231,7 @@ export function TodoForm({
         // 값을 그대로 저장한다.
         spec: row.spec || null,
         quantity: row.quantity,
+        quantityFormula: row.quantityFormula ?? null,
         lotNumber: row.lotNumber || null,
       }))
   );
@@ -448,6 +452,8 @@ export function TodoForm({
                         onQuantityChange={(n) => updateRow(row.key, { quantity: n })}
                         basePackageQty={product?.base_package_qty}
                         unit={product?.unit}
+                        formula={row.quantityFormula}
+                        onFormulaChange={(f) => updateRow(row.key, { quantityFormula: f })}
                         allowFormula
                         className="erp-input w-full"
                       />

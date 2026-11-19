@@ -1434,7 +1434,6 @@ export function NewPurchaseForm({
                           }
                           basePackageQty={product?.base_package_qty}
                           label="출고수량"
-                          allowFormula
                           className="erp-input w-full"
                         />
                         {row.saleQuantity > row.quantity && (
