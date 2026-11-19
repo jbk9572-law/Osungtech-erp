@@ -13,6 +13,8 @@ import { matchesSearch } from "@/lib/search-match";
 import { isUuid } from "@/lib/is-uuid";
 import type { Database } from "@/types/database.types";
 import { formatNumber } from "@/lib/format-number";
+import { getAllCustomerBalances } from "@/lib/ar-ap";
+import { PartyBalanceMeta } from "@/components/grid/party-balance-meta";
 
 type CustomerRow = Database["public"]["Tables"]["customers"]["Row"];
 
@@ -66,6 +68,11 @@ async function CustomersPage({
         ),
       )
     : allCustomers;
+
+  // 목록 행에 미수 잔액/연체 상태를 붙인다(미수금현황과 같은 DB 함수 1회) — 실패해도 목록은 뜬다.
+  const balanceMap = new Map(
+    (await getAllCustomerBalances(supabase).catch(() => [])).map((b) => [b.id, b]),
+  );
 
   const exportHref = "/api/customers/export";
   const listParams = new URLSearchParams();
@@ -158,6 +165,11 @@ async function CustomersPage({
                     <>
                       {c.name}
                       <div className="erp-split-list-row-sub">{c.customer_code}</div>
+                      <PartyBalanceMeta
+                        label="미수"
+                        balance={balanceMap.get(c.id)?.balance}
+                        oldestUnpaidDate={balanceMap.get(c.id)?.oldestUnpaidDate}
+                      />
                     </>
                   ),
                 }),
