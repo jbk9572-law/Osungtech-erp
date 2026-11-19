@@ -47,7 +47,7 @@ import { useDraftAutosave } from "@/lib/use-draft-autosave";
 import { DraftResumeBanner } from "@/components/draft-resume-banner";
 import { OrderRowStockHint } from "@/components/order-row-stock-hint";
 import { ManualPriceToggle } from "@/components/order-manual-price-toggle";
-import { DraftSavedIndicator } from "@/components/draft-saved-indicator";
+import { VoucherBasicHead, VoucherChip, VoucherFooter, VoucherTitle } from "@/components/erp/voucher-chrome";
 import {
   PaperCalcGridRows,
   PaperCalcHiddenInputs,
@@ -918,22 +918,17 @@ export function NewSaleForm({
     );
   }
 
+  const saveButtons = <FormSaveButtons isEdit={!!initial?.id} pending={pending} submitRef={submitRef} label={isReturn ? `반품 ${initial?.id ? "수정" : "등록"}` : submitLabel} />;
+
   return (
     <form
       ref={formRef}
       action={formAction}
-      className="erp-doc-sheet"
+      className="erp-doc-sheet erp-voucher"
       onKeyDown={(e) => {
         preventEnterSubmit(e);
-        // ESC는 이 화면에서 "그냥 닫기"가 아니라 F7과 같은 "저장 후
-        // 닫기"로 동작한다(실패하면 에러만 뜨고 안 닫힘 — 기존 저장
-        // 버튼 로직을 그대로 탄다). 상단 툴바의 "✕" 버튼은 그대로 저장
-        // 없이 즉시 닫힌다 — 사용자가 그 둘을 구분해 쓸 수 있게 한다.
-        // stopPropagation으로 이 keydown이 window까지 올라가는 걸 막아,
-        // 모달 셸/페이지의 "그냥 닫기" ESC 핸들러가 같은 키 입력에
-        // 동시에 반응해 저장이 끝나기 전에 먼저 닫혀버리는 걸 막는다.
-        // (자동완성 드롭다운의 ESC는 캡처 단계에서 먼저 소비되므로 여기
-        // 도달 전에 이미 처리되어 있다 — 드롭다운만 닫히고 저장은 안 됨.)
+        // ESC = F7과 같은 "저장 후 닫기"(실패하면 에러만 뜨고 안 닫힘). 상단 ✕는 저장 없이 닫기. stopPropagation으로
+        // 모달 셸/페이지의 "그냥 닫기" ESC가 같은 키에 반응해 저장 전에 닫히는 걸 막는다(자동완성 ESC는 캡처 단계에서 먼저 소비됨).
         if (e.key === "Escape") {
           e.stopPropagation();
           submitRef.current?.click();
@@ -957,7 +952,11 @@ export function NewSaleForm({
       }}
     >
       <div className="erp-doc-paper flex flex-col gap-6">
-      <h2 className="erp-doc-title">{isReturn ? "반 품 전 표" : "매 출 전 표"}</h2>
+      <VoucherTitle title={isReturn ? "반품전표" : "매출전표"} savedAt={savedAt}>
+        {isReturn && <VoucherChip tone="warning">반품</VoucherChip>}
+        {isCarryover && <VoucherChip tone="info">이월 처리</VoucherChip>}
+        {isSample && <VoucherChip>샘플</VoucherChip>}
+      </VoucherTitle>
       <LocationAllocationModal
         open={allocationModalOpen}
         items={multiLocationItems}
@@ -1006,7 +1005,7 @@ export function NewSaleForm({
       )}
       <PaperCalcOverrideInput pc={pc} />
 
-      {showDraftBanner && <DraftResumeBanner onResume={resumeDraft} onDiscard={discardDraft} />}<DraftSavedIndicator savedAt={savedAt} />
+      {showDraftBanner && <DraftResumeBanner onResume={resumeDraft} onDiscard={discardDraft} />}
 
       <PaperCalcLinkedGuide pc={pc} includeCopied />
 
@@ -1047,10 +1046,7 @@ export function NewSaleForm({
       )}
 
       <div>
-        <div className="erp-form-section-head">
-          <span className="erp-eyebrow erp-u-m-0">기본정보</span>
-          <FormSaveButtons isEdit={!!initial?.id} pending={pending} submitRef={submitRef} label={isReturn ? `반품 ${initial?.id ? "수정" : "등록"}` : submitLabel} />
-        </div>
+        <VoucherBasicHead actions={saveButtons} />
         {!!(messageDismissed ? undefined : state) && (
           <div style={{ padding: "8px 14px 0" }}>
             <FormMessage state={messageDismissed ? undefined : state} />
@@ -1521,6 +1517,7 @@ export function NewSaleForm({
           </div>
         )}
       </div>
+      <VoucherFooter supply={supplyAmount} tax={taxAmount} total={total} actions={saveButtons} />
       </div>
     </form>
   );

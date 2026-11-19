@@ -43,7 +43,7 @@ import { useKeyedRows } from "@/lib/use-keyed-rows";
 import { useDraftAutosave } from "@/lib/use-draft-autosave";
 import { DraftResumeBanner } from "@/components/draft-resume-banner";
 import { ManualPriceToggle } from "@/components/order-manual-price-toggle";
-import { DraftSavedIndicator } from "@/components/draft-saved-indicator";
+import { VoucherBasicHead, VoucherChip, VoucherFooter, VoucherTitle } from "@/components/erp/voucher-chrome";
 import {
   PaperCalcGridRows,
   PaperCalcHiddenInputs,
@@ -966,11 +966,13 @@ export function NewPurchaseForm({
     );
   }
 
+  const saveButtons = <FormSaveButtons isEdit={!!initial?.id} pending={pending} submitRef={submitRef} label={submitLabel} />;
+
   return (
     <form
       ref={formRef}
       action={formAction}
-      className="erp-doc-sheet"
+      className="erp-doc-sheet erp-voucher"
       onKeyDown={(e) => {
         preventEnterSubmit(e);
         // new-sale-form.tsx와 동일 — ESC를 F7과 같은 "저장 후 닫기"로
@@ -999,7 +1001,9 @@ export function NewPurchaseForm({
       }}
     >
       <div className="erp-doc-paper flex flex-col gap-6">
-      <h2 className="erp-doc-title">매 입 전 표</h2>
+      <VoucherTitle title="매입전표" savedAt={savedAt}>
+        {isCarryover && <VoucherChip tone="info">이월 처리</VoucherChip>}
+      </VoucherTitle>
       <LocationAllocationModal
         open={allocationModalOpen}
         items={multiLocationItems}
@@ -1063,7 +1067,7 @@ export function NewPurchaseForm({
       )}
       <PaperCalcOverrideInput pc={pc} />
 
-      {showDraftBanner && <DraftResumeBanner onResume={resumeDraft} onDiscard={discardDraft} />}<DraftSavedIndicator savedAt={savedAt} />
+      {showDraftBanner && <DraftResumeBanner onResume={resumeDraft} onDiscard={discardDraft} />}
 
       {isCarryover && !alsoCreateSale && (
         <PageGuide tone="warning">
@@ -1076,10 +1080,7 @@ export function NewPurchaseForm({
       <PaperCalcLinkedGuide pc={pc} includeCopied={false} />
 
       <div>
-        <div className="erp-form-section-head">
-          <span className="erp-eyebrow erp-u-m-0">기본정보</span>
-          <FormSaveButtons isEdit={!!initial?.id} pending={pending} submitRef={submitRef} label={submitLabel} />
-        </div>
+        <VoucherBasicHead actions={saveButtons} />
         {!!(messageDismissed ? undefined : state) && (
           <div style={{ padding: "8px 14px 0" }}>
             <FormMessage state={messageDismissed ? undefined : state} />
@@ -1590,8 +1591,8 @@ export function NewPurchaseForm({
           </div>
         )}
       </div>
+      <VoucherFooter supply={supplyAmount} tax={taxAmount} total={total} actions={saveButtons} />
       </div>
-
     </form>
   );
 }

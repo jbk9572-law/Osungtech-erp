@@ -7526,3 +7526,97 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
 @media (max-width: 1099px) {
   .erp-widget.is-mobile-hidden { display: none; }
 }
+
+/* ── 전표 등록 모달 — voucherLayout 테마(밀집 시트) 전용 조각 ──────────────
+   클래식은 이 클래스들을 그리지 않는다(voucher-chrome.tsx가 테마 플래그로 갈라 그림). */
+.erp-voucher-titlebar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  /* 오른쪽 위 모달 닫기(✕)와 겹치지 않게 비운다 */
+  padding-right: 36px;
+  min-height: 28px;
+}
+.erp-voucher-title {
+  margin: 0 6px 0 0;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--erp-text);
+}
+.erp-voucher-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: var(--erp-radius-pill);
+  font-size: var(--erp-font-xs);
+  font-weight: 700;
+  background: var(--erp-bg-disabled);
+  color: var(--erp-text-muted);
+}
+.erp-voucher-chip-info {
+  background: var(--erp-carry-next-bg);
+  color: var(--erp-carry-next-bar);
+}
+.erp-voucher-chip-warning {
+  background: var(--erp-warning-bg);
+  color: var(--erp-warning);
+}
+.erp-voucher .erp-draft-indicator {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: var(--erp-radius-pill);
+  font-size: var(--erp-font-xs);
+  font-weight: 700;
+  background: var(--erp-success-bg);
+  color: var(--erp-success);
+}
+/* 섹션 머리줄 — "품목" 같은 라벨은 숨기고 도구줄만 남긴다 */
+.erp-voucher .erp-form-section-head {
+  border-bottom: none;
+  margin-bottom: 6px;
+  padding-bottom: 0;
+}
+.erp-voucher .erp-form-section-head > .erp-eyebrow {
+  display: none;
+}
+.erp-voucher .erp-item-toolbar {
+  justify-content: flex-start;
+}
+/* 표 아래 합계 칸의 큰 금액은 하단 바로 올라가 중복을 없앤다 */
+.erp-voucher .erp-doc-total {
+  display: none;
+}
+.erp-voucher-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 0 calc(-1 * 18px) calc(-1 * 12px);
+  padding: 10px 18px;
+  background: var(--erp-panel);
+  border-top: 1px solid var(--erp-border-strong);
+}
+.erp-voucher-footer-sum {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+}
+.erp-voucher-footer-label {
+  font-size: var(--erp-font-xs);
+  color: var(--erp-text-muted);
+}
+.erp-voucher-footer-total {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--erp-text);
+  font-variant-numeric: tabular-nums;
+}

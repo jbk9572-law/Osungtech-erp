@@ -20,13 +20,15 @@ export type ThemeFeatures = {
   gridSelectionStats: boolean;
   /** 매출/매입 목록에 수금/지급 상태 칸을 보여준다. */
   paymentStatusColumn: boolean;
+  /** 매출/매입 전표 등록 모달을 밀집 시트 구조(상태 칩 제목줄 + 하단 합계·저장 바)로 그린다. */
+  voucherLayout: boolean;
 };
 
-const CLASSIC_FEATURES: ThemeFeatures = { rowNumbers: false, groupedHeader: false, stockNear: false, partnerPaymentTerms: false, gridSelectionStats: false, paymentStatusColumn: false };
+const CLASSIC_FEATURES: ThemeFeatures = { rowNumbers: false, groupedHeader: false, stockNear: false, partnerPaymentTerms: false, gridSelectionStats: false, paymentStatusColumn: false, voucherLayout: false };
 
 const THEME_FEATURES: Record<string, ThemeFeatures> = {
   "classic-light": CLASSIC_FEATURES,
-  "grid-modern": { rowNumbers: true, groupedHeader: true, stockNear: true, partnerPaymentTerms: true, gridSelectionStats: true, paymentStatusColumn: true },
+  "grid-modern": { rowNumbers: true, groupedHeader: true, stockNear: true, partnerPaymentTerms: true, gridSelectionStats: true, paymentStatusColumn: true, voucherLayout: true },
 };
 
 const ThemeFeaturesContext = createContext<ThemeFeatures>(CLASSIC_FEATURES);

@@ -26,7 +26,7 @@ const SRC_ROOT = path.join(__dirname, "..", "src");
 
 // 동시등록 출고수량은 매입 수량에서 자동으로 따라오는 보조 입력이라 입력 식을 따로 저장하지 않는다.
 // 모바일 패널은 숫자 키패드에 = 키가 없어 수식을 켜지 않는다.
-const ALLOWLIST = new Set(["src/components/new-purchase-form.tsx:1427", "src/components/erp/mobile-item-entry-panel.tsx:182", "src/components/erp/mobile-item-entry-panel.tsx:247"]);
+const ALLOWLIST = new Set(["src/components/erp/mobile-item-entry-panel.tsx:182", "src/components/erp/mobile-item-entry-panel.tsx:247"]);
 
 // 컴포넌트 정의 파일 자신은 검사 대상에서 뺀다(allowFormula를 선언/
 // 전달만 하지 실제 "수량 필드 사용처"가 아니다).
@@ -70,6 +70,8 @@ function checkFile(filePath) {
     }
 
     if (getAttr(attributes, "allowFormula")) return;
+    // 동시등록 출고수량(label="출고수량")은 줄 번호가 아니라 라벨로 예외 처리한다 — 줄이 밀려도 안 깨지게.
+    if (getAttr(attributes, "label")?.initializer?.getText(sourceFile) === '"출고수량"') return;
 
     const { line } = sourceFile.getLineAndCharacterOfPosition(node.getStart());
     const key = `${relPath}:${line + 1}`;
