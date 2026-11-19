@@ -44,7 +44,7 @@ export function OrderDateCell({
         : "-"}
       {isCarryover && date && <CarryoverBadge date={date} fromPrevMonth={compact} />}
       {rowDay(date) === "future" && (
-        <GridBadge tone="muted" style={{ marginLeft: 4 }}>
+        <GridBadge tone="reserve" style={{ marginLeft: 4 }} title="미리 등록해 둔 예약 건(아직 오지 않은 날짜)">
           예약
         </GridBadge>
       )}

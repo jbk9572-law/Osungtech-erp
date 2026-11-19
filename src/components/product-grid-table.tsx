@@ -18,6 +18,7 @@ import { formatNumber } from "@/lib/format-number";
 import { ErpSelect } from "@/components/erp/erp-select";
 import { GridToolbar } from "@/components/grid/grid-toolbar";
 import { ROW_NO_WIDTH, useThemeFeatures } from "@/lib/erp-theme-features";
+import { STOCK_STATUS_BADGE, isLowStock, stockStatus, type StockStatus } from "@/lib/stock-status";
 
 export type ProductGridRow = {
   id: string;
@@ -83,7 +84,7 @@ export function ProductGridTable({
       : selectedNames.join(", ");
   const allSelected = sortedRows.length > 0 && sortedRows.every((r) => selected.has(r.id));
   // 재고현황 합계 요약(표 위 도구줄) — 안전재고 이하인 품목 수와 매입가 기준 재고 총액.
-  const lowCount = sortedRows.filter((r) => (r.reorderPoint ?? 0) > 0 && r.quantity <= (r.reorderPoint ?? 0)).length;
+  const lowCount = sortedRows.filter((r) => isLowStock(r.quantity, r.reorderPoint)).length;
   const stockValue = sortedRows.reduce((sum, r) => sum + Math.max(0, r.quantity) * (r.cost ?? 0), 0);
 
   function toggleAll() {
@@ -113,7 +114,12 @@ export function ProductGridTable({
     );
   }
 
-  const { rowNumbers } = useThemeFeatures();
+  const { rowNumbers, stockNear } = useThemeFeatures();
+  // 근접 단계는 테마 기능이 켜졌을 때만 — 꺼져 있으면 클래식과 같은 두 단계(재주문 필요/정상).
+  const statusOf = (r: ProductGridRow): StockStatus => {
+    const s = stockStatus(r.quantity, r.reorderPoint);
+    return s === "near" && !stockNear ? "ok" : s;
+  };
   // 행 번호(No) 칸 — 테마 기능이 켜졌을 때만. 체크박스 다음에 고정해서 뒤따르는 고정 칸 오프셋을 밀어준다.
   const noWidth = rowNumbers ? ROW_NO_WIDTH : 0;
   const noLeft = allowBulkDelete ? GRID_CHECKBOX_WIDTH : 0;
@@ -140,7 +146,7 @@ export function ProductGridTable({
   // 보여주고 나머지(카테고리/공급처 등)는 상세 화면으로 넘긴다
   // (sales/purchase-grid-table.tsx와 같은 패턴).
   function renderMobileCard(row: ProductGridRow) {
-    const isLow = mode === "inventory" && (row.reorderPoint ?? 0) > 0 && row.quantity <= (row.reorderPoint ?? 0);
+    const status = mode === "inventory" ? statusOf(row) : "ok";
     const href = mode === "products" ? `/products/${row.id}${backParam ? `?back=${backParam}` : ""}` : `/inventory/item/${row.id}`;
     const isRowSelected = selected.has(row.id);
 
@@ -184,7 +190,7 @@ export function ProductGridTable({
         </div>
         {mode === "inventory" && (
           <div className="erp-row-card-badges">
-            <GridBadge tone={isLow ? "danger" : "ok"}>{isLow ? "재주문 필요" : "정상"}</GridBadge>
+            <GridBadge tone={STOCK_STATUS_BADGE[status].tone}>{STOCK_STATUS_BADGE[status].label}</GridBadge>
           </div>
         )}
       </>
@@ -260,7 +266,7 @@ export function ProductGridTable({
         </thead>
         <tbody>
           {sortedRows.map((row, rowIndex) => {
-            const isLow = mode === "inventory" && (row.reorderPoint ?? 0) > 0 && row.quantity <= (row.reorderPoint ?? 0);
+            const status = mode === "inventory" ? statusOf(row) : "ok";
             const href =
               mode === "products"
                 ? `/products/${row.id}${backParam ? `?back=${backParam}` : ""}`
@@ -307,7 +313,7 @@ export function ProductGridTable({
                       <QtyWithBoxes quantity={row.quantity} basePackageQty={row.basePackageQty} packUnit={row.unit} />
                     </td>
                     <td>
-                      <GridBadge tone={isLow ? "danger" : "ok"}>{isLow ? "재주문 필요" : "정상"}</GridBadge>
+                      <GridBadge tone={STOCK_STATUS_BADGE[status].tone}>{STOCK_STATUS_BADGE[status].label}</GridBadge>
                     </td>
                   </>
                 )}

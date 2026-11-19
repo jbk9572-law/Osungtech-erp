@@ -1,5 +1,6 @@
 "use client";
 
+import { isLowStock } from "@/lib/stock-status";
 import Link from "next/link";
 import { useState } from "react";
 import { ProductSearchSelect } from "@/components/product-search-select";
@@ -28,7 +29,7 @@ export function QuickStockLookup({ loadProducts }: { loadProducts: () => Promise
   const [loadState, setLoadState] = useState<"idle" | "loading" | "done">("idle");
   const [selectedId, setSelectedId] = useState("");
   const selected = products.find((p) => p.id === selectedId) ?? null;
-  const isLow = !!selected && (selected.reorderPoint ?? 0) > 0 && selected.quantity <= (selected.reorderPoint ?? 0);
+  const isLow = !!selected && isLowStock(selected.quantity, selected.reorderPoint);
   const boxCount =
     selected && shouldShowBoxCountOnDashboard(selected.name, selected.categoryName)
       ? formatBoxCount(selected.quantity, selected.basePackageQty, selected.unit)

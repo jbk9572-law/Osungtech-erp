@@ -3603,7 +3603,8 @@ form.erp-field-grid {
 .erp-legend-future { --legend-dot: var(--erp-border); }
 
 .erp-badge-carry,
-.erp-badge-carry-prev {
+.erp-badge-carry-prev,
+.erp-badge-reserve {
   background: var(--erp-panel);
   box-shadow: inset 0 0 0 1px currentColor;
 }
@@ -3612,6 +3613,9 @@ form.erp-field-grid {
 }
 .erp-badge-carry-prev {
   color: var(--erp-warning);
+}
+.erp-badge-reserve {
+  color: var(--erp-text-muted);
 }
 
 /* 그리드 행 안에 있는 "명세표 →" 같은 텍스트 링크를 아이콘 버튼으로

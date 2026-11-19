@@ -12,13 +12,15 @@ export type ThemeFeatures = {
   rowNumbers: boolean;
   /** 표 머리글 위에 묶음 머리글 줄(예: "금액(원)")을 얹는다. */
   groupedHeader: boolean;
+  /** 재고 상태에 "근접"(안전재고 직전) 단계를 추가로 보여준다. */
+  stockNear: boolean;
 };
 
-const CLASSIC_FEATURES: ThemeFeatures = { rowNumbers: false, groupedHeader: false };
+const CLASSIC_FEATURES: ThemeFeatures = { rowNumbers: false, groupedHeader: false, stockNear: false };
 
 const THEME_FEATURES: Record<string, ThemeFeatures> = {
   "classic-light": CLASSIC_FEATURES,
-  "grid-modern": { rowNumbers: true, groupedHeader: true },
+  "grid-modern": { rowNumbers: true, groupedHeader: true, stockNear: true },
 };
 
 const ThemeFeaturesContext = createContext<ThemeFeatures>(CLASSIC_FEATURES);
