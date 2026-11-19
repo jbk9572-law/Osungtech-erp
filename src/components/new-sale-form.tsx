@@ -45,8 +45,10 @@ import {
 import { useKeyedRows } from "@/lib/use-keyed-rows";
 import { useDraftAutosave } from "@/lib/use-draft-autosave";
 import { DraftResumeBanner } from "@/components/draft-resume-banner";
-import { OrderRowStockHint } from "@/components/order-row-stock-hint";
+import { OrderRowStockCell, OrderRowStockHint } from "@/components/order-row-stock-hint";
+import { useThemeFeatures } from "@/lib/erp-theme-features";
 import { ManualPriceToggle } from "@/components/order-manual-price-toggle";
+import { PartyContextStrip } from "@/components/erp/party-context-strip";
 import { VoucherBasicHead, VoucherChip, VoucherFooter, VoucherTitle } from "@/components/erp/voucher-chrome";
 import {
   PaperCalcGridRows,
@@ -404,9 +406,7 @@ export function NewSaleForm({
     if (state?.redirectTo) clearDraft();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
-  // 서버 액션에서 직접 redirect()를 부르면 모달(인터셉트 라우트)로 열려
-  // 있던 이 폼이 항상 전체 페이지로 튕겨나가버린다 — 액션은 이동할 경로만
-  // 반환하고, 실제 이동은 여기서 클라이언트 라우터로 한다.
+  // 서버 액션의 redirect()는 모달로 열린 폼을 전체 페이지로 튕겨내므로, 액션은 경로만 반환하고 이동은 클라이언트 라우터로 한다.
   useFormRedirect(state);
   // 품목 그리드 칸 너비 — 마우스로 드래그해서 직접 조절할 수 있고, 조절한
   // 값은 DB에 저장되어 다음에 열어도, 다른 직원 화면에서도 유지된다.
@@ -418,7 +418,8 @@ export function NewSaleForm({
     ITEM_GRID_COLUMN_PX_WIDTHS,
     initialColWidths,
   );
-  const itemGridTotalWidth = Object.values<number>(colWidths).reduce((a, b) => a + b, 0);
+  const { voucherLayout } = useThemeFeatures();
+  const itemGridTotalWidth = Object.values<number>(colWidths).reduce((a, b) => a + b, 0) + (voucherLayout ? 180 : 0);
   // 등록 실패 메시지는 실제로 다시 제출하기 전까지는 useActionState가 값을
   // 갱신하지 않는다. 값을 수정한 뒤에도 이전 실패 메시지가 그대로 남아있으면
   // "고쳤는데도 계속 실패한다"고 오해하게 되므로, 입력을 건드리는 순간
@@ -957,6 +958,7 @@ export function NewSaleForm({
         {isCarryover && <VoucherChip tone="info">이월 처리</VoucherChip>}
         {isSample && <VoucherChip>샘플</VoucherChip>}
       </VoucherTitle>
+      <PartyContextStrip kind="customer" partyId={customerId} partyName={customers.find((x) => x.id === customerId)?.name ?? ""} />
       <LocationAllocationModal
         open={allocationModalOpen}
         items={multiLocationItems}
@@ -1279,6 +1281,7 @@ export function NewSaleForm({
           >
             <thead>
               <tr>
+                {voucherLayout && <th style={{ width: 40 }}>No</th>}
                 {resizableTh("product", "품목")}
                 {resizableTh("spec", "규격")}
                 {resizableTh("lotNumber", "관리번호")}
@@ -1288,6 +1291,7 @@ export function NewSaleForm({
                 {resizableTh("supplyAmount", "공급가액", "num")}
                 {resizableTh("tax", "세액", "num")}
                 {resizableTh("total", "합계", "num")}
+                {voucherLayout && <th style={{ width: 140 }}>재고 확인</th>}
                 {resizableTh("remark", "비고")}
                 <th style={{ width: colWidths.actions }} />
               </tr>
@@ -1299,13 +1303,15 @@ export function NewSaleForm({
               }}
             >
               <PaperCalcGridRows pc={pc} />
-              {rows.map((row) => {
+              {rows.map((row, rowIndex) => {
                 const product = products.find((p) => p.id === row.productId);
+                const stockProps = product && row.productId ? { stock: product.stock ?? 0, originalQty: originalQtyByProduct.get(row.productId) ?? 0, unit: product.unit ?? "", quantity: row.quantity, totalQty: rowQtyByProduct.get(row.productId) ?? row.quantity, isReturn } : null;
                 const recentPrice = row.productId
                   ? resolvePrice(customerId, row.productId)
                   : 0;
                 return (
                   <tr key={row.key}>
+                    {voucherLayout && <td className="erp-u-muted num">{rowIndex + 1}</td>}
                     <td>
                       {row.isCustomEntry ? (
                         <input
@@ -1406,16 +1412,7 @@ export function NewSaleForm({
                     </td>
                     <td className="num">
                       {formatNumber((row.quantity * row.unitPrice))}원
-                      {row.productId && product && (
-                        <OrderRowStockHint
-                          stock={product.stock ?? 0}
-                          originalQty={originalQtyByProduct.get(row.productId) ?? 0}
-                          unit={product.unit ?? ""}
-                          quantity={row.quantity}
-                          totalQty={rowQtyByProduct.get(row.productId) ?? row.quantity}
-                          isReturn={isReturn}
-                        />
-                      )}
+                      {!voucherLayout && stockProps && <OrderRowStockHint {...stockProps} />}
                     </td>
                     <td
                       className="num erp-u-muted"
@@ -1430,6 +1427,7 @@ export function NewSaleForm({
                       ))}
                       원
                     </td>
+                    {voucherLayout && <td>{stockProps && <OrderRowStockCell {...stockProps} />}</td>}
                     <RemarkActionCells
                       remark={row.remark}
                       onRemarkChange={(remark) => updateRow(row.key, { remark })}
@@ -1443,10 +1441,10 @@ export function NewSaleForm({
             </tbody>
             <tfoot>
               <tr className="erp-u-bg-page">
-                <td className="erp-u-bold" colSpan={6}>
+                <td className="erp-u-bold" colSpan={voucherLayout ? 7 : 6}>
                   합계
                 </td>
-                <td className="num" colSpan={5}>
+                <td className="num" colSpan={voucherLayout ? 6 : 5}>
                   <div className="erp-u-muted">
                     공급가액 {formatNumber(supplyAmount)}원 · 부가세{" "}
                     {formatNumber(taxAmount)}원

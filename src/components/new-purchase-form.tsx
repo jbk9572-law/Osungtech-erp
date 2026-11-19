@@ -43,6 +43,7 @@ import { useKeyedRows } from "@/lib/use-keyed-rows";
 import { useDraftAutosave } from "@/lib/use-draft-autosave";
 import { DraftResumeBanner } from "@/components/draft-resume-banner";
 import { ManualPriceToggle } from "@/components/order-manual-price-toggle";
+import { PartyContextStrip } from "@/components/erp/party-context-strip";
 import { VoucherBasicHead, VoucherChip, VoucherFooter, VoucherTitle } from "@/components/erp/voucher-chrome";
 import {
   PaperCalcGridRows,
@@ -74,11 +75,8 @@ type Product = {
 type Row = {
   key: number;
   productId: string;
-  // 품목마스터 없이 1회성으로 입력하는 줄(예: "소프너 교체")일 때만 쓴다 —
-  // productId는 빈 문자열로 두고 이 이름을 그대로 저장한다. 재고 연동 없이
-  // 매입 합계에만 잡힌다(inventory_transactions은 생성되지 않음). "매출도
-  // 같이 등록"(alsoCreateSale) 모드에서는 서버에서 막고 있어 이 폼에서도
-  // 그 모드일 때는 켤 수 없다.
+  // 품목마스터 없이 1회성으로 입력하는 줄(예: "소프너 교체")일 때만 쓴다 — productId는 빈 문자열, 이 이름을 그대로 저장하고
+  // 재고 연동 없이 매입 합계에만 잡힌다. "매출도 같이 등록" 모드에서는 서버가 막으므로 켤 수 없다.
   customName: string;
   isCustomEntry: boolean;
   spec: string;
@@ -1026,6 +1024,7 @@ export function NewPurchaseForm({
           requestAnimationFrame(() => formRef.current?.requestSubmit(lastSubmitterRef.current ?? undefined));
         }}
       />
+      <PartyContextStrip kind="supplier" partyId={supplierId} partyName={suppliers.find((x) => x.id === supplierId)?.name ?? ""} />
       {initial?.id && <input type="hidden" name="id" value={initial.id} />}
       {backParam && <input type="hidden" name="back" value={backParam} />}
       <input type="hidden" name="doc_no" value={docNo} />

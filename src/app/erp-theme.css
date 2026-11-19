@@ -7646,3 +7646,50 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
 .erp-voucher .erp-grid tbody td:focus-within {
   background: var(--erp-info-bg);
 }
+
+/* 전표 표 "재고 확인" 칸 — 색 점 + 한 줄 */
+.erp-stock-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--erp-font-xs);
+  font-weight: 700;
+  white-space: nowrap;
+}
+.erp-stock-cell::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: var(--erp-radius-circle);
+  background: currentColor;
+}
+.erp-stock-cell-danger {
+  color: var(--erp-danger);
+}
+.erp-stock-cell-ok {
+  color: var(--erp-success);
+}
+.erp-stock-cell-info {
+  color: var(--erp-primary);
+}
+
+/* 전표 모달 거래처 정보 줄 */
+.erp-voucher-context {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 2px 0 4px;
+  padding: 7px 10px;
+  background: var(--erp-bg-subtle);
+  border: 1px solid var(--erp-divider);
+  border-radius: var(--erp-radius-md);
+  font-size: var(--erp-font-sm);
+  color: var(--erp-text-muted);
+}
+.erp-voucher-context b {
+  color: var(--erp-text);
+}
+.erp-voucher-context b.erp-u-danger {
+  color: var(--erp-danger);
+}

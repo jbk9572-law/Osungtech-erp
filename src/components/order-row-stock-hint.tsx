@@ -48,3 +48,18 @@ export function OrderRowStockHint({
     </p>
   );
 }
+
+// 전표 표의 "재고 확인" 칸(voucherLayout 테마) — 위 안내문과 같은 계산을 점 + 한 줄로 보여준다.
+// 부족(빨강) / 여유(초록) / 반품은 늘어나는 수량(파랑). 품목이 없으면 비워 둔다.
+export function OrderRowStockCell({ stock, originalQty, unit, quantity, totalQty, isReturn }: {
+  stock: number; originalQty: number; unit: string; quantity: number; totalQty: number; isReturn: boolean;
+}) {
+  const available = stock + originalQty;
+  if (isReturn) return <span className="erp-stock-cell erp-stock-cell-info">+{formatNumber(quantity)}{unit} 입고</span>;
+  const remaining = available - totalQty;
+  return remaining < 0 ? (
+    <span className="erp-stock-cell erp-stock-cell-danger">{formatNumber(remaining)}{unit} 부족</span>
+  ) : (
+    <span className="erp-stock-cell erp-stock-cell-ok">{formatNumber(remaining)}{unit} 여유</span>
+  );
+}
