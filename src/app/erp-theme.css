@@ -7620,3 +7620,29 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   color: var(--erp-text);
   font-variant-numeric: tabular-nums;
 }
+
+/* 전표 표 — 칸마다 테두리 입력칸이 박힌 폼 모양 대신 스프레드시트처럼: 평소엔 테두리 없이 값만 보이고,
+   마우스를 올리면 칸 윤곽, 누르면 파란 선택 칸이 된다. voucher 폼(.erp-voucher) 안의 표에만 적용. */
+.erp-voucher .erp-grid tbody .erp-input:not(:disabled),
+.erp-voucher .erp-grid tbody .erp-select:not(:disabled) {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+.erp-voucher .erp-grid tbody .erp-input:not(:disabled):hover,
+.erp-voucher .erp-grid tbody .erp-select:not(:disabled):hover {
+  border-color: var(--erp-border);
+}
+.erp-voucher .erp-grid tbody .erp-input:focus,
+.erp-voucher .erp-grid tbody .erp-select:focus {
+  background: var(--erp-panel);
+  border-color: var(--erp-primary);
+  box-shadow: 0 0 0 2px var(--erp-focus-ring);
+  transform: none;
+}
+.erp-voucher .erp-grid tbody tr:hover > td {
+  background: var(--erp-hover);
+}
+.erp-voucher .erp-grid tbody td:focus-within {
+  background: var(--erp-info-bg);
+}
