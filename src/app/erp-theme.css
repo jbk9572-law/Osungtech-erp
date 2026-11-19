@@ -2230,7 +2230,13 @@ form.erp-field-grid {
   border-radius: var(--erp-radius-md, 0);
   overflow: hidden;
 }
-.erp-seg button {
+/* 버튼(<button>)뿐 아니라 링크(<a>, 인쇄 옵션 전환처럼 주소로 상태를 갖는 곳)도 같은 모양 — 예전엔 button만 스타일돼서 링크로 만든 곳은
+   글자만 다닥다닥 붙은 채 눌리는 곳인지도 알 수 없었다. */
+.erp-seg > button,
+.erp-seg > a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   margin: 0;
   padding: 3px 10px;
   border: none;
@@ -2238,18 +2244,77 @@ form.erp-field-grid {
   color: var(--erp-text);
   font: inherit;
   font-size: var(--erp-font-sm);
+  text-decoration: none;
+  white-space: nowrap;
   cursor: pointer;
 }
-.erp-seg button + button {
+.erp-seg > button:hover:not(.active),
+.erp-seg > a:hover:not(.active) {
+  background: var(--erp-hover);
+}
+.erp-seg > button + button,
+.erp-seg > a + a {
   border-left: 1px solid var(--erp-border);
 }
-.erp-seg button.active {
+.erp-seg > button.active,
+.erp-seg > a.active {
   background: var(--erp-primary);
   color: var(--erp-on-primary);
 }
-.erp-seg button.active,
-.erp-seg button.active + button {
+.erp-seg > button.active,
+.erp-seg > button.active + button,
+.erp-seg > a.active,
+.erp-seg > a.active + a {
   border-left-color: var(--erp-primary);
+}
+
+/* ── 인쇄 옵션 줄(명세표 출력/용지/미수금 선택) ──────────────────────
+   그룹 이름 + 세그먼트를 한 덩어리로 묶고, 좁은 화면에서는 한 줄씩 쌓여 버튼이 터치하기 좋은 높이로 커진다. */
+.erp-optbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--erp-space-3) var(--erp-space-5);
+  align-items: center;
+  margin-bottom: var(--erp-space-3);
+  padding: var(--erp-space-3) var(--erp-space-4);
+  background: var(--erp-bg-subtle);
+  border: 1px solid var(--erp-border-strong);
+  border-radius: var(--erp-radius-xl, 0);
+}
+.erp-optbar-group {
+  display: flex;
+  align-items: center;
+  gap: var(--erp-space-2);
+}
+.erp-optbar-label {
+  font-size: var(--erp-font-sm);
+  font-weight: 600;
+  color: var(--erp-text-muted);
+  white-space: nowrap;
+}
+.erp-optbar .erp-seg > a {
+  height: var(--erp-control-h-md);
+  padding: 0 var(--erp-space-4);
+  font-size: var(--erp-font-md);
+}
+@media (max-width: 640px) {
+  .erp-optbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .erp-optbar-group {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--erp-space-1);
+  }
+  .erp-optbar .erp-seg {
+    display: flex;
+  }
+  .erp-optbar .erp-seg > a {
+    flex: 1;
+    height: 40px;
+    padding: 0 var(--erp-space-2);
+  }
 }
 
 /* ── 6. Data grid ──────────────────────────────────────────── */

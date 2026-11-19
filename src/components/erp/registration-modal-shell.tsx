@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useScrollLock } from "@/lib/use-scroll-lock";
 import { ModalCloseProvider, ModalCloseHrefProvider } from "@/lib/modal-context";
 import { getModalOrigin, markModalOpen, pathOf } from "@/lib/modal-origin";
-import { notifyUserLeft } from "@/lib/nav-start";
+import { anchorLeavesPath, notifyUserLeft } from "@/lib/nav-start";
 
 const SIZE_CLASS = {
   md: "erp-modal-md",
@@ -180,7 +180,10 @@ export function RegistrationModalShell({
     if ((e.target as HTMLElement | null)?.closest?.("button")) markDirty(e);
     // "ESC 닫기" 링크처럼 이 모달을 벗어나는 실제 이동이 시작되는 순간,
     // 그 이동이 끝나길 기다리지 않고 즉시 닫히는 모습을 보여준다.
-    if (isInternalNavAnchor(e.target)) beginClosing();
+    // 같은 경로에서 ?옵션만 바꾸는 링크(인쇄 옵션 전환 등)는 모달 안에 머무는 이동이라 닫지 않는다 —
+    // 예전엔 이것까지 "닫힘"으로 처리해 옵션 버튼을 누르면 모달이 사라진 채 먹통이 됐다.
+    const anchor = (e.target as HTMLElement | null)?.closest?.("a[href]") as HTMLAnchorElement | null;
+    if (anchor && isInternalNavAnchor(e.target) && anchorLeavesPath(anchor.href, window.location.href)) beginClosing();
   }
 
   return (
