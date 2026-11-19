@@ -3571,11 +3571,20 @@ form.erp-field-grid {
 /* 행 번호(No) — 테마 기능 rowNumbers가 켜졌을 때만 마크업에 들어간다(erp-theme-features.tsx) */
 .erp-row-no {
   display: inline-block;
-  min-width: 24px;
-  margin-right: var(--erp-space-1);
-  text-align: right;
+  min-width: 22px;
+  margin-left: var(--erp-space-2);
+  vertical-align: middle;
   color: var(--erp-text-muted);
   font-variant-numeric: tabular-nums;
+}
+/* 체크박스·번호가 한 칸에 같이 있는 칸 — 둘의 세로 가운데를 맞춘다 */
+.erp-grid th:has(> .erp-row-no),
+.erp-grid tbody td:has(> .erp-row-no) {
+  vertical-align: middle;
+}
+.erp-grid th > input[type="checkbox"]:has(~ .erp-row-no),
+.erp-grid td > input[type="checkbox"]:has(~ .erp-row-no) {
+  vertical-align: middle;
 }
 
 /* 행 색 범례(GridRowLegend) */

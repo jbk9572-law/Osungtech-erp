@@ -364,7 +364,6 @@ export function SalesGridTable({
         onClick={() => opts.selectable && !hasTextSelection() && toggleAccordion(row.key)}
       >
         <td style={opts.compactDate ? tdSticky1Carryover : tdSticky1}>
-          {rowNumbers && <span className="erp-row-no">{opts.rowNo ?? ""}</span>}
           {opts.selectable && row.orderId && (
             <RowCheckbox
               checked={isRowSelected}
@@ -372,6 +371,7 @@ export function SalesGridTable({
               label={`${row.date ? formatKstDate(row.date) + " " : ""}${row.customerName ?? ""} 선택`}
             />
           )}
+          {rowNumbers && <span className="erp-row-no">{opts.rowNo ?? ""}</span>}
         </td>
         <OrderDateCell
           date={row.date}
