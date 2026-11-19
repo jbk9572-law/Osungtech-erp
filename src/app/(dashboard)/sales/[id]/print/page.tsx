@@ -14,6 +14,8 @@ import { formatPaperCalcSizeLines, mergePaperCalcInputItems } from "@/modules/pa
 import { PAPER_STOCK_SKU } from "@/modules/paper-calc/public";
 import { getCustomerBalance } from "@/lib/ar-ap";
 import { calcVatForTaxType } from "@/lib/tax";
+import { resolveInvoiceForm } from "@/lib/invoice-form";
+import { getTenantTheme } from "@/lib/tenant-theme";
 
 export default async function SalesPrintPage({
   params,
@@ -28,8 +30,6 @@ export default async function SalesPrintPage({
   const copies: InvoiceCopies =
     copiesParam === "receiver" || copiesParam === "supplier" ? copiesParam : "both";
   const layout: InvoiceLayout = layoutParam === "full" ? "full" : "half";
-  // 서식: 기본은 지금까지 쓰던 B형. ?form=a 일 때만 A형(공급받는자 사업자 정보까지 채움).
-  const form: InvoiceForm = sp.form === "a" ? "A" : "B";
   // 실무에서 거의 안 쓰는 기능이라 기본은 "표기 안함" — 명시적으로
   // ?balance=show를 눌러야만 전잔금/총잔금 칸에 실제 잔액이 찍힌다.
   const showBalance = balanceParam === "show";
@@ -37,6 +37,8 @@ export default async function SalesPrintPage({
   // 칸에 같이 찍히게 한다.
   const showLot = lotParam === "show";
   const supabase = await createClient();
+  // 서식: ?form=a/b 로 직접 고른 값이 우선, 없으면 회사 테마의 기본 서식(클래식 B형 / grid-modern 새 A형). A형은 공급받는자 사업자 정보까지 채운다.
+  const form: InvoiceForm = resolveInvoiceForm(sp.form, await getTenantTheme(supabase));
 
   const [{ data: order }, { data: items }, { data: company }, { data: paperCalcs }] = await Promise.all([
     supabase.from("sales_orders").select("*, customers(*)").eq("id", id).maybeSingle(),

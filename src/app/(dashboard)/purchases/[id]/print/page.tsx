@@ -8,6 +8,8 @@ import { PAPER_STOCK_SKU } from "@/modules/paper-calc/public";
 import { getSupplierBalance } from "@/lib/ar-ap";
 import { calcVatForTaxType } from "@/lib/tax";
 import { PrintToolbar } from "@/components/erp/print-toolbar";
+import { resolveInvoiceForm } from "@/lib/invoice-form";
+import { getTenantTheme } from "@/lib/tenant-theme";
 
 // 매출(sales/[id]/print)에는 있던 인쇄 화면이 매입에는 아예 없었다 —
 // 전체 감사에서 발견. 매입은 거래처(공급처)별 전용 서식(출고증 등)이
@@ -25,11 +27,11 @@ export default async function PurchasePrintPage({
   const { copies: copiesParam, layout: layoutParam, balance: balanceParam, lot: lotParam } = sp;
   const copies: InvoiceCopies = copiesParam === "receiver" || copiesParam === "supplier" ? copiesParam : "both";
   const layout: InvoiceLayout = layoutParam === "full" ? "full" : "half";
-  // 서식: 기본은 지금까지 쓰던 B형. ?form=a 일 때만 A형(공급받는자 사업자 정보까지 채움).
-  const form: InvoiceForm = sp.form === "a" ? "A" : "B";
   const showBalance = balanceParam === "show";
   const showLot = lotParam === "show";
   const supabase = await createClient();
+  // 서식: ?form=a/b 로 직접 고른 값이 우선, 없으면 회사 테마의 기본 서식(클래식 B형 / grid-modern 새 A형). A형은 공급받는자 사업자 정보까지 채운다.
+  const form: InvoiceForm = resolveInvoiceForm(sp.form, await getTenantTheme(supabase));
 
   const [{ data: order }, { data: items }, { data: company }, { data: paperCalcs }] = await Promise.all([
     supabase.from("purchase_orders").select("*, suppliers(*)").eq("id", id).maybeSingle(),
