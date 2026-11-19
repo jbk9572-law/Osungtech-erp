@@ -1379,7 +1379,7 @@ export function NewPurchaseForm({
                       )}
                       {!alsoCreateSale && (
                         <label
-                          className="mt-1 flex items-center gap-1 text-[10.5px] erp-u-muted"
+                          className="mt-1 flex items-center gap-1 text-[10.5px] erp-u-muted erp-cell-aux"
                         >
                           <input
                             type="checkbox"

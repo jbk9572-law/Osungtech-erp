@@ -42,7 +42,7 @@ export function SpecLotUnitCells({
           className="erp-input w-full disabled:bg-[var(--erp-bg-disabled)] disabled:text-[var(--erp-text-muted)]"
         />
         {hasProduct && (
-          <label className="mt-1 flex items-center gap-1 text-[10.5px] erp-u-muted">
+          <label className="mt-1 flex items-center gap-1 text-[10.5px] erp-u-muted erp-cell-aux">
             <input
               type="checkbox"
               checked={manualSpec}

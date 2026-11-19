@@ -7957,3 +7957,71 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   box-shadow: var(--erp-shadow-md);
 }
 .erp-form-options:empty { display: none; }
+
+/* ───────── 전표 표 세부 다듬기(voucherLayout) ─────────
+   줄은 시안처럼 한 줄 높이로 — 칸 안의 보조 체크("직접입력" 등)는 줄 높이를 늘리지 않고, 줄에 마우스를 올리거나 줄 안에 커서가 있을 때만 칸 오른쪽에 떠오른다. */
+.erp-voucher .erp-grid tbody td {
+  position: relative;
+  padding-block: 0;
+  vertical-align: middle;
+}
+.erp-voucher .erp-grid tbody td > .erp-cell-aux {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  margin: 0;
+  padding: 1px 6px;
+  border: 1px solid var(--erp-border);
+  border-radius: var(--erp-radius-sm);
+  background: var(--erp-panel);
+  box-shadow: var(--erp-shadow-sm);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+.erp-voucher .erp-grid tbody tr:hover .erp-cell-aux,
+.erp-voucher .erp-grid tbody tr:focus-within .erp-cell-aux {
+  opacity: 1;
+  pointer-events: auto;
+}
+/* 커서가 있는 줄 — 줄 전체는 은은하게, 번호는 파랗고 굵게(시안의 선택 줄) */
+.erp-voucher .erp-grid tbody tr:focus-within > td {
+  background: var(--erp-info-bg);
+}
+.erp-voucher .erp-grid tbody tr:focus-within > td:first-child {
+  color: var(--erp-primary);
+  font-weight: 700;
+}
+/* 숫자는 자릿수가 맞게, 입력칸 안 글자도 같은 서체·정렬 */
+.erp-voucher .erp-grid td.num,
+.erp-voucher .erp-grid td.num .erp-input {
+  font-variant-numeric: tabular-nums;
+}
+.erp-voucher .erp-grid tbody td .erp-input {
+  height: var(--erp-control-h-cell);
+}
+/* 칸 범위 복사 안내 */
+.erp-voucher-rangestats kbd {
+  margin-left: 6px;
+  padding: 0 4px;
+  border: 1px solid var(--erp-border);
+  border-radius: var(--erp-radius-xs);
+  background: var(--erp-bg-subtle);
+  color: var(--erp-text-muted);
+  font-size: var(--erp-font-xs);
+}
+.erp-copy-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 72px;
+  transform: translateX(-50%);
+  z-index: 1200;
+  padding: 6px 14px;
+  border-radius: var(--erp-radius-md);
+  background: var(--erp-text);
+  color: var(--erp-on-primary);
+  font-size: var(--erp-font-sm);
+  box-shadow: var(--erp-shadow-md);
+  pointer-events: none;
+}
