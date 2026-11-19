@@ -78,7 +78,7 @@ type Product = {
   unit?: string | null;
   price: number;
   stock?: number;
-  base_package_qty?: number | null;
+  base_package_qty?: number | null; parent_product_id?: string | null;
 };
 type CustomerPrice = {
   customer_id: string;

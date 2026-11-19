@@ -8042,3 +8042,21 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
 .erp-voucher-title {
   line-height: var(--erp-control-h-xs);
 }
+
+/* 일시반출 현황의 반납 입력 한 줄 — 품목명 / 남은 수량 / 반납 수량 입력 */
+.erp-loan-return-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+.erp-loan-return-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.erp-loan-return-input {
+  flex: 0 0 88px;
+}

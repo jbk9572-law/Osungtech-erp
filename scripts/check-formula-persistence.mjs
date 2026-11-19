@@ -16,6 +16,7 @@ const TARGETS = new Set(["NumberInput", "QuantityWithBoxInput"]);
 // 식을 저장할 이유가 없는 화면 — 저장 뒤 다시 열어 볼 "문서"가 아니라 한 번 실행하고 끝나는 입력/계산 도구다.
 // (저장된 결과가 입출고 기록 같은 원장으로만 남고 수정 화면이 없다.) 이유와 함께 올린다.
 const EXEMPT = {
+  "src/components/stock-loan-actions.tsx": "반납 수량은 그 자리에서 처리하고 끝나는 일회성 입력(반납 이력은 재고 원장에 남는다) — 식을 다시 열어 볼 화면이 없다",
   "src/components/erp/mobile-item-entry-panel.tsx": "모바일 숫자 키패드에는 = 키가 없어 수식 입력을 켜지 않는다(저장 대상 아님)",
   "src/components/tax-invoice-items-grid.tsx": "세금계산서는 법정 서식 — 수정세금계산서 음수·공급가액/세액 직접 입력 등 경로가 달라 입력 식을 따로 저장하지 않는다",
   "src/components/inventory-adjust-form.tsx": "재고 조정은 입력 후 입출고 기록으로만 남고 다시 열어 고치는 화면이 없다",
