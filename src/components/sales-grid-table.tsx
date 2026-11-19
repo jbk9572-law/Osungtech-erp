@@ -27,6 +27,7 @@ import { GridBadge } from "@/components/grid/badge";
 import { CarryoverBadge, DeliveryMethodCell, OrderDateCell, TaxTypeCell } from "@/components/grid/order-row-cells";
 import { carryoverRowClass, usesShortDate } from "@/lib/carryover";
 import { RowCheckbox } from "@/components/grid/row-checkbox";
+import { OrderSidePanel } from "@/components/grid/order-side-panel";
 import { OrderDetailPanel, type OrderDetailSelection } from "@/components/grid/order-detail-panel";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import { formatNumOrDash } from "@/lib/format-num-or-dash";
@@ -287,6 +288,14 @@ export function SalesGridTable({
           ? formatKstDate(activeRow.date)
           : "-",
         isReturn: activeRow.isReturn,
+        meta: [
+          { label: "구분", value: activeRow.kind === "collection" ? "수금" : activeRow.isReturn ? "반품" : activeRow.isSample ? "샘플" : "매출" },
+          ...(activeRow.docNo != null ? [{ label: "전표번호", value: String(activeRow.docNo) }] : []),
+          ...(activeRow.authorName ? [{ label: "담당", value: activeRow.authorName }] : []),
+          ...(activeRow.remark ? [{ label: "비고", value: activeRow.remark }] : []),
+        ],
+        detailHref: activeRow.orderId ? `/sales/${activeRow.orderId}${backParam ? `?back=${backParam}` : ""}` : undefined,
+        printHref: activeRow.orderId && activeRow.kind === "sale" ? `/sales/${activeRow.orderId}/print` : undefined,
         items:
           activeRow.items ??
           (activeRow.kind === "sale"
@@ -606,6 +615,8 @@ export function SalesGridTable({
       </GridToolbar>
       <GridRowLegend />
 
+      <div className="erp-master-detail">
+      <div className="erp-master-detail-main">
       <div className="erp-grid-wrap has-card-view">
         <table className="erp-grid">
           <thead>
@@ -728,6 +739,9 @@ export function SalesGridTable({
             </tfoot>
           )}
         </table>
+      </div>
+      </div>
+      <OrderSidePanel selection={activeSelection} priceLabel="공급가" />
       </div>
 
       <div className="erp-row-card-toolbar">

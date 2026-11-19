@@ -27,6 +27,7 @@ import { GridBadge } from "@/components/grid/badge";
 import { CarryoverBadge, DeliveryMethodCell, OrderDateCell, TaxTypeCell } from "@/components/grid/order-row-cells";
 import { carryoverRowClass, usesShortDate } from "@/lib/carryover";
 import { RowCheckbox } from "@/components/grid/row-checkbox";
+import { OrderSidePanel } from "@/components/grid/order-side-panel";
 import { OrderDetailPanel, type OrderDetailSelection } from "@/components/grid/order-detail-panel";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import { formatCarryoverDate } from "@/lib/carryover";
@@ -267,6 +268,14 @@ export function PurchaseGridTable({
         dateLabel: activeRow.date
           ? formatKstDate(activeRow.date)
           : "-",
+        meta: [
+          { label: "구분", value: activeRow.kind === "payment" ? "지급" : "매입" },
+          ...(activeRow.docNo != null ? [{ label: "전표번호", value: String(activeRow.docNo) }] : []),
+          ...(activeRow.authorName ? [{ label: "담당", value: activeRow.authorName }] : []),
+          ...(activeRow.remark ? [{ label: "비고", value: activeRow.remark }] : []),
+        ],
+        detailHref: activeRow.orderId ? `/purchases/${activeRow.orderId}${backParam ? `?back=${backParam}` : ""}` : undefined,
+        printHref: activeRow.orderId && activeRow.kind === "purchase" ? `/purchases/${activeRow.orderId}/print` : undefined,
         items:
           activeRow.items?.map((item) => ({ ...item, unitPrice: item.unitCost })) ??
           (activeRow.kind === "purchase"
@@ -514,6 +523,8 @@ export function PurchaseGridTable({
       </GridToolbar>
       <GridRowLegend />
 
+      <div className="erp-master-detail">
+      <div className="erp-master-detail-main">
       <div className="erp-grid-wrap has-card-view">
         <table className="erp-grid">
           <thead>
@@ -629,6 +640,9 @@ export function PurchaseGridTable({
             </tfoot>
           )}
         </table>
+      </div>
+      </div>
+      <OrderSidePanel selection={activeSelection} priceLabel="매입가" />
       </div>
 
       <div className="erp-row-card-toolbar">
