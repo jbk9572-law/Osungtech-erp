@@ -20,7 +20,6 @@ import {
   stickyHeaderStyle,
   stickyCellStyle,
   stickyFooterStyle,
-  GRID_CHECKBOX_WIDTH,
   GRID_ACTION_COL_WIDTH,
 } from "@/lib/grid-sticky";
 import { GridBadge } from "@/components/grid/badge";
@@ -38,6 +37,7 @@ import { buildBackHref, resolveListHref } from "@/lib/list-return";
 import { useColumnVisibility } from "@/lib/use-column-visibility";
 import { ColumnVisibilityMenu, type ColumnVisibilityOption } from "@/components/grid/column-visibility-menu";
 import { GridToolbar } from "@/components/grid/grid-toolbar";
+import { useGridCheckboxWidth, useThemeFeatures } from "@/lib/erp-theme-features";
 import { GridRowLegend } from "@/components/grid/row-legend";
 
 // 핵심 칸(체크박스/날짜/거래처/품목/수량/공급가액/세액/작업)은 끌 수
@@ -260,12 +260,14 @@ export function SalesGridTable({
     );
   }
 
-  const thSticky1 = stickyHeaderStyle(0, GRID_CHECKBOX_WIDTH);
-  const thSticky2 = stickyHeaderStyle(GRID_CHECKBOX_WIDTH, STICKY_2_WIDTH, {
+  const checkW = useGridCheckboxWidth();
+  const { rowNumbers } = useThemeFeatures();
+  const thSticky1 = stickyHeaderStyle(0, checkW);
+  const thSticky2 = stickyHeaderStyle(checkW, STICKY_2_WIDTH, {
     borderRight: "1px solid var(--erp-border)",
   });
-  const tdSticky1 = stickyCellStyle(0, GRID_CHECKBOX_WIDTH);
-  const tdSticky2 = stickyCellStyle(GRID_CHECKBOX_WIDTH, STICKY_2_WIDTH, {
+  const tdSticky1 = stickyCellStyle(0, checkW);
+  const tdSticky2 = stickyCellStyle(checkW, STICKY_2_WIDTH, {
     borderRight: "1px solid var(--erp-border)",
   });
   // 전월 이월분 행은 일반 행과 구분되게 옅은 배경을 깔아둔다 — 스크롤해도
@@ -273,10 +275,10 @@ export function SalesGridTable({
   // (stickyCellStyle이 var(--erp-panel) 고정), 그냥 <tr style>로 배경을
   // 주면 스티키 칸만 색이 안 먹어 이질감이 생긴다 — 스티키 칸 전용 톤을
   // 따로 만든다.
-  const tdSticky1Carryover = stickyCellStyle(0, GRID_CHECKBOX_WIDTH, {
+  const tdSticky1Carryover = stickyCellStyle(0, checkW, {
     borderLeft: "3px solid var(--erp-warning)",
   });
-  const tdSticky2Carryover = stickyCellStyle(GRID_CHECKBOX_WIDTH, STICKY_2_WIDTH, {
+  const tdSticky2Carryover = stickyCellStyle(checkW, STICKY_2_WIDTH, {
     borderRight: "1px solid var(--erp-border)",
   });
 
@@ -323,7 +325,7 @@ export function SalesGridTable({
   // 제목이 이미 "전월(N월)"이라고 말해주므로 각 행에서 연도·월을 또
   // 반복하지 않고 "MM.DD + 이월" 짧은 표기를 쓴다 — 그래야 바로 아래
   // "이번달 신규" 행들과 칸 너비가 들쭉날쭉해지지 않는다).
-  function renderRow(row: SalesRow, opts: { selectable: boolean; compactDate?: boolean }) {
+  function renderRow(row: SalesRow, opts: { selectable: boolean; compactDate?: boolean; rowNo?: number }) {
     const isRowSelected = opts.selectable && !!row.orderId && selected.has(row.orderId);
     const isCollection = row.kind === "collection";
     const detailHref = row.orderId
@@ -355,6 +357,7 @@ export function SalesGridTable({
         onClick={() => opts.selectable && toggleAccordion(row.key)}
       >
         <td style={opts.compactDate ? tdSticky1Carryover : tdSticky1}>
+          {rowNumbers && <span className="erp-row-no">{opts.rowNo ?? ""}</span>}
           {opts.selectable && row.orderId && (
             <RowCheckbox
               checked={isRowSelected}
@@ -628,6 +631,7 @@ export function SalesGridTable({
                   onChange={toggleAll}
                   aria-label="전체 선택"
                 />
+                {rowNumbers && <span className="erp-row-no">No</span>}
               </th>
               {sortableHeader("거래일자", "date", thSticky2)}
               <th style={colStyle("docNo", { width: 90 })}>전표번호</th>
@@ -686,7 +690,7 @@ export function SalesGridTable({
           <tbody>
             {sortedRows.map((row) => (
               <Fragment key={row.key}>
-                {renderRow(row, { selectable: true })}
+                {renderRow(row, { selectable: true, rowNo: sortedRows.indexOf(row) + 1 })}
                 {row.key === activeKey && (
                   <tr className="erp-grid-accordion-row">
                     {/* 20 = 표 전체 칸 수(위 carryover 구분줄의 colSpan과 동일) —
@@ -721,7 +725,7 @@ export function SalesGridTable({
                 <td
                   colSpan={11}
                   style={stickyFooterStyle(
-                    GRID_CHECKBOX_WIDTH + STICKY_2_WIDTH,
+                    checkW + STICKY_2_WIDTH,
                   )}
                 >
                   매출 합계 (
