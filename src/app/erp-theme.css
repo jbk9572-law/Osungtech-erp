@@ -355,6 +355,7 @@
   --erp-badge-dot-display: none;
   /* 행 색 범례 줄 — 클래식은 숨김 */
   --erp-grid-legend-display: none;
+  --erp-grid-stats-display: none;
   --erp-ribbon-bg: #fafbfc;
   --erp-titlebar-bg: #132944;
   --erp-titlebar-fg: #fff;
@@ -524,6 +525,7 @@
   --erp-badge-bg-info: transparent;
   --erp-badge-dot-display: inline-block;
   --erp-grid-legend-display: flex;
+  --erp-grid-stats-display: inline-flex;
 
   /* 상단바/리본 — 남색 바 대신 흰 바 + 얇은 선 */
   --erp-titlebar-bg: #ffffff;
@@ -2448,10 +2450,26 @@ form.erp-field-grid {
    (.erp-grid-wrap)와 별개로, 표 바로 위에서 오른쪽 정렬로 둔다. */
 .erp-grid-toolbar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--erp-space-2);
   margin-bottom: var(--erp-space-2);
+}
+
+.erp-grid-stats {
+  display: var(--erp-grid-stats-display);
+  flex-wrap: wrap;
+  gap: var(--erp-space-5);
+  margin-right: auto;
+  margin-left: var(--erp-space-5);
+  font-size: var(--erp-font-sm);
+  color: var(--erp-text-muted);
+}
+.erp-grid-stat b {
+  color: var(--erp-text);
+  font-variant-numeric: tabular-nums;
+  margin-left: var(--erp-space-1);
 }
 
 .erp-grid-toolbar-info {

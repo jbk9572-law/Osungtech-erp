@@ -501,7 +501,15 @@ export function PurchaseGridTable({
         />
       )}
 
-      <GridToolbar total={sortedRows.length} selectedCount={selected.size}>
+      <GridToolbar
+        total={sortedRows.length}
+        selectedCount={selected.size}
+        stats={[
+          { label: "공급가액", value: formatNumber(totalSupply) },
+          { label: "세액", value: formatNumber(totalTax) },
+          { label: "합계", value: formatNumber(totalSupply + totalTax) },
+        ]}
+      >
         <ColumnVisibilityMenu options={PURCHASE_HIDEABLE_COLUMNS} isHidden={isHidden} onToggle={toggleColumn} />
       </GridToolbar>
       <GridRowLegend />
