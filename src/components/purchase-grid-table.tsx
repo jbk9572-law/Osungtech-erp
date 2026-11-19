@@ -23,6 +23,8 @@ import {
   GRID_ACTION_COL_WIDTH,
 } from "@/lib/grid-sticky";
 import { GridBadge } from "@/components/grid/badge";
+import { PaymentStatusCell } from "@/components/grid/payment-status-cell";
+import type { OrderPaymentStatus } from "@/lib/order-payment-status";
 import { CarryoverBadge, DeliveryMethodCell, OrderDateCell, TaxTypeCell } from "@/components/grid/order-row-cells";
 import { carryoverRowClass, usesShortDate } from "@/lib/carryover";
 import { RowCheckbox } from "@/components/grid/row-checkbox";
@@ -84,6 +86,8 @@ export type PurchaseRow = {
   taxType?: "과세" | "면세" | "영세" | null;
   evidenceType?: string | null;
   invoiceReceived?: boolean;
+  // 지급 상태(DB 선입선출 계산) — 테마 전용 칸(지급)에 표시된다.
+  paymentStatus?: OrderPaymentStatus;
   date: string | undefined;
   supplierName: string | undefined;
   authorName: string | null | undefined;
@@ -388,6 +392,7 @@ export function PurchaseGridTable({
         >
           {isPayment ? "-" : formatNumber(row.taxAmount)}
         </td>
+        <PaymentStatusCell status={row.paymentStatus} skip={isPayment} labels={{ paid: "완료", partial: "일부", unpaid: "미지급" }} />
         <td style={colStyle("invoiceReceived")}>
           {isPayment ? (
             "-"
@@ -532,7 +537,7 @@ export function PurchaseGridTable({
       <div className="erp-grid-wrap has-card-view">
         <table className="erp-grid">
           <thead>
-            <GridGroupHeaderRow before={15} span={2} after={3} label="금액(원)" />
+            <GridGroupHeaderRow before={15} span={2} after={4} label="금액(원)" />
             <tr>
               <th style={thSticky1}>
                 <input
@@ -559,6 +564,7 @@ export function PurchaseGridTable({
               <th className="num" style={colStyle("unitCost")}>매입가</th>
               {sortableHeader("공급가액", "supplyAmount", undefined, "num")}
               {sortableHeader("세액", "taxAmount", undefined, "num")}
+              <th className="erp-col-theme-only" style={{ width: 70 }}>지급</th>
               <th style={colStyle("invoiceReceived", { width: 86 })}>세금계산서 수취</th>
               <th style={colStyle("remark")}>비고</th>
               <th style={{ width: GRID_ACTION_COL_WIDTH }} />
@@ -568,7 +574,7 @@ export function PurchaseGridTable({
             <tbody>
               <tr>
                 <td className="erp-u-bold erp-u-muted erp-u-bg-page erp-u-pad-6-8"
-                  colSpan={20}
+                  colSpan={21}
                 >
                   전월 이월분 · 이번달 실적으로 반영됨
                 </td>
@@ -594,6 +600,7 @@ export function PurchaseGridTable({
                 <td />
                 <td />
                 <td />
+                <td />
               </tr>
             </tbody>
           )}
@@ -603,7 +610,7 @@ export function PurchaseGridTable({
                 {renderRow(row, { selectable: true, rowNo: sortedRows.indexOf(row) + 1 })}
                 {row.key === activeKey && (
                   <tr className="erp-grid-accordion-row">
-                    <td colSpan={20}>
+                    <td colSpan={21}>
                       <OrderDetailPanel
                         selection={activeSelection}
                         priceLabel="매입가"
@@ -616,7 +623,7 @@ export function PurchaseGridTable({
             ))}
             {!sortedRows.length && (
               <tr>
-                <td colSpan={20} className="erp-grid-empty">
+                <td colSpan={21} className="erp-grid-empty">
                   조건에 맞는 매입 거래가 없습니다.
                 </td>
               </tr>
@@ -639,6 +646,7 @@ export function PurchaseGridTable({
                 <td />
                 <td className="num">{formatNumber(totalSupply)}</td>
                 <td className="num">{formatNumber(totalTax)}</td>
+                <td />
                 <td />
                 <td />
                 <td />

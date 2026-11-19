@@ -2,6 +2,7 @@ import { withPageTiming } from "@/lib/page-timing";
 import { GuardedLink } from "@/components/erp/guarded-link";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { fetchPurchasePaymentStatus } from "@/lib/order-payment-status";
 import { getQuickDatePresets, getYearMonthButtons, defaultListRange, getMonthRange, shiftMonth } from "@/lib/date-presets";
 import { monthRangeOf } from "@/lib/carryover";
 import { DateRangeQuickFilters } from "@/components/erp/date-range-quick-filters";
@@ -368,6 +369,15 @@ async function PurchasesPage({
   const rows: DisplayRow[] = [...purchaseRows, ...paymentRows].sort((a, b) =>
     (b.date ?? "").localeCompare(a.date ?? ""),
   );
+
+  // 전표별 지급 상태(DB 선입선출) — 이번에 화면에 올라가는 전표(이월분 포함)만 한 번에 계산한다.
+  const paymentStatusMap = await fetchPurchasePaymentStatus(
+    supabase,
+    [...rows, ...carryoverRows].flatMap((r) => (r.kind === "purchase" && r.orderId ? [r.orderId] : [])),
+  );
+  for (const r of [...rows, ...carryoverRows]) {
+    if (r.orderId) r.paymentStatus = paymentStatusMap.get(r.orderId);
+  }
 
   // 합계는 위 itemRows(더보기 limit로 잘린 화면 표시용)가 아니라 조회기간
   // 전체를 다시 훑어서 계산한다 — sales/page.tsx와 동일한 이유로, itemRows

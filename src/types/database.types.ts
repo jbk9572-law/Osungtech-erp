@@ -6338,6 +6338,14 @@ export type Database = {
         Args: Record<string, never>;
         Returns: number;
       };
+      get_sales_order_payment_status: {
+        Args: { p_order_ids: string[] };
+        Returns: { order_id: string; outstanding: number; status: string }[];
+      };
+      get_purchase_order_payment_status: {
+        Args: { p_order_ids: string[] };
+        Returns: { order_id: string; outstanding: number; status: string }[];
+      };
       get_customer_balances: {
         Args: Record<string, never>;
         Returns: {
