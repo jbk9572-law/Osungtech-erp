@@ -23,6 +23,7 @@ import {
   GRID_ACTION_COL_WIDTH,
 } from "@/lib/grid-sticky";
 import { GridBadge } from "@/components/grid/badge";
+import { hasTextSelection } from "@/lib/has-text-selection";
 import { PaymentStatusCell } from "@/components/grid/payment-status-cell";
 import type { OrderPaymentStatus } from "@/lib/order-payment-status";
 import { CarryoverBadge, DeliveryMethodCell, OrderDateCell, TaxTypeCell } from "@/components/grid/order-row-cells";
@@ -322,7 +323,7 @@ export function PurchaseGridTable({
       <tr
         key={row.key}
         className={`cursor-pointer${isRowSelected ? " selected" : isActive ? " master-active" : ""}${rowDayClass(rowDay(row.date))}${carryoverRowClass(row.isCarryover, !!opts.compactDate)}`}
-        onClick={() => opts.selectable && toggleAccordion(row.key)}
+        onClick={() => opts.selectable && !hasTextSelection() && toggleAccordion(row.key)}
       >
         <td style={opts.compactDate ? tdSticky1Carryover : tdSticky1}>
           {rowNumbers && <span className="erp-row-no">{opts.rowNo ?? ""}</span>}

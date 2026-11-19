@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import type { CSSProperties, MouseEvent, ReactNode } from "react";
 import { startRouteProgress } from "@/lib/route-progress";
+import { hasTextSelection } from "@/lib/has-text-selection";
 
 export function ClickableRow({
   href,
@@ -22,6 +23,8 @@ export function ClickableRow({
   // 그쪽 동작을 우선하고, 행 전체 이동은 건너뛴다.
   function handleClick(e: MouseEvent<HTMLTableRowElement>) {
     if ((e.target as HTMLElement).closest("a")) return;
+    // 칸을 드래그해 고르던 중이면(합계 보기 등) 이동하지 않는다.
+    if (hasTextSelection()) return;
     startRouteProgress();
     router.push(href);
   }
