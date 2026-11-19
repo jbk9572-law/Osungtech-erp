@@ -3786,6 +3786,7 @@ export type Database = {
       };
       sales_orders: {
         Row: {
+          item_formulas: Json | null;
           id: string;
           customer_id: string;
           warehouse_id: string;
@@ -3811,6 +3812,7 @@ export type Database = {
         };
         Insert: {
           id?: string;
+          item_formulas?: Json | null;
           customer_id: string;
           warehouse_id: string;
           order_date?: string;
@@ -3835,6 +3837,7 @@ export type Database = {
         };
         Update: {
           id?: string;
+          item_formulas?: Json | null;
           customer_id?: string;
           warehouse_id?: string;
           order_date?: string;
@@ -4126,6 +4129,7 @@ export type Database = {
       };
       purchase_orders: {
         Row: {
+          item_formulas: Json | null;
           id: string;
           supplier_id: string;
           warehouse_id: string;
@@ -4144,6 +4148,7 @@ export type Database = {
         };
         Insert: {
           id?: string;
+          item_formulas?: Json | null;
           supplier_id: string;
           warehouse_id: string;
           purchase_date?: string;
@@ -4161,6 +4166,7 @@ export type Database = {
         };
         Update: {
           id?: string;
+          item_formulas?: Json | null;
           supplier_id?: string;
           warehouse_id?: string;
           purchase_date?: string;

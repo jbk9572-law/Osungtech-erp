@@ -45,6 +45,8 @@ import {
 import { useKeyedRows } from "@/lib/use-keyed-rows";
 import { useDraftAutosave } from "@/lib/use-draft-autosave";
 import { DraftResumeBanner } from "@/components/draft-resume-banner";
+import { OrderRowStockHint } from "@/components/order-row-stock-hint";
+import { ManualPriceToggle } from "@/components/order-manual-price-toggle";
 import { DraftSavedIndicator } from "@/components/draft-saved-indicator";
 import {
   PaperCalcGridRows,
@@ -101,6 +103,9 @@ type Row = {
   lotNumber: string;
   quantity: number;
   unitPrice: number;
+  // 수량·단가 칸에 엑셀식("=600*2")으로 입력했을 때 그 식 — 저장해서 다시 열어도 보이게 한다(lib/item-formulas).
+  quantityFormula?: string | null;
+  unitPriceFormula?: string | null;
   manualPrice: boolean;
   remark: string;
   // 입고 불러오기로 가져온 줄이 나갈 입고분(매입 품목) id — 저장 때 연결 기록으로만 남긴다(재고 차감은 선입선출 그대로). 품목을 바꾸면 비운다.
@@ -149,6 +154,8 @@ export type SaleInitial = {
     spec?: string | null;
     quantity: number;
     unitPrice: number;
+    quantityFormula?: string | null;
+    unitPriceFormula?: string | null;
     remark?: string | null;
     lotNumber?: string | null;
     sourcePurchaseItemId?: string | null;
@@ -303,6 +310,8 @@ export function NewSaleForm({
           lotNumber: item.lotNumber ?? "",
           quantity: item.quantity,
           unitPrice: item.unitPrice,
+          quantityFormula: item.quantityFormula ?? null,
+          unitPriceFormula: item.unitPriceFormula ?? null,
           manualPrice: (!item.productId && !!item.customName) || item.unitPrice === 0,
           remark: item.remark ?? "",
           sourcePurchaseItemId: item.sourcePurchaseItemId ?? null,
@@ -854,6 +863,8 @@ export function NewSaleForm({
         spec: row.manualSpec ? row.spec : null,
         quantity: row.quantity,
         unitPrice: row.unitPrice,
+        quantityFormula: row.quantityFormula ?? null,
+        unitPriceFormula: row.unitPriceFormula ?? null,
         remark: row.remark || null,
         lotNumber: row.lotNumber || null,
         sourcePurchaseItemId: row.productId ? row.sourcePurchaseItemId || null : null,
@@ -1372,6 +1383,8 @@ export function NewSaleForm({
                           updateRow(row.key, { quantity: n })
                         }
                         allowFormula
+                        formula={row.quantityFormula}
+                        onFormulaChange={(f) => updateRow(row.key, { quantityFormula: f })}
                         basePackageQty={product?.base_package_qty}
                       />
                     </td>
@@ -1380,86 +1393,33 @@ export function NewSaleForm({
                         placeholder="단가"
                         value={row.unitPrice}
                         onChange={(n) => updateRow(row.key, { unitPrice: n })}
+                        allowFormula
+                        formula={row.unitPriceFormula}
+                        onFormulaChange={(f) => updateRow(row.key, { unitPriceFormula: f })}
                         disabled={isSample || !row.manualPrice}
                         className="erp-input w-full disabled:bg-[var(--erp-bg-disabled)] disabled:text-[var(--erp-text-muted)]"
                       />
                       {row.productId && customerId && !isSample && (
-                        <label
-                          className="mt-1 flex items-center justify-end gap-1 text-[10.5px] erp-u-muted"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={row.manualPrice}
-                            onChange={(e) => {
-                              const manualPrice = e.target.checked;
-                              updateRow(row.key, {
-                                manualPrice,
-                                ...(manualPrice
-                                  ? {}
-                                  : { unitPrice: recentPrice }),
-                              });
-                            }}
-                          />
-                          직접입력
-                        </label>
+                        <ManualPriceToggle
+                          checked={row.manualPrice}
+                          onChange={(manualPrice) =>
+                            updateRow(row.key, { manualPrice, ...(manualPrice ? {} : { unitPrice: recentPrice }) })
+                          }
+                        />
                       )}
                     </td>
                     <td className="num">
                       {formatNumber((row.quantity * row.unitPrice))}원
-                      {row.productId &&
-                        product &&
-                        (() => {
-                          const availableStock =
-                            (product.stock ?? 0) +
-                            (originalQtyByProduct.get(row.productId) ?? 0);
-                          const unit = product.unit ?? "";
-                          // 반품은 출고가 아니라 입고(재고 증가)이므로 부족
-                          // 여부를 따질 필요가 없다 — 늘어난 뒤 수량만 보여준다.
-                          if (isReturn) {
-                            const afterReturn = availableStock + row.quantity;
-                            return (
-                              <p
-                                className="text-[10.5px] erp-u-danger"
-                              >
-                                재고 {formatNumber(availableStock)}
-                                {unit} + 반품 {formatNumber(row.quantity)}
-                                {unit} = {formatNumber(afterReturn)}
-                                {unit}
-                              </p>
-                            );
-                          }
-                          // "재고 900"만 보여주면 이 출고를 반영하기 전인지 후인지
-                          // 헷갈린다는 지적이 있어, 계산식 그대로 보여준다 —
-                          // 재고에서 이번 출고량을 뺀 잔여 수량이 마이너스면
-                          // 그 자체로 초과분을 뜻하므로 빨간색으로 강조한다.
-                          // 같은 상품이 이 주문 안에서 여러 줄로 나뉘어 있으면
-                          // (관리번호별 분할 등) 그 줄들의 합계로 부족 여부를
-                          // 판단해야 실제 재고를 넘는 걸 놓치지 않는다.
-                          const totalQty =
-                            rowQtyByProduct.get(row.productId) ?? row.quantity;
-                          const remaining = availableStock - totalQty;
-                          const short = remaining < 0;
-                          return (
-                            <p
-                              className="text-[10.5px]"
-                              style={{
-                                color: short
-                                  ? "var(--erp-danger)"
-                                  : "var(--erp-primary)",
-                              }}
-                            >
-                              재고 {formatNumber(availableStock)}
-                              {unit} - 출고 {formatNumber(row.quantity)}
-                              {unit}
-                              {totalQty !== row.quantity &&
-                                ` (합계 ${formatNumber(totalQty)}${unit})`}
-                              {" = "}
-                              {formatNumber(remaining)}
-                              {unit}
-                              {short && " (부족)"}
-                            </p>
-                          );
-                        })()}
+                      {row.productId && product && (
+                        <OrderRowStockHint
+                          stock={product.stock ?? 0}
+                          originalQty={originalQtyByProduct.get(row.productId) ?? 0}
+                          unit={product.unit ?? ""}
+                          quantity={row.quantity}
+                          totalQty={rowQtyByProduct.get(row.productId) ?? row.quantity}
+                          isReturn={isReturn}
+                        />
+                      )}
                     </td>
                     <td
                       className="num erp-u-muted"

@@ -371,6 +371,7 @@
   --erp-grid-stats-display: none;
   --erp-split-meta-display: none;
   --erp-draft-indicator-display: none;
+  --erp-fx-badge-display: none;
   /* 선택 전표 상세 — 클래식은 행 아래 아코디언, 테마에 따라 오른쪽 고정 패널 */
   --erp-detail-side-display: none;
   /* 왼쪽 메뉴 선택 항목 — initial이면 기존(선택색 배경, 본문색, 띠 없음) */
@@ -564,6 +565,7 @@
   --erp-grid-stats-display: inline-flex;
   --erp-split-meta-display: flex;
   --erp-draft-indicator-display: block;
+  --erp-fx-badge-display: block;
   --erp-detail-side-display: flex;
   --erp-tree-active-bg: #eaf0fd;
   --erp-tree-active-fg: #2f62d6;
@@ -3575,6 +3577,41 @@ form.erp-field-grid {
 }
 .erp-grid thead tr.erp-grid-group-row ~ tr th {
   top: var(--erp-grid-group-h);
+}
+
+/* 계산식으로 입력한 칸의 "fx" 표시(NumberInput) — 표시 여부는 테마 토큰 */
+.erp-fx-cell {
+  position: relative;
+  display: block;
+}
+.erp-fx-badge {
+  display: var(--erp-fx-badge-display);
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  padding: 1px 3px;
+  border-radius: var(--erp-radius-xs, 0);
+  background: var(--erp-primary);
+  color: var(--erp-on-primary);
+  font-size: var(--erp-font-2xs);
+  font-style: italic;
+  font-weight: 700;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.erp-fx-mark {
+  display: var(--erp-fx-badge-display);
+  margin-left: var(--erp-space-1);
+  padding: 1px 3px;
+  border-radius: var(--erp-radius-xs, 0);
+  background: var(--erp-primary);
+  color: var(--erp-on-primary);
+  font-size: var(--erp-font-2xs);
+  font-style: italic;
+  font-weight: 700;
+  line-height: 1;
+  vertical-align: middle;
 }
 
 /* 임시저장 시각 표시(DraftSavedIndicator) */

@@ -1,3 +1,4 @@
+import { FormulaMark } from "@/components/grid/formula-mark";
 import { GridBadgeLink } from "@/components/grid/badge";
 import { formatPackageQty } from "@/lib/package-qty";
 import { formatNumOrDash } from "@/lib/format-num-or-dash";
@@ -24,6 +25,9 @@ export type OrderItemRow = {
   basePackageQty: number | null | undefined;
   quantity: number;
   unitPrice: number | null;
+  // 입력 때 쓴 계산식(저장된 식) — 값 옆 fx 표시로 보여준다.
+  quantityFormula?: string | null;
+  unitPriceFormula?: string | null;
   supplyAmount: number;
   taxAmount: number;
   remark: string | null;
@@ -90,9 +94,13 @@ export function OrderItemsTable({
                   >
                     {formatPackageQty(row.basePackageQty, row.quantity)}
                   </td>
-                  <td className="num">{formatNumber(row.quantity)}</td>
+                  <td className="num">
+                    {formatNumber(row.quantity)}
+                    <FormulaMark formula={row.quantityFormula} value={formatNumber(row.quantity)} />
+                  </td>
                   <td className="num erp-u-muted">
                     {formatNumOrDash(row.unitPrice)}
+                    <FormulaMark formula={row.unitPriceFormula} value={formatNumOrDash(row.unitPrice)} />
                   </td>
                   <td className="num">{formatNumber(row.supplyAmount)}</td>
                   <td className="num erp-u-muted">
@@ -172,11 +180,17 @@ export function OrderItemsTable({
                 </div>
                 <div>
                   <dt>수량</dt>
-                  <dd>{formatNumber(row.quantity)}</dd>
+                  <dd>
+                    {formatNumber(row.quantity)}
+                    <FormulaMark formula={row.quantityFormula} value={formatNumber(row.quantity)} />
+                  </dd>
                 </div>
                 <div>
                   <dt>{priceLabel}</dt>
-                  <dd>{formatNumOrDash(row.unitPrice)}</dd>
+                  <dd>
+                    {formatNumOrDash(row.unitPrice)}
+                    <FormulaMark formula={row.unitPriceFormula} value={formatNumOrDash(row.unitPrice)} />
+                  </dd>
                 </div>
                 <div>
                   <dt>공급가액</dt>

@@ -42,6 +42,7 @@ import {
 import { useKeyedRows } from "@/lib/use-keyed-rows";
 import { useDraftAutosave } from "@/lib/use-draft-autosave";
 import { DraftResumeBanner } from "@/components/draft-resume-banner";
+import { ManualPriceToggle } from "@/components/order-manual-price-toggle";
 import { DraftSavedIndicator } from "@/components/draft-saved-indicator";
 import {
   PaperCalcGridRows,
@@ -85,6 +86,7 @@ type Row = {
   lotNumber: string;
   quantity: number;
   unitCost: number;
+  quantityFormula?: string | null; unitPriceFormula?: string | null; // 엑셀식 입력("=600*2") 저장용 — lib/item-formulas
   manualPrice: boolean;
   remark: string;
   // "매출도 같이 등록"을 켰을 때만 쓴다. 기본은 매입수량을 그대로 따라가지만
@@ -149,6 +151,8 @@ export type PurchaseInitial = {
     spec?: string | null;
     quantity: number;
     unitCost: number;
+    quantityFormula?: string | null;
+    unitPriceFormula?: string | null;
     remark?: string | null;
     lotNumber?: string | null;
   }[];
@@ -362,6 +366,8 @@ export function NewPurchaseForm({
           lotNumber: item.lotNumber ?? "",
           quantity: item.quantity,
           unitCost: item.unitCost,
+          quantityFormula: item.quantityFormula ?? null,
+          unitPriceFormula: item.unitPriceFormula ?? null,
           manualPrice: (!item.productId && !!item.customName) || item.unitCost === 0,
           remark: item.remark ?? "",
           saleQuantity: item.quantity,
@@ -862,6 +868,8 @@ export function NewPurchaseForm({
         spec: row.manualSpec ? row.spec : null,
         quantity: row.quantity,
         unitCost: row.unitCost,
+        quantityFormula: row.quantityFormula ?? null,
+        unitPriceFormula: row.unitPriceFormula ?? null,
         remark: row.remark || null,
         lotNumber: row.lotNumber || null,
       })),
@@ -1409,6 +1417,8 @@ export function NewPurchaseForm({
                           })
                         }
                         allowFormula
+                        formula={row.quantityFormula}
+                        onFormulaChange={(f) => updateRow(row.key, { quantityFormula: f })}
                         basePackageQty={product?.base_package_qty}
                       />
                     </td>
@@ -1440,28 +1450,19 @@ export function NewPurchaseForm({
                         placeholder="매입단가"
                         value={row.unitCost}
                         onChange={(n) => updateRow(row.key, { unitCost: n })}
+                        allowFormula
+                        formula={row.unitPriceFormula}
+                        onFormulaChange={(f) => updateRow(row.key, { unitPriceFormula: f })}
                         disabled={!row.manualPrice}
                         className="erp-input w-full disabled:bg-[var(--erp-bg-disabled)] disabled:text-[var(--erp-text-muted)]"
                       />
                       {row.productId && (
-                        <label
-                          className="mt-1 flex items-center justify-end gap-1 text-[10.5px] erp-u-muted"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={row.manualPrice}
-                            onChange={(e) => {
-                              const manualPrice = e.target.checked;
-                              updateRow(row.key, {
-                                manualPrice,
-                                ...(manualPrice
-                                  ? {}
-                                  : { unitCost: recentCost }),
-                              });
-                            }}
-                          />
-                          직접입력
-                        </label>
+                        <ManualPriceToggle
+                          checked={row.manualPrice}
+                          onChange={(manualPrice) =>
+                            updateRow(row.key, { manualPrice, ...(manualPrice ? {} : { unitCost: recentCost }) })
+                          }
+                        />
                       )}
                     </td>
                     {alsoCreateSale && (

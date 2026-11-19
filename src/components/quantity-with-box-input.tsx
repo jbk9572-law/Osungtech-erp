@@ -22,6 +22,8 @@ export function QuantityWithBoxInput({
   quantity,
   onQuantityChange,
   allowFormula = false,
+  formula,
+  onFormulaChange,
   basePackageQty,
   unit,
   label = "수량",
@@ -30,6 +32,9 @@ export function QuantityWithBoxInput({
   quantity: number;
   onQuantityChange: (n: number) => void;
   allowFormula?: boolean;
+  // 계산식 저장·표시(NumberInput 참고) — 넘기지 않으면 식은 저장하지 않는다.
+  formula?: string | null;
+  onFormulaChange?: (formula: string | null) => void;
   basePackageQty?: number | string | null;
   // 품목 단위 — 리터 계열이면 환산 표시가 "박스"가 아니라 "포"로 나온다.
   unit?: string | null;
@@ -52,6 +57,8 @@ export function QuantityWithBoxInput({
         value={quantity}
         onChange={onQuantityChange}
         allowFormula={allowFormula}
+        formula={formula}
+        onFormulaChange={onFormulaChange}
         className={className}
       />
       {base !== null && base > 0 && quantity !== 0 && (

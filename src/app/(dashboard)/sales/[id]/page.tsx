@@ -1,3 +1,4 @@
+import { attachItemFormulas } from "@/lib/item-formulas";
 import { formatKstDate } from "@/lib/kst-date";
 import { notFound } from "next/navigation";
 import { isUuid } from "@/lib/is-uuid";
@@ -89,7 +90,14 @@ export default async function SaleDetailPage({
   });
   const totalSupply = rows.reduce((sum, row) => sum + row.supplyAmount, 0);
   const totalTax = rows.reduce((sum, row) => sum + row.taxAmount, 0);
-  const itemRows: OrderItemRow[] = rows.map((row) => ({
+  // 입력 때 쓴 계산식(fx) — 줄 값이 식의 결과와 맞는 것만 붙는다(lib/item-formulas.ts).
+  const formulas = attachItemFormulas(
+    rows.map((row) => ({ productId: row.product_id, customName: row.custom_name, quantity: row.quantity, price: Number(row.unit_price) })),
+    order.item_formulas,
+  );
+  const itemRows: OrderItemRow[] = rows.map((row, i) => ({
+    quantityFormula: formulas[i].quantityFormula,
+    unitPriceFormula: formulas[i].unitPriceFormula,
     id: row.id,
     sku: row.products?.sku,
     productLabel: row.products?.name ?? row.custom_name ?? "-",
