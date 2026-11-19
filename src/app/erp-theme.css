@@ -345,6 +345,12 @@
   --erp-badge-radius: 999px;
   --erp-badge-px: 9px;
   --erp-badge-weight: 600;
+  /* 포커스 링·버튼 호버 — 브랜드색(남색) 기준. 테마가 자기 포인트색으로 바꾼다. */
+  --erp-focus-ring: rgba(19, 41, 68, 0.16);
+  --erp-focus-ring-soft: rgba(19, 41, 68, 0.08);
+  --erp-btn-hover-border: #c3cee0;
+  --erp-btn-hover-lift: -1px;
+  --erp-btn-hover-shadow: 0 3px 8px rgba(19, 41, 68, 0.14);
   /* 뱃지 톤별 배경 — initial(=값 없음)이면 기존 --erp-*-bg를 쓴다. 테마가 투명 등으로 바꾸는 자리. */
   --erp-badge-bg-success: initial;
   --erp-badge-bg-warning: initial;
@@ -491,13 +497,13 @@
   --erp-hover: #f1f6ff;
   --erp-selected: #d6e4fb;
   --erp-select-accent: #2f62d6;
-  --erp-success: #1a8a56;
+  --erp-success: #157a48;
   --erp-success-bg: #e6f6ec;
   --erp-success-border: #bfe6cf;
   --erp-warning: #a35f0a;
   --erp-warning-bg: #fff3dc;
   --erp-warning-border: #f3d9a4;
-  --erp-danger: #d63d3d;
+  --erp-danger: #c42f2f;
   --erp-danger-bg: #fdeaea;
   --erp-danger-border: #f3c6c6;
   --erp-info-bg: #eaf0fd;
@@ -525,6 +531,11 @@
   --erp-badge-radius: 9px;
   --erp-badge-px: 7px;
   --erp-badge-weight: 700;
+  --erp-focus-ring: rgba(47, 98, 214, 0.18);
+  --erp-focus-ring-soft: rgba(47, 98, 214, 0.08);
+  --erp-btn-hover-border: #b8c4d6;
+  --erp-btn-hover-lift: 0px;
+  --erp-btn-hover-shadow: 0 1px 3px rgba(30, 45, 80, 0.12);
   --erp-badge-bg-success: transparent;
   --erp-badge-bg-warning: transparent;
   --erp-badge-bg-danger: transparent;
@@ -1924,8 +1935,8 @@
   outline: none;
   border-color: var(--erp-primary);
   box-shadow:
-    0 0 0 3px rgba(19, 41, 68, 0.16),
-    0 1px 2px rgba(19, 41, 68, 0.08);
+    0 0 0 3px var(--erp-focus-ring),
+    0 1px 2px var(--erp-focus-ring-soft);
   transform: translateY(-0.5px);
 }
 
@@ -2249,9 +2260,9 @@ form.erp-field-grid {
 
 .erp-btn:hover {
   background: var(--erp-hover);
-  border-color: #c3cee0;
-  transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(19, 41, 68, 0.14);
+  border-color: var(--erp-btn-hover-border);
+  transform: translateY(var(--erp-btn-hover-lift));
+  box-shadow: var(--erp-btn-hover-shadow);
 }
 
 .erp-btn:active {
@@ -3109,7 +3120,7 @@ form.erp-field-grid {
 
 .erp-richtext:focus-within {
   border-color: var(--erp-primary);
-  box-shadow: 0 0 0 3px rgba(19, 41, 68, 0.16);
+  box-shadow: 0 0 0 3px var(--erp-focus-ring);
 }
 
 .erp-richtext-toolbar {
@@ -5894,7 +5905,7 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
 }
 
 .erp-titlebar-menu-toggle:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--erp-titlebar-hover);
 }
 
 @media (max-width: 768px) {
