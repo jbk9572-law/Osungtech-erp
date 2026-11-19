@@ -16,6 +16,8 @@ import { GridBadge } from "@/components/grid/badge";
 import { RowCheckbox } from "@/components/grid/row-checkbox";
 import { formatNumber } from "@/lib/format-number";
 import { ErpSelect } from "@/components/erp/erp-select";
+import { GridToolbar } from "@/components/grid/grid-toolbar";
+import { ROW_NO_WIDTH, useThemeFeatures } from "@/lib/erp-theme-features";
 
 export type ProductGridRow = {
   id: string;
@@ -80,6 +82,9 @@ export function ProductGridTable({
       ? `${selectedNames.slice(0, 3).join(", ")} 외 ${selectedNames.length - 3}건`
       : selectedNames.join(", ");
   const allSelected = sortedRows.length > 0 && sortedRows.every((r) => selected.has(r.id));
+  // 재고현황 합계 요약(표 위 도구줄) — 안전재고 이하인 품목 수와 매입가 기준 재고 총액.
+  const lowCount = sortedRows.filter((r) => (r.reorderPoint ?? 0) > 0 && r.quantity <= (r.reorderPoint ?? 0)).length;
+  const stockValue = sortedRows.reduce((sum, r) => sum + Math.max(0, r.quantity) * (r.cost ?? 0), 0);
 
   function toggleAll() {
     setSelected(allSelected ? new Set() : new Set(sortedRows.map((r) => r.id)));
@@ -108,7 +113,13 @@ export function ProductGridTable({
     );
   }
 
-  const checkboxOffset = allowBulkDelete ? GRID_CHECKBOX_WIDTH : 0;
+  const { rowNumbers } = useThemeFeatures();
+  // 행 번호(No) 칸 — 테마 기능이 켜졌을 때만. 체크박스 다음에 고정해서 뒤따르는 고정 칸 오프셋을 밀어준다.
+  const noWidth = rowNumbers ? ROW_NO_WIDTH : 0;
+  const noLeft = allowBulkDelete ? GRID_CHECKBOX_WIDTH : 0;
+  const thNo = stickyHeaderStyle(noLeft, noWidth);
+  const tdNo = stickyCellStyle(noLeft, noWidth);
+  const checkboxOffset = noLeft + noWidth;
   const thCheckbox = stickyHeaderStyle(0, GRID_CHECKBOX_WIDTH);
   const tdCheckbox = stickyCellStyle(0, GRID_CHECKBOX_WIDTH);
   const thSticky1 = stickyHeaderStyle(checkboxOffset, STICKY_1_WIDTH);
@@ -122,7 +133,7 @@ export function ProductGridTable({
 
   // products 모드는 체크박스 칸이 하나 더 있고, inventory 모드는 대신
   // 재고수량/상태가 안전재고 한 칸 대신 두 칸이라 결과적으로 항상 12칸이다.
-  const colCount = 12;
+  const colCount = 12 + (rowNumbers ? 1 : 0);
 
   // 표의 각 행과 같은 데이터로 모바일 카드 한 장을 그린다 — 상품명/SKU/
   // 규격/단위와 재고모드의 재고수량·상태(또는 상품모드의 매입가·판매가)만
@@ -207,6 +218,16 @@ export function ProductGridTable({
           onConfirmTextChange={setConfirmText}
         />
       )}
+      {mode === "inventory" && (
+        <GridToolbar
+          total={sortedRows.length}
+          selectedCount={selected.size}
+          stats={[
+            { label: "재주문 필요", value: `${formatNumber(lowCount)}개` },
+            { label: "재고 총액", value: formatNumber(stockValue) },
+          ]}
+        />
+      )}
       <div className="erp-grid-wrap has-card-view">
         <table className="erp-grid">
         <thead>
@@ -216,6 +237,7 @@ export function ProductGridTable({
                 <input type="checkbox" checked={allSelected} onChange={toggleAll} aria-label="전체 선택" />
               </th>
             )}
+            {rowNumbers && <th style={thNo}>No</th>}
             {sortableHeader("SKU", "sku", thSticky1)}
             {sortableHeader("상품명", "name", thSticky2)}
             <th>규격</th>
@@ -237,7 +259,7 @@ export function ProductGridTable({
           </tr>
         </thead>
         <tbody>
-          {sortedRows.map((row) => {
+          {sortedRows.map((row, rowIndex) => {
             const isLow = mode === "inventory" && (row.reorderPoint ?? 0) > 0 && row.quantity <= (row.reorderPoint ?? 0);
             const href =
               mode === "products"
@@ -253,6 +275,11 @@ export function ProductGridTable({
                       onChange={() => toggleRow(row.id)}
                       label={`${row.name} 선택`}
                     />
+                  </td>
+                )}
+                {rowNumbers && (
+                  <td style={tdNo}>
+                    <span className="erp-row-no">{rowIndex + 1}</span>
                   </td>
                 )}
                 <td style={tdSticky1}>{row.sku}</td>
