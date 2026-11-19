@@ -15,6 +15,44 @@ export type Company = {
   seal_image_url?: string | null;
 } | null;
 
+// 서식: B형(공급받는자는 상호+貴下만) / A형(공급받는자도 사업자번호·대표자·주소·업태·종목을 모두 채움).
+export type InvoiceForm = "A" | "B";
+
+// A형의 공급받는자 칸에 채우는 상대 사업자 정보(거래처 또는 공급처 한 곳).
+export type InvoiceParty = {
+  name: string;
+  business_number: string | null;
+  representative_name: string | null;
+  address: string | null;
+  business_type: string | null;
+  business_item: string | null;
+};
+
+// 거래처/공급처 행에서 A형이 쓰는 값만 뽑는다 — 두 테이블 모두 같은 이름의 컬럼을 갖고 있어 한 함수로 처리한다.
+export function toInvoiceParty(
+  row:
+    | {
+        name: string;
+        business_number?: string | null;
+        representative_name?: string | null;
+        address?: string | null;
+        business_type?: string | null;
+        business_item?: string | null;
+      }
+    | null
+    | undefined,
+): InvoiceParty | null {
+  if (!row) return null;
+  return {
+    name: row.name,
+    business_number: row.business_number ?? null,
+    representative_name: row.representative_name ?? null,
+    address: row.address ?? null,
+    business_type: row.business_type ?? null,
+    business_item: row.business_item ?? null,
+  };
+}
+
 export type InvoiceItem = {
   id: string;
   monthDay: string;

@@ -1,5 +1,7 @@
+import type { ComponentProps } from "react";
 import { InvoiceCopy } from "./InvoiceCopy";
-import type { Company, InvoiceColor, InvoiceItem, CopyLabel } from "./types";
+import { InvoiceCopyA } from "./InvoiceCopyA";
+import type { Company, InvoiceColor, InvoiceForm, InvoiceItem, InvoiceParty, CopyLabel } from "./types";
 
 export type InvoiceCopies = "both" | "receiver" | "supplier";
 export type InvoiceLayout = "half" | "full";
@@ -37,6 +39,8 @@ export function InvoicePage({
   copies = "both",
   layout = "half",
   balance,
+  form = "B",
+  customer,
 }: {
   company: Company;
   customerName: string;
@@ -49,6 +53,9 @@ export function InvoicePage({
   // 이 거래처의 현재 미수금 잔액(이번 거래 포함) — 넘기면 전잔금/총잔금
   // 칸에 실제 값이 찍힌다. 안 넘기면(기본) 원본 서식처럼 빈 칸으로 남는다.
   balance?: number;
+  // 서식: B형(기본, 공급받는자는 상호+貴下만) / A형(공급받는자 사업자 정보까지 채움). A형은 customer(상대 사업자 정보)를 함께 받는다.
+  form?: InvoiceForm;
+  customer?: InvoiceParty | null;
 }) {
   const showReceiver = copies === "both" || copies === "receiver";
   const showSupplier = copies === "both" || copies === "supplier";
@@ -81,7 +88,9 @@ export function InvoicePage({
             // 나뉠 때 위/아래 여백이 첫 장/마지막 장에만 적용되는 문제가 있다.
             className={`print-page-wrapper${i < pages.length - 1 ? " print-page-break" : ""}`}
           >
-            <InvoiceCopy
+            <Copy
+              form={form}
+              customer={customer}
               copyLabel={p.copyLabel}
               color={p.color}
               company={company}
@@ -107,7 +116,9 @@ export function InvoicePage({
   return (
     <div className="overflow-x-auto break-inside-avoid">
       {showReceiver && (
-        <InvoiceCopy
+        <Copy
+          form={form}
+          customer={customer}
           copyLabel="공급받는자 보관용"
           color="blue"
           company={company}
@@ -121,7 +132,9 @@ export function InvoicePage({
       )}
       {showReceiver && showSupplier && <CutLine />}
       {showSupplier && (
-        <InvoiceCopy
+        <Copy
+          form={form}
+          customer={customer}
           copyLabel="공급자 보관용"
           color="red"
           company={company}
@@ -135,6 +148,16 @@ export function InvoicePage({
       )}
     </div>
   );
+}
+
+// 서식에 따라 한 부(InvoiceCopy=B형 / InvoiceCopyA=A형)를 고른다 — 같은 props로 두 서식을 바꿔 쓸 수 있게 한다.
+function Copy({
+  form,
+  customer,
+  ...rest
+}: ComponentProps<typeof InvoiceCopy> & { form: InvoiceForm; customer?: InvoiceParty | null }) {
+  if (form === "A") return <InvoiceCopyA {...rest} customer={customer} />;
+  return <InvoiceCopy {...rest} />;
 }
 
 function CutLine() {

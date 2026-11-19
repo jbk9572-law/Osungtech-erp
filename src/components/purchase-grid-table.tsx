@@ -27,6 +27,7 @@ import { GridBadge } from "@/components/grid/badge";
 import { CarryoverBadge, DeliveryMethodCell, OrderDateCell, TaxTypeCell } from "@/components/grid/order-row-cells";
 import { carryoverRowClass, usesShortDate } from "@/lib/carryover";
 import { RowCheckbox } from "@/components/grid/row-checkbox";
+import { OrderSidePanel } from "@/components/grid/order-side-panel";
 import { OrderDetailPanel, type OrderDetailSelection } from "@/components/grid/order-detail-panel";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import { formatCarryoverDate } from "@/lib/carryover";
@@ -36,6 +37,7 @@ import { buildBackHref, resolveListHref } from "@/lib/list-return";
 import { useColumnVisibility } from "@/lib/use-column-visibility";
 import { ColumnVisibilityMenu, type ColumnVisibilityOption } from "@/components/grid/column-visibility-menu";
 import { GridToolbar } from "@/components/grid/grid-toolbar";
+import { GridRowLegend } from "@/components/grid/row-legend";
 
 // 매출(sales-grid-table.tsx)과 같은 이유로 계정별로 끌 수 있는 칸만
 // 여기 올린다 — 날짜/공급처/품목명/수량/금액 같은 핵심 칸은 빼서 못
@@ -266,6 +268,14 @@ export function PurchaseGridTable({
         dateLabel: activeRow.date
           ? formatKstDate(activeRow.date)
           : "-",
+        meta: [
+          { label: "구분", value: activeRow.kind === "payment" ? "지급" : "매입" },
+          ...(activeRow.docNo != null ? [{ label: "전표번호", value: String(activeRow.docNo) }] : []),
+          ...(activeRow.authorName ? [{ label: "담당", value: activeRow.authorName }] : []),
+          ...(activeRow.remark ? [{ label: "비고", value: activeRow.remark }] : []),
+        ],
+        detailHref: activeRow.orderId ? `/purchases/${activeRow.orderId}${backParam ? `?back=${backParam}` : ""}` : undefined,
+        printHref: activeRow.orderId && activeRow.kind === "purchase" ? `/purchases/${activeRow.orderId}/print` : undefined,
         items:
           activeRow.items?.map((item) => ({ ...item, unitPrice: item.unitCost })) ??
           (activeRow.kind === "purchase"
@@ -500,10 +510,21 @@ export function PurchaseGridTable({
         />
       )}
 
-      <GridToolbar total={sortedRows.length} selectedCount={selected.size}>
+      <GridToolbar
+        total={sortedRows.length}
+        selectedCount={selected.size}
+        stats={[
+          { label: "공급가액", value: formatNumber(totalSupply) },
+          { label: "세액", value: formatNumber(totalTax) },
+          { label: "합계", value: formatNumber(totalSupply + totalTax) },
+        ]}
+      >
         <ColumnVisibilityMenu options={PURCHASE_HIDEABLE_COLUMNS} isHidden={isHidden} onToggle={toggleColumn} />
       </GridToolbar>
+      <GridRowLegend />
 
+      <div className="erp-master-detail">
+      <div className="erp-master-detail-main">
       <div className="erp-grid-wrap has-card-view">
         <table className="erp-grid">
           <thead>
@@ -619,6 +640,9 @@ export function PurchaseGridTable({
             </tfoot>
           )}
         </table>
+      </div>
+      </div>
+      <OrderSidePanel selection={activeSelection} priceLabel="매입가" />
       </div>
 
       <div className="erp-row-card-toolbar">

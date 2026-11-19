@@ -39,6 +39,7 @@ export function ErpShell({
   platformAnnouncements,
   quotaBanner,
   impersonatingTenantName,
+  theme,
   children,
   modal,
 }: {
@@ -66,9 +67,22 @@ export function ErpShell({
   // 화면을 대신 보고 있을 때만 값이 있다 — 있으면 배너 + 나가기
   // 버튼을 띄운다.
   impersonatingTenantName?: string | null;
+  // 이 회사에 플랫폼 운영자가 지정한 화면 테마(tenants.theme) — 루트 .erp에 data-theme으로 얹는다(erp-theme.css의 [data-theme="…"] 블록).
+  // 기본 테마(classic-light)는 속성을 달지 않는다 — :root 값이 곧 기본 테마다.
+  theme?: string | null;
   children: React.ReactNode;
   modal?: React.ReactNode;
 }) {
+  // 드롭다운·팝오버처럼 body로 포털되는 요소는 .erp 바깥에 그려져 [data-theme]을 못 물려받는다 — 그래서 같은 속성을 <html>에도 단다
+  // (테마 값 블록은 [data-theme="…"] 선택자라 html과 .erp 어느 쪽에 있어도 적용된다). 기본 테마는 속성이 없다.
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme && theme !== "classic-light") root.dataset.theme = theme;
+    else delete root.dataset.theme;
+    return () => {
+      delete root.dataset.theme;
+    };
+  }, [theme]);
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -112,7 +126,7 @@ export function ErpShell({
   }
 
   return (
-    <div className="erp">
+    <div className="erp" data-theme={theme && theme !== "classic-light" ? theme : undefined}>
       <a href="#erp-main-content" className="erp-skip-link">
         본문으로 바로가기
       </a>

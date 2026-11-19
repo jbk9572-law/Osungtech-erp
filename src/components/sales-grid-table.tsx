@@ -27,6 +27,7 @@ import { GridBadge } from "@/components/grid/badge";
 import { CarryoverBadge, DeliveryMethodCell, OrderDateCell, TaxTypeCell } from "@/components/grid/order-row-cells";
 import { carryoverRowClass, usesShortDate } from "@/lib/carryover";
 import { RowCheckbox } from "@/components/grid/row-checkbox";
+import { OrderSidePanel } from "@/components/grid/order-side-panel";
 import { OrderDetailPanel, type OrderDetailSelection } from "@/components/grid/order-detail-panel";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import { formatNumOrDash } from "@/lib/format-num-or-dash";
@@ -37,6 +38,7 @@ import { buildBackHref, resolveListHref } from "@/lib/list-return";
 import { useColumnVisibility } from "@/lib/use-column-visibility";
 import { ColumnVisibilityMenu, type ColumnVisibilityOption } from "@/components/grid/column-visibility-menu";
 import { GridToolbar } from "@/components/grid/grid-toolbar";
+import { GridRowLegend } from "@/components/grid/row-legend";
 
 // 핵심 칸(체크박스/날짜/거래처/품목/수량/공급가액/세액/작업)은 끌 수
 // 없게 여기 안 넣는다 — 나머지만 "컬럼 설정"에서 계정별로 켜고 끈다.
@@ -286,6 +288,14 @@ export function SalesGridTable({
           ? formatKstDate(activeRow.date)
           : "-",
         isReturn: activeRow.isReturn,
+        meta: [
+          { label: "구분", value: activeRow.kind === "collection" ? "수금" : activeRow.isReturn ? "반품" : activeRow.isSample ? "샘플" : "매출" },
+          ...(activeRow.docNo != null ? [{ label: "전표번호", value: String(activeRow.docNo) }] : []),
+          ...(activeRow.authorName ? [{ label: "담당", value: activeRow.authorName }] : []),
+          ...(activeRow.remark ? [{ label: "비고", value: activeRow.remark }] : []),
+        ],
+        detailHref: activeRow.orderId ? `/sales/${activeRow.orderId}${backParam ? `?back=${backParam}` : ""}` : undefined,
+        printHref: activeRow.orderId && activeRow.kind === "sale" ? `/sales/${activeRow.orderId}/print` : undefined,
         items:
           activeRow.items ??
           (activeRow.kind === "sale"
@@ -592,10 +602,21 @@ export function SalesGridTable({
         />
       )}
 
-      <GridToolbar total={sortedRows.length} selectedCount={selected.size}>
+      <GridToolbar
+        total={sortedRows.length}
+        selectedCount={selected.size}
+        stats={[
+          { label: "공급가액", value: formatNumber(totalSupply) },
+          { label: "세액", value: formatNumber(totalTax) },
+          { label: "합계", value: formatNumber(totalSupply + totalTax) },
+        ]}
+      >
         <ColumnVisibilityMenu options={SALES_HIDEABLE_COLUMNS} isHidden={isHidden} onToggle={toggleColumn} />
       </GridToolbar>
+      <GridRowLegend />
 
+      <div className="erp-master-detail">
+      <div className="erp-master-detail-main">
       <div className="erp-grid-wrap has-card-view">
         <table className="erp-grid">
           <thead>
@@ -718,6 +739,9 @@ export function SalesGridTable({
             </tfoot>
           )}
         </table>
+      </div>
+      </div>
+      <OrderSidePanel selection={activeSelection} priceLabel="공급가" />
       </div>
 
       <div className="erp-row-card-toolbar">

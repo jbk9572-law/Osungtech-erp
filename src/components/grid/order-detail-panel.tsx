@@ -25,6 +25,10 @@ export type OrderDetailSelection = {
   dateLabel: string;
   items: OrderDetailItem[];
   isReturn?: boolean;
+  // 오른쪽 고정 상세 패널(OrderSidePanel)용 부가 정보 — 아코디언은 쓰지 않는다.
+  meta?: { label: string; value: string }[];
+  detailHref?: string;
+  printHref?: string;
 };
 
 export function OrderDetailPanel({

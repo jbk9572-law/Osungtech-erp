@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PrintButton } from "@/components/print-button";
+import { PrintOptionBar } from "@/components/print-option-bar";
 import { CloseButton } from "@/components/erp/close-button";
 import { DeliveryNoteDoc } from "@/components/delivery-note-doc";
 import {
@@ -10,7 +10,7 @@ import {
   KtSolutionCanvas,
 } from "@/components/delivery-note-v2/DeliveryNoteCanvas";
 import { InvoicePage, type InvoiceCopies, type InvoiceLayout } from "@/components/invoice/InvoicePage";
-import type { InvoiceItem } from "@/components/invoice/types";
+import { toInvoiceParty, type InvoiceForm, type InvoiceItem } from "@/components/invoice/types";
 import { formatPaperCalcSizeLines, mergePaperCalcInputItems } from "@/modules/paper-calc/public";
 import { PAPER_STOCK_SKU } from "@/modules/paper-calc/public";
 import { getCustomerBalance } from "@/lib/ar-ap";
@@ -21,13 +21,16 @@ export default async function SalesPrintPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ copies?: string; layout?: string; balance?: string; lot?: string }>;
+  searchParams: Promise<{ copies?: string; layout?: string; balance?: string; lot?: string; form?: string }>;
 }) {
   const { id } = await params;
-  const { copies: copiesParam, layout: layoutParam, balance: balanceParam, lot: lotParam } = await searchParams;
+  const sp = await searchParams;
+  const { copies: copiesParam, layout: layoutParam, balance: balanceParam, lot: lotParam } = sp;
   const copies: InvoiceCopies =
     copiesParam === "receiver" || copiesParam === "supplier" ? copiesParam : "both";
   const layout: InvoiceLayout = layoutParam === "full" ? "full" : "half";
+  // 서식: 기본은 지금까지 쓰던 B형. ?form=a 일 때만 A형(공급받는자 사업자 정보까지 채움).
+  const form: InvoiceForm = sp.form === "a" ? "A" : "B";
   // 실무에서 거의 안 쓰는 기능이라 기본은 "표기 안함" — 명시적으로
   // ?balance=show를 눌러야만 전잔금/총잔금 칸에 실제 잔액이 찍힌다.
   const showBalance = balanceParam === "show";
@@ -276,66 +279,55 @@ export default async function SalesPrintPage({
     <div
       className={`mx-auto max-w-5xl print:mx-0 print:max-w-none ${layout === "half" ? "print-page-wrapper" : ""}`}
     >
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-2 print:hidden">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 print:hidden">
         <CloseButton href="/sales" className="erp-btn erp-btn-dark print:hidden">
           목록으로
         </CloseButton>
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="erp-seg">
-            {(
-              [
-                ["both", "양쪽 다"],
-                ["receiver", "공급받는자만"],
-                ["supplier", "공급자만"],
-              ] as const
-            ).map(([value, label]) => (
-              <Link
-                key={value}
-                href={`/sales/${id}/print?copies=${value}&layout=${layout}&balance=${showBalance ? "show" : "hide"}`}
-                replace
-                className={`erp-seg-btn${copies === value ? " active" : ""}`}
-              >
-                {label}
-              </Link>
-            ))}
-          </div>
-          <div className="erp-seg">
-            {(
-              [
-                ["half", "2연식"],
-                ["full", "전지"],
-              ] as const
-            ).map(([value, label]) => (
-              <Link
-                key={value}
-                href={`/sales/${id}/print?copies=${copies}&layout=${value}&balance=${showBalance ? "show" : "hide"}`}
-                replace
-                className={`erp-seg-btn${layout === value ? " active" : ""}`}
-              >
-                {label}
-              </Link>
-            ))}
-          </div>
-          <div className="erp-seg">
-            {(
-              [
-                ["hide", "미수금 표기 안함"],
-                ["show", "미수금 표기"],
-              ] as const
-            ).map(([value, label]) => (
-              <Link
-                key={value}
-                href={`/sales/${id}/print?copies=${copies}&layout=${layout}&balance=${value}`}
-                replace
-                className={`erp-seg-btn${(showBalance ? "show" : "hide") === value ? " active" : ""}`}
-              >
-                {label}
-              </Link>
-            ))}
-          </div>
-        </div>
         <PrintButton autoPrint={false} />
       </div>
+      <PrintOptionBar
+        basePath={`/sales/${id}/print`}
+        params={sp}
+        groups={[
+          {
+            key: "form",
+            label: "서식",
+            current: form === "A" ? "a" : "b",
+            options: [
+              { value: "b", label: "B형" },
+              { value: "a", label: "A형" },
+            ],
+          },
+          {
+            key: "copies",
+            label: "출력",
+            current: copies,
+            options: [
+              { value: "both", label: "양쪽 다" },
+              { value: "receiver", label: "공급받는자만" },
+              { value: "supplier", label: "공급자만" },
+            ],
+          },
+          {
+            key: "layout",
+            label: "용지",
+            current: layout,
+            options: [
+              { value: "half", label: "2연식" },
+              { value: "full", label: "전지" },
+            ],
+          },
+          {
+            key: "balance",
+            label: "미수금",
+            current: showBalance ? "show" : "hide",
+            options: [
+              { value: "hide", label: "표기 안함" },
+              { value: "show", label: "표기" },
+            ],
+          },
+        ]}
+      />
       <InvoicePage
         company={company}
         customerName={order.customers?.name ?? ""}
@@ -345,6 +337,8 @@ export default async function SalesPrintPage({
         memo={order.memo}
         copies={copies}
         layout={layout}
+        form={form}
+        customer={toInvoiceParty(order.customers)}
         balance={customerBalance}
       />
     </div>

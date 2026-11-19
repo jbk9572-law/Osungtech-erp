@@ -8,6 +8,7 @@ import Link from "next/link";
 import { formatNumber } from "@/lib/format-number";
 import { OrderDetailPanel, type OrderDetailItem, type OrderDetailSelection } from "@/components/grid/order-detail-panel";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
+import { GridRowLegend } from "@/components/grid/row-legend";
 
 export type PortalOrderRow = {
   id: string;
@@ -47,6 +48,7 @@ export function PortalOrdersGridTable({ rows, ordersHref }: { rows: PortalOrderR
 
   return (
     <>
+      <GridRowLegend />
       <div className="erp-grid-wrap has-card-view">
         <table className="erp-grid">
           <thead>

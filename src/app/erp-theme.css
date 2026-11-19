@@ -332,6 +332,42 @@
      추가했다(지금까진 가로줄만 있었음) — 더존/이카운트류처럼 칸이
      사방으로 또렷이 나뉘어 보이게. */
   --erp-grid-header-bg: #c7cdd6;
+  /* 테마가 바꿀 수 있는 "구조" 토큰 — 값이 아니라 치수/굵기/상단바 색.
+     기본값은 클래식 화면과 똑같아서 이 토큰을 쓰도록 바꿔도 클래식은 그대로다.
+     테마 블록([data-theme])은 이 토큰 값만 바꾸고, 규칙을 따로 덮어쓰지 않는다. */
+  --erp-grid-head-h: 32px;
+  --erp-grid-row-h: 30px;
+  --erp-grid-cell-px: 10px;
+  --erp-grid-head-weight: 800;
+  --erp-grid-head-fg: #182338;
+  --erp-grid-zebra-bg: #fafbfc;
+  --erp-row-bar-w: 3px;
+  --erp-badge-radius: 999px;
+  --erp-badge-px: 9px;
+  --erp-badge-weight: 600;
+  /* 뱃지 톤별 배경 — initial(=값 없음)이면 기존 --erp-*-bg를 쓴다. 테마가 투명 등으로 바꾸는 자리. */
+  --erp-badge-bg-success: initial;
+  --erp-badge-bg-warning: initial;
+  --erp-badge-bg-danger: initial;
+  --erp-badge-bg-muted: initial;
+  --erp-badge-bg-info: initial;
+  /* 상태 뱃지 앞 점(●) — 클래식은 없음 */
+  --erp-badge-dot-display: none;
+  /* 행 색 범례 줄 — 클래식은 숨김 */
+  --erp-grid-legend-display: none;
+  --erp-grid-stats-display: none;
+  /* 선택 전표 상세 — 클래식은 행 아래 아코디언, 테마에 따라 오른쪽 고정 패널 */
+  --erp-detail-side-display: none;
+  --erp-detail-inline-display: table-row;
+  --erp-ribbon-bg: #fafbfc;
+  --erp-titlebar-bg: #132944;
+  --erp-titlebar-fg: #fff;
+  --erp-titlebar-fg-menu: #cfe0ff;
+  --erp-titlebar-fg-sub: #dbe6f9;
+  --erp-titlebar-hover: rgba(255, 255, 255, 0.12);
+  --erp-titlebar-logo-filter: brightness(0) invert(1);
+  --erp-titlebar-shadow:
+    0 1px 2px rgba(32, 28, 43, 0.05), 0 2px 8px -3px rgba(32, 28, 43, 0.1);
   /* 비활성(disabled) 입력·버튼 배경 — .erp-btn:disabled와 여러 폼의
      disabled 인풋이 각자 같은 값을 하드코딩하고 있었다. */
   --erp-bg-disabled: #f5f6f8;
@@ -426,6 +462,97 @@
   /* 인라인으로 쓰이던 11px/12px 글자 크기의 공용 토큰(값 그대로) — 11.5/12.5 토큰으로 합칠지는 화면을 보며 결정. */
   --erp-font-caption: 11px;
   --erp-font-compact: 12px;
+}
+
+/* ══ 테마: grid-modern (모던 + 한국형 밀집 그리드) ═════════════════════════
+   이 블록은 "토큰 값"만 바꾼다 — 규칙(셀렉터)을 따로 덮어쓰지 않는다(scripts/
+   check-theme-blocks.mjs가 강제). 그래서 새 화면/컴포넌트가 생겨도 토큰만 쓰면
+   이 테마에 자동으로 맞는다. 클래식(위 :root)은 백업본으로 그대로 둔다.
+   html과 .erp 둘 다에 data-theme가 붙는다(포털로 뜨는 드롭다운이 .erp 밖이라). */
+[data-theme="grid-modern"] {
+  --erp-primary: #2f62d6;
+  --erp-primary-dark: #2450b3;
+  --erp-bg: #f4f5f7;
+  --erp-panel: #ffffff;
+  --erp-bg-subtle: #f8f9fb;
+  --erp-bg-disabled: #f1f2f5;
+  --erp-text: #1f2530;
+  --erp-text-muted: #6b7380;
+  --erp-text-disabled: #b3b9c4;
+  --erp-icon-muted: #aab1bd;
+  --erp-glyph-muted: #cdd2da;
+  --erp-border: #cfd5de;
+  --erp-border-strong: #e1e5eb;
+  --erp-divider: #eef0f3;
+  --erp-hover: #f1f6ff;
+  --erp-selected: #d6e4fb;
+  --erp-select-accent: #2f62d6;
+  --erp-success: #1a8a56;
+  --erp-success-bg: #e6f6ec;
+  --erp-success-border: #bfe6cf;
+  --erp-warning: #a35f0a;
+  --erp-warning-bg: #fff3dc;
+  --erp-warning-border: #f3d9a4;
+  --erp-danger: #d63d3d;
+  --erp-danger-bg: #fdeaea;
+  --erp-danger-border: #f3c6c6;
+  --erp-info-bg: #eaf0fd;
+  --erp-info-border: #c5d6f7;
+  --erp-carry-next-bg: #efeaff;
+  --erp-carry-next-border: #d6c9f0;
+  --erp-carry-next-bar: #7c5cd6;
+  --erp-tabbar-bg: #eceff4;
+  --erp-tab-bg: #e1e5ec;
+  --erp-tree-badge-border: #d3d8e0;
+  --erp-shadow-sm: 0 1px 2px rgba(30, 45, 80, 0.06);
+  --erp-shadow-md: 0 4px 14px rgba(30, 45, 80, 0.1);
+  --erp-shadow-lg: 0 8px 24px rgba(30, 45, 80, 0.16);
+
+  /* 그리드 — 칸이 또렷이 보이되 힘을 뺀 톤(진한 박스·굵은 글씨 없음) */
+  --erp-grid-line: #d3d8e0;
+  --erp-grid-header-bg: #e9edf3;
+  --erp-grid-head-fg: #252d3b;
+  --erp-grid-head-h: 28px;
+  --erp-grid-head-weight: 700;
+  --erp-grid-row-h: 28px;
+  --erp-grid-cell-px: 8px;
+  --erp-grid-zebra-bg: #f8f9fc;
+  --erp-control-h-cell: 28px;
+  --erp-badge-radius: 9px;
+  --erp-badge-px: 7px;
+  --erp-badge-weight: 700;
+  --erp-badge-bg-success: transparent;
+  --erp-badge-bg-warning: transparent;
+  --erp-badge-bg-danger: transparent;
+  --erp-badge-bg-muted: transparent;
+  --erp-badge-bg-info: transparent;
+  --erp-badge-dot-display: inline-block;
+  --erp-grid-legend-display: flex;
+  --erp-grid-stats-display: inline-flex;
+  --erp-detail-side-display: flex;
+  --erp-detail-inline-display: none;
+
+  /* 상단바/리본 — 남색 바 대신 흰 바 + 얇은 선 */
+  --erp-titlebar-bg: #ffffff;
+  --erp-titlebar-fg: #1f2530;
+  --erp-titlebar-fg-menu: #6b7380;
+  --erp-titlebar-fg-sub: #4b5565;
+  --erp-titlebar-hover: #f1f3f6;
+  --erp-titlebar-logo-filter: none;
+  --erp-titlebar-shadow: 0 1px 0 #e1e5eb;
+  --erp-ribbon-bg: #ffffff;
+
+  /* 모서리 — 입력/버튼은 작게, 큰 패널은 조금 크게 */
+  --erp-radius-xs: 3px;
+  --erp-radius-sm: 3px;
+  --erp-radius-md: 5px;
+  --erp-radius-lg: 5px;
+  --erp-radius-xl: 6px;
+  --erp-radius-2xl: 6px;
+  --erp-radius-3xl: 8px;
+  --erp-radius-4xl: 8px;
+  --erp-radius-circle: 50%;
+  --erp-radius-pill: 999px;
 }
 
 .erp {
@@ -742,11 +869,11 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--erp-primary);
-  color: var(--erp-on-primary);
+  background: var(--erp-titlebar-bg);
+  color: var(--erp-titlebar-fg);
   padding: 0 12px;
   padding-top: env(safe-area-inset-top, 0px);
-  box-shadow: var(--erp-shadow-sm);
+  box-shadow: var(--erp-titlebar-shadow);
   /* relative가 아니라 sticky여야 하는 이유: iOS Safari(최신 버전)는
      theme-color 메타 태그를 더 이상 안정적으로 읽지 않고, 대신 뷰포트
      맨 위 4px 안쪽 지점에서 히트테스트해 거기 걸리는 첫 position:fixed/
@@ -786,13 +913,13 @@
 }
 
 .erp-titlebar-home:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--erp-titlebar-hover);
 }
 
 .erp-titlebar-logo {
   height: 20px;
   width: auto;
-  filter: brightness(0) invert(1);
+  filter: var(--erp-titlebar-logo-filter);
 }
 
 .erp-titlebar-name {
@@ -811,7 +938,7 @@
 
 .erp-titlebar-menu {
   font-size: var(--erp-font-base);
-  color: #cfe0ff;
+  color: var(--erp-titlebar-fg-menu);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -822,7 +949,7 @@
   align-items: center;
   gap: 14px;
   font-size: var(--erp-font-base);
-  color: #dbe6f9;
+  color: var(--erp-titlebar-fg-sub);
   /* 좁은 화면에서 flex 아이템이 줄어들 때 안의 텍스트("백업/복원" 등)가
      단어 중간에서 줄바꿈되며 타이틀바가 여러 줄로 깨지는 걸 막는다.
      white-space는 상속 속성이라 자식 span/Link/button에 그대로 적용된다. */
@@ -840,7 +967,7 @@
 }
 
 .erp-titlebar-right button:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--erp-titlebar-hover);
 }
 
 /* ── 2. Ribbon (40px) ──────────────────────────────────────── */
@@ -850,7 +977,7 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  background: var(--erp-bg-subtle);
+  background: var(--erp-ribbon-bg);
   border-bottom: 1px solid var(--erp-border);
   padding: 0 10px;
   /* 리본 버튼이 좁은 화면에서 줄바꿈되지 않고 가로 스크롤되게 한다. */
@@ -2230,7 +2357,13 @@ form.erp-field-grid {
   border-radius: var(--erp-radius-md, 0);
   overflow: hidden;
 }
-.erp-seg button {
+/* 버튼(<button>)뿐 아니라 링크(<a>, 인쇄 옵션 전환처럼 주소로 상태를 갖는 곳)도 같은 모양 — 예전엔 button만 스타일돼서 링크로 만든 곳은
+   글자만 다닥다닥 붙은 채 눌리는 곳인지도 알 수 없었다. */
+.erp-seg > button,
+.erp-seg > a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   margin: 0;
   padding: 3px 10px;
   border: none;
@@ -2238,18 +2371,77 @@ form.erp-field-grid {
   color: var(--erp-text);
   font: inherit;
   font-size: var(--erp-font-sm);
+  text-decoration: none;
+  white-space: nowrap;
   cursor: pointer;
 }
-.erp-seg button + button {
+.erp-seg > button:hover:not(.active),
+.erp-seg > a:hover:not(.active) {
+  background: var(--erp-hover);
+}
+.erp-seg > button + button,
+.erp-seg > a + a {
   border-left: 1px solid var(--erp-border);
 }
-.erp-seg button.active {
+.erp-seg > button.active,
+.erp-seg > a.active {
   background: var(--erp-primary);
   color: var(--erp-on-primary);
 }
-.erp-seg button.active,
-.erp-seg button.active + button {
+.erp-seg > button.active,
+.erp-seg > button.active + button,
+.erp-seg > a.active,
+.erp-seg > a.active + a {
   border-left-color: var(--erp-primary);
+}
+
+/* ── 인쇄 옵션 줄(명세표 출력/용지/미수금 선택) ──────────────────────
+   그룹 이름 + 세그먼트를 한 덩어리로 묶고, 좁은 화면에서는 한 줄씩 쌓여 버튼이 터치하기 좋은 높이로 커진다. */
+.erp-optbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--erp-space-3) var(--erp-space-5);
+  align-items: center;
+  margin-bottom: var(--erp-space-3);
+  padding: var(--erp-space-3) var(--erp-space-4);
+  background: var(--erp-bg-subtle);
+  border: 1px solid var(--erp-border-strong);
+  border-radius: var(--erp-radius-xl, 0);
+}
+.erp-optbar-group {
+  display: flex;
+  align-items: center;
+  gap: var(--erp-space-2);
+}
+.erp-optbar-label {
+  font-size: var(--erp-font-sm);
+  font-weight: 600;
+  color: var(--erp-text-muted);
+  white-space: nowrap;
+}
+.erp-optbar .erp-seg > a {
+  height: var(--erp-control-h-md);
+  padding: 0 var(--erp-space-4);
+  font-size: var(--erp-font-md);
+}
+@media (max-width: 640px) {
+  .erp-optbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .erp-optbar-group {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--erp-space-1);
+  }
+  .erp-optbar .erp-seg {
+    display: flex;
+  }
+  .erp-optbar .erp-seg > a {
+    flex: 1;
+    height: 40px;
+    padding: 0 var(--erp-space-2);
+  }
 }
 
 /* ── 6. Data grid ──────────────────────────────────────────── */
@@ -2263,10 +2455,26 @@ form.erp-field-grid {
    (.erp-grid-wrap)와 별개로, 표 바로 위에서 오른쪽 정렬로 둔다. */
 .erp-grid-toolbar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--erp-space-2);
   margin-bottom: var(--erp-space-2);
+}
+
+.erp-grid-stats {
+  display: var(--erp-grid-stats-display);
+  flex-wrap: wrap;
+  gap: var(--erp-space-5);
+  margin-right: auto;
+  margin-left: var(--erp-space-5);
+  font-size: var(--erp-font-sm);
+  color: var(--erp-text-muted);
+}
+.erp-grid-stat b {
+  color: var(--erp-text);
+  font-variant-numeric: tabular-nums;
+  margin-left: var(--erp-space-1);
 }
 
 .erp-grid-toolbar-info {
@@ -2291,12 +2499,12 @@ form.erp-field-grid {
 }
 
 .erp-grid thead th {
-  height: 32px;
+  height: var(--erp-grid-head-h);
   background: var(--erp-grid-header-bg);
-  color: var(--erp-text);
-  font-weight: 800;
+  color: var(--erp-grid-head-fg);
+  font-weight: var(--erp-grid-head-weight);
   text-align: left;
-  padding: 0 10px;
+  padding: 0 var(--erp-grid-cell-px);
   border-bottom: 1px solid var(--erp-border-strong);
   border-right: 1px solid var(--erp-grid-line);
   white-space: nowrap;
@@ -2338,8 +2546,8 @@ form.erp-field-grid {
 }
 
 .erp-grid tbody td {
-  height: 30px;
-  padding: 4px 10px;
+  height: var(--erp-grid-row-h);
+  padding: 4px var(--erp-grid-cell-px);
   border-bottom: 1px solid var(--erp-grid-line);
   border-right: 1px solid var(--erp-grid-line);
   white-space: nowrap;
@@ -2348,8 +2556,8 @@ form.erp-field-grid {
 }
 
 .erp-grid tfoot td {
-  height: 30px;
-  padding: 4px 10px;
+  height: var(--erp-grid-row-h);
+  padding: 4px var(--erp-grid-cell-px);
   border-top: 2px solid var(--erp-border);
   border-right: 1px solid var(--erp-grid-line);
   white-space: nowrap;
@@ -2366,7 +2574,7 @@ form.erp-field-grid {
    특이도가 hover/selected 규칙과 같아서(:nth-child도 가상클래스),
    아래쪽에 나오는 hover/selected가 소스 순서상 항상 우선한다. */
 .erp-grid tbody tr:nth-child(even) {
-  background: var(--erp-bg-subtle);
+  background: var(--erp-grid-zebra-bg);
 }
 
 .erp-grid tbody tr:hover {
@@ -2416,7 +2624,7 @@ form.erp-field-grid {
   background: var(--erp-carry-next-bg) !important;
 }
 .erp-grid tbody tr.row-carryover-next:not(.selected):not(.master-active) > td:first-child {
-  box-shadow: inset 3px 0 0 var(--erp-carry-next-bar);
+  box-shadow: inset var(--erp-row-bar-w) 0 0 var(--erp-carry-next-bar);
 }
 
 /* 목록 그리드의 "오늘"/"예약(미래 날짜)" 행 구분 — src/lib/row-day.ts.
@@ -2428,13 +2636,13 @@ form.erp-field-grid {
   background: var(--erp-success-bg) !important;
 }
 .erp-grid tbody tr.day-today:not(.selected):not(.master-active) > td:first-child {
-  box-shadow: inset 3px 0 0 var(--erp-success);
+  box-shadow: inset var(--erp-row-bar-w) 0 0 var(--erp-success);
 }
 .erp-grid tbody tr.day-future:not(.selected):not(.master-active) > td {
   background: var(--erp-bg) !important;
 }
 .erp-grid tbody tr.day-future:not(.selected):not(.master-active) > td:first-child {
-  box-shadow: inset 3px 0 0 var(--erp-border-strong);
+  box-shadow: inset var(--erp-row-bar-w) 0 0 var(--erp-border-strong);
 }
 .erp-row-card.row-carryover:not(.selected) {
   background: var(--erp-warning-bg);
@@ -2461,6 +2669,7 @@ form.erp-field-grid {
    행처럼 보이는 포인터 커서/줄무늬/호버 배경을 전부 뺀다. */
 .erp-grid tbody tr.erp-grid-accordion-row {
   cursor: default;
+  display: var(--erp-detail-inline-display);
 }
 .erp-grid tbody tr.erp-grid-accordion-row:nth-child(even),
 .erp-grid tbody tr.erp-grid-accordion-row:hover {
@@ -3140,36 +3349,191 @@ form.erp-field-grid {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 2px 9px;
-  border-radius: 999px;
+  padding: 2px var(--erp-badge-px);
+  border-radius: var(--erp-badge-radius);
   font-size: var(--erp-font-sm);
-  font-weight: 600;
+  font-weight: var(--erp-badge-weight);
 }
 
 .erp-badge-success {
-  background: var(--erp-success-bg);
+  background: var(--erp-badge-bg-success, var(--erp-success-bg));
   color: var(--erp-success);
 }
 
 .erp-badge-warning {
-  background: var(--erp-warning-bg);
+  background: var(--erp-badge-bg-warning, var(--erp-warning-bg));
   color: var(--erp-warning);
 }
 
 .erp-badge-danger {
-  background: var(--erp-danger-bg);
+  background: var(--erp-badge-bg-danger, var(--erp-danger-bg));
   color: var(--erp-danger);
 }
 
 .erp-badge-muted {
-  background: var(--erp-divider);
+  background: var(--erp-badge-bg-muted, var(--erp-divider));
   color: var(--erp-text-muted);
 }
 
 .erp-badge-info {
-  background: var(--erp-info-bg);
+  background: var(--erp-badge-bg-info, var(--erp-info-bg));
   color: var(--erp-text);
 }
+
+/* 상태 뱃지 앞 점 — 표시 여부는 --erp-badge-dot-display(테마) */
+.erp-badge-success::before,
+.erp-badge-warning::before,
+.erp-badge-danger::before {
+  content: "";
+  display: var(--erp-badge-dot-display);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* 선택 전표 상세 — 목록 오른쪽 고정 패널(OrderSidePanel). 표시 여부는 테마 토큰. */
+.erp-master-detail {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--erp-space-3);
+}
+.erp-master-detail-main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.erp-detail-side {
+  display: var(--erp-detail-side-display);
+  flex-direction: column;
+  flex: 0 0 320px;
+  width: 320px;
+  position: sticky;
+  top: 0;
+  max-height: 80vh;
+  overflow: auto;
+  background: var(--erp-panel);
+  border: 1px solid var(--erp-border-strong);
+  border-radius: var(--erp-radius-2xl, 0);
+  font-size: var(--erp-font-base);
+}
+.erp-detail-side-empty {
+  margin: 0;
+  padding: var(--erp-space-5);
+  color: var(--erp-text-muted);
+}
+.erp-detail-side-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--erp-space-3);
+  padding: var(--erp-space-4) var(--erp-space-4) var(--erp-space-2);
+}
+.erp-detail-side-head span {
+  color: var(--erp-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+.erp-detail-side-kv {
+  margin: 0;
+  padding: 0 var(--erp-space-4) var(--erp-space-3);
+  border-bottom: 1px solid var(--erp-divider);
+}
+.erp-detail-side-kv > div {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  padding: 3px 0;
+}
+.erp-detail-side-kv dt {
+  color: var(--erp-text-muted);
+}
+.erp-detail-side-kv dd {
+  margin: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.erp-detail-side-items {
+  padding: var(--erp-space-2) var(--erp-space-4);
+}
+.erp-detail-side-item {
+  padding: var(--erp-space-2) 0;
+  border-bottom: 1px solid var(--erp-divider);
+}
+.erp-detail-side-item-name span {
+  color: var(--erp-text-muted);
+}
+.erp-detail-side-item-num {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--erp-space-3);
+  margin-top: 2px;
+  color: var(--erp-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+.erp-detail-side-item-num b {
+  color: var(--erp-text);
+}
+.erp-detail-side-total {
+  margin: var(--erp-space-2) var(--erp-space-4);
+  padding: var(--erp-space-3);
+  background: var(--erp-bg-subtle);
+  border-radius: var(--erp-radius-lg, 0);
+  font-variant-numeric: tabular-nums;
+}
+.erp-detail-side-total > div {
+  display: flex;
+  justify-content: space-between;
+  padding: 1px 0;
+}
+.erp-detail-side-total-sum {
+  margin-top: var(--erp-space-1);
+  padding-top: var(--erp-space-1);
+  border-top: 1px solid var(--erp-divider);
+  font-weight: 800;
+  font-size: var(--erp-font-lg);
+}
+.erp-detail-side-actions {
+  display: flex;
+  gap: var(--erp-space-2);
+  padding: var(--erp-space-2) var(--erp-space-4) var(--erp-space-4);
+}
+/* 좁은 화면(≤1100px)에서는 오른쪽 패널 대신 항상 기존 행 아래 아코디언을 쓴다. */
+@media (max-width: 1100px) {
+  .erp-detail-side {
+    display: none;
+  }
+  .erp-grid tbody tr.erp-grid-accordion-row {
+    display: table-row;
+  }
+}
+
+/* 행 색 범례(GridRowLegend) */
+.erp-grid-legend {
+  display: var(--erp-grid-legend-display);
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--erp-space-4);
+  padding: var(--erp-space-2) var(--erp-space-1);
+  font-size: var(--erp-font-sm);
+  color: var(--erp-text-muted);
+}
+.erp-grid-legend-title {
+  font-weight: 700;
+}
+.erp-grid-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--erp-space-1);
+}
+.erp-grid-legend-item::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--legend-dot);
+}
+.erp-legend-today { --legend-dot: var(--erp-success); }
+.erp-legend-carry-prev { --legend-dot: var(--erp-warning); }
+.erp-legend-carry-next { --legend-dot: var(--erp-carry-next-bar); }
+.erp-legend-future { --legend-dot: var(--erp-border); }
 
 .erp-badge-carry,
 .erp-badge-carry-prev {
