@@ -12,6 +12,8 @@ import { matchesSearch } from "@/lib/search-match";
 import { isUuid } from "@/lib/is-uuid";
 import type { Database } from "@/types/database.types";
 import { formatNumber } from "@/lib/format-number";
+import { getAllSupplierBalances } from "@/lib/ar-ap";
+import { PartyBalanceMeta } from "@/components/grid/party-balance-meta";
 
 type SupplierRow = Database["public"]["Tables"]["suppliers"]["Row"];
 
@@ -65,6 +67,11 @@ export default async function SuppliersPage({
         ),
       )
     : allSuppliers;
+
+  // 목록 행에 미지급 잔액/연체 상태를 붙인다(미지급금현황과 같은 DB 함수 1회) — 실패해도 목록은 뜬다.
+  const balanceMap = new Map(
+    (await getAllSupplierBalances(supabase).catch(() => [])).map((b) => [b.id, b]),
+  );
 
   const listParams = new URLSearchParams();
   if (q) listParams.set("q", q);
@@ -154,6 +161,11 @@ export default async function SuppliersPage({
                     <>
                       {s.name}
                       <div className="erp-split-list-row-sub">{s.supplier_code}</div>
+                      <PartyBalanceMeta
+                        label="미지급"
+                        balance={balanceMap.get(s.id)?.balance}
+                        oldestUnpaidDate={balanceMap.get(s.id)?.oldestUnpaidDate}
+                      />
                     </>
                   ),
                 }),

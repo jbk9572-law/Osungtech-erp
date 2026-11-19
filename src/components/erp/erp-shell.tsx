@@ -6,6 +6,7 @@ import { TitleBar } from "@/components/erp/title-bar";
 import { Ribbon } from "@/components/erp/ribbon";
 import { TreeMenu } from "@/components/erp/tree-menu";
 import { TabBar } from "@/components/erp/tab-bar";
+import { ThemeFeaturesProvider } from "@/lib/erp-theme-features";
 import { StatusBar } from "@/components/erp/status-bar";
 import { RouteProgressBar } from "@/components/erp/route-progress-bar";
 import { NavTimingReporter } from "@/components/erp/nav-timing-reporter";
@@ -126,6 +127,7 @@ export function ErpShell({
   }
 
   return (
+    <ThemeFeaturesProvider theme={theme}>
     <div className="erp" data-theme={theme && theme !== "classic-light" ? theme : undefined}>
       <a href="#erp-main-content" className="erp-skip-link">
         본문으로 바로가기
@@ -196,5 +198,6 @@ export function ErpShell({
       <StatusBar email={email} companyName={companyName} />
       {modal}
     </div>
+    </ThemeFeaturesProvider>
   );
 }

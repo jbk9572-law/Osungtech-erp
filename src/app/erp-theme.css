@@ -345,6 +345,19 @@
   --erp-badge-radius: 999px;
   --erp-badge-px: 9px;
   --erp-badge-weight: 600;
+  --erp-grid-group-h: 22px;
+  --erp-grid-group-bg: #c7cdd6;
+  --erp-grid-group-fg: #182338;
+  /* 기본(주요) 버튼 — initial이면 흰 바탕+테두리(기존), 테마가 채움 버튼으로 바꾼다 */
+  --erp-btn-primary-bg: initial;
+  --erp-btn-primary-fg: initial;
+  --erp-btn-primary-hover-bg: initial;
+  /* 포커스 링·버튼 호버 — 브랜드색(남색) 기준. 테마가 자기 포인트색으로 바꾼다. */
+  --erp-focus-ring: rgba(19, 41, 68, 0.16);
+  --erp-focus-ring-soft: rgba(19, 41, 68, 0.08);
+  --erp-btn-hover-border: #c3cee0;
+  --erp-btn-hover-lift: -1px;
+  --erp-btn-hover-shadow: 0 3px 8px rgba(19, 41, 68, 0.14);
   /* 뱃지 톤별 배경 — initial(=값 없음)이면 기존 --erp-*-bg를 쓴다. 테마가 투명 등으로 바꾸는 자리. */
   --erp-badge-bg-success: initial;
   --erp-badge-bg-warning: initial;
@@ -356,8 +369,16 @@
   /* 행 색 범례 줄 — 클래식은 숨김 */
   --erp-grid-legend-display: none;
   --erp-grid-stats-display: none;
+  /* 테마 전용 표 칸(수금/지급 상태 등) — DOM에는 항상 있고 표시만 토큰으로 켠다(칸 수가 테마마다 달라지지 않게) */
+  --erp-theme-col-display: none;
+  --erp-split-meta-display: none;
+  --erp-draft-indicator-display: none;
   /* 선택 전표 상세 — 클래식은 행 아래 아코디언, 테마에 따라 오른쪽 고정 패널 */
   --erp-detail-side-display: none;
+  /* 왼쪽 메뉴 선택 항목 — initial이면 기존(선택색 배경, 본문색, 띠 없음) */
+  --erp-tree-active-bg: initial;
+  --erp-tree-active-fg: initial;
+  --erp-tree-active-bar: initial;
   --erp-detail-inline-display: table-row;
   --erp-ribbon-bg: #fafbfc;
   --erp-titlebar-bg: #132944;
@@ -487,13 +508,13 @@
   --erp-hover: #f1f6ff;
   --erp-selected: #d6e4fb;
   --erp-select-accent: #2f62d6;
-  --erp-success: #1a8a56;
+  --erp-success: #157a48;
   --erp-success-bg: #e6f6ec;
   --erp-success-border: #bfe6cf;
   --erp-warning: #a35f0a;
   --erp-warning-bg: #fff3dc;
   --erp-warning-border: #f3d9a4;
-  --erp-danger: #d63d3d;
+  --erp-danger: #c42f2f;
   --erp-danger-bg: #fdeaea;
   --erp-danger-border: #f3c6c6;
   --erp-info-bg: #eaf0fd;
@@ -518,9 +539,23 @@
   --erp-grid-cell-px: 8px;
   --erp-grid-zebra-bg: #f8f9fc;
   --erp-control-h-cell: 28px;
+  --erp-control-h-md: 30px;
+  --erp-control-h-sm: 26px;
+  --erp-control-h-xs: 22px;
   --erp-badge-radius: 9px;
   --erp-badge-px: 7px;
   --erp-badge-weight: 700;
+  --erp-grid-group-h: 22px;
+  --erp-grid-group-bg: #dfe5ee;
+  --erp-grid-group-fg: #3a4558;
+  --erp-btn-primary-bg: #2f62d6;
+  --erp-btn-primary-fg: #ffffff;
+  --erp-btn-primary-hover-bg: #2450b3;
+  --erp-focus-ring: rgba(47, 98, 214, 0.18);
+  --erp-focus-ring-soft: rgba(47, 98, 214, 0.08);
+  --erp-btn-hover-border: #b8c4d6;
+  --erp-btn-hover-lift: 0px;
+  --erp-btn-hover-shadow: 0 1px 3px rgba(30, 45, 80, 0.12);
   --erp-badge-bg-success: transparent;
   --erp-badge-bg-warning: transparent;
   --erp-badge-bg-danger: transparent;
@@ -529,7 +564,13 @@
   --erp-badge-dot-display: inline-block;
   --erp-grid-legend-display: flex;
   --erp-grid-stats-display: inline-flex;
+  --erp-theme-col-display: table-cell;
+  --erp-split-meta-display: flex;
+  --erp-draft-indicator-display: block;
   --erp-detail-side-display: flex;
+  --erp-tree-active-bg: #eaf0fd;
+  --erp-tree-active-fg: #2f62d6;
+  --erp-tree-active-bar: #2f62d6;
   --erp-detail-inline-display: none;
 
   /* 상단바/리본 — 남색 바 대신 흰 바 + 얇은 선 */
@@ -1543,9 +1584,10 @@
    메뉴 그룹 전체 너비를 채우는 사각형 대신 옆에 여백을 살짝 남긴
    둥근 알약(pill) 배경으로 바꿔서 더 가벼운 느낌을 준다. */
 .erp-tree-item.active {
-  background: var(--erp-selected);
-  color: var(--erp-text);
+  background: var(--erp-tree-active-bg, var(--erp-selected));
+  color: var(--erp-tree-active-fg, var(--erp-text));
   font-weight: 700;
+  box-shadow: inset var(--erp-row-bar-w) 0 0 var(--erp-tree-active-bar, transparent);
 }
 
 .erp-tree-item.disabled {
@@ -1916,8 +1958,8 @@
   outline: none;
   border-color: var(--erp-primary);
   box-shadow:
-    0 0 0 3px rgba(19, 41, 68, 0.16),
-    0 1px 2px rgba(19, 41, 68, 0.08);
+    0 0 0 3px var(--erp-focus-ring),
+    0 1px 2px var(--erp-focus-ring-soft);
   transform: translateY(-0.5px);
 }
 
@@ -2241,9 +2283,9 @@ form.erp-field-grid {
 
 .erp-btn:hover {
   background: var(--erp-hover);
-  border-color: #c3cee0;
-  transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(19, 41, 68, 0.14);
+  border-color: var(--erp-btn-hover-border);
+  transform: translateY(var(--erp-btn-hover-lift));
+  box-shadow: var(--erp-btn-hover-shadow);
 }
 
 .erp-btn:active {
@@ -2302,13 +2344,13 @@ form.erp-field-grid {
    바꿨다 — 화면마다 파란 덩어리가 여러 개 떠서 정작 중요한 강조가 묻히는
    문제도 줄어든다. */
 .erp-btn-primary {
-  background: var(--erp-panel);
+  background: var(--erp-btn-primary-bg, var(--erp-panel));
   border-color: var(--erp-primary);
-  color: var(--erp-text);
+  color: var(--erp-btn-primary-fg, var(--erp-text));
 }
 
-.erp-btn-primary:hover {
-  background: var(--erp-info-bg);
+.erp-btn-primary:hover:not(:disabled) {
+  background: var(--erp-btn-primary-hover-bg, var(--erp-info-bg));
 }
 
 /* "F5 조회"(erp-btn-primary) 같은 아웃라인 스타일로 통일 — 꽉 채운
@@ -3101,7 +3143,7 @@ form.erp-field-grid {
 
 .erp-richtext:focus-within {
   border-color: var(--erp-primary);
-  box-shadow: 0 0 0 3px rgba(19, 41, 68, 0.16);
+  box-shadow: 0 0 0 3px var(--erp-focus-ring);
 }
 
 .erp-richtext-toolbar {
@@ -3505,6 +3547,45 @@ form.erp-field-grid {
   }
 }
 
+/* 묶음 머리글 줄(GridGroupHeaderRow) — 아래 머리글 줄은 이 줄 높이만큼 아래에 붙는다 */
+.erp-grid thead tr.erp-grid-group-row th {
+  height: var(--erp-grid-group-h);
+  padding: 0;
+  background: var(--erp-grid-group-bg);
+  color: var(--erp-grid-group-fg);
+  text-align: center;
+  font-size: var(--erp-font-sm);
+  border-bottom: 1px solid var(--erp-grid-line);
+}
+.erp-grid thead tr.erp-grid-group-row ~ tr th {
+  top: var(--erp-grid-group-h);
+}
+
+/* 테마 전용 표 칸 — th/td에 붙인다 */
+.erp-col-theme-only {
+  display: var(--erp-theme-col-display);
+}
+
+/* 임시저장 시각 표시(DraftSavedIndicator) */
+.erp-draft-indicator {
+  display: var(--erp-draft-indicator-display);
+  margin: var(--erp-space-1) 0;
+  text-align: right;
+  font-size: var(--erp-font-sm);
+  color: var(--erp-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 행 번호(No) — 테마 기능 rowNumbers가 켜졌을 때만 마크업에 들어간다(erp-theme-features.tsx) */
+.erp-row-no {
+  display: inline-block;
+  min-width: 24px;
+  margin-right: var(--erp-space-1);
+  text-align: right;
+  color: var(--erp-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
 /* 행 색 범례(GridRowLegend) */
 .erp-grid-legend {
   display: var(--erp-grid-legend-display);
@@ -3536,7 +3617,8 @@ form.erp-field-grid {
 .erp-legend-future { --legend-dot: var(--erp-border); }
 
 .erp-badge-carry,
-.erp-badge-carry-prev {
+.erp-badge-carry-prev,
+.erp-badge-reserve {
   background: var(--erp-panel);
   box-shadow: inset 0 0 0 1px currentColor;
 }
@@ -3545,6 +3627,9 @@ form.erp-field-grid {
 }
 .erp-badge-carry-prev {
   color: var(--erp-warning);
+}
+.erp-badge-reserve {
+  color: var(--erp-text-muted);
 }
 
 /* 그리드 행 안에 있는 "명세표 →" 같은 텍스트 링크를 아이콘 버튼으로
@@ -3847,6 +3932,19 @@ a.erp-detail-tab:hover:not(.active) {
     inset 0 -2px 0 var(--erp-select-accent);
 }
 
+.erp-split-list-row-meta {
+  display: var(--erp-split-meta-display);
+  align-items: center;
+  gap: var(--erp-space-2);
+  margin-top: 2px;
+  font-size: var(--erp-font-xs);
+  color: var(--erp-text-muted);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+.erp-split-list-row-meta b {
+  color: var(--erp-text);
+}
 .erp-split-list-row-sub {
   margin-top: 1px;
   font-size: var(--erp-font-xs);
@@ -4459,6 +4557,11 @@ a.erp-detail-tab:hover:not(.active) {
 
 .erp-statusbar span {
   white-space: nowrap;
+}
+
+.erp-statusbar-selection b {
+  color: var(--erp-text);
+  font-variant-numeric: tabular-nums;
 }
 
 .erp-statusbar .sep {
@@ -5886,7 +5989,7 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
 }
 
 .erp-titlebar-menu-toggle:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--erp-titlebar-hover);
 }
 
 @media (max-width: 768px) {

@@ -42,6 +42,8 @@ function customerFieldsFrom(formData: FormData) {
     phone: combinePhone(formData),
     address: String(formData.get("address") ?? "") || null,
     notes: String(formData.get("notes") ?? "") || null,
+    // 결제조건 입력칸은 일부 테마에서만 보인다 — 칸이 없는 폼에서 저장해도 기존 값이 지워지지 않게 있을 때만 쓴다.
+    ...(formData.has("payment_terms") ? { payment_terms: String(formData.get("payment_terms") ?? "").trim() || null } : {}),
     document_type: (documentType === "출고증" ? "출고증" : "명세표") as "출고증" | "명세표",
     delivery_note_variant: (DELIVERY_NOTE_VARIANTS as readonly string[]).includes(variant)
       ? (variant as (typeof DELIVERY_NOTE_VARIANTS)[number])

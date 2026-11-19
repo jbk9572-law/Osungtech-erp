@@ -42,6 +42,7 @@ import {
 import { useKeyedRows } from "@/lib/use-keyed-rows";
 import { useDraftAutosave } from "@/lib/use-draft-autosave";
 import { DraftResumeBanner } from "@/components/draft-resume-banner";
+import { DraftSavedIndicator } from "@/components/draft-saved-indicator";
 import {
   PaperCalcGridRows,
   PaperCalcHiddenInputs,
@@ -409,7 +410,7 @@ export function NewPurchaseForm({
   // "이어서 작성" 대상이 될 임시저장이 애초에 없다) 이 브라우저에
   // 임시저장한다.
   const draftKey = initial?.id || prefillItems?.length ? null : "erp-draft:purchase:new";
-  const { draft, draftLoaded, save: saveDraft, clear: clearDraft } = useDraftAutosave<PurchaseDraft>(draftKey);
+  const { draft, draftLoaded, save: saveDraft, clear: clearDraft, savedAt } = useDraftAutosave<PurchaseDraft>(draftKey);
   const [draftChoiceMade, setDraftChoiceMade] = useState(false);
   const showDraftBanner = !!draftKey && draftLoaded && !!draft && draftHasContent(draft) && !draftChoiceMade;
 
@@ -1054,7 +1055,7 @@ export function NewPurchaseForm({
       )}
       <PaperCalcOverrideInput pc={pc} />
 
-      {showDraftBanner && <DraftResumeBanner onResume={resumeDraft} onDiscard={discardDraft} />}
+      {showDraftBanner && <DraftResumeBanner onResume={resumeDraft} onDiscard={discardDraft} />}<DraftSavedIndicator savedAt={savedAt} />
 
       {isCarryover && !alsoCreateSale && (
         <PageGuide tone="warning">
