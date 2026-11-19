@@ -5,8 +5,8 @@
 // 화면 코드가 테마 이름을 직접 비교(if theme === ...)하지 않고 이 플래그만 읽게 하려는 것이다.
 // 새 테마를 추가하면 여기에 한 줄 추가한다(없으면 클래식과 같은 기본값).
 export type ThemeFeatures = {
-  /** 명세표 인쇄의 기본 서식 — 주소에 ?form=이 없을 때 쓴다(A형 = 새 엔택스 A형, B형 = 기존 0707 원본). */
-  defaultInvoiceForm: "A" | "B";
+  /** 명세표 인쇄의 기본 서식 — 주소에 ?form=이 없을 때 쓴다(N = 우리가 설계한 새 공용 서식, B형 = 엔택스 0707 원본 복제, A형 = 엔택스 A형 복제). */
+  defaultInvoiceForm: "A" | "B" | "N";
   /** 목록 표 첫 칸에 행 번호(No)를 같이 보여준다. */
   rowNumbers: boolean;
   /** 표 머리글 위에 묶음 머리글 줄(예: "금액(원)")을 얹는다. */
@@ -27,7 +27,7 @@ export const CLASSIC_FEATURES: ThemeFeatures = { defaultInvoiceForm: "B", rowNum
 
 export const THEME_FEATURES: Record<string, ThemeFeatures> = {
   "classic-light": CLASSIC_FEATURES,
-  "grid-modern": { defaultInvoiceForm: "A", rowNumbers: true, groupedHeader: true, stockNear: true, partnerPaymentTerms: true, gridSelectionStats: true, paymentStatusColumn: true, voucherLayout: true },
+  "grid-modern": { defaultInvoiceForm: "N", rowNumbers: true, groupedHeader: true, stockNear: true, partnerPaymentTerms: true, gridSelectionStats: true, paymentStatusColumn: true, voucherLayout: true },
 };
 
 export function getThemeFeatures(theme: string | null | undefined): ThemeFeatures {

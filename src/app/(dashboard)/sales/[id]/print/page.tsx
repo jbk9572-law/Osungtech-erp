@@ -14,7 +14,7 @@ import { formatPaperCalcSizeLines, mergePaperCalcInputItems } from "@/modules/pa
 import { PAPER_STOCK_SKU } from "@/modules/paper-calc/public";
 import { getCustomerBalance } from "@/lib/ar-ap";
 import { calcVatForTaxType } from "@/lib/tax";
-import { resolveInvoiceForm } from "@/lib/invoice-form";
+import { INVOICE_FORM_OPTIONS, invoiceFormParam, resolveInvoiceForm } from "@/lib/invoice-form";
 import { getTenantTheme } from "@/lib/tenant-theme";
 
 export default async function SalesPrintPage({
@@ -37,7 +37,7 @@ export default async function SalesPrintPage({
   // 칸에 같이 찍히게 한다.
   const showLot = lotParam === "show";
   const supabase = await createClient();
-  // 서식: ?form=a/b 로 직접 고른 값이 우선, 없으면 회사 테마의 기본 서식(클래식 B형 / grid-modern 새 A형). A형은 공급받는자 사업자 정보까지 채운다.
+  // 서식: ?form=a/b 로 직접 고른 값이 우선, 없으면 회사 테마의 기본 서식(클래식 B형 / grid-modern 새 서식 N). A형·N은 공급받는자 사업자 정보까지 채운다.
   const form: InvoiceForm = resolveInvoiceForm(sp.form, await getTenantTheme(supabase));
 
   const [{ data: order }, { data: items }, { data: company }, { data: paperCalcs }] = await Promise.all([
@@ -268,11 +268,8 @@ export default async function SalesPrintPage({
           {
             key: "form",
             label: "서식",
-            current: form === "A" ? "a" : "b",
-            options: [
-              { value: "b", label: "B형" },
-              { value: "a", label: "A형" },
-            ],
+            current: invoiceFormParam(form),
+            options: INVOICE_FORM_OPTIONS,
           },
           {
             key: "copies",
