@@ -48,7 +48,7 @@
   grid-template-columns: 1fr 232px;
   gap: 12px;
   align-items: stretch;
-  margin-bottom: 7px;
+  margin-bottom: 6px;
 }
 .invm-title {
   display: flex;
@@ -98,7 +98,7 @@
   padding: 3px 2px;
 }
 .invm-box {
-  margin-bottom: 7px;
+  margin-bottom: 6px;
   border: 1.5px solid var(--invm-c);
   border-radius: 3px;
   overflow: hidden;
@@ -183,7 +183,8 @@
 .invm-items col:nth-child(7) { width: 78px; }
 .invm-items col:nth-child(8) { width: 70px; }
 .invm-items td {
-  height: 22px;
+  height: 20px;
+  padding-block: 2px;
 }
 .invm-full .invm-items td {
   height: 33px;

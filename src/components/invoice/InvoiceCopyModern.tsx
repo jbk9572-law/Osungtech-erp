@@ -7,7 +7,8 @@ import { koreanAmountLine } from "@/lib/korean-amount";
 // 새 거래명세표 서식 한 부(공급받는자 보관용 또는 공급자 보관용) — 엔택스 A/B형 복제본이 아니라 우리가 설계한 공용 서식이다(grid-modern 테마의 기본).
 // 칸이 나뉜 전통 명세표 구조 + 가는 연한 선, 받는자=파랑·공급자=빨강, 회사 로고 워터마크(올린 회사만), 세금계산서 필수 항목(등록번호·상호·성명·공급가액·세액·작성일자) 포함.
 // 회사별 값(로고·도장·인사말·연락처)은 전부 회사 설정에서 props로 받는다. 합계/잔금 계산은 A/B형과 같은 InvoiceTotals를 쓴다.
-const MIN_ROWS_HALF = 9;
+// 2연식에서 한 장에 들어가는 기본 줄 수 — 엘보닉스 B형(10줄)과 같다(A형은 8줄). 줄 간격은 이 줄 수가 A4 한 장에 들어가게 맞춘 값이다(실제 A4 PDF로 측정).
+const MIN_ROWS_HALF = 10;
 
 /** MMDD("1118") → "11-18". 이미 구분자가 있거나 비어 있으면 그대로. */
 function monthDayLabel(value: string): string {
