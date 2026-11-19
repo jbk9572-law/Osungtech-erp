@@ -8,6 +8,7 @@ import { useKeyedRows } from "@/lib/use-keyed-rows";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { ItemEntryBlock } from "@/components/erp/item-entry-block";
 import { blankItemRow, buildItemRow, isBlankItemRow, validItemRows, type ItemEntryRow } from "@/lib/item-entry-rows";
+import { DocSubmitBar, VoucherTitle, useDocSheetClass } from "@/components/erp/voucher-chrome";
 
 export function NewQuoteForm({
   today,
@@ -46,13 +47,14 @@ export function NewQuoteForm({
     }))
   );
 
+  const docSheetClass = useDocSheetClass();
   return (
-    <form action={formAction} onKeyDown={preventEnterSubmit} className="erp-doc-sheet">
+    <form action={formAction} onKeyDown={preventEnterSubmit} className={docSheetClass}>
       <div className="erp-doc-paper flex flex-col gap-3">
       <input type="hidden" name="customer_id" value={customerId} />
       <input type="hidden" name="items" value={itemsJson} />
 
-      <h2 className="erp-doc-title">견 적 서</h2>
+      <VoucherTitle title="견적서" savedAt={null} />
 
       <div className="erp-doc-header">
         <div className="erp-doc-header-row">
@@ -94,9 +96,11 @@ export function NewQuoteForm({
 
       <FormMessage state={state} />
 
-      <button type="submit" className="erp-btn erp-btn-primary erp-u-self-start" disabled={pending || !customerId || validRows.length === 0}>
-        {pending ? "등록 중..." : "견적서 등록"}
-      </button>
+      <DocSubmitBar>
+        <button type="submit" className="erp-btn erp-btn-primary erp-u-self-start" disabled={pending || !customerId || validRows.length === 0}>
+          {pending ? "등록 중..." : "견적서 등록"}
+        </button>
+      </DocSubmitBar>
       </div>
     </form>
   );

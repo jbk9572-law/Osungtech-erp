@@ -11,6 +11,7 @@ import type { FormState } from "@/components/form-message";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { useFormRedirect } from "@/lib/use-form-redirect";
 import { ErpSelect } from "@/components/erp/erp-select";
+import { DocSubmitBar, VoucherTitle, useDocSheetClass } from "@/components/erp/voucher-chrome";
 
 type Initial = {
   id: string;
@@ -41,10 +42,11 @@ export function PaymentRequestForm({
   const [periodTo, setPeriodTo] = useState(initial?.periodTo ?? today);
   const [cardType, setCardType] = useState<PaymentRequestCardType>(initial?.cardType ?? "개인카드");
 
+  const docSheetClass = useDocSheetClass();
   return (
-    <form action={formAction} className="erp-doc-sheet" onKeyDown={preventEnterSubmit}>
+    <form action={formAction} className={docSheetClass} onKeyDown={preventEnterSubmit}>
       <div className="erp-doc-paper grid grid-cols-1 gap-3 md:grid-cols-4">
-      <h2 className="erp-doc-title md:col-span-4">지 급 결 의 서</h2>
+      <div className="md:col-span-4"><VoucherTitle title="지급결의서" savedAt={null} /></div>
       {initial && <input type="hidden" name="id" value={initial.id} />}
       <input type="hidden" name="department" value={department} />
       <input type="hidden" name="period_from" value={periodFrom} />
@@ -118,6 +120,7 @@ export function PaymentRequestForm({
         </>
       )}
 
+      <DocSubmitBar>
       <div className="md:col-span-4 flex items-center gap-2">
         <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary erp-form-submit">
           {pending ? (
@@ -130,6 +133,7 @@ export function PaymentRequestForm({
         </button>
         <FormMessage state={state} />
       </div>
+      </DocSubmitBar>
       </div>
     </form>
   );

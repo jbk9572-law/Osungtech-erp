@@ -7847,3 +7847,41 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
 .erp-voucher-chip-toggle input {
   margin: 0;
 }
+
+/* 문서 폼(견적서·구매요청서·세금계산서·지급결의서 등)의 제목줄은 paper 안에 직접 들어가므로 — 일반 자식 안쪽 여백 규칙보다 우선해 ✕ 자리를 지킨다 */
+.erp-voucher .erp-doc-paper > .erp-voucher-titlebar {
+  padding-right: 48px;
+}
+/* 하단 바 안으로 옮겨 온 기존 저장 영역은 따로 떠다니지(sticky) 않고 바에 얌전히 들어간다 */
+.erp-voucher-footer .erp-form-actions,
+.erp-voucher-footer .erp-form-submit {
+  position: static;
+  box-shadow: none;
+  min-width: 0;
+  grid-column: auto;
+}
+
+/* 전표 모달 안의 페이지 껍데기(화면마다 다른 큰 제목·도구줄·안내문) — 제목은 전표 제목줄(VoucherTitle)이 대신하므로 숨기고,
+   폼 밖에 남는 조각은 띠(폼)와 같은 안쪽 여백으로 맞춘다. 화면마다 따로 고치지 않고 이 규칙 한 곳에서 처리한다. */
+.erp-modal-body:has(.erp-voucher) h1.erp-h1 {
+  display: none;
+}
+.erp-modal-body:has(.erp-voucher) > div > :not(form):not(:has(.erp-voucher)):not(:has(.erp-voucher-typebar)) {
+  margin-inline: 18px;
+}
+.erp-modal-body:has(.erp-voucher) > div > :not(form):not(:has(.erp-voucher)):not(:has(.erp-voucher-typebar)):first-child {
+  margin-top: 12px;
+}
+
+/* 종이 없는 단순 폼(수금·지급)도 문서 화면과 같은 안쪽 여백으로 — 띠(하단 바)만 가장자리까지 닿는다 */
+.erp-voucher-plain {
+  display: flex;
+  flex-direction: column;
+  padding-top: 12px;
+}
+.erp-voucher-plain > * {
+  padding-inline: 18px;
+}
+.erp-voucher-typebar ~ div > :not(form) {
+  margin-inline: 18px;
+}

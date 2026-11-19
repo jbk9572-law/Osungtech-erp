@@ -46,7 +46,7 @@ import { ManualPriceToggle } from "@/components/order-manual-price-toggle";
 import { useThemeFeatures } from "@/lib/erp-theme-features";
 import { OrderTotalsRow } from "@/components/erp/order-totals-row";
 import { PartyContextStrip } from "@/components/erp/party-context-strip";
-import { VoucherBasicHead, VoucherAddRow, VoucherDocNoChip, VoucherFooter, VoucherTitle, VoucherToggleChip } from "@/components/erp/voucher-chrome";
+import { useDocSheetClass, VoucherBasicHead, VoucherAddRow, VoucherDocNoChip, VoucherFooter, VoucherTitle, VoucherToggleChip } from "@/components/erp/voucher-chrome";
 import {
   PaperCalcGridRows,
   PaperCalcHiddenInputs,
@@ -964,13 +964,14 @@ export function NewPurchaseForm({
     );
   }
 
+  const docSheetClass = useDocSheetClass();
   const saveButtons = <FormSaveButtons isEdit={!!initial?.id} pending={pending} submitRef={submitRef} label={submitLabel} />;
 
   return (
     <form
       ref={formRef}
       action={formAction}
-      className={`erp-doc-sheet${voucherLayout ? " erp-voucher" : ""}`}
+      className={docSheetClass}
       onKeyDown={(e) => {
         preventEnterSubmit(e);
         // new-sale-form.tsx와 동일 — ESC를 F7과 같은 "저장 후 닫기"로

@@ -8,6 +8,7 @@ import { FormMessage } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { ErpSelect } from "@/components/erp/erp-select";
 import { PAYMENT_METHODS as METHODS } from "@/lib/payment-methods";
+import { DocSubmitBar, useFormSheetClass } from "@/components/erp/voucher-chrome";
 
 // 매입 등록 화면의 "유형: 지급" 모드 — new-collection-form.tsx(수금)과
 // 동일한 구조로, 공급처의 미지급금에 바로 반영되는 지급 내역을 등록한다.
@@ -34,9 +35,11 @@ export function NewPaymentForm({
     }
   }
 
+  const formSheetClass = useFormSheetClass();
+
   return (
     <div>
-      <form action={formAction} key={formKey}>
+      <form action={formAction} key={formKey} className={formSheetClass}>
         <input type="hidden" name="supplier_id" value={supplierId} />
         <div className="erp-detail erp-u-mt-0">
           <div className="erp-detail-tabs">
@@ -83,6 +86,7 @@ export function NewPaymentForm({
           </div>
         </div>
 
+        <DocSubmitBar>
         <div className="mt-3 flex items-center gap-2">
           <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary erp-form-submit">
             {pending ? (
@@ -95,6 +99,7 @@ export function NewPaymentForm({
           </button>
           <FormMessage state={state} />
         </div>
+        </DocSubmitBar>
       </form>
 
       <PartyTransactionHistory

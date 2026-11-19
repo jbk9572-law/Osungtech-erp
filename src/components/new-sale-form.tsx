@@ -45,12 +45,12 @@ import {
 import { useKeyedRows } from "@/lib/use-keyed-rows";
 import { useDraftAutosave } from "@/lib/use-draft-autosave";
 import { DraftResumeBanner } from "@/components/draft-resume-banner";
-import { OrderRowStockCell, OrderRowStockHint } from "@/components/order-row-stock-hint";
+import { OrderRowStockCell, OrderRowStockHint, rowStockRemaining } from "@/components/order-row-stock-hint";
 import { useThemeFeatures } from "@/lib/erp-theme-features";
 import { ManualPriceToggle } from "@/components/order-manual-price-toggle";
 import { OrderTotalsRow } from "@/components/erp/order-totals-row";
 import { PartyContextStrip } from "@/components/erp/party-context-strip";
-import { VoucherBasicHead, VoucherChip, VoucherFooter, VoucherAddRow, VoucherDocNoChip, VoucherTitle, VoucherToggleChip, VoucherWarning } from "@/components/erp/voucher-chrome";
+import { useDocSheetClass, VoucherBasicHead, VoucherChip, VoucherFooter, VoucherAddRow, VoucherDocNoChip, VoucherTitle, VoucherToggleChip, VoucherWarning } from "@/components/erp/voucher-chrome";
 import {
   PaperCalcGridRows,
   PaperCalcHiddenInputs,
@@ -638,7 +638,7 @@ export function NewSaleForm({
   }, [rows]);
   const stockShortages = isReturn ? [] : [...rowQtyByProduct].flatMap(([pid, qty]) => {
     const p = products.find((x) => x.id === pid);
-    const short = p ? qty - ((p.stock ?? 0) + (originalQtyByProduct.get(pid) ?? 0)) : 0;
+    const short = p ? -rowStockRemaining({ stock: p.stock ?? 0, originalQty: originalQtyByProduct.get(pid) ?? 0, quantity: qty, totalQty: qty, isReturn: false }).remaining : 0;
     return p && short > 0 ? [{ name: p.name, short, unit: p.unit ?? "" }] : [];
   });
 
@@ -921,13 +921,14 @@ export function NewSaleForm({
     );
   }
 
+  const docSheetClass = useDocSheetClass();
   const saveButtons = <FormSaveButtons isEdit={!!initial?.id} pending={pending} submitRef={submitRef} label={isReturn ? `반품 ${initial?.id ? "수정" : "등록"}` : submitLabel} />;
 
   return (
     <form
       ref={formRef}
       action={formAction}
-      className={`erp-doc-sheet${voucherLayout ? " erp-voucher" : ""}`}
+      className={docSheetClass}
       onKeyDown={(e) => {
         preventEnterSubmit(e);
         // ESC = F7과 같은 "저장 후 닫기"(실패하면 에러만 뜨고 안 닫힘). 상단 ✕는 저장 없이 닫기. stopPropagation으로

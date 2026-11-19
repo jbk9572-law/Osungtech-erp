@@ -80,15 +80,32 @@ export function VoucherWarning({ shortages }: { shortages: { name: string; short
   );
 }
 
-/** 하단 고정 바 — voucherLayout 테마만. 왼쪽 단축키 안내, 오른쪽 합계금액과 [취소] [저장]. */
-export function VoucherFooter({ supply, tax, total, actions }: { supply: number; tax: number; total: number; actions: ReactNode }) {
-  const { voucherLayout } = useThemeFeatures();
+/** 하단 고정 바의 뼈대 — 왼쪽 단축키 안내, 오른쪽 [요약] [취소] [저장 영역]. voucherLayout 테마의 모든 문서 화면이 같은 바를 쓴다. */
+function FooterShell({ summary, children }: { summary?: ReactNode; children: ReactNode }) {
   const close = useModalClose();
-  if (!voucherLayout) return null;
   return (
     <div className="erp-voucher-footer">
-      <span className="erp-voucher-footer-hint">Esc 저장 후 닫기</span>
+      <span className="erp-voucher-footer-hint">Esc 닫기</span>
       <div className="erp-voucher-footer-right">
+        {summary}
+        {close && (
+          <button type="button" className="erp-btn" onClick={close}>
+            취소
+          </button>
+        )}
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/** 매출/매입 전표의 하단 바 — voucherLayout 테마만. 합계금액 요약 + 저장 버튼. */
+export function VoucherFooter({ supply, tax, total, actions }: { supply: number; tax: number; total: number; actions: ReactNode }) {
+  const { voucherLayout } = useThemeFeatures();
+  if (!voucherLayout) return null;
+  return (
+    <FooterShell
+      summary={
         <div className="erp-voucher-footer-sum">
           <span className="erp-u-muted erp-u-text-xs">
             공급가액 {formatNumber(supply)} · 부가세 {formatNumber(tax)}
@@ -96,15 +113,25 @@ export function VoucherFooter({ supply, tax, total, actions }: { supply: number;
           <span className="erp-voucher-footer-label">합계금액</span>
           <b className="erp-voucher-footer-total">{formatNumber(total)}원</b>
         </div>
-        {close && (
-          <button type="button" className="erp-btn" onClick={close}>
-            취소
-          </button>
-        )}
-        {actions}
-      </div>
-    </div>
+      }
+    >
+      {actions}
+    </FooterShell>
   );
+}
+
+/**
+ * 합계 없는 문서(견적서·구매요청서·세금계산서·지급결의서 등)의 저장 영역 — 클래식은 children을 제자리 그대로 그리고,
+ * voucherLayout 테마는 같은 하단 바 안으로 옮긴다. 저장 버튼 마크업은 폼이 그대로 소유한다.
+ */
+export function DocSubmitBar({ children }: { children: ReactNode }) {
+  const { voucherLayout } = useThemeFeatures();
+  return voucherLayout ? <FooterShell>{children}</FooterShell> : <>{children}</>;
+}
+
+/** 문서 폼 루트(<form>)에 붙일 클래스 — 테마 구조에 맞는 틀(.erp-voucher)을 켠다. 모든 문서 화면이 이걸 써서 틀이 갈라지지 않는다. */
+export function useDocSheetClass(): string {
+  return `erp-doc-sheet${useThemeFeatures().voucherLayout ? " erp-voucher" : ""}`;
 }
 
 /** 상태 칩 한 개(예: "이월 처리", "샘플"). */
@@ -153,4 +180,9 @@ export function VoucherToggleChip({ checked, onChange, children }: { checked: bo
       {children}
     </label>
   );
+}
+
+/** 종이(erp-doc-paper) 없이 단순한 폼(수금·지급 등)의 <form> 클래스 — voucherLayout 테마에서만 같은 틀(띠·하단 바)을 켠다. 클래식은 빈 문자열. */
+export function useFormSheetClass(): string {
+  return useThemeFeatures().voucherLayout ? "erp-voucher erp-voucher-plain" : "";
 }

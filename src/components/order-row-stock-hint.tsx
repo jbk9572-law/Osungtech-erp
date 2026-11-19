@@ -5,6 +5,15 @@ import { formatNumber } from "@/lib/format-number";
 // 잔여 수량이 마이너스면 그 자체로 초과분이라 빨간색으로 강조한다. 같은 상품이 한 주문 안에서 여러 줄로 나뉘어 있으면
 // (관리번호별 분할 등) 그 줄들의 합계(totalQty)로 부족 여부를 판단해야 실제 재고를 넘는 걸 놓치지 않는다.
 // 반품은 출고가 아니라 입고(재고 증가)라 부족 여부를 따지지 않고 늘어난 뒤 수량만 보여준다.
+type RowStockInput = { stock: number; originalQty: number; quantity: number; totalQty: number; isReturn: boolean };
+
+// 두 표시(안내문·"재고 확인" 칸)가 같은 계산을 쓰게 한 곳에서 한다 — 수정 중인 전표가 이미 차감한 수량(originalQty)은 되돌려 계산하고,
+// 같은 상품이 여러 줄이면 합계(totalQty)로 부족 여부를 판단한다. 반품은 부족을 따지지 않는다.
+export function rowStockRemaining({ stock, originalQty, quantity, totalQty, isReturn }: RowStockInput) {
+  const available = stock + originalQty;
+  return { available, remaining: isReturn ? available + quantity : available - totalQty };
+}
+
 export function OrderRowStockHint({
   stock,
   originalQty,
@@ -22,7 +31,7 @@ export function OrderRowStockHint({
   totalQty: number;
   isReturn: boolean;
 }) {
-  const availableStock = stock + originalQty;
+  const { available: availableStock, remaining } = rowStockRemaining({ stock, originalQty, quantity, totalQty, isReturn });
   if (isReturn) {
     return (
       <p className="text-[10.5px] erp-u-danger">
@@ -33,7 +42,6 @@ export function OrderRowStockHint({
       </p>
     );
   }
-  const remaining = availableStock - totalQty;
   const short = remaining < 0;
   return (
     <p className="text-[10.5px]" style={{ color: short ? "var(--erp-danger)" : "var(--erp-primary)" }}>
@@ -54,9 +62,8 @@ export function OrderRowStockHint({
 export function OrderRowStockCell({ stock, originalQty, unit, quantity, totalQty, isReturn }: {
   stock: number; originalQty: number; unit: string; quantity: number; totalQty: number; isReturn: boolean;
 }) {
-  const available = stock + originalQty;
   if (isReturn) return <span className="erp-stock-cell erp-stock-cell-info">+{formatNumber(quantity)}{unit} 입고</span>;
-  const remaining = available - totalQty;
+  const { remaining } = rowStockRemaining({ stock, originalQty, quantity, totalQty, isReturn });
   return remaining < 0 ? (
     <span className="erp-stock-cell erp-stock-cell-danger">{formatNumber(remaining)}{unit} 부족</span>
   ) : (
