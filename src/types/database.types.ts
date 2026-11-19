@@ -6360,6 +6360,10 @@ export type Database = {
         Args: { p_supplier_ids: string[] };
         Returns: { supplier_id: string; last_order_date: string }[];
       };
+      ensure_company_profile: {
+        Args: Record<string, never>;
+        Returns: undefined;
+      };
       get_customer_balances: {
         Args: Record<string, never>;
         Returns: {

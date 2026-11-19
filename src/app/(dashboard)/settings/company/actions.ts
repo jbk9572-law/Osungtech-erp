@@ -5,6 +5,7 @@ import { refreshLayout } from "@/lib/layout-cache";
 import { combinePhone } from "@/lib/phone";
 import { detectRasterImageType } from "@/lib/upload-safety";
 import { requireAdmin } from "@/lib/require-admin";
+import { writeCompanyProfile } from "@/lib/company-profile-write";
 import { uploadAttachment } from "@/lib/storage/upload-attachment";
 import type { FormState } from "@/components/form-message";
 
@@ -33,9 +34,7 @@ export async function updateCompanyProfile(
     return { error: "사무실 인정 반경을 올바르게 입력해주세요." };
   }
 
-  const { error } = await supabase
-    .from("company_profile")
-    .update({
+  const result = await writeCompanyProfile(supabase, {
       name,
       business_number: String(formData.get("business_number") ?? "") || null,
       representative_name: String(formData.get("representative_name") ?? "") || null,
@@ -51,18 +50,13 @@ export async function updateCompanyProfile(
       office_lat: officeLat,
       office_lng: officeLng,
       office_radius_m: officeRadiusM,
-    })
-    // id 값으로 특정 행을 고르는 게 아니라(RLS가 실제/데모 계정에 맞는
-    // 행만 갱신되게 걸러준다 — company_profile_demo_isolation 마이그레이션
-    // 참고), DB가 WHERE절 없는 UPDATE 자체를 막고 있어서 형식상 항상
-    // 참인 조건을 하나 붙여준다.
-    .not("id", "is", null);
+    });
 
-  if (error) {
+  if (!result.ok) {
     return {
-      error: error.message.includes("column")
+      error: result.error.includes("column")
         ? "저장에 실패했습니다. 아직 실행하지 않은 데이터베이스 마이그레이션이 있을 수 있습니다."
-        : `저장에 실패했습니다: ${error.message}`,
+        : `저장에 실패했습니다: ${result.error}`,
     };
   }
 
@@ -141,13 +135,9 @@ export async function uploadBrandingImage(
         ? { logo_mark_url: url }
         : { seal_image_url: url };
 
-  // id로 안 고른다 — RLS가 실제/데모 계정에 맞는 행만 갱신되게 걸러준다
-  // (company_profile_demo_isolation 마이그레이션 참고). DB가 WHERE절
-  // 없는 UPDATE를 막고 있어서 형식상 항상 참인 조건을 붙여준다.
-  const { error } = await supabase.from("company_profile").update(update).not("id", "is", null);
-
-  if (error) {
-    return { error: `저장에 실패했습니다: ${error.message}` };
+  const result = await writeCompanyProfile(supabase, update);
+  if (!result.ok) {
+    return { error: `저장에 실패했습니다: ${result.error}` };
   }
 
   refreshLayout();
@@ -200,12 +190,9 @@ export async function resetBrandingImage(
         ? { logo_mark_url: resetValue }
         : { seal_image_url: resetValue };
 
-  // DB가 WHERE절 없는 UPDATE를 막고 있어서 형식상 항상 참인 조건을
-  // 붙여준다 — 실제 행 선택은 위 uploadBrandingImage와 동일하게 RLS가 한다.
-  const { error } = await supabase.from("company_profile").update(update).not("id", "is", null);
-
-  if (error) {
-    return { error: `되돌리기에 실패했습니다: ${error.message}` };
+  const result = await writeCompanyProfile(supabase, update);
+  if (!result.ok) {
+    return { error: `되돌리기에 실패했습니다: ${result.error}` };
   }
 
   refreshLayout();
