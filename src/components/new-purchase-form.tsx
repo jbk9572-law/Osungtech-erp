@@ -12,11 +12,12 @@ import { NumberInput } from "@/components/number-input";
 import { RemarkActionCells, SpecLotUnitCells } from "@/components/erp/order-form-row-cells";
 import { QuantityWithBoxInput } from "@/components/quantity-with-box-input";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
-import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
+import { KeyboardHintBar, ORDER_GRID_KEY_HINTS } from "@/components/erp/keyboard-hint-bar";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import {
   focusSameColumnNextRow,
   focusGridArrowNav,
+  focusGridRowShortcuts,
 } from "@/lib/grid-enter-nav";
 import { TodoImportPopover } from "@/components/todo-import-popover";
 import { AlwaysCreditOption, CarryoverToggle, FormSaveButtons, PaymentMethodFields } from "@/components/erp/order-form-fields";
@@ -965,6 +966,11 @@ export function NewPurchaseForm({
   }
 
   const docSheetClass = useDocSheetClass();
+  const appendRowIfFilled = () => {
+    const filled = !!(rows[rows.length - 1]?.productId || rows[rows.length - 1]?.customName?.trim());
+    if (filled) addRow();
+    return filled;
+  };
   const saveButtons = <FormSaveButtons isEdit={!!initial?.id} pending={pending} submitRef={submitRef} label={submitLabel} />;
 
   return (
@@ -1332,6 +1338,7 @@ export function NewPurchaseForm({
               onKeyDown={(e) => {
                 focusSameColumnNextRow(e);
                 focusGridArrowNav(e);
+                focusGridRowShortcuts(e, { onAppendRow: appendRowIfFilled });
               }}
             >
               <PaperCalcGridRows pc={pc} dashAfterQuantity={alsoCreateSale} dashAfterUnit={alsoCreateSale} />
@@ -1534,14 +1541,7 @@ export function NewPurchaseForm({
           />
         </div>
 
-        <KeyboardHintBar
-          items={[
-            { key: "Tab", label: "다음 칸" },
-            { key: "Enter", label: "아래 칸" },
-            { key: "F7", label: "저장" },
-            { key: "Esc", label: "저장 후 닫기" },
-          ]}
-        />
+        <KeyboardHintBar items={ORDER_GRID_KEY_HINTS} />
 
         {rows.some(
           (r) =>

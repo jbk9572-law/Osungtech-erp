@@ -17,7 +17,7 @@ import {
 import { parseTodoType, type TodoType } from "@/lib/todo-flow";
 import { FieldHint } from "@/components/field-hint";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
-import { focusSameColumnNextRow, focusGridArrowNav } from "@/lib/grid-enter-nav";
+import { focusSameColumnNextRow, focusGridArrowNav, focusGridRowShortcuts } from "@/lib/grid-enter-nav";
 import { normalizeLotNumber } from "@/lib/lot-number";
 import { useFormRedirect } from "@/lib/use-form-redirect";
 import { formatNumber } from "@/lib/format-number";
@@ -393,6 +393,7 @@ export function TodoForm({
               onKeyDown={(e) => {
                 focusSameColumnNextRow(e);
                 focusGridArrowNav(e);
+                focusGridRowShortcuts(e);
               }}
             >
               {rows.map((row) => {
@@ -470,6 +471,7 @@ export function TodoForm({
                         type="button"
                         className="erp-btn erp-btn-danger erp-btn-sm erp-u-minw-0"
                         onClick={() => removeRow(row.key)}
+                        aria-label="이 줄 삭제"
                       >
                         삭제
                       </button>

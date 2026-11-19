@@ -16,7 +16,7 @@ import { NumberInput } from "@/components/number-input";
 import { RemarkActionCells, SpecLotUnitCells } from "@/components/erp/order-form-row-cells";
 import { QuantityWithBoxInput } from "@/components/quantity-with-box-input";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
-import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
+import { KeyboardHintBar, ORDER_GRID_KEY_HINTS } from "@/components/erp/keyboard-hint-bar";
 import { ErpSelect } from "@/components/erp/erp-select";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { TodoImportPopover } from "@/components/todo-import-popover";
@@ -26,6 +26,7 @@ import { normalizeLotNumber } from "@/lib/lot-number";
 import {
   focusSameColumnNextRow,
   focusGridArrowNav,
+  focusGridRowShortcuts,
 } from "@/lib/grid-enter-nav";
 import {
   getOpenTodos,
@@ -922,6 +923,11 @@ export function NewSaleForm({
   }
 
   const docSheetClass = useDocSheetClass();
+  const appendRowIfFilled = () => {
+    const filled = !!(rows[rows.length - 1]?.productId || rows[rows.length - 1]?.customName?.trim());
+    if (filled) addRow();
+    return filled;
+  };
   const saveButtons = <FormSaveButtons isEdit={!!initial?.id} pending={pending} submitRef={submitRef} label={isReturn ? `반품 ${initial?.id ? "수정" : "등록"}` : submitLabel} />;
 
   return (
@@ -1302,6 +1308,7 @@ export function NewSaleForm({
               onKeyDown={(e) => {
                 focusSameColumnNextRow(e);
                 focusGridArrowNav(e);
+                focusGridRowShortcuts(e, { onAppendRow: appendRowIfFilled });
               }}
             >
               <PaperCalcGridRows pc={pc} />
@@ -1466,14 +1473,7 @@ export function NewSaleForm({
         </div>
 
         <VoucherWarning shortages={stockShortages} />
-        <KeyboardHintBar
-          items={[
-            { key: "Tab", label: "다음 칸" },
-            { key: "Enter", label: "아래 칸" },
-            { key: "F7", label: "저장" },
-            { key: "Esc", label: "저장 후 닫기" },
-          ]}
-        />
+        <KeyboardHintBar items={ORDER_GRID_KEY_HINTS} />
 
         {rows.some(
           (r) =>

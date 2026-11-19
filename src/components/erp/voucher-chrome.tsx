@@ -6,6 +6,7 @@ import { DraftSavedIndicator } from "@/components/draft-saved-indicator";
 import { useThemeFeatures } from "@/lib/erp-theme-features";
 import { formatNumber } from "@/lib/format-number";
 import { useModalClose } from "@/lib/modal-context";
+import { GridCellRangeStats } from "@/components/erp/grid-cell-range";
 
 // 매출/매입 전표 등록 모달의 "틀" — 테마에 따라 구조 자체가 다르다.
 //  · 클래식: 가운데 제목 + "기본정보" 머리줄(오른쪽에 저장 버튼) + 표 아래 합계.
@@ -85,7 +86,10 @@ function FooterShell({ summary, children }: { summary?: ReactNode; children: Rea
   const close = useModalClose();
   return (
     <div className="erp-voucher-footer">
-      <span className="erp-voucher-footer-hint">Esc 닫기</span>
+      <span className="erp-voucher-footer-hint">
+        Esc 닫기
+        <GridCellRangeStats />
+      </span>
       <div className="erp-voucher-footer-right">
         {summary}
         {close && (
