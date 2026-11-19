@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { NewPurchaseTypeSwitcher } from "@/components/new-purchase-type-switcher";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { HideWhenVoucher } from "@/components/erp/voucher-chrome";
 import { ListPageHeader } from "@/components/erp/page-header";
 import {
   applyDuePriceSchedules,
@@ -138,7 +139,7 @@ async function NewPurchasePage({
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/purchases" } }} />
-      <ListPageHeader title="새 매입(입고) 등록" />
+      <HideWhenVoucher><ListPageHeader title="새 매입(입고) 등록" /></HideWhenVoucher>
       {saved && (
         <PageGuide tone="success">
           방금 등록한 거래가 저장되었습니다.{" "}

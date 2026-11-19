@@ -49,7 +49,7 @@ import { OrderRowStockCell, OrderRowStockHint } from "@/components/order-row-sto
 import { useThemeFeatures } from "@/lib/erp-theme-features";
 import { ManualPriceToggle } from "@/components/order-manual-price-toggle";
 import { PartyContextStrip } from "@/components/erp/party-context-strip";
-import { VoucherBasicHead, VoucherChip, VoucherFooter, VoucherTitle } from "@/components/erp/voucher-chrome";
+import { VoucherBasicHead, VoucherChip, VoucherFooter, VoucherTitle, VoucherWarning } from "@/components/erp/voucher-chrome";
 import {
   PaperCalcGridRows,
   PaperCalcHiddenInputs,
@@ -614,9 +614,7 @@ export function NewSaleForm({
     return lookupPartyProductValue(noteMap, forCustomerId, productId) ?? null;
   }
 
-  // 수정 화면에서는 product.stock이 "이 거래로 이미 출고 처리된 뒤"의 현재
-  // 재고라, 원래 수량 그대로 비교하면 항상 부족한 것처럼 보인다. 이 거래가
-  // 원래 갖고 있던 수량만큼은 되돌려받은 셈 치고 비교해야 한다.
+  // 수정 화면의 product.stock은 이 거래가 이미 출고된 뒤의 재고라, 이 거래의 원래 수량은 되돌려받은 셈 치고 비교해야 한다.
   const originalQtyByProduct = useMemo(() => {
     const map = new Map<string, number>();
     for (const item of initial?.items ?? []) {
@@ -626,11 +624,7 @@ export function NewSaleForm({
     return map;
   }, [initial]);
 
-  // 관리번호(롯)별로 같은 상품을 여러 줄에 나눠 입력하는 경우(코드베이스
-  // 전반에서 흔한 패턴), 재고 부족 여부는 그 줄 하나가 아니라 이 주문에
-  // 걸린 같은 상품의 모든 줄을 합쳐서 따져야 한다 — 줄마다 따로 보면
-  // 재고 50개인데 30개씩 두 줄(합계 60개)을 넣어도 각 줄은 "여유 있음"
-  // 으로 보여 실제로는 부족한데 경고가 안 뜬다.
+  // 같은 상품을 관리번호(롯)별로 여러 줄에 나눠 넣을 수 있으므로, 재고 부족은 줄 하나가 아니라 이 주문의 같은 상품 전체 합계로 따진다.
   const rowQtyByProduct = useMemo(() => {
     const map = new Map<string, number>();
     for (const row of rows) {
@@ -639,6 +633,11 @@ export function NewSaleForm({
     }
     return map;
   }, [rows]);
+  const stockShortages = isReturn ? [] : [...rowQtyByProduct].flatMap(([pid, qty]) => {
+    const p = products.find((x) => x.id === pid);
+    const short = p ? qty - ((p.stock ?? 0) + (originalQtyByProduct.get(pid) ?? 0)) : 0;
+    return p && short > 0 ? [{ name: p.name, short, unit: p.unit ?? "" }] : [];
+  });
 
   function resolvePrice(forCustomerId: string, productId: string) {
     // 샘플(무상증정)이면 거래처 단가/품목 기본가와 무관하게 항상 0원 —
@@ -925,7 +924,7 @@ export function NewSaleForm({
     <form
       ref={formRef}
       action={formAction}
-      className="erp-doc-sheet erp-voucher"
+      className={`erp-doc-sheet${voucherLayout ? " erp-voucher" : ""}`}
       onKeyDown={(e) => {
         preventEnterSubmit(e);
         // ESC = F7과 같은 "저장 후 닫기"(실패하면 에러만 뜨고 안 닫힘). 상단 ✕는 저장 없이 닫기. stopPropagation으로
@@ -1475,6 +1474,7 @@ export function NewSaleForm({
           />
         </div>
 
+        <VoucherWarning shortages={stockShortages} />
         <KeyboardHintBar
           items={[
             { key: "Tab", label: "다음 칸" },

@@ -1,5 +1,6 @@
 "use client";
 
+import { VoucherTypeBar } from "@/components/erp/voucher-chrome";
 import { useState, type ComponentProps } from "react";
 import { NewSaleForm } from "@/components/new-sale-form";
 import { NewCollectionForm } from "@/components/new-collection-form";
@@ -14,6 +15,7 @@ export function NewSaleTypeSwitcher({ today, ...saleProps }: SaleFormProps & { t
 
   return (
     <div>
+      <VoucherTypeBar title="매출전표 등록">
       <div className="erp-seg erp-u-mb-12">
         <button
           type="button"
@@ -38,6 +40,7 @@ export function NewSaleTypeSwitcher({ today, ...saleProps }: SaleFormProps & { t
           반품
         </button>
       </div>
+      </VoucherTypeBar>
       {type === "sale" && <NewSaleForm {...saleProps} />}
       {type === "collection" && <NewCollectionForm customers={saleProps.customers} today={today} />}
       {type === "return" && (

@@ -1,5 +1,6 @@
 "use client";
 
+import { VoucherTypeBar } from "@/components/erp/voucher-chrome";
 import { useState, type ComponentProps } from "react";
 import { NewPurchaseForm } from "@/components/new-purchase-form";
 import { NewPaymentForm } from "@/components/new-payment-form";
@@ -13,6 +14,7 @@ export function NewPurchaseTypeSwitcher({ today, ...purchaseProps }: PurchaseFor
 
   return (
     <div>
+      <VoucherTypeBar title="매입전표 등록">
       <div className="erp-seg erp-u-mb-12">
         <button
           type="button"
@@ -29,6 +31,7 @@ export function NewPurchaseTypeSwitcher({ today, ...purchaseProps }: PurchaseFor
           지급
         </button>
       </div>
+      </VoucherTypeBar>
       {type === "purchase" ? (
         <NewPurchaseForm {...purchaseProps} />
       ) : (

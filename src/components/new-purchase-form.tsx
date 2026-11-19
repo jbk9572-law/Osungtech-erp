@@ -43,6 +43,7 @@ import { useKeyedRows } from "@/lib/use-keyed-rows";
 import { useDraftAutosave } from "@/lib/use-draft-autosave";
 import { DraftResumeBanner } from "@/components/draft-resume-banner";
 import { ManualPriceToggle } from "@/components/order-manual-price-toggle";
+import { useThemeFeatures } from "@/lib/erp-theme-features";
 import { PartyContextStrip } from "@/components/erp/party-context-strip";
 import { VoucherBasicHead, VoucherChip, VoucherFooter, VoucherTitle } from "@/components/erp/voucher-chrome";
 import {
@@ -87,10 +88,7 @@ type Row = {
   quantityFormula?: string | null; unitPriceFormula?: string | null; // 엑셀식 입력("=600*2") 저장용 — lib/item-formulas
   manualPrice: boolean;
   remark: string;
-  // "매출도 같이 등록"을 켰을 때만 쓴다. 기본은 매입수량을 그대로 따라가지만
-  // (전량 당일출고 가정), 일부만 출고하고 나머지는 재고로 남기는 경우를 위해
-  // 독립적으로 고칠 수 있다 — 한 번 직접 고치면(manualSaleQuantity) 이후
-  // 매입수량이 바뀌어도 더 이상 따라가지 않는다.
+  // "매출도 같이 등록"일 때만 쓴다. 기본은 매입수량을 따라가지만(전량 당일출고 가정) 직접 고치면(manualSaleQuantity) 더 이상 안 따라간다.
   saleQuantity: number;
   manualSaleQuantity: boolean;
   // 매출 단가 — 출고처의 거래처별 단가(customer_product_prices)를 우선
@@ -264,6 +262,7 @@ export function NewPurchaseForm({
   // 이 체크박스로 명시적으로 관리한다(매출 등록 폼과 동일한 방식).
   // "매출도 같이 등록"(당일 즉시 출고)과는 개념이 겹치지 않아 같이 켤 필요가
   // 없으므로, 아래 alsoCreateSale이 켜지면 이 체크박스는 숨긴다.
+  const { voucherLayout } = useThemeFeatures();
   const [isCarryover, setIsCarryover] = useState(
     initial?.isCarryover ?? false,
   );
@@ -970,7 +969,7 @@ export function NewPurchaseForm({
     <form
       ref={formRef}
       action={formAction}
-      className="erp-doc-sheet erp-voucher"
+      className={`erp-doc-sheet${voucherLayout ? " erp-voucher" : ""}`}
       onKeyDown={(e) => {
         preventEnterSubmit(e);
         // new-sale-form.tsx와 동일 — ESC를 F7과 같은 "저장 후 닫기"로

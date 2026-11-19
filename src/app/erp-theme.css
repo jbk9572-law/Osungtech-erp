@@ -605,7 +605,7 @@
   --erp-modal-close-hover-bg: #eef0f3;
   --erp-modal-close-hover-fg: #1f2530;
   --erp-doc-sheet-bg: #ffffff;
-  --erp-doc-sheet-pad: 14px 18px 12px;
+  --erp-doc-sheet-pad: 0px;
   --erp-doc-paper-bw: 0px;
   --erp-doc-paper-top-w: 0px;
   --erp-doc-paper-pad: 0px;
@@ -7550,10 +7550,38 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
+  gap: 6px 10px;
+  /* 오른쪽 위 모달 닫기(✕) 자리를 비운다 */
+  padding: 12px 48px 12px 18px;
+  border-bottom: 1px solid var(--erp-divider);
+}
+.erp-voucher-titlebar .erp-seg {
+  margin-bottom: 0;
+}
+.erp-voucher-chips {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
   gap: 6px;
-  /* 오른쪽 위 모달 닫기(✕)와 겹치지 않게 비운다 */
-  padding-right: 36px;
-  min-height: 28px;
+}
+/* 전표 모달은 띠(제목줄·거래처 정보 줄·하단 바)가 모달 가장자리까지 닿는다 — 본문 안쪽 여백을 없애고 칸마다 안쪽 여백을 준다 */
+.erp-modal-body:has(.erp-voucher),
+.erp-modal-body:has(.erp-voucher-typebar) {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.erp-voucher-typebar ~ form:not(.erp-voucher) {
+  padding: 16px;
+}
+.erp-voucher .erp-doc-paper {
+  gap: 0;
+}
+.erp-voucher .erp-doc-paper > * {
+  padding-inline: 18px;
+}
+.erp-voucher .erp-doc-paper > div:not([class]) {
+  padding-top: 12px;
 }
 .erp-voucher-title {
   margin: 0 6px 0 0;
@@ -7616,8 +7644,7 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 8px 16px;
-  margin: 0 calc(-1 * 18px) calc(-1 * 12px);
-  padding: 10px 18px;
+  padding-block: 10px;
   background: var(--erp-panel);
   border-top: 1px solid var(--erp-border-strong);
 }
@@ -7696,11 +7723,9 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   align-items: center;
   flex-wrap: wrap;
   gap: 4px 16px;
-  margin: 2px 0 4px;
-  padding: 7px 10px;
+  padding-block: 8px;
   background: var(--erp-bg-subtle);
-  border: 1px solid var(--erp-divider);
-  border-radius: var(--erp-radius-md);
+  border-bottom: 1px solid var(--erp-divider);
   font-size: var(--erp-font-sm);
   color: var(--erp-text-muted);
 }
@@ -7709,4 +7734,28 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
 }
 .erp-voucher-context b.erp-u-danger {
   color: var(--erp-danger);
+}
+
+/* 전표 모달 — 재고 부족 경고 띠, 하단 바 보조 요소 */
+.erp-voucher-warning {
+  padding-block: 7px;
+  background: var(--erp-warning-bg);
+  border-top: 1px solid var(--erp-warning-border);
+  color: var(--erp-warning);
+  font-size: var(--erp-font-sm);
+  font-weight: 600;
+}
+.erp-voucher .erp-key-hint-bar {
+  display: none;
+}
+.erp-voucher-footer-hint {
+  font-size: var(--erp-font-xs);
+  color: var(--erp-text-muted);
+}
+.erp-voucher-footer-right {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-left: auto;
 }
