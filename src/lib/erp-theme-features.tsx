@@ -10,13 +10,15 @@ import { GRID_CHECKBOX_WIDTH } from "@/lib/grid-sticky";
 export type ThemeFeatures = {
   /** 목록 표 첫 칸에 행 번호(No)를 같이 보여준다. */
   rowNumbers: boolean;
+  /** 표 머리글 위에 묶음 머리글 줄(예: "금액(원)")을 얹는다. */
+  groupedHeader: boolean;
 };
 
-const CLASSIC_FEATURES: ThemeFeatures = { rowNumbers: false };
+const CLASSIC_FEATURES: ThemeFeatures = { rowNumbers: false, groupedHeader: false };
 
 const THEME_FEATURES: Record<string, ThemeFeatures> = {
   "classic-light": CLASSIC_FEATURES,
-  "grid-modern": { rowNumbers: true },
+  "grid-modern": { rowNumbers: true, groupedHeader: true },
 };
 
 const ThemeFeaturesContext = createContext<ThemeFeatures>(CLASSIC_FEATURES);

@@ -345,6 +345,9 @@
   --erp-badge-radius: 999px;
   --erp-badge-px: 9px;
   --erp-badge-weight: 600;
+  --erp-grid-group-h: 22px;
+  --erp-grid-group-bg: #c7cdd6;
+  --erp-grid-group-fg: #182338;
   /* 기본(주요) 버튼 — initial이면 흰 바탕+테두리(기존), 테마가 채움 버튼으로 바꾼다 */
   --erp-btn-primary-bg: initial;
   --erp-btn-primary-fg: initial;
@@ -538,6 +541,9 @@
   --erp-badge-radius: 9px;
   --erp-badge-px: 7px;
   --erp-badge-weight: 700;
+  --erp-grid-group-h: 22px;
+  --erp-grid-group-bg: #dfe5ee;
+  --erp-grid-group-fg: #3a4558;
   --erp-btn-primary-bg: #2f62d6;
   --erp-btn-primary-fg: #ffffff;
   --erp-btn-primary-hover-bg: #2450b3;
@@ -3532,6 +3538,20 @@ form.erp-field-grid {
   .erp-grid tbody tr.erp-grid-accordion-row {
     display: table-row;
   }
+}
+
+/* 묶음 머리글 줄(GridGroupHeaderRow) — 아래 머리글 줄은 이 줄 높이만큼 아래에 붙는다 */
+.erp-grid thead tr.erp-grid-group-row th {
+  height: var(--erp-grid-group-h);
+  padding: 0;
+  background: var(--erp-grid-group-bg);
+  color: var(--erp-grid-group-fg);
+  text-align: center;
+  font-size: var(--erp-font-sm);
+  border-bottom: 1px solid var(--erp-grid-line);
+}
+.erp-grid thead tr.erp-grid-group-row ~ tr th {
+  top: var(--erp-grid-group-h);
 }
 
 /* 행 번호(No) — 테마 기능 rowNumbers가 켜졌을 때만 마크업에 들어간다(erp-theme-features.tsx) */

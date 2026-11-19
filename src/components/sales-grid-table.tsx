@@ -38,6 +38,7 @@ import { useColumnVisibility } from "@/lib/use-column-visibility";
 import { ColumnVisibilityMenu, type ColumnVisibilityOption } from "@/components/grid/column-visibility-menu";
 import { GridToolbar } from "@/components/grid/grid-toolbar";
 import { useGridCheckboxWidth, useThemeFeatures } from "@/lib/erp-theme-features";
+import { GridGroupHeaderRow } from "@/components/grid/group-header-row";
 import { GridRowLegend } from "@/components/grid/row-legend";
 
 // 핵심 칸(체크박스/날짜/거래처/품목/수량/공급가액/세액/작업)은 끌 수
@@ -623,6 +624,7 @@ export function SalesGridTable({
       <div className="erp-grid-wrap has-card-view">
         <table className="erp-grid">
           <thead>
+            <GridGroupHeaderRow before={15} span={2} after={3} label="금액(원)" />
             <tr>
               <th style={thSticky1}>
                 <input
