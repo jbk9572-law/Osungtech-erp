@@ -33,6 +33,20 @@ while ((m = ruleRe.exec(css))) {
   }
 }
 
+// 5) 날짜 상태 행(rowDayClass)을 쓰는 표는 행 색 범례(GridRowLegend)도 같이 둔다 — 색 규칙이 화면에 설명 없이 남지 않게.
+function walk(dir) {
+  return fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+    const f = `${dir}/${e.name}`;
+    return e.isDirectory() ? walk(f) : f.endsWith(".tsx") ? [f] : [];
+  });
+}
+for (const f of walk("src")) {
+  const t = fs.readFileSync(f, "utf8");
+  if (/rowDayClass\(/.test(t) && !/GridRowLegend/.test(t)) {
+    errors.push(`${f} rowDayClass를 쓰는데 <GridRowLegend />가 없습니다`);
+  }
+}
+
 if (errors.length) {
   console.error(errors.join("\n"));
   process.exit(1);

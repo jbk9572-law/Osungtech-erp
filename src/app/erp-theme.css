@@ -345,6 +345,16 @@
   --erp-badge-radius: 999px;
   --erp-badge-px: 9px;
   --erp-badge-weight: 600;
+  /* 뱃지 톤별 배경 — initial(=값 없음)이면 기존 --erp-*-bg를 쓴다. 테마가 투명 등으로 바꾸는 자리. */
+  --erp-badge-bg-success: initial;
+  --erp-badge-bg-warning: initial;
+  --erp-badge-bg-danger: initial;
+  --erp-badge-bg-muted: initial;
+  --erp-badge-bg-info: initial;
+  /* 상태 뱃지 앞 점(●) — 클래식은 없음 */
+  --erp-badge-dot-display: none;
+  /* 행 색 범례 줄 — 클래식은 숨김 */
+  --erp-grid-legend-display: none;
   --erp-ribbon-bg: #fafbfc;
   --erp-titlebar-bg: #132944;
   --erp-titlebar-fg: #fff;
@@ -507,6 +517,13 @@
   --erp-badge-radius: 9px;
   --erp-badge-px: 7px;
   --erp-badge-weight: 700;
+  --erp-badge-bg-success: transparent;
+  --erp-badge-bg-warning: transparent;
+  --erp-badge-bg-danger: transparent;
+  --erp-badge-bg-muted: transparent;
+  --erp-badge-bg-info: transparent;
+  --erp-badge-dot-display: inline-block;
+  --erp-grid-legend-display: flex;
 
   /* 상단바/리본 — 남색 바 대신 흰 바 + 얇은 선 */
   --erp-titlebar-bg: #ffffff;
@@ -3315,29 +3332,71 @@ form.erp-field-grid {
 }
 
 .erp-badge-success {
-  background: var(--erp-success-bg);
+  background: var(--erp-badge-bg-success, var(--erp-success-bg));
   color: var(--erp-success);
 }
 
 .erp-badge-warning {
-  background: var(--erp-warning-bg);
+  background: var(--erp-badge-bg-warning, var(--erp-warning-bg));
   color: var(--erp-warning);
 }
 
 .erp-badge-danger {
-  background: var(--erp-danger-bg);
+  background: var(--erp-badge-bg-danger, var(--erp-danger-bg));
   color: var(--erp-danger);
 }
 
 .erp-badge-muted {
-  background: var(--erp-divider);
+  background: var(--erp-badge-bg-muted, var(--erp-divider));
   color: var(--erp-text-muted);
 }
 
 .erp-badge-info {
-  background: var(--erp-info-bg);
+  background: var(--erp-badge-bg-info, var(--erp-info-bg));
   color: var(--erp-text);
 }
+
+/* 상태 뱃지 앞 점 — 표시 여부는 --erp-badge-dot-display(테마) */
+.erp-badge-success::before,
+.erp-badge-warning::before,
+.erp-badge-danger::before {
+  content: "";
+  display: var(--erp-badge-dot-display);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* 행 색 범례(GridRowLegend) */
+.erp-grid-legend {
+  display: var(--erp-grid-legend-display);
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--erp-space-4);
+  padding: var(--erp-space-2) var(--erp-space-1);
+  font-size: var(--erp-font-sm);
+  color: var(--erp-text-muted);
+}
+.erp-grid-legend-title {
+  font-weight: 700;
+}
+.erp-grid-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--erp-space-1);
+}
+.erp-grid-legend-item::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--legend-dot);
+}
+.erp-legend-today { --legend-dot: var(--erp-success); }
+.erp-legend-carry-prev { --legend-dot: var(--erp-warning); }
+.erp-legend-carry-next { --legend-dot: var(--erp-carry-next-bar); }
+.erp-legend-future { --legend-dot: var(--erp-border); }
 
 .erp-badge-carry,
 .erp-badge-carry-prev {
