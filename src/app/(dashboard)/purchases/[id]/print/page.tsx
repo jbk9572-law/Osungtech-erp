@@ -4,7 +4,7 @@ import { PrintButton } from "@/components/print-button";
 import { PrintOptionBar } from "@/components/print-option-bar";
 import { CloseButton } from "@/components/erp/close-button";
 import { InvoicePage, type InvoiceCopies, type InvoiceLayout } from "@/components/invoice/InvoicePage";
-import type { InvoiceItem } from "@/components/invoice/types";
+import { toInvoiceParty, type InvoiceForm, type InvoiceItem } from "@/components/invoice/types";
 import { formatPaperCalcSizeLines, mergePaperCalcInputItems } from "@/modules/paper-calc/public";
 import { PAPER_STOCK_SKU } from "@/modules/paper-calc/public";
 import { getSupplierBalance } from "@/lib/ar-ap";
@@ -19,13 +19,15 @@ export default async function PurchasePrintPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ copies?: string; layout?: string; balance?: string; lot?: string }>;
+  searchParams: Promise<{ copies?: string; layout?: string; balance?: string; lot?: string; form?: string }>;
 }) {
   const { id } = await params;
   const sp = await searchParams;
   const { copies: copiesParam, layout: layoutParam, balance: balanceParam, lot: lotParam } = sp;
   const copies: InvoiceCopies = copiesParam === "receiver" || copiesParam === "supplier" ? copiesParam : "both";
   const layout: InvoiceLayout = layoutParam === "full" ? "full" : "half";
+  // 서식: 기본은 지금까지 쓰던 B형. ?form=a 일 때만 A형(공급받는자 사업자 정보까지 채움).
+  const form: InvoiceForm = sp.form === "a" ? "A" : "B";
   const showBalance = balanceParam === "show";
   const showLot = lotParam === "show";
   const supabase = await createClient();
@@ -107,6 +109,15 @@ export default async function PurchasePrintPage({
         params={sp}
         groups={[
           {
+            key: "form",
+            label: "서식",
+            current: form === "A" ? "a" : "b",
+            options: [
+              { value: "b", label: "B형" },
+              { value: "a", label: "A형" },
+            ],
+          },
+          {
             key: "copies",
             label: "출력",
             current: copies,
@@ -145,6 +156,8 @@ export default async function PurchasePrintPage({
         memo={order.memo}
         copies={copies}
         layout={layout}
+        form={form}
+        customer={toInvoiceParty(order.suppliers)}
         balance={supplierBalance}
       />
     </div>

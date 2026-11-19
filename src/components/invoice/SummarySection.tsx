@@ -1,6 +1,7 @@
 import { Cell } from "./Cell";
 import { DOCUMENT, SUMMARY } from "./InvoiceMetrics";
 import type { InvoiceItem } from "./types";
+import { computeInvoiceTotals } from "./InvoiceTotals";
 import { formatNumber } from "@/lib/format-number";
 
 // 0707 원본: "합계 ₩1,265,000원정 (수량 : 10,000, 공급가 : 1,150,000, 세액 : 115,000)"
@@ -16,13 +17,7 @@ export function SummarySection({
   memo?: string | null;
   balance?: number;
 }) {
-  const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
-  const supplyTotal = items.reduce((sum, item) => sum + item.supplyAmount, 0);
-  const taxTotal = items.reduce((sum, item) => sum + item.taxAmount, 0);
-  const grandTotal = supplyTotal + taxTotal;
-  // 총잔금은 이번 거래까지 반영된 현재 잔액이므로, 그 값에서 이번 거래
-  // 금액을 빼면 이번 거래 전까지의 잔액(전잔금)이 된다.
-  const priorBalance = balance !== undefined ? balance - grandTotal : undefined;
+  const { totalQuantity, supplyTotal, taxTotal, grandTotal, priorBalance } = computeInvoiceTotals(items, balance);
 
   return (
     <>

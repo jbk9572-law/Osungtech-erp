@@ -10,7 +10,7 @@ import {
   KtSolutionCanvas,
 } from "@/components/delivery-note-v2/DeliveryNoteCanvas";
 import { InvoicePage, type InvoiceCopies, type InvoiceLayout } from "@/components/invoice/InvoicePage";
-import type { InvoiceItem } from "@/components/invoice/types";
+import { toInvoiceParty, type InvoiceForm, type InvoiceItem } from "@/components/invoice/types";
 import { formatPaperCalcSizeLines, mergePaperCalcInputItems } from "@/modules/paper-calc/public";
 import { PAPER_STOCK_SKU } from "@/modules/paper-calc/public";
 import { getCustomerBalance } from "@/lib/ar-ap";
@@ -21,7 +21,7 @@ export default async function SalesPrintPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ copies?: string; layout?: string; balance?: string; lot?: string }>;
+  searchParams: Promise<{ copies?: string; layout?: string; balance?: string; lot?: string; form?: string }>;
 }) {
   const { id } = await params;
   const sp = await searchParams;
@@ -29,6 +29,8 @@ export default async function SalesPrintPage({
   const copies: InvoiceCopies =
     copiesParam === "receiver" || copiesParam === "supplier" ? copiesParam : "both";
   const layout: InvoiceLayout = layoutParam === "full" ? "full" : "half";
+  // 서식: 기본은 지금까지 쓰던 B형. ?form=a 일 때만 A형(공급받는자 사업자 정보까지 채움).
+  const form: InvoiceForm = sp.form === "a" ? "A" : "B";
   // 실무에서 거의 안 쓰는 기능이라 기본은 "표기 안함" — 명시적으로
   // ?balance=show를 눌러야만 전잔금/총잔금 칸에 실제 잔액이 찍힌다.
   const showBalance = balanceParam === "show";
@@ -288,6 +290,15 @@ export default async function SalesPrintPage({
         params={sp}
         groups={[
           {
+            key: "form",
+            label: "서식",
+            current: form === "A" ? "a" : "b",
+            options: [
+              { value: "b", label: "B형" },
+              { value: "a", label: "A형" },
+            ],
+          },
+          {
             key: "copies",
             label: "출력",
             current: copies,
@@ -326,6 +337,8 @@ export default async function SalesPrintPage({
         memo={order.memo}
         copies={copies}
         layout={layout}
+        form={form}
+        customer={toInvoiceParty(order.customers)}
         balance={customerBalance}
       />
     </div>

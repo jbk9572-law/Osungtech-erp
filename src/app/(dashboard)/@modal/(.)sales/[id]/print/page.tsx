@@ -9,7 +9,7 @@ import { resolveListHref } from "@/lib/list-return";
 // 누르면 그냥 꺼져야지 이전 모달로 "뒤로가기" 하면 안 된다).
 export default async function InterceptedSalesPrintPage(props: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ copies?: string; layout?: string; balance?: string; lot?: string; back?: string }>;
+  searchParams: Promise<{ copies?: string; layout?: string; balance?: string; lot?: string; form?: string; back?: string }>;
 }) {
   const { back } = await props.searchParams;
   return (

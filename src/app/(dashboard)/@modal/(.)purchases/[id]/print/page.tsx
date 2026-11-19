@@ -7,7 +7,7 @@ import { resolveListHref } from "@/lib/list-return";
 // 닫는다 — sales/[id]/print와 동일한 이유.
 export default async function InterceptedPurchasePrintPage(props: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ copies?: string; layout?: string; balance?: string; lot?: string; back?: string }>;
+  searchParams: Promise<{ copies?: string; layout?: string; balance?: string; lot?: string; form?: string; back?: string }>;
 }) {
   const { back } = await props.searchParams;
   return (
