@@ -374,6 +374,26 @@
   --erp-fx-badge-display: none;
   /* 선택 전표 상세 — 클래식은 행 아래 아코디언, 테마에 따라 오른쪽 고정 패널 */
   --erp-detail-side-display: none;
+  /* 전표(등록 모달) 틀 — 클래식은 "종이 카드", grid-modern은 틀 없이 밀집 시트 */
+  --erp-modal-top-w: 3px;
+  --erp-doc-sheet-bg: var(--erp-bg);
+  --erp-doc-sheet-pad: 20px;
+  --erp-doc-paper-bw: 1px;
+  --erp-doc-paper-top-w: 3px;
+  --erp-doc-paper-pad: 24px;
+  --erp-doc-paper-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+  --erp-doc-title-align: center;
+  --erp-doc-title-size: 17px;
+  --erp-doc-title-spacing: 0.15em;
+  --erp-doc-title-line-w: 1.5px;
+  --erp-doc-title-pb: 14px;
+  --erp-doc-title-mb: 18px;
+  --erp-doc-label-bg: var(--erp-bg-subtle);
+  --erp-doc-label-px: 6px;
+  --erp-doc-label-size: var(--erp-font-sm);
+  --erp-doc-label-weight: 400;
+  --erp-doc-field-gap: 14px;
+  --erp-section-eyebrow-transform: uppercase;
   /* 왼쪽 메뉴 선택 항목 — initial이면 기존(선택색 배경, 본문색, 띠 없음) */
   --erp-tree-active-bg: initial;
   --erp-tree-active-fg: initial;
@@ -567,6 +587,25 @@
   --erp-draft-indicator-display: block;
   --erp-fx-badge-display: block;
   --erp-detail-side-display: flex;
+  --erp-modal-top-w: 0px;
+  --erp-doc-sheet-bg: #ffffff;
+  --erp-doc-sheet-pad: 14px 18px 12px;
+  --erp-doc-paper-bw: 0px;
+  --erp-doc-paper-top-w: 0px;
+  --erp-doc-paper-pad: 0px;
+  --erp-doc-paper-shadow: none;
+  --erp-doc-title-align: left;
+  --erp-doc-title-size: 15px;
+  --erp-doc-title-spacing: 0;
+  --erp-doc-title-line-w: 0px;
+  --erp-doc-title-pb: 0px;
+  --erp-doc-title-mb: 2px;
+  --erp-doc-label-bg: transparent;
+  --erp-doc-label-px: 0px;
+  --erp-doc-label-size: var(--erp-font-xs);
+  --erp-doc-label-weight: 600;
+  --erp-doc-field-gap: 8px 10px;
+  --erp-section-eyebrow-transform: none;
   --erp-tree-active-bg: #eaf0fd;
   --erp-tree-active-fg: #2f62d6;
   --erp-tree-active-bar: #2f62d6;
@@ -696,7 +735,7 @@ html:has(.erp) body {
   font-weight: 700;
   color: var(--erp-text-muted);
   letter-spacing: 0.08em;
-  text-transform: uppercase;
+  text-transform: var(--erp-section-eyebrow-transform);
   margin-bottom: 4px;
 }
 
@@ -1175,7 +1214,7 @@ html:has(.erp) body {
      제목바(.erp-modal-title)가 붙는 단순 모달과 같은 화면에서 "같은
      모달"처럼 안 보인다는 지적 — 위쪽에 브랜드 색 테두리를 둘러 모든
      모달이 하나의 통일된 틀을 쓰는 것처럼 보이게 한다. */
-  border-top: 3px solid var(--erp-primary);
+  border-top: var(--erp-modal-top-w) solid var(--erp-primary);
   box-shadow: var(--erp-shadow-lg);
   opacity: 1;
   transform: scale(1);
@@ -3017,28 +3056,28 @@ form.erp-field-grid {
    "캔버스"로 쓰고, --erp-panel(흰색)을 그 위에 얹는 "종이" 카드로 쓴다.
    새 색을 만들지 않아서 다른 화면과 톤이 갈라지지 않는다. */
 .erp-doc-sheet {
-  background: var(--erp-bg);
-  padding: 20px;
+  background: var(--erp-doc-sheet-bg);
+  padding: var(--erp-doc-sheet-pad);
 }
 
 .erp-doc-paper {
   background: var(--erp-panel);
-  border: 1px solid var(--erp-border-strong);
-  border-top: 3px solid var(--erp-primary);
-  box-shadow: var(--erp-shadow-md);
-  padding: 24px;
+  border: var(--erp-doc-paper-bw) solid var(--erp-border-strong);
+  border-top: var(--erp-doc-paper-top-w) solid var(--erp-primary);
+  box-shadow: var(--erp-doc-paper-shadow);
+  padding: var(--erp-doc-paper-pad);
   border-radius: var(--erp-radius-3xl, 0);
 }
 
 .erp-doc-title {
-  text-align: center;
+  text-align: var(--erp-doc-title-align);
   font-weight: 800;
-  font-size: 17px;
-  letter-spacing: 0.15em;
+  font-size: var(--erp-doc-title-size);
+  letter-spacing: var(--erp-doc-title-spacing);
   color: var(--erp-text);
-  margin: 0 0 18px;
-  padding-bottom: 14px;
-  border-bottom: 1.5px solid var(--erp-primary);
+  margin: 0 0 var(--erp-doc-title-mb);
+  padding-bottom: var(--erp-doc-title-pb);
+  border-bottom: var(--erp-doc-title-line-w) solid var(--erp-primary);
 }
 
 /* 필드 라벨만 옅은 배경으로 구분해서(실제 서식지의 라벨칸 느낌) 문서
@@ -3046,10 +3085,16 @@ form.erp-field-grid {
    두고 라벨 쪽 배경만 얹는 가벼운 방식(매출/매입처럼 동적 필드가 많은
    화면에 씀). */
 .erp-doc-sheet .erp-field > label {
-  background: var(--erp-bg-subtle);
+  background: var(--erp-doc-label-bg);
+  font-size: var(--erp-doc-label-size);
+  font-weight: var(--erp-doc-label-weight);
   display: inline-block;
-  padding: 1px 6px;
+  padding: 1px var(--erp-doc-label-px);
   border-radius: var(--erp-radius-sm, 0);
+}
+
+.erp-doc-sheet .erp-field-grid {
+  gap: var(--erp-doc-field-gap);
 }
 
 .erp-doc-total {
