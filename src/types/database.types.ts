@@ -6352,6 +6352,14 @@ export type Database = {
         Args: { p_order_ids: string[] };
         Returns: { order_id: string; outstanding: number; status: string }[];
       };
+      get_customer_last_order_dates: {
+        Args: { p_customer_ids: string[] };
+        Returns: { customer_id: string; last_order_date: string }[];
+      };
+      get_supplier_last_order_dates: {
+        Args: { p_supplier_ids: string[] };
+        Returns: { supplier_id: string; last_order_date: string }[];
+      };
       get_customer_balances: {
         Args: Record<string, never>;
         Returns: {

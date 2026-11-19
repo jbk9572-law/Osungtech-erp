@@ -40,6 +40,7 @@ import { useColumnVisibility } from "@/lib/use-column-visibility";
 import { ColumnVisibilityMenu, type ColumnVisibilityOption } from "@/components/grid/column-visibility-menu";
 import { GridToolbar } from "@/components/grid/grid-toolbar";
 import { useGridCheckboxWidth, useThemeFeatures } from "@/lib/erp-theme-features";
+import { visibleColumnCount } from "@/lib/grid-columns";
 import { GridGroupHeaderRow } from "@/components/grid/group-header-row";
 import { GridRowLegend } from "@/components/grid/row-legend";
 
@@ -60,6 +61,8 @@ const PURCHASE_HIDEABLE_COLUMNS: ColumnVisibilityOption[] = [
   { key: "invoiceReceived", label: "세금계산서 수취" },
   { key: "remark", label: "비고" },
 ];
+// 표 칸 순서(머리글 th와 같은 순서) — colSpan 계산용(check-group-header-span이 th 개수와 맞는지 검사).
+const PURCHASE_COLUMN_KEYS = ["check","date","docNo","supplierCode","kind","taxType","evidenceType","supplier","deliveryMethod","authorName","product","spec","lotNumber","quantity","unitCost","supplyAmount","taxAmount","payment","invoiceReceived","remark","action"] as const;
 
 export type PurchaseRowItem = {
   productLabel: string;
@@ -149,10 +152,15 @@ export function PurchaseGridTable({
   const { sortedRows, toggleSort, sortIndicator, ariaSortFor, applySort } =
     useSortableRows<PurchaseRow, SortKey>(rows);
   const { isHidden, toggleColumn } = useColumnVisibility("purchase-list");
+  const { paymentStatusColumn } = useThemeFeatures();
+  const hiddenCol = (key: string) => (key === "payment" ? !paymentStatusColumn : isHidden(key));
   const colStyle = (key: string, extra?: CSSProperties): CSSProperties => ({
     ...extra,
-    ...(isHidden(key) ? { display: "none" } : undefined),
+    ...(hiddenCol(key) ? { display: "none" } : undefined),
   });
+  // colSpan은 보이는 칸 수로 계산한다(숨긴 칸까지 세면 표 오른쪽에 빈 공간·가로 스크롤이 생긴다).
+  const spanOf = (from = 0, to: number = PURCHASE_COLUMN_KEYS.length) => visibleColumnCount(PURCHASE_COLUMN_KEYS, hiddenCol, from, to);
+  const supplyIdx = PURCHASE_COLUMN_KEYS.indexOf("supplyAmount");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirmText, setConfirmText] = useState("");
   // 모바일 카드 목록에서 "선택" 버튼을 눌렀을 때만 체크박스를 보여준다
@@ -393,7 +401,7 @@ export function PurchaseGridTable({
         >
           {isPayment ? "-" : formatNumber(row.taxAmount)}
         </td>
-        <PaymentStatusCell status={row.paymentStatus} skip={isPayment} labels={{ paid: "완료", partial: "일부", unpaid: "미지급" }} />
+        <PaymentStatusCell style={colStyle("payment")} status={row.paymentStatus} skip={isPayment} labels={{ paid: "완료", partial: "일부", unpaid: "미지급" }} />
         <td style={colStyle("invoiceReceived")}>
           {isPayment ? (
             "-"
@@ -538,7 +546,7 @@ export function PurchaseGridTable({
       <div className="erp-grid-wrap has-card-view">
         <table className="erp-grid">
           <thead>
-            <GridGroupHeaderRow before={15} span={2} after={4} label="금액(원)" />
+            <GridGroupHeaderRow before={spanOf(0, supplyIdx)} span={2} after={spanOf(supplyIdx + 2)} label="금액(원)" />
             <tr>
               <th style={thSticky1}>
                 <input
@@ -565,7 +573,7 @@ export function PurchaseGridTable({
               <th className="num" style={colStyle("unitCost")}>매입가</th>
               {sortableHeader("공급가액", "supplyAmount", undefined, "num")}
               {sortableHeader("세액", "taxAmount", undefined, "num")}
-              <th className="erp-col-theme-only" style={{ width: 70 }}>지급</th>
+              <th style={colStyle("payment", { width: 70 })}>지급</th>
               <th style={colStyle("invoiceReceived", { width: 86 })}>세금계산서 수취</th>
               <th style={colStyle("remark")}>비고</th>
               <th style={{ width: GRID_ACTION_COL_WIDTH }} />
@@ -575,7 +583,7 @@ export function PurchaseGridTable({
             <tbody>
               <tr>
                 <td className="erp-u-bold erp-u-muted erp-u-bg-page erp-u-pad-6-8"
-                  colSpan={21}
+                  colSpan={spanOf()}
                 >
                   전월 이월분 · 이번달 실적으로 반영됨
                 </td>
@@ -584,25 +592,22 @@ export function PurchaseGridTable({
               <tr>
                 <td colSpan={2} style={stickyFooterStyle(0)} />
                 <td className="erp-u-muted erp-u-text-xs erp-u-pad-4-8"
-                  colSpan={11}
+                  colSpan={spanOf(2, 13)}
                 >
                   전월 이월 소계 ({carryoverRows.length}건)
                 </td>
                 <td className="num erp-u-muted erp-u-text-xs">
                   {formatNumber(carryoverQuantity ?? 0)}
                 </td>
-                <td />
+                <td style={colStyle("unitCost")} />
                 <td className="num erp-u-muted erp-u-text-xs">
                   {formatNumber(carryoverSupply ?? 0)}
                 </td>
                 <td className="num erp-u-muted erp-u-text-xs">
                   {formatNumber(carryoverTax ?? 0)}
                 </td>
-                <td />
-                <td />
-                <td />
-                <td />
-              </tr>
+                <td style={colStyle("payment")} /><td style={colStyle("invoiceReceived")} /><td style={colStyle("remark")} /><td />
+</tr>
             </tbody>
           )}
           <tbody>
@@ -611,7 +616,7 @@ export function PurchaseGridTable({
                 {renderRow(row, { selectable: true, rowNo: sortedRows.indexOf(row) + 1 })}
                 {row.key === activeKey && (
                   <tr className="erp-grid-accordion-row">
-                    <td colSpan={21}>
+                    <td colSpan={spanOf()}>
                       <OrderDetailPanel
                         selection={activeSelection}
                         priceLabel="매입가"
@@ -624,7 +629,7 @@ export function PurchaseGridTable({
             ))}
             {!sortedRows.length && (
               <tr>
-                <td colSpan={21} className="erp-grid-empty">
+                <td colSpan={spanOf()} className="erp-grid-empty">
                   조건에 맞는 매입 거래가 없습니다.
                 </td>
               </tr>
@@ -635,7 +640,7 @@ export function PurchaseGridTable({
               <tr className="erp-u-bold erp-u-bg-page">
                 <td colSpan={2} style={stickyFooterStyle(0)} />
                 <td
-                  colSpan={11}
+                  colSpan={spanOf(2, 13)}
                   style={stickyFooterStyle(
                     checkW + STICKY_2_WIDTH,
                   )}
@@ -644,14 +649,11 @@ export function PurchaseGridTable({
                   {sortedRows.filter((r) => r.kind === "purchase").length}건)
                 </td>
                 <td className="num">{formatNumber(totalQuantity)}</td>
-                <td />
+                <td style={colStyle("unitCost")} />
                 <td className="num">{formatNumber(totalSupply)}</td>
                 <td className="num">{formatNumber(totalTax)}</td>
-                <td />
-                <td />
-                <td />
-                <td />
-              </tr>
+                <td style={colStyle("payment")} /><td style={colStyle("invoiceReceived")} /><td style={colStyle("remark")} /><td />
+</tr>
             </tfoot>
           )}
         </table>

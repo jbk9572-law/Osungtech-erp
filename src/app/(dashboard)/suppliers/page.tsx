@@ -14,6 +14,7 @@ import type { Database } from "@/types/database.types";
 import { formatNumber } from "@/lib/format-number";
 import { getAllSupplierBalances } from "@/lib/ar-ap";
 import { PartyBalanceMeta } from "@/components/grid/party-balance-meta";
+import { fetchSupplierLastOrderDates } from "@/lib/party-last-order";
 
 type SupplierRow = Database["public"]["Tables"]["suppliers"]["Row"];
 
@@ -69,6 +70,7 @@ export default async function SuppliersPage({
     : allSuppliers;
 
   // 목록 행에 미지급 잔액/연체 상태를 붙인다(미지급금현황과 같은 DB 함수 1회) — 실패해도 목록은 뜬다.
+  const lastOrderMap = await fetchSupplierLastOrderDates(supabase, suppliers.map((x) => x.id));
   const balanceMap = new Map(
     (await getAllSupplierBalances(supabase).catch(() => [])).map((b) => [b.id, b]),
   );
@@ -165,6 +167,7 @@ export default async function SuppliersPage({
                         label="미지급"
                         balance={balanceMap.get(s.id)?.balance}
                         oldestUnpaidDate={balanceMap.get(s.id)?.oldestUnpaidDate}
+                        lastOrderDate={lastOrderMap.get(s.id)}
                       />
                     </>
                   ),

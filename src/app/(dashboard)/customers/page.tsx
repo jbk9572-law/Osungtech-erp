@@ -15,6 +15,7 @@ import type { Database } from "@/types/database.types";
 import { formatNumber } from "@/lib/format-number";
 import { getAllCustomerBalances } from "@/lib/ar-ap";
 import { PartyBalanceMeta } from "@/components/grid/party-balance-meta";
+import { fetchCustomerLastOrderDates } from "@/lib/party-last-order";
 
 type CustomerRow = Database["public"]["Tables"]["customers"]["Row"];
 
@@ -70,6 +71,7 @@ async function CustomersPage({
     : allCustomers;
 
   // 목록 행에 미수 잔액/연체 상태를 붙인다(미수금현황과 같은 DB 함수 1회) — 실패해도 목록은 뜬다.
+  const lastOrderMap = await fetchCustomerLastOrderDates(supabase, customers.map((x) => x.id));
   const balanceMap = new Map(
     (await getAllCustomerBalances(supabase).catch(() => [])).map((b) => [b.id, b]),
   );
@@ -169,6 +171,7 @@ async function CustomersPage({
                         label="미수"
                         balance={balanceMap.get(c.id)?.balance}
                         oldestUnpaidDate={balanceMap.get(c.id)?.oldestUnpaidDate}
+                        lastOrderDate={lastOrderMap.get(c.id)}
                       />
                     </>
                   ),

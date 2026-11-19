@@ -35,6 +35,7 @@ import { useColumnVisibility } from "@/lib/use-column-visibility";
 import { ColumnVisibilityMenu, type ColumnVisibilityOption } from "@/components/grid/column-visibility-menu";
 import { GridToolbar } from "@/components/grid/grid-toolbar";
 import { useGridCheckboxWidth, useThemeFeatures } from "@/lib/erp-theme-features";
+import { visibleColumnCount } from "@/lib/grid-columns";
 import { GridGroupHeaderRow } from "@/components/grid/group-header-row";
 import { GridRowLegend } from "@/components/grid/row-legend";
 
@@ -54,6 +55,8 @@ const SALES_HIDEABLE_COLUMNS: ColumnVisibilityOption[] = [
   { key: "invoiceStatus", label: "계산서발행" },
   { key: "remark", label: "비고" },
 ];
+// 표 칸 순서(머리글 th와 같은 순서) — colSpan 계산용(check-group-header-span이 th 개수와 맞는지 검사).
+const SALES_COLUMN_KEYS = ["check","date","docNo","customerCode","kind","taxType","evidenceType","customer","deliveryMethod","authorName","product","spec","lotNumber","quantity","unitPrice","supplyAmount","taxAmount","payment","invoiceStatus","remark","action"] as const;
 
 export type SalesRowItem = {
   productLabel: string;
@@ -150,10 +153,14 @@ export function SalesGridTable({
   const { sortedRows, toggleSort, sortIndicator, ariaSortFor, applySort } =
     useSortableRows<SalesRow, SortKey>(rows);
   const { isHidden, toggleColumn } = useColumnVisibility("sales-list");
+  const { paymentStatusColumn } = useThemeFeatures();
+  const hiddenCol = (key: string) => (key === "payment" ? !paymentStatusColumn : isHidden(key));
   const colStyle = (key: string, extra?: CSSProperties): CSSProperties => ({
     ...extra,
-    ...(isHidden(key) ? { display: "none" } : undefined),
+    ...(hiddenCol(key) ? { display: "none" } : undefined),
   });
+  const spanOf = (from = 0, to: number = SALES_COLUMN_KEYS.length) => visibleColumnCount(SALES_COLUMN_KEYS, hiddenCol, from, to);
+  const supplyIdx = SALES_COLUMN_KEYS.indexOf("supplyAmount"); // colSpan은 spanOf(보이는 칸 수)로 — lib/grid-columns.ts
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirmText, setConfirmText] = useState("");
   // 모바일 카드 목록은 평소엔 카드 전체가 상세로 가는 링크라 체크박스가
@@ -437,7 +444,7 @@ export function SalesGridTable({
         >
           {isCollection ? "-" : `${row.isReturn ? "-" : ""}${formatNumber(row.taxAmount)}`}
         </td>
-        <PaymentStatusCell status={row.paymentStatus} skip={isCollection} labels={{ paid: "완료", partial: "일부", unpaid: "미수" }} />
+        <PaymentStatusCell style={colStyle("payment")} status={row.paymentStatus} skip={isCollection} labels={{ paid: "완료", partial: "일부", unpaid: "미수" }} />
         <td style={colStyle("invoiceStatus")} onClick={(e) => canQuickIssue && e.stopPropagation()}>
           {isCollection ? (
             "-"
@@ -624,7 +631,7 @@ export function SalesGridTable({
       <div className="erp-grid-wrap has-card-view">
         <table className="erp-grid">
           <thead>
-            <GridGroupHeaderRow before={15} span={2} after={4} label="금액(원)" />
+            <GridGroupHeaderRow before={spanOf(0, supplyIdx)} span={2} after={spanOf(supplyIdx + 2)} label="금액(원)" />
             <tr>
               <th style={thSticky1}>
                 <input
@@ -651,7 +658,7 @@ export function SalesGridTable({
               <th className="num" style={colStyle("unitPrice")}>공급가</th>
               {sortableHeader("공급가액", "supplyAmount", undefined, "num")}
               {sortableHeader("세액", "taxAmount", undefined, "num")}
-              <th className="erp-col-theme-only" style={{ width: 70 }}>수금</th>
+              <th style={colStyle("payment", { width: 70 })}>수금</th>
               <th style={colStyle("invoiceStatus", { width: 76 })}>계산서발행</th>
               <th style={colStyle("remark")}>비고</th>
               <th style={{ width: GRID_ACTION_COL_WIDTH }} />
@@ -661,7 +668,7 @@ export function SalesGridTable({
             <tbody>
               <tr>
                 <td className="erp-u-bold erp-u-muted erp-u-bg-page erp-u-pad-6-8"
-                  colSpan={21}
+                  colSpan={spanOf()}
                 >
                   전월 이월분 · 이번달 실적으로 반영됨
                 </td>
@@ -670,25 +677,22 @@ export function SalesGridTable({
               <tr>
                 <td colSpan={2} style={stickyFooterStyle(0)} />
                 <td className="erp-u-muted erp-u-text-xs erp-u-pad-4-8"
-                  colSpan={11}
+                  colSpan={spanOf(2, 13)}
                 >
                   전월 이월 소계 ({carryoverRows.length}건)
                 </td>
                 <td className="num erp-u-muted erp-u-text-xs">
                   {formatNumber(carryoverQuantity ?? 0)}
                 </td>
-                <td />
+                <td style={colStyle("unitPrice")} />
                 <td className="num erp-u-muted erp-u-text-xs">
                   {formatNumber(carryoverSupply ?? 0)}
                 </td>
                 <td className="num erp-u-muted erp-u-text-xs">
                   {formatNumber(carryoverTax ?? 0)}
                 </td>
-                <td />
-                <td />
-                <td />
-                <td />
-              </tr>
+                <td style={colStyle("payment")} /><td style={colStyle("invoiceStatus")} /><td style={colStyle("remark")} /><td />
+</tr>
             </tbody>
           )}
           <tbody>
@@ -703,7 +707,7 @@ export function SalesGridTable({
                         보여준다(사용자 요청 — 제자리 펼침, 스크롤 없이 한눈에).
                         패딩/배경/카드 테두리는 .erp-grid-accordion-row CSS가 맡는다
                         (인셋 카드 스타일 — erp-theme.css 참고). */}
-                    <td colSpan={21}>
+                    <td colSpan={spanOf()}>
                       <OrderDetailPanel
                         selection={activeSelection}
                         priceLabel="공급가"
@@ -716,7 +720,7 @@ export function SalesGridTable({
             ))}
             {!sortedRows.length && (
               <tr>
-                <td colSpan={22} className="erp-grid-empty">
+                <td colSpan={spanOf()} className="erp-grid-empty">
                   조건에 맞는 판매 거래가 없습니다.
                 </td>
               </tr>
@@ -727,7 +731,7 @@ export function SalesGridTable({
               <tr className="erp-u-bold erp-u-bg-page">
                 <td colSpan={2} style={stickyFooterStyle(0)} />
                 <td
-                  colSpan={11}
+                  colSpan={spanOf(2, 13)}
                   style={stickyFooterStyle(
                     checkW + STICKY_2_WIDTH,
                   )}
@@ -736,15 +740,11 @@ export function SalesGridTable({
                   {sortedRows.filter((r) => r.kind === "sale").length}건)
                 </td>
                 <td className="num">{formatNumber(totalQuantity)}</td>
-                <td />
+                <td style={colStyle("unitPrice")} />
                 <td className="num">{formatNumber(totalSupply)}</td>
                 <td className="num">{formatNumber(totalTax)}</td>
-                <td />
-                <td />
-                <td />
-                <td />
-                <td />
-              </tr>
+                <td style={colStyle("payment")} /><td style={colStyle("invoiceStatus")} /><td style={colStyle("remark")} /><td />
+</tr>
             </tfoot>
           )}
         </table>

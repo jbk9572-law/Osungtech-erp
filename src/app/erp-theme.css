@@ -369,8 +369,6 @@
   /* 행 색 범례 줄 — 클래식은 숨김 */
   --erp-grid-legend-display: none;
   --erp-grid-stats-display: none;
-  /* 테마 전용 표 칸(수금/지급 상태 등) — DOM에는 항상 있고 표시만 토큰으로 켠다(칸 수가 테마마다 달라지지 않게) */
-  --erp-theme-col-display: none;
   --erp-split-meta-display: none;
   --erp-draft-indicator-display: none;
   /* 선택 전표 상세 — 클래식은 행 아래 아코디언, 테마에 따라 오른쪽 고정 패널 */
@@ -564,7 +562,6 @@
   --erp-badge-dot-display: inline-block;
   --erp-grid-legend-display: flex;
   --erp-grid-stats-display: inline-flex;
-  --erp-theme-col-display: table-cell;
   --erp-split-meta-display: flex;
   --erp-draft-indicator-display: block;
   --erp-detail-side-display: flex;
@@ -3559,11 +3556,6 @@ form.erp-field-grid {
 }
 .erp-grid thead tr.erp-grid-group-row ~ tr th {
   top: var(--erp-grid-group-h);
-}
-
-/* 테마 전용 표 칸 — th/td에 붙인다 */
-.erp-col-theme-only {
-  display: var(--erp-theme-col-display);
 }
 
 /* 임시저장 시각 표시(DraftSavedIndicator) */
