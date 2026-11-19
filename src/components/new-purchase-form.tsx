@@ -44,8 +44,9 @@ import { useDraftAutosave } from "@/lib/use-draft-autosave";
 import { DraftResumeBanner } from "@/components/draft-resume-banner";
 import { ManualPriceToggle } from "@/components/order-manual-price-toggle";
 import { useThemeFeatures } from "@/lib/erp-theme-features";
+import { OrderTotalsRow } from "@/components/erp/order-totals-row";
 import { PartyContextStrip } from "@/components/erp/party-context-strip";
-import { VoucherBasicHead, VoucherChip, VoucherFooter, VoucherTitle } from "@/components/erp/voucher-chrome";
+import { VoucherBasicHead, VoucherAddRow, VoucherDocNoChip, VoucherFooter, VoucherTitle, VoucherToggleChip } from "@/components/erp/voucher-chrome";
 import {
   PaperCalcGridRows,
   PaperCalcHiddenInputs,
@@ -520,7 +521,7 @@ export function NewPurchaseForm({
         resizingCol: baseCols.resizingCol ?? splitCols.resizingCol,
       }
     : baseCols;
-  const itemGridTotalWidth = Object.values<number>(colWidths).reduce((a, b) => a + b, 0);
+  const itemGridTotalWidth = Object.values<number>(colWidths).reduce((a, b) => a + b, 0) + (voucherLayout ? 40 - colWidths.unit : 0);
   // 등록 실패 메시지는 실제로 다시 제출하기 전까지는 useActionState가 값을
   // 갱신하지 않는다. 값을 수정한 뒤에도 이전 실패 메시지가 그대로 남아있으면
   // "고쳤는데도 계속 실패한다"고 오해하게 되므로, 입력을 건드리는 순간
@@ -999,7 +1000,8 @@ export function NewPurchaseForm({
     >
       <div className="erp-doc-paper flex flex-col gap-6">
       <VoucherTitle title="매입전표" savedAt={savedAt}>
-        {isCarryover && <VoucherChip tone="info">이월 처리</VoucherChip>}
+        <VoucherDocNoChip value={docNo} onChange={setDocNo} />
+        {!alsoCreateSale && <VoucherToggleChip checked={isCarryover} onChange={setIsCarryover}>이월 처리</VoucherToggleChip>}
       </VoucherTitle>
       <LocationAllocationModal
         open={allocationModalOpen}
@@ -1085,7 +1087,7 @@ export function NewPurchaseForm({
           </div>
         )}
         <div className="erp-field-grid">
-          <div className="erp-field erp-span-2">
+          <div className="erp-field erp-vf-hide erp-span-2">
             <label htmlFor="purchase-docno">No</label>
             <input
               id="purchase-docno"
@@ -1098,7 +1100,7 @@ export function NewPurchaseForm({
               title="비워두면 자동으로 채번됩니다. 인쇄되는 거래명세표의 No와 같은 번호입니다."
             />
           </div>
-          <div className="erp-field erp-span-4">
+          <div className="erp-field erp-vf-party erp-span-4">
             <label htmlFor="purchase-supplier">공급처</label>
             <PartySearchSelect
               id="purchase-supplier"
@@ -1109,7 +1111,7 @@ export function NewPurchaseForm({
               placeholder="공급처명 검색"
             />
           </div>
-          <div className="erp-field erp-span-2">
+          <div className="erp-field erp-vf-date erp-span-2">
             <label htmlFor="purchase-date">매입일자</label>
             <input
               id="purchase-date"
@@ -1122,7 +1124,7 @@ export function NewPurchaseForm({
             />
           </div>
           {warehouses.length > 1 && (
-            <div className="erp-field erp-span-2">
+            <div className="erp-field erp-vf-wh erp-span-2">
               <label htmlFor="purchase-warehouse">입고창고</label>
               <ErpSelect
                 id="purchase-warehouse"
@@ -1134,7 +1136,7 @@ export function NewPurchaseForm({
               />
             </div>
           )}
-          <div className={`erp-field ${warehouses.length > 1 ? "erp-span-2" : "erp-span-4"}`}>
+          <div className={`erp-field erp-vf-deliv ${warehouses.length > 1 ? "erp-span-2" : "erp-span-4"}`}>
             <label htmlFor="purchase-delivery-method">입고방법</label>
             <ErpSelect
               id="purchase-delivery-method"
@@ -1143,7 +1145,7 @@ export function NewPurchaseForm({
               options={[{ value: "", label: "-" }, ...DELIVERY_METHODS.map((m) => ({ value: m, label: m }))]}
             />
           </div>
-          <div className="erp-field erp-span-2">
+          <div className="erp-field erp-vf-tax erp-span-2">
             <label htmlFor="purchase-tax-type">과세구분</label>
             <ErpSelect
               id="purchase-tax-type"
@@ -1152,7 +1154,7 @@ export function NewPurchaseForm({
               options={TAX_TYPES.map((t) => ({ value: t, label: t }))}
             />
           </div>
-          <div className="erp-field erp-span-4">
+          <div className="erp-field erp-vf-evid erp-span-4">
             <label htmlFor="purchase-evidence-type">증빙유형</label>
             <ErpSelect
               id="purchase-evidence-type"
@@ -1161,7 +1163,7 @@ export function NewPurchaseForm({
               options={[{ value: "", label: "(미정)" }, ...EVIDENCE_TYPES.map((t) => ({ value: t, label: t }))]}
             />
           </div>
-          <div className="erp-field erp-span-6">
+          <div className="erp-field erp-vf-memo erp-span-6">
             <label htmlFor="purchase-memo">적요 (선택)</label>
             <input
               id="purchase-memo"
@@ -1174,7 +1176,7 @@ export function NewPurchaseForm({
           </div>
           <PaymentMethodFields alwaysCredit={alwaysCredit} paymentMethod={paymentMethod} onPaymentMethodChange={setPaymentMethod} />
           <div className="erp-form-options">
-            {!alsoCreateSale && <CarryoverToggle checked={isCarryover} onChange={setIsCarryover} monthLabel={nextMonthLabel(purchaseDate)} />}
+            {!alsoCreateSale && !voucherLayout && <CarryoverToggle checked={isCarryover} onChange={setIsCarryover} monthLabel={nextMonthLabel(purchaseDate)} />}
             <AlwaysCreditOption checked={alwaysCredit} onChange={setAlwaysCredit} />
           </div>
           {!initial?.id && customers.length > 0 && (
@@ -1309,13 +1311,14 @@ export function NewPurchaseForm({
           >
             <thead>
               <tr>
+                {voucherLayout && <th style={{ width: 40 }}>No</th>}
                 {resizableTh("product", "품목")}
                 {resizableTh("spec", "규격")}
                 {resizableTh("lotNumber", "관리번호")}
-                {resizableTh("unit", "단위")}
-                {resizableTh(alsoCreateSale ? "quantityIn" : "quantity", "입고수량", "num")}
+                {!voucherLayout && resizableTh("unit", "단위")}
+                {resizableTh(alsoCreateSale ? "quantityIn" : "quantity", "입고수량", "num erp-th-key")}
                 {alsoCreateSale && resizableTh("quantityOut", "출고수량", "num")}
-                {resizableTh(alsoCreateSale ? "priceIn" : "price", "매입단가", "num")}
+                {resizableTh(alsoCreateSale ? "priceIn" : "price", "매입단가", "num erp-th-key")}
                 {alsoCreateSale && resizableTh("priceOut", "매출단가", "num")}
                 {resizableTh("supplyAmount", "공급가액", "num")}
                 {resizableTh("tax", "세액", "num")}
@@ -1336,6 +1339,7 @@ export function NewPurchaseForm({
                 const recentCost = resolveCost(supplierId, row.productId);
                 return (
                   <tr key={row.key}>
+                    {voucherLayout && <td className="erp-u-muted num">{rows.indexOf(row) + 1}</td>}
                     <td>
                       {row.isCustomEntry ? (
                         <input
@@ -1504,24 +1508,10 @@ export function NewPurchaseForm({
                   </tr>
                 );
               })}
+              <VoucherAddRow colSpan={alsoCreateSale ? 13 : 11} onAdd={addRow} />
             </tbody>
             <tfoot>
-              <tr className="erp-u-bg-page">
-                <td className="erp-u-bold"
-                  colSpan={alsoCreateSale ? 8 : 6}
-                >
-                  매입 합계
-                </td>
-                <td className="num" colSpan={5}>
-                  <div className="erp-u-muted">
-                    공급가액 {formatNumber(supplyAmount)}원 · 부가세{" "}
-                    {formatNumber(taxAmount)}원
-                  </div>
-                  <div className="erp-doc-total">
-                    {formatNumber(total)}원
-                  </div>
-                </td>
-              </tr>
+              <OrderTotalsRow count={rows.filter((r) => r.productId || r.customName).length} quantity={rows.reduce((n, r) => n + r.quantity, 0)} supply={supplyAmount} tax={taxAmount} total={total} label="매입 합계" classicSpans={[alsoCreateSale ? 8 : 6, 5]} voucherLeadSpan={4} voucherTrailSpan={2} classicOnly={alsoCreateSale} />
             </tfoot>
           </table>
         </div>
@@ -1546,6 +1536,7 @@ export function NewPurchaseForm({
         <KeyboardHintBar
           items={[
             { key: "Tab", label: "다음 칸" },
+            { key: "Enter", label: "아래 칸" },
             { key: "F7", label: "저장" },
             { key: "Esc", label: "저장 후 닫기" },
           ]}

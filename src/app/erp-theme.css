@@ -7746,7 +7746,30 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   font-weight: 600;
 }
 .erp-voucher .erp-key-hint-bar {
-  display: none;
+  justify-content: flex-end;
+  margin-bottom: 0;
+  padding-block: 6px;
+  border: none;
+  border-top: 1px solid var(--erp-divider);
+  background: var(--erp-bg-subtle);
+}
+/* 표 줄 끝의 [+] [✕] — 평소엔 조용한 글자만, 올리면 윤곽 */
+.erp-voucher .erp-row-action {
+  min-width: 22px;
+  padding-inline: 4px;
+  background: transparent;
+  border-color: transparent;
+  color: var(--erp-icon-muted);
+}
+.erp-voucher .erp-row-action:hover:not(:disabled) {
+  background: var(--erp-hover);
+  border-color: var(--erp-border);
+  color: var(--erp-text);
+}
+.erp-voucher .erp-row-action-danger:hover:not(:disabled) {
+  background: var(--erp-danger-bg);
+  border-color: var(--erp-danger-border);
+  color: var(--erp-danger);
 }
 .erp-voucher-footer-hint {
   font-size: var(--erp-font-xs);
@@ -7758,4 +7781,69 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   flex-wrap: wrap;
   gap: 8px 12px;
   margin-left: auto;
+}
+
+/* 전표 표 — 핵심 열(수량·단가) 머리글 강조, 합계 줄, "+ 품목 입력" 줄 */
+.erp-voucher .erp-grid thead th.erp-th-key {
+  color: var(--erp-primary);
+}
+.erp-voucher .erp-grid tfoot tr.erp-voucher-totals td {
+  background: var(--erp-bg-subtle);
+  border-top: 2px solid var(--erp-border);
+  font-weight: 800;
+  color: var(--erp-text);
+  font-variant-numeric: tabular-nums;
+}
+.erp-voucher .erp-grid tbody tr.erp-voucher-addrow td {
+  background: var(--erp-panel);
+}
+.erp-voucher-addrow-btn {
+  all: unset;
+  cursor: pointer;
+  color: var(--erp-primary);
+  font-size: var(--erp-font-sm);
+  font-weight: 600;
+  padding: 4px 0;
+}
+.erp-voucher-addrow-btn:focus-visible {
+  outline: 2px solid var(--erp-primary);
+  outline-offset: 2px;
+}
+
+/* 전표 기본정보 칸 배치 — 시안대로 한 줄(거래일자·거래처·창고·배송·과세·증빙) + 적요 한 줄. 전표번호는 제목줄 칩으로 옮겨 이 칸은 숨긴다.
+   .erp-vf-* 는 폼 마크업이 칸마다 붙인 이름표(클래식에서는 규칙이 없어 아무 영향 없음). */
+.erp-voucher .erp-field-grid > .erp-vf-hide {
+  display: none;
+}
+.erp-voucher .erp-field-grid > .erp-vf-date { grid-column: span 2; order: 1; }
+.erp-voucher .erp-field-grid > .erp-vf-party { grid-column: span 3; order: 2; }
+.erp-voucher .erp-field-grid > .erp-vf-wh { grid-column: span 2; order: 3; }
+.erp-voucher .erp-field-grid > .erp-vf-deliv { grid-column: span 2; order: 4; }
+.erp-voucher .erp-field-grid > .erp-vf-tax { grid-column: span 1; order: 5; }
+.erp-voucher .erp-field-grid > .erp-vf-evid { grid-column: span 2; order: 6; }
+.erp-voucher .erp-field-grid > .erp-vf-memo { grid-column: span 12; order: 10; }
+.erp-voucher .erp-field-grid > :not([class*="erp-vf-"]) { order: 11; }
+@media (max-width: 900px) {
+  .erp-voucher .erp-field-grid > [class*="erp-vf-"] { grid-column: span 12; }
+}
+/* 제목줄 칩 안의 입력/체크 */
+.erp-voucher-chip-input {
+  width: 56px;
+  height: 16px;
+  margin-left: 4px;
+  padding: 0 2px;
+  border: none;
+  border-bottom: 1px solid var(--erp-border);
+  background: transparent;
+  color: var(--erp-text);
+  font-size: var(--erp-font-xs);
+  font-weight: 700;
+  border-radius: 0;
+}
+.erp-voucher-chip-toggle {
+  cursor: pointer;
+  gap: 4px;
+}
+.erp-voucher-chip-toggle input {
+  margin: 0;
 }

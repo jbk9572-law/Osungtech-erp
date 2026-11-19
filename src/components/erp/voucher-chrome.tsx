@@ -87,7 +87,7 @@ export function VoucherFooter({ supply, tax, total, actions }: { supply: number;
   if (!voucherLayout) return null;
   return (
     <div className="erp-voucher-footer">
-      <span className="erp-voucher-footer-hint">Tab 다음 칸 · F7 저장 · Esc 저장 후 닫기</span>
+      <span className="erp-voucher-footer-hint">Esc 저장 후 닫기</span>
       <div className="erp-voucher-footer-right">
         <div className="erp-voucher-footer-sum">
           <span className="erp-u-muted erp-u-text-xs">
@@ -110,4 +110,47 @@ export function VoucherFooter({ supply, tax, total, actions }: { supply: number;
 /** 상태 칩 한 개(예: "이월 처리", "샘플"). */
 export function VoucherChip({ tone = "muted", children }: { tone?: "muted" | "info" | "warning"; children: ReactNode }) {
   return <span className={`erp-voucher-chip erp-voucher-chip-${tone}`}>{children}</span>;
+}
+
+/** 표 맨 아래 "+ 품목 입력" 줄 — voucherLayout 테마만. 누르면 빈 줄 하나를 추가한다. */
+export function VoucherAddRow({ colSpan, onAdd }: { colSpan: number; onAdd: () => void }) {
+  const { voucherLayout } = useThemeFeatures();
+  if (!voucherLayout) return null;
+  return (
+    <tr className="erp-voucher-addrow">
+      <td className="num erp-u-muted">+</td>
+      <td colSpan={colSpan - 1}>
+        <button type="button" className="erp-voucher-addrow-btn" onClick={onAdd}>
+          품목 줄 추가
+        </button>
+      </td>
+    </tr>
+  );
+}
+
+/** 제목줄의 전표번호 칩 — 비워 두면 자동 채번. 숫자만 받는다(인쇄되는 거래명세표 No와 같은 번호). */
+export function VoucherDocNoChip({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <label className="erp-voucher-chip" title="비워두면 자동으로 채번됩니다. 인쇄되는 거래명세표의 No와 같은 번호입니다.">
+      전표번호
+      <input
+        className="erp-voucher-chip-input"
+        inputMode="numeric"
+        placeholder="자동"
+        aria-label="전표번호"
+        value={value}
+        onChange={(e) => onChange(e.target.value.replace(/[^0-9]/g, ""))}
+      />
+    </label>
+  );
+}
+
+/** 제목줄의 켜고 끄는 칩(예: 이월 처리). */
+export function VoucherToggleChip({ checked, onChange, children }: { checked: boolean; onChange: (v: boolean) => void; children: ReactNode }) {
+  return (
+    <label className={`erp-voucher-chip erp-voucher-chip-toggle${checked ? " erp-voucher-chip-info" : ""}`}>
+      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+      {children}
+    </label>
+  );
 }

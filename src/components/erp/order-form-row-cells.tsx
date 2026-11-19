@@ -1,6 +1,7 @@
 "use client";
 
 import { normalizeLotNumber } from "@/lib/lot-number";
+import { useThemeFeatures } from "@/lib/erp-theme-features";
 
 // 매출/매입 등록 폼 품목 표의 한 줄 안에서, 두 폼이 글자 그대로 똑같이 들고 있던
 // "규격 · 관리번호 · 단위" 세 칸. 수량 칸부터는 두 폼의 동작이 달라(매입은 출고수량과 연동)
@@ -25,6 +26,7 @@ export function SpecLotUnitCells({
   unit: string | null | undefined;
   onPatch: (patch: SpecLotPatch) => void;
 }) {
+  const { voucherLayout } = useThemeFeatures();
   return (
     <>
       <td>
@@ -64,7 +66,7 @@ export function SpecLotUnitCells({
           className="erp-input w-full"
         />
       </td>
-      <td className="erp-u-muted">{unit ?? "-"}</td>
+      {!voucherLayout && <td className="erp-u-muted">{unit ?? "-"}</td>}
     </>
   );
 }
@@ -83,6 +85,7 @@ export function RemarkActionCells({
   onRemove: () => void;
   canRemove: boolean;
 }) {
+  const { voucherLayout } = useThemeFeatures();
   return (
     <>
       <td>
@@ -96,21 +99,11 @@ export function RemarkActionCells({
         />
       </td>
       <td className="num erp-u-nowrap">
-        <button
-          type="button"
-          className="erp-btn erp-btn-sm erp-u-minw-0 erp-u-mr-4"
-          onClick={onInsert}
-          title="이 줄 아래에 빈 줄 삽입"
-        >
-          + 삽입
+        <button type="button" className={`erp-btn erp-btn-sm erp-u-minw-0 erp-u-mr-4${voucherLayout ? " erp-row-action" : ""}`} onClick={onInsert} title="이 줄 아래에 빈 줄 삽입" aria-label="이 줄 아래에 빈 줄 삽입">
+          {voucherLayout ? "+" : "+ 삽입"}
         </button>
-        <button
-          type="button"
-          className="erp-btn erp-btn-danger erp-btn-sm erp-u-minw-0"
-          onClick={onRemove}
-          disabled={!canRemove}
-        >
-          삭제
+        <button type="button" className={voucherLayout ? "erp-btn erp-btn-sm erp-u-minw-0 erp-row-action erp-row-action-danger" : "erp-btn erp-btn-danger erp-btn-sm erp-u-minw-0"} onClick={onRemove} disabled={!canRemove} aria-label="이 줄 삭제">
+          {voucherLayout ? "✕" : "삭제"}
         </button>
       </td>
     </>

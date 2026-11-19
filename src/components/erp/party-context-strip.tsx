@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { GridBadge } from "@/components/grid/badge";
 import { useThemeFeatures } from "@/lib/erp-theme-features";
 import { formatNumber } from "@/lib/format-number";
+import { daysSince } from "@/lib/ar-ap";
 import { PARTY_CREDIT_BADGE, partyCreditStatus } from "@/lib/party-credit-status";
 import { loadPartyContext, type PartyContext } from "@/lib/party-context-actions";
 
@@ -31,7 +32,7 @@ export function PartyContextStrip({ kind, partyId, partyName }: { kind: "custome
       {ctx && (
         <>
           <span>{kind === "customer" ? "미수 잔액" : "미지급 잔액"} <b className={hasBalance ? "erp-u-danger" : undefined}>{formatNumber(ctx.balance)}</b></span>
-          {badge && <GridBadge tone={badge.tone}>{badge.label}</GridBadge>}
+          {badge && <GridBadge tone={badge.tone}>{badge.label}{ctx.oldestUnpaidDate && ` · ${daysSince(ctx.oldestUnpaidDate)}일 경과`}</GridBadge>}
           {ctx.lastOrderDate && <span>최근 거래 <b>{ctx.lastOrderDate}</b></span>}
           {ctx.paymentTerms && <span>결제조건 <b>{ctx.paymentTerms}</b></span>}
         </>
