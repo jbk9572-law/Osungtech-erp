@@ -4,7 +4,7 @@ import { selectInChunks } from "@/lib/fetch-all-rows";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { parseOrderItems, type ParsedOrderItem } from "@/lib/order-items-input";
-import { saveItemFormulas } from "@/lib/item-formulas-server";
+import { saveInputFormulas } from "@/lib/input-formulas-server";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { attachPaperCalcToPurchase, attachPaperCalcToSale, readPaperCalcFields } from "@/modules/paper-calc/order-actions";
 import { markTodoSideDone } from "@/lib/todo-flow";
@@ -309,7 +309,7 @@ export async function createPurchase(
     purchaseOrderId = newPurchaseId;
   }
 
-  await saveItemFormulas(supabase, "purchase_orders", purchaseOrderId, items);
+  await saveInputFormulas(supabase, "purchase_order", purchaseOrderId, items);
 
   // 보관 위치별 재고에도 이 매입만큼 반영한다(0곳이면 건너뜀, 1곳이면
   // 자동, 2곳 이상이면 등록 화면 확인 모달에서 고른 배분대로). 매입+출고
@@ -497,7 +497,7 @@ export async function updatePurchase(
     return { error: docNoErrorMessage(error, docNo) ?? `매입 거래 수정에 실패했습니다: ${error.message}` };
   }
 
-  await saveItemFormulas(supabase, "purchase_orders", id, items);
+  await saveInputFormulas(supabase, "purchase_order", id, items);
 
   await reverseOrderLocationStock(supabase, "purchase", id);
   const locationStockWarning = await applyOrderLocationStock(supabase, {

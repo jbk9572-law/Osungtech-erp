@@ -4,7 +4,7 @@ import { chunkIds, selectInChunks } from "@/lib/fetch-all-rows";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { parseOrderItems, type ParsedOrderItem } from "@/lib/order-items-input";
-import { saveItemFormulas } from "@/lib/item-formulas-server";
+import { saveInputFormulas } from "@/lib/input-formulas-server";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { attachPaperCalcToSale, readPaperCalcFields } from "@/modules/paper-calc/order-actions";
 import { markTodoSideDone } from "@/lib/todo-flow";
@@ -124,7 +124,7 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
     return { error: docNoErrorMessage(error, docNo) ?? `판매 거래 등록에 실패했습니다: ${error?.message ?? "알 수 없는 오류"}` };
   }
 
-  await saveItemFormulas(supabase, "sales_orders", salesOrderId, items);
+  await saveInputFormulas(supabase, "sales_order", salesOrderId, items);
 
   // 샘플(무상)은 단가가 0으로 강제돼 있어서, 거래처별 단가 기억에 0원을 저장하면 다음 정상 매출 단가가 0으로 채워진다 → 건너뛴다.
   const itemsWithProduct = isSample ? [] : items.filter((item) => item.productId);
@@ -292,7 +292,7 @@ export async function updateSale(_prevState: FormState, formData: FormData): Pro
     return { error: docNoErrorMessage(error, docNo) ?? `매출 거래 수정에 실패했습니다: ${error.message}` };
   }
 
-  await saveItemFormulas(supabase, "sales_orders", id, items);
+  await saveInputFormulas(supabase, "sales_order", id, items);
 
   // 이 건 때문에 위치별 재고에 반영했던 이전 내용을 정확히 되돌린 뒤,
   // 방금 수정한 새 품목/수량 기준으로 다시 반영한다.

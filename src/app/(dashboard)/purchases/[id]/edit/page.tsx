@@ -1,4 +1,5 @@
-import { attachItemFormulas } from "@/lib/item-formulas";
+import { attachFormulaRows } from "@/lib/item-formulas";
+import { loadInputFormulas } from "@/lib/input-formulas-server";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { NewPurchaseForm } from "@/components/new-purchase-form";
@@ -120,14 +121,14 @@ export default async function EditPurchasePage({
   }
 
   // 입력 때 쓴 계산식(품목 칸의 fx) — 줄 값이 식의 결과와 맞는 것만 붙는다(lib/item-formulas.ts).
-  const formulas = attachItemFormulas(
+  const formulas = attachFormulaRows(
     (items ?? []).map((item) => ({
       productId: item.product_id,
       customName: item.custom_name,
       quantity: item.quantity,
       price: Number(item.unit_cost),
     })),
-    order.item_formulas,
+    await loadInputFormulas(supabase, "purchase_order", order.id),
   );
 
   const priceHistory = (history ?? [])

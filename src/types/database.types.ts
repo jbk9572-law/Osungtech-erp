@@ -3004,6 +3004,45 @@ export type Database = {
         };
         Relationships: [];
       };
+      input_formulas: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          is_demo: boolean;
+          entity: string;
+          entity_id: string;
+          line_key: string;
+          field: string;
+          formula: string;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id?: string;
+          is_demo?: boolean;
+          entity: string;
+          entity_id: string;
+          line_key: string;
+          field: string;
+          formula: string;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          is_demo?: boolean;
+          entity?: string;
+          entity_id?: string;
+          line_key?: string;
+          field?: string;
+          formula?: string;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       customers: {
         Row: {
           id: string;
@@ -3786,7 +3825,6 @@ export type Database = {
       };
       sales_orders: {
         Row: {
-          item_formulas: Json | null;
           id: string;
           customer_id: string;
           warehouse_id: string;
@@ -3812,7 +3850,6 @@ export type Database = {
         };
         Insert: {
           id?: string;
-          item_formulas?: Json | null;
           customer_id: string;
           warehouse_id: string;
           order_date?: string;
@@ -3837,7 +3874,6 @@ export type Database = {
         };
         Update: {
           id?: string;
-          item_formulas?: Json | null;
           customer_id?: string;
           warehouse_id?: string;
           order_date?: string;
@@ -4129,7 +4165,6 @@ export type Database = {
       };
       purchase_orders: {
         Row: {
-          item_formulas: Json | null;
           id: string;
           supplier_id: string;
           warehouse_id: string;
@@ -4148,7 +4183,6 @@ export type Database = {
         };
         Insert: {
           id?: string;
-          item_formulas?: Json | null;
           supplier_id: string;
           warehouse_id: string;
           purchase_date?: string;
@@ -4166,7 +4200,6 @@ export type Database = {
         };
         Update: {
           id?: string;
-          item_formulas?: Json | null;
           supplier_id?: string;
           warehouse_id?: string;
           purchase_date?: string;
