@@ -423,7 +423,7 @@ export function NewSaleForm({
     initialColWidths,
   );
   const { voucherLayout } = useThemeFeatures();
-  const itemGridTotalWidth = Object.values<number>(colWidths).reduce((a, b) => a + b, 0) + (voucherLayout ? 180 - colWidths.unit : 0);
+  const itemGridTotalWidth = Object.values<number>(colWidths).reduce((a, b) => a + b, 0) + (voucherLayout ? 180 - colWidths.unit - colWidths.remark : 0);
   // 등록 실패 메시지는 실제로 다시 제출하기 전까지는 useActionState가 값을
   // 갱신하지 않는다. 값을 수정한 뒤에도 이전 실패 메시지가 그대로 남아있으면
   // "고쳤는데도 계속 실패한다"고 오해하게 되므로, 입력을 건드리는 순간
@@ -1152,7 +1152,7 @@ export function NewSaleForm({
               className="erp-input erp-u-w-full"
             />
           </div>
-          <PaymentMethodFields alwaysCredit={alwaysCredit} paymentMethod={paymentMethod} onPaymentMethodChange={setPaymentMethod} />
+          <PaymentMethodFields alwaysCredit={alwaysCredit} paymentMethod={paymentMethod} onPaymentMethodChange={setPaymentMethod} onAlwaysCreditChange={setAlwaysCredit} />
           <div className="erp-form-options">
             {!voucherLayout && <CarryoverToggle checked={isCarryover} onChange={setIsCarryover} monthLabel={nextMonthLabel(orderDate)} />}
             {!voucherLayout && <FormCheckOption checked={isSample} onChange={handleSampleChange} tone="info">샘플(무상증정)</FormCheckOption>}
@@ -1300,7 +1300,7 @@ export function NewSaleForm({
                 {resizableTh("tax", "세액", "num")}
                 {resizableTh("total", "합계", "num")}
                 {voucherLayout && <th style={{ width: 140 }}>재고 확인</th>}
-                {resizableTh("remark", "비고")}
+                {!voucherLayout && resizableTh("remark", "비고")}
                 <th style={{ width: colWidths.actions }} />
               </tr>
             </thead>
@@ -1447,10 +1447,10 @@ export function NewSaleForm({
                   </tr>
                 );
               })}
-              <VoucherAddRow colSpan={12} onAdd={addRow} />
+              <VoucherAddRow colSpan={11} onAdd={addRow} />
             </tbody>
             <tfoot>
-              <OrderTotalsRow count={rows.filter((r) => r.productId || r.customName).length} quantity={rows.reduce((n, r) => n + r.quantity, 0)} supply={supplyAmount} tax={taxAmount} total={total} classicSpans={[6, 5]} voucherLeadSpan={4} voucherTrailSpan={3} />
+              <OrderTotalsRow count={rows.filter((r) => r.productId || r.customName).length} quantity={rows.reduce((n, r) => n + r.quantity, 0)} supply={supplyAmount} tax={taxAmount} total={total} classicSpans={[6, 5]} voucherLeadSpan={4} voucherTrailSpan={2} />
             </tfoot>
           </table>
         </div>

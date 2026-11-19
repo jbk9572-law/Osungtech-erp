@@ -7821,7 +7821,7 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
 .erp-voucher .erp-field-grid > .erp-vf-deliv { grid-column: span 2; order: 4; }
 .erp-voucher .erp-field-grid > .erp-vf-tax { grid-column: span 1; order: 5; }
 .erp-voucher .erp-field-grid > .erp-vf-evid { grid-column: span 2; order: 6; }
-.erp-voucher .erp-field-grid > .erp-vf-memo { grid-column: span 12; order: 10; }
+.erp-voucher .erp-field-grid > .erp-vf-memo { grid-column: span 8; order: 10; }
 .erp-voucher .erp-field-grid > :not([class*="erp-vf-"]) { order: 11; }
 @media (max-width: 900px) {
   .erp-voucher .erp-field-grid > [class*="erp-vf-"] { grid-column: span 12; }
@@ -7934,3 +7934,26 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   pointer-events: none;
   white-space: nowrap;
 }
+
+/* 결제 칸 + 적요를 한 줄에(시안) / 줄 끝 비고 [✎] 버튼과 입력창 */
+.erp-voucher .erp-field-grid > .erp-vf-pay { grid-column: span 4; order: 9; }
+@media (max-width: 900px) {
+  .erp-voucher .erp-field-grid > .erp-vf-pay { grid-column: span 12; }
+}
+.erp-voucher .erp-row-action-on {
+  color: var(--erp-primary);
+  border-color: var(--erp-info-border);
+  background: var(--erp-info-bg);
+}
+.erp-remark-pop-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1099;
+}
+.erp-remark-pop {
+  position: fixed;
+  z-index: 1100;
+  width: 260px;
+  box-shadow: var(--erp-shadow-md);
+}
+.erp-form-options:empty { display: none; }

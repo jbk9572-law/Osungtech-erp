@@ -3,6 +3,7 @@
 import type { ReactNode, RefObject } from "react";
 import { ErpSelect } from "@/components/erp/erp-select";
 import { PAYMENT_METHODS } from "@/lib/payment-methods";
+import { useThemeFeatures } from "@/lib/erp-theme-features";
 
 // 매출/매입 등록 폼이 글자 그대로 복사해서 쓰던 폼 조각들 — 두 폼의 차이는 라벨
 // 한 줄(저장 버튼 문구)과 날짜 변수 이름뿐이라 props로 받는다. 마크업·스타일은
@@ -93,6 +94,8 @@ export function CarryoverToggle({
 
 /** [항상 외상] 체크 옵션 — 체크를 풀면 결제방법 선택(PaymentMethodFields)이 나타난다. */
 export function AlwaysCreditOption({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
+  // voucherLayout 테마는 결제 선택 한 칸(PaymentMethodFields)이 이 역할을 대신한다.
+  if (useThemeFeatures().voucherLayout) return null;
   return (
     <FormCheckOption checked={checked} onChange={onChange}>
       항상 외상
@@ -100,16 +103,42 @@ export function AlwaysCreditOption({ checked, onChange }: { checked: boolean; on
   );
 }
 
-/** 결제방법 선택 — "항상 외상"이 아닐 때만 나타난다(체크는 AlwaysCreditOption이 옵션 줄에서 맡는다). */
+/**
+ * 결제방법 선택.
+ *  · 클래식: "항상 외상"이 아닐 때만 나타난다(체크는 AlwaysCreditOption이 옵션 줄에서 맡는다).
+ *  · voucherLayout 테마: "외상 + 현금/계좌이체/카드/어음" 한 칸짜리 선택으로 항상 보인다 — 같은 상태(alwaysCredit, paymentMethod)를
+ *    한 칸으로 고를 뿐이라 저장되는 값은 클래식과 똑같다. 이때 AlwaysCreditOption은 아무것도 그리지 않는다.
+ */
+const CREDIT_VALUE = "__credit";
 export function PaymentMethodFields({
   alwaysCredit,
   paymentMethod,
   onPaymentMethodChange,
+  onAlwaysCreditChange,
 }: {
   alwaysCredit: boolean;
   paymentMethod: string;
   onPaymentMethodChange: (v: string) => void;
+  onAlwaysCreditChange?: (v: boolean) => void;
 }) {
+  const { voucherLayout } = useThemeFeatures();
+  if (voucherLayout && onAlwaysCreditChange) {
+    return (
+      <div className="erp-field erp-vf-pay">
+        <label htmlFor="order-payment">결제</label>
+        <ErpSelect
+          id="order-payment"
+          ariaLabel="결제"
+          value={alwaysCredit ? CREDIT_VALUE : paymentMethod}
+          onChange={(v) => {
+            onAlwaysCreditChange(v === CREDIT_VALUE);
+            if (v !== CREDIT_VALUE) onPaymentMethodChange(v);
+          }}
+          options={[{ value: CREDIT_VALUE, label: "외상" }, ...PAYMENT_METHODS.map((m) => ({ value: m, label: m }))]}
+        />
+      </div>
+    );
+  }
   if (alwaysCredit) return null;
   return (
     <div className="erp-field erp-span-3">

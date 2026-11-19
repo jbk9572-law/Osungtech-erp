@@ -1,5 +1,7 @@
 "use client";
 
+import { useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { normalizeLotNumber } from "@/lib/lot-number";
 import { useThemeFeatures } from "@/lib/erp-theme-features";
 
@@ -71,7 +73,54 @@ export function SpecLotUnitCells({
   );
 }
 
-// 품목 줄 맨 끝의 "비고 입력칸 + 이 줄 아래 삽입 / 삭제 버튼" 두 칸 — 두 폼이 글자 그대로 똑같았다.
+// voucherLayout 테마의 비고 — 표 칸 대신 줄 끝 [✎] 버튼이 작은 입력창을 띄운다(시안처럼 표를 좁게 유지). 값이 있으면 버튼이 강조되고 마우스를 올리면 내용이 보인다.
+// 입력창은 표의 스크롤 영역에 잘리지 않게 body에 띄운다. Enter·Esc·바깥 클릭으로 닫는다(Esc는 전표 저장으로 번지지 않게 막는다).
+function RemarkPopoverButton({ remark, onRemarkChange }: { remark: string; onRemarkChange: (value: string) => void }) {
+  const [rect, setRect] = useState<DOMRect | null>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const close = () => setRect(null);
+  return (
+    <>
+      <button
+        ref={btnRef}
+        type="button"
+        className={`erp-btn erp-btn-sm erp-u-minw-0 erp-u-mr-4 erp-row-action${remark ? " erp-row-action-on" : ""}`}
+        title={remark ? `비고: ${remark}` : "비고 입력"}
+        aria-label="비고 입력"
+        onClick={() => setRect(btnRef.current?.getBoundingClientRect() ?? null)}
+      >
+        ✎
+      </button>
+      {rect &&
+        createPortal(
+          <>
+            <div className="erp-remark-pop-backdrop" onMouseDown={close} />
+            <input
+              autoFocus
+              className="erp-input erp-remark-pop"
+              style={{ top: rect.bottom + 4, left: Math.max(8, rect.right - 260) }}
+              placeholder="비고"
+              aria-label="비고"
+              value={remark}
+              onChange={(e) => onRemarkChange(e.target.value)}
+              onFocus={(e) => e.currentTarget.select()}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === "Escape") {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  close();
+                  btnRef.current?.focus();
+                }
+              }}
+            />
+          </>,
+          document.body,
+        )}
+    </>
+  );
+}
+
+// 품목 줄 맨 끝의 "비고 입력칸 + 이 줄 아래 삽입 / 삭제 버튼" 두 칸 — 두 폼이 글자 그대로 똑같았다. voucherLayout 테마는 비고 칸이 없고 줄 끝 버튼 묶음만 그린다.
 export function RemarkActionCells({
   remark,
   onRemarkChange,
@@ -88,17 +137,20 @@ export function RemarkActionCells({
   const { voucherLayout } = useThemeFeatures();
   return (
     <>
-      <td>
-        <input
-          type="text"
-          placeholder="비고"
-          aria-label="비고"
-          value={remark}
-          onChange={(e) => onRemarkChange(e.target.value)}
-          className="erp-input w-full"
-        />
-      </td>
+      {!voucherLayout && (
+        <td>
+          <input
+            type="text"
+            placeholder="비고"
+            aria-label="비고"
+            value={remark}
+            onChange={(e) => onRemarkChange(e.target.value)}
+            className="erp-input w-full"
+          />
+        </td>
+      )}
       <td className="num erp-u-nowrap">
+        {voucherLayout && <RemarkPopoverButton remark={remark} onRemarkChange={onRemarkChange} />}
         <button type="button" className={`erp-btn erp-btn-sm erp-u-minw-0 erp-u-mr-4${voucherLayout ? " erp-row-action" : ""}`} onClick={onInsert} title="이 줄 아래에 빈 줄 삽입" aria-label="이 줄 아래에 빈 줄 삽입">
           {voucherLayout ? "+" : "+ 삽입"}
         </button>
