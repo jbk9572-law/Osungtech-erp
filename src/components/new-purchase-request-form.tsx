@@ -56,6 +56,8 @@ export function NewPurchaseRequestForm({
       spec: r.spec || null,
       quantity: r.quantity,
       estimatedUnitPrice: r.unitPrice,
+      quantityFormula: r.quantityFormula ?? null,
+      unitPriceFormula: r.unitPriceFormula ?? null,
       remark: r.remark || null,
     }))
   );

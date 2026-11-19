@@ -34,6 +34,7 @@ type PostedItem = {
   unitPriceFormula?: unknown;
   unitPrice?: number;
   unitCost?: number;
+  estimatedUnitPrice?: number;
 };
 
 /** 서버 액션: 브라우저가 보낸 품목에서 검증된 식만 골라 저장용 행으로 만든다. */
@@ -43,7 +44,7 @@ export function buildFormulaRows(items: PostedItem[]): FormulaRow[] {
     const key = itemKey(item);
     const q = sanitizeFormula(item.quantityFormula, item.quantity);
     if (q) out.push({ line_key: key, field: "quantity", formula: q });
-    const p = sanitizeFormula(item.unitPriceFormula, item.unitPrice ?? item.unitCost ?? 0);
+    const p = sanitizeFormula(item.unitPriceFormula, item.unitPrice ?? item.unitCost ?? item.estimatedUnitPrice ?? 0);
     if (p) out.push({ line_key: key, field: "unit_price", formula: p });
     if (out.length >= MAX_STORED_FORMULAS) break;
   }
@@ -68,5 +69,17 @@ export function attachFormulaRows(
   return rows.map((row) => {
     const key = itemKey(row);
     return { quantityFormula: take(key, "quantity", row.quantity), unitPriceFormula: take(key, "unit_price", row.price) };
+  });
+}
+
+/** DB 함수(RPC)에 넘기는 품목에서 식 칸을 뺀다 — 식은 별도 저장소(input_formulas)에 기록한다. */
+export function withoutFormulaFields<T extends { quantityFormula?: unknown; unitPriceFormula?: unknown }>(
+  items: T[],
+): Omit<T, "quantityFormula" | "unitPriceFormula">[] {
+  return items.map((item) => {
+    const rest = { ...item };
+    delete rest.quantityFormula;
+    delete rest.unitPriceFormula;
+    return rest;
   });
 }

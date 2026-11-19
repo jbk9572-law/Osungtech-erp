@@ -39,7 +39,13 @@ export function NewPurchaseQuoteRequestForm({
 
   const validRows = validItemRows(rows);
   const itemsJson = JSON.stringify(
-    validRows.map((r) => ({ productId: r.productId, spec: r.spec || null, quantity: r.quantity, remark: r.remark || null }))
+    validRows.map((r) => ({
+      productId: r.productId,
+      spec: r.spec || null,
+      quantity: r.quantity,
+      quantityFormula: r.quantityFormula ?? null,
+      remark: r.remark || null,
+    }))
   );
 
   return (

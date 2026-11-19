@@ -40,6 +40,8 @@ export function NewQuoteForm({
       spec: r.spec || null,
       quantity: r.quantity,
       unitPrice: r.unitPrice,
+      quantityFormula: r.quantityFormula ?? null,
+      unitPriceFormula: r.unitPriceFormula ?? null,
       remark: r.remark || null,
     }))
   );

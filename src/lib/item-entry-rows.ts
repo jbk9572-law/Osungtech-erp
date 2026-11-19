@@ -9,6 +9,9 @@ export type ItemEntryRow = {
   quantity: number;
   unitPrice: number;
   remark: string;
+  // 수량·단가 칸에 엑셀식("=600*2")으로 입력한 식 — 저장해서 다시 열어도 보인다(lib/item-formulas, input_formulas).
+  quantityFormula?: string | null;
+  unitPriceFormula?: string | null;
 };
 
 export type ItemEntryProduct = { id: string; name: string; spec: string | null };

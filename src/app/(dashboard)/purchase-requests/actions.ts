@@ -1,5 +1,7 @@
 "use server";
 
+import { saveInputFormulas } from "@/lib/input-formulas-server";
+import { withoutFormulaFields } from "@/lib/item-formulas";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient, getUser } from "@/lib/supabase/server";
@@ -14,6 +16,8 @@ type PurchaseRequestItemInput = {
   quantity: number;
   estimatedUnitPrice: number;
   remark: string | null;
+  quantityFormula?: unknown; // 입력칸 계산식(저장은 input_formulas, DB 함수에는 넘기지 않는다)
+  unitPriceFormula?: unknown;
 };
 
 function parseItems(raw: string): PurchaseRequestItemInput[] {
@@ -39,12 +43,14 @@ export async function createPurchaseRequest(_prevState: FormState, formData: For
     p_supplier_id: supplierId,
     p_request_date: requestDate || todayKstStr(),
     p_memo: memo || null,
-    p_items: items,
+    p_items: withoutFormulaFields(items),
   });
 
   if (error || !requestId) {
     return { error: `구매요청 등록에 실패했습니다: ${error?.message ?? "알 수 없는 오류"}` };
   }
+
+  await saveInputFormulas(supabase, "purchase_request", requestId, items);
 
   revalidatePath("/purchase-requests");
   redirect(`/purchase-requests/${requestId}`);
