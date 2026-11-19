@@ -1,8 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { PrintButton } from "@/components/print-button";
+import { PrintToolbar } from "@/components/erp/print-toolbar";
 import { PrintOptionBar } from "@/components/print-option-bar";
-import { CloseButton } from "@/components/erp/close-button";
 import { DeliveryNoteDoc } from "@/components/delivery-note-doc";
 import {
   SnsFiltechCanvas,
@@ -81,12 +80,7 @@ export default async function SalesPrintPage({
 
       return (
         <div>
-          <div className="mb-4 flex items-center justify-between print:hidden">
-            <CloseButton href="/sales" className="erp-btn erp-btn-dark print:hidden">
-              목록으로
-            </CloseButton>
-            <PrintButton />
-          </div>
+          <PrintToolbar closeHref="/sales" title="출고증 인쇄" />
           {/* 실제 PDF 벡터 좌표를 그대로 옮긴 정밀 재현이라 폭을 줄이면
               레이아웃이 깨진다 — 모바일에서 줄이는 대신, 표처럼
               가로스크롤로 전체를 볼 수 있게 한다(.erp의 overflow-x:
@@ -126,12 +120,7 @@ export default async function SalesPrintPage({
 
       return (
         <div>
-          <div className="mb-4 flex items-center justify-between print:hidden">
-            <CloseButton href="/sales" className="erp-btn erp-btn-dark print:hidden">
-              목록으로
-            </CloseButton>
-            <PrintButton />
-          </div>
+          <PrintToolbar closeHref="/sales" title="출고증 인쇄" />
           <div className="overflow-x-auto print:overflow-visible">
             <div className="mx-auto print:mx-0" style={{ width: "595.32pt" }}>
               <ZenithTechCanvas
@@ -169,12 +158,7 @@ export default async function SalesPrintPage({
 
       return (
         <div>
-          <div className="mb-4 flex items-center justify-between print:hidden">
-            <CloseButton href="/sales" className="erp-btn erp-btn-dark print:hidden">
-              목록으로
-            </CloseButton>
-            <PrintButton />
-          </div>
+          <PrintToolbar closeHref="/sales" title="출고증 인쇄" />
           <div className="overflow-x-auto print:overflow-visible">
             <div className="mx-auto print:mx-0" style={{ width: "595.32pt" }}>
               <KtSolutionCanvas
@@ -205,12 +189,7 @@ export default async function SalesPrintPage({
 
     return (
       <div className="mx-auto max-w-3xl print-page-wrapper">
-        <div className="mb-4 flex items-center justify-between print:hidden">
-          <CloseButton href="/sales" className="erp-btn erp-btn-dark print:hidden">
-            목록으로
-          </CloseButton>
-          <PrintButton />
-        </div>
+        <PrintToolbar closeHref="/sales" title="출고증 인쇄" />
         <DeliveryNoteDoc
           company={company}
           customerName={order.customers?.name ?? ""}
@@ -279,12 +258,7 @@ export default async function SalesPrintPage({
     <div
       className={`mx-auto max-w-5xl print:mx-0 print:max-w-none ${layout === "half" ? "print-page-wrapper" : ""}`}
     >
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 print:hidden">
-        <CloseButton href="/sales" className="erp-btn erp-btn-dark print:hidden">
-          목록으로
-        </CloseButton>
-        <PrintButton autoPrint={false} />
-      </div>
+      <PrintToolbar closeHref="/sales" title={`${docType} 인쇄`} autoPrint={false} />
       <PrintOptionBar
         basePath={`/sales/${id}/print`}
         params={sp}

@@ -8060,3 +8060,23 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
 .erp-loan-return-input {
   flex: 0 0 88px;
 }
+
+/* 인쇄 화면 도구줄(PrintToolbar, voucherLayout 테마) — 전표 제목줄과 같은 글씨·높이, 오른쪽에 [닫기][인쇄하기]. 종이(인쇄물)는 건드리지 않는다. */
+.erp-print-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--erp-divider);
+}
+.erp-print-toolbar-spacer {
+  flex: 1 1 auto;
+}
+/* 도구줄 바로 아래 인쇄 옵션 줄은 상자 없이 띠로 */
+.erp-print-toolbar + .erp-optbar {
+  padding-inline: 0;
+  background: transparent;
+  border: none;
+}

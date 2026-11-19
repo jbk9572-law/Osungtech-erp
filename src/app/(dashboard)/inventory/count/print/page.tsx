@@ -1,11 +1,10 @@
 import { packageUnitLabel } from "@/lib/package-qty";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { findWarehouseQuantity } from "@/lib/inventory-quantity";
-import { PrintButton } from "@/components/print-button";
 import { todayKstStr } from "@/lib/kst-date";
 import { formatNumber } from "@/lib/format-number";
+import { PrintToolbar } from "@/components/erp/print-toolbar";
 
 const cellStyle: React.CSSProperties = {
   border: "1px solid #000",
@@ -65,12 +64,7 @@ export default async function InventoryCountPrintPage({
 
   return (
     <div className="mx-auto print-page-margin" style={{ width: 780, maxWidth: "100%" }}>
-      <div className="mb-4 flex items-center justify-between print:hidden">
-        <Link href="/inventory/count" className="erp-btn erp-btn-dark">
-          닫기
-        </Link>
-        <PrintButton />
-      </div>
+      <PrintToolbar closeHref="/inventory/count" closeLabel="닫기" title="재고 실사 목록 인쇄" />
 
       <div className="mb-3 flex items-end justify-between" style={{ color: "#000" }}>
         <h1 className="erp-u-bold" style={{ fontSize: 18 }}>재고 실사 목록{selectedWarehouseName ? ` — ${selectedWarehouseName}` : ""}</h1>

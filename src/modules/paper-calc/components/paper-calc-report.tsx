@@ -1,11 +1,10 @@
 "use client";
 
-import Link from "next/link";
-import { PrintButton } from "@/components/print-button";
 import type { Item, NestResult } from "@/modules/paper-calc/lib/paper-nest-engine";
 import { BatchCard, ProductionSummaryTable } from "@/modules/paper-calc/components/paper-calc-client";
 import { DIAGRAM_COLORS } from "@/modules/paper-calc/lib/paper-calc-diagram-colors";
 import { formatNumber } from "@/lib/format-number";
+import { PrintToolbar } from "@/components/erp/print-toolbar";
 
 // 인쇄 미리보기(계산 직후, localStorage 기반)와 저장된 계산 다시 보기(DB
 // 기반) 두 화면이 같은 보고서 레이아웃을 쓰기 때문에 공통 컴포넌트로 뺐다.
@@ -36,12 +35,7 @@ export function PaperCalcReport({
 
   return (
     <div className="mx-auto max-w-4xl p-8 print-page-margin">
-      <div className="mb-4 flex items-center justify-between print:hidden">
-        <Link href={closeHref} className="erp-btn erp-btn-dark">
-          닫기
-        </Link>
-        <PrintButton autoPrint={autoPrint} />
-      </div>
+      <PrintToolbar closeHref={closeHref} closeLabel="닫기" title="재단 결과 보고서 인쇄" autoPrint={autoPrint} />
 
       <h1 className="mb-4 text-lg font-bold">재단 결과 보고서</h1>
 
