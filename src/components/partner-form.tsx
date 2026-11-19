@@ -7,6 +7,7 @@ import { PhoneInputGroup } from "@/components/phone-input-group";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { FieldHint } from "@/components/field-hint";
 import { ErpSelect } from "@/components/erp/erp-select";
+import { useThemeFeatures } from "@/lib/erp-theme-features";
 
 export type PartnerFormInitial = {
   name?: string | null;
@@ -17,6 +18,7 @@ export type PartnerFormInitial = {
   phone?: string | null;
   address?: string | null;
   notes?: string | null;
+  payment_terms?: string | null;
   document_type?: "출고증" | "명세표" | null;
   delivery_note_variant?: "sns_filtech" | "zenith_tech" | "ket_solution" | null;
   // 세금계산서 공급받는자 칸에 필요(company_profile은 이미 갖고 있던
@@ -38,6 +40,7 @@ export function PartnerForm({
   submitLabel?: string;
   idFieldValue?: string;
 }) {
+  const { partnerPaymentTerms } = useThemeFeatures();
   const [state, formAction, pending] = useActionState(action, undefined);
   const submitRef = useRef<HTMLButtonElement>(null);
   useKeyShortcut("F7", submitRef);
@@ -113,6 +116,16 @@ export function PartnerForm({
         defaultValue={initial?.address ?? ""}
         className="erp-input md:col-span-3"
       />
+      {partnerPaymentTerms && (
+        <input
+          name="payment_terms"
+          autoComplete="off"
+          placeholder="결제조건 (예: 월말 마감 · 익월 말 결제)"
+          aria-label="결제조건"
+          defaultValue={initial?.payment_terms ?? ""}
+          className="erp-input md:col-span-3"
+        />
+      )}
       <textarea
         name="notes"
         placeholder="비고 / 특이사항"

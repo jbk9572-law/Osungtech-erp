@@ -14,13 +14,15 @@ export type ThemeFeatures = {
   groupedHeader: boolean;
   /** 재고 상태에 "근접"(안전재고 직전) 단계를 추가로 보여준다. */
   stockNear: boolean;
+  /** 거래처/공급처 폼에 결제조건 입력칸을 보여준다. */
+  partnerPaymentTerms: boolean;
 };
 
-const CLASSIC_FEATURES: ThemeFeatures = { rowNumbers: false, groupedHeader: false, stockNear: false };
+const CLASSIC_FEATURES: ThemeFeatures = { rowNumbers: false, groupedHeader: false, stockNear: false, partnerPaymentTerms: false };
 
 const THEME_FEATURES: Record<string, ThemeFeatures> = {
   "classic-light": CLASSIC_FEATURES,
-  "grid-modern": { rowNumbers: true, groupedHeader: true, stockNear: true },
+  "grid-modern": { rowNumbers: true, groupedHeader: true, stockNear: true, partnerPaymentTerms: true },
 };
 
 const ThemeFeaturesContext = createContext<ThemeFeatures>(CLASSIC_FEATURES);

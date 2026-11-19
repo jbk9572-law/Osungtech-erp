@@ -168,6 +168,7 @@ export type Database = {
           phone: string | null;
           address: string | null;
           notes: string | null;
+          payment_terms: string | null;
           purchase_export_template: "generic" | "standard_ledger" | "leaders_special" | "wote_ledger";
           purchase_price_basis: "box" | "quantity";
           business_type: string | null;
@@ -185,6 +186,7 @@ export type Database = {
           phone?: string | null;
           address?: string | null;
           notes?: string | null;
+          payment_terms?: string | null;
           purchase_export_template?: "generic" | "standard_ledger" | "leaders_special" | "wote_ledger";
           purchase_price_basis?: "box" | "quantity";
           business_type?: string | null;
@@ -202,6 +204,7 @@ export type Database = {
           phone?: string | null;
           address?: string | null;
           notes?: string | null;
+          payment_terms?: string | null;
           purchase_export_template?: "generic" | "standard_ledger" | "leaders_special" | "wote_ledger";
           purchase_price_basis?: "box" | "quantity";
           business_type?: string | null;
@@ -3013,6 +3016,7 @@ export type Database = {
           phone: string | null;
           address: string | null;
           notes: string | null;
+          payment_terms: string | null;
           document_type: "출고증" | "명세표";
           delivery_note_variant: "sns_filtech" | "zenith_tech" | "ket_solution" | null;
           sales_export_template: "generic" | "filter_box" | "filter_no_box" | "paper_roll" | "wote_ledger";
@@ -3033,6 +3037,7 @@ export type Database = {
           phone?: string | null;
           address?: string | null;
           notes?: string | null;
+          payment_terms?: string | null;
           document_type?: "출고증" | "명세표";
           delivery_note_variant?: "sns_filtech" | "zenith_tech" | "ket_solution" | null;
           sales_export_template?: "generic" | "filter_box" | "filter_no_box" | "paper_roll" | "wote_ledger";
@@ -3053,6 +3058,7 @@ export type Database = {
           phone?: string | null;
           address?: string | null;
           notes?: string | null;
+          payment_terms?: string | null;
           document_type?: "출고증" | "명세표";
           delivery_note_variant?: "sns_filtech" | "zenith_tech" | "ket_solution" | null;
           sales_export_template?: "generic" | "filter_box" | "filter_no_box" | "paper_roll" | "wote_ledger";
