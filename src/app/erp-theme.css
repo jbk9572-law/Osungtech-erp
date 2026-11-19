@@ -2510,6 +2510,14 @@ form.erp-field-grid {
 .erp-seg > a.active + a {
   border-left-color: var(--erp-primary);
 }
+/* 위험 성격의 탭(반품) — 선택되면 빨강 */
+.erp-seg > button.erp-seg-btn-danger.active {
+  background: var(--erp-danger);
+}
+.erp-seg > button.erp-seg-btn-danger.active,
+.erp-seg > button.erp-seg-btn-danger.active + button {
+  border-left-color: var(--erp-danger);
+}
 
 /* ── 인쇄 옵션 줄(명세표 출력/용지/미수금 선택) ──────────────────────
    그룹 이름 + 세그먼트를 한 덩어리로 묶고, 좁은 화면에서는 한 줄씩 쌓여 버튼이 터치하기 좋은 높이로 커진다. */
@@ -7592,7 +7600,7 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
 .erp-voucher-chip {
   display: inline-flex;
   align-items: center;
-  height: 20px;
+  height: var(--erp-control-h-xs);
   padding: 0 8px;
   border-radius: var(--erp-radius-pill);
   font-size: var(--erp-font-xs);
@@ -7608,10 +7616,10 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   background: var(--erp-warning-bg);
   color: var(--erp-warning);
 }
-.erp-voucher .erp-draft-indicator {
+.erp-voucher-titlebar .erp-draft-indicator {
   display: inline-flex;
   align-items: center;
-  height: 20px;
+  height: var(--erp-control-h-xs);
   padding: 0 8px;
   border-radius: var(--erp-radius-pill);
   font-size: var(--erp-font-xs);
@@ -8024,4 +8032,13 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   font-size: var(--erp-font-sm);
   box-shadow: var(--erp-shadow-md);
   pointer-events: none;
+}
+
+/* 제목줄 한 줄의 높이 통일 — 유형 탭·상태 칩·임시저장 표시가 모두 같은 높이(--erp-control-h-xs)라 높낮이가 어긋나지 않는다 */
+.erp-voucher-titlebar .erp-seg > button {
+  height: calc(var(--erp-control-h-xs) - 2px);
+  padding-block: 0;
+}
+.erp-voucher-title {
+  line-height: var(--erp-control-h-xs);
 }
