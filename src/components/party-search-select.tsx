@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { useHighlightScroll } from "@/lib/use-highlight-scroll";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import { useDropdownReposition } from "@/lib/use-dropdown-reposition";
+import { useThemeFeatures } from "@/lib/erp-theme-features";
 
 type Party = { id: string; name: string; notes?: string | null };
 
@@ -26,6 +27,7 @@ export function PartySearchSelect({
   name?: string;
   id?: string;
 }) {
+  const { voucherLayout } = useThemeFeatures();
   const selected = parties.find((p) => p.id === value) ?? null;
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
@@ -106,6 +108,11 @@ export function PartySearchSelect({
         }}
         className="erp-input erp-u-w-full"
       />
+      {voucherLayout && selected && !open && (
+        <button type="button" className="erp-party-change" onClick={() => inputRef.current?.focus()}>
+          변경
+        </button>
+      )}
       {!open && selected?.notes && (
         <p className="erp-u-mt-4 erp-u-pad-4-8 erp-u-text-sm erp-u-color-info-text erp-u-bg-info-bg erp-u-border-info-border erp-u-radius-sm"
         >

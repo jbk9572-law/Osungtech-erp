@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { formatNumber } from "@/lib/format-number";
 import { summarizeCells, type GridSelectionSummary } from "@/lib/grid-selection-sum";
 
@@ -31,6 +32,8 @@ function textOf(td: HTMLTableCellElement): string {
 
 export function GridCellRangeStats() {
   const [summary, setSummary] = useState<GridSelectionSummary | null>(null);
+  // 고른 범위 바로 옆에 띄울 말풍선 위치(범위 오른쪽 아래) — 하단 바가 시선에서 멀 때를 위해 같이 보여준다.
+  const [bubble, setBubble] = useState<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     let anchor: Cell | null = null;
@@ -43,9 +46,12 @@ export function GridCellRangeStats() {
       clearMarks();
       if (r1 === r2 && c1 === c2) {
         setSummary(null);
+        setBubble(null);
         return;
       }
       const texts: string[] = [];
+      let right = 0;
+      let bottom = 0;
       const rows = anchor.table.tBodies[0]?.rows ?? [];
       for (let r = r1; r <= r2; r++) {
         for (let c = c1; c <= c2; c++) {
@@ -53,15 +59,20 @@ export function GridCellRangeStats() {
           if (!td || !td.offsetParent) continue;
           td.classList.add(SELECTED);
           texts.push(textOf(td));
+          const box = td.getBoundingClientRect();
+          right = Math.max(right, box.right);
+          bottom = Math.max(bottom, box.bottom);
         }
       }
       setSummary(summarizeCells(texts));
+      setBubble({ x: right, y: bottom });
     };
 
     const onDown = (e: MouseEvent) => {
       if (e.button !== 0) return;
       clearMarks();
       setSummary(null);
+      setBubble(null);
       anchor = cellAt(e.target);
       dragging = !!anchor;
     };
@@ -80,6 +91,7 @@ export function GridCellRangeStats() {
       if (e.key === "Escape" && document.querySelector(`.${SELECTED}`)) {
         clearMarks();
         setSummary(null);
+        setBubble(null);
       }
     };
     document.addEventListener("mousedown", onDown);
@@ -97,8 +109,17 @@ export function GridCellRangeStats() {
 
   if (!summary) return null;
   return (
-    <span className="erp-voucher-rangestats" role="status">
-      선택한 셀 <b>{formatNumber(summary.count)}</b>개 · 합계 <b>{formatNumber(summary.sum)}</b> · 평균 <b>{formatNumber(summary.average)}</b>
-    </span>
+    <>
+      <span className="erp-voucher-rangestats" role="status">
+        선택한 셀 <b>{formatNumber(summary.count)}</b>개 · 합계 <b>{formatNumber(summary.sum)}</b> · 평균 <b>{formatNumber(summary.average)}</b>
+      </span>
+      {bubble &&
+        createPortal(
+          <div className="erp-range-bubble" style={{ left: bubble.x, top: bubble.y + 6 }}>
+            합계 <b>{formatNumber(summary.sum)}</b> · 평균 {formatNumber(summary.average)} · {formatNumber(summary.count)}칸
+          </div>,
+          document.body,
+        )}
+    </>
   );
 }

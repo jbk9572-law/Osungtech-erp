@@ -7899,3 +7899,38 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
 .erp-voucher-rangestats b {
   font-variant-numeric: tabular-nums;
 }
+
+/* 전표 거래처 칸 오른쪽의 "변경" 글자 — 누르면 검색 목록이 열린다(voucherLayout 테마) */
+.erp-party-change {
+  all: unset;
+  position: absolute;
+  top: 0;
+  right: 8px;
+  height: var(--erp-control-h-md);
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  color: var(--erp-primary);
+  font-size: var(--erp-font-sm);
+  font-weight: 600;
+}
+.erp-party-change:focus-visible {
+  outline: 2px solid var(--erp-primary);
+  outline-offset: 2px;
+}
+
+/* 칸 범위 선택 합계 말풍선 — 고른 범위의 오른쪽 아래에 붙는다 */
+.erp-range-bubble {
+  position: fixed;
+  transform: translateX(-100%);
+  z-index: 1100;
+  padding: 4px 10px;
+  border-radius: var(--erp-radius-md);
+  background: var(--erp-text);
+  color: var(--erp-on-primary);
+  font-size: var(--erp-font-xs);
+  font-variant-numeric: tabular-nums;
+  box-shadow: var(--erp-shadow-md);
+  pointer-events: none;
+  white-space: nowrap;
+}

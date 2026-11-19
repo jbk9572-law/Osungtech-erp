@@ -20,6 +20,7 @@ export function KeyboardHintBar({ items }: { items: { key: string; label: string
 export const ORDER_GRID_KEY_HINTS = [
   { key: "Tab", label: "다음 칸" },
   { key: "Enter", label: "아래 칸 · 마지막 줄이면 줄 추가" },
+  { key: "Ctrl+F", label: "품목 검색" },
   { key: "Ctrl+D", label: "위 값으로 채우기" },
   { key: "Ctrl+Del", label: "줄 삭제" },
   { key: "F7", label: "저장" },

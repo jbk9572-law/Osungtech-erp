@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { DraftSavedIndicator } from "@/components/draft-saved-indicator";
 import { useThemeFeatures } from "@/lib/erp-theme-features";
@@ -81,11 +81,30 @@ export function VoucherWarning({ shortages }: { shortages: { name: string; short
   );
 }
 
+// 전표 모달 안에서 Ctrl+F는 브라우저 찾기 대신 품목 검색창(QuickAddProductSearch의 data-quick-add-search)으로 커서를 보낸다.
+// 품목 검색창이 없는 문서 화면에서는 아무것도 하지 않고 브라우저 기본 동작을 그대로 둔다.
+function VoucherShortcuts() {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== "f") return;
+      const search = document.querySelector<HTMLInputElement>(".erp-voucher [data-quick-add-search]");
+      if (!search) return;
+      e.preventDefault();
+      search.focus();
+      search.select();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
+  return null;
+}
+
 /** 하단 고정 바의 뼈대 — 왼쪽 단축키 안내, 오른쪽 [요약] [취소] [저장 영역]. voucherLayout 테마의 모든 문서 화면이 같은 바를 쓴다. */
 function FooterShell({ summary, children }: { summary?: ReactNode; children: ReactNode }) {
   const close = useModalClose();
   return (
     <div className="erp-voucher-footer">
+      <VoucherShortcuts />
       <span className="erp-voucher-footer-hint">
         Esc 닫기
         <GridCellRangeStats />
