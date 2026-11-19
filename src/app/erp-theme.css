@@ -358,6 +358,10 @@
   --erp-grid-stats-display: none;
   /* 선택 전표 상세 — 클래식은 행 아래 아코디언, 테마에 따라 오른쪽 고정 패널 */
   --erp-detail-side-display: none;
+  /* 왼쪽 메뉴 선택 항목 — initial이면 기존(선택색 배경, 본문색, 띠 없음) */
+  --erp-tree-active-bg: initial;
+  --erp-tree-active-fg: initial;
+  --erp-tree-active-bar: initial;
   --erp-detail-inline-display: table-row;
   --erp-ribbon-bg: #fafbfc;
   --erp-titlebar-bg: #132944;
@@ -530,6 +534,9 @@
   --erp-grid-legend-display: flex;
   --erp-grid-stats-display: inline-flex;
   --erp-detail-side-display: flex;
+  --erp-tree-active-bg: #eaf0fd;
+  --erp-tree-active-fg: #2f62d6;
+  --erp-tree-active-bar: #2f62d6;
   --erp-detail-inline-display: none;
 
   /* 상단바/리본 — 남색 바 대신 흰 바 + 얇은 선 */
@@ -1543,9 +1550,10 @@
    메뉴 그룹 전체 너비를 채우는 사각형 대신 옆에 여백을 살짝 남긴
    둥근 알약(pill) 배경으로 바꿔서 더 가벼운 느낌을 준다. */
 .erp-tree-item.active {
-  background: var(--erp-selected);
-  color: var(--erp-text);
+  background: var(--erp-tree-active-bg, var(--erp-selected));
+  color: var(--erp-tree-active-fg, var(--erp-text));
   font-weight: 700;
+  box-shadow: inset var(--erp-row-bar-w) 0 0 var(--erp-tree-active-bar, transparent);
 }
 
 .erp-tree-item.disabled {
