@@ -376,6 +376,14 @@
   --erp-detail-side-display: none;
   /* 전표(등록 모달) 틀 — 클래식은 "종이 카드", grid-modern은 틀 없이 밀집 시트 */
   --erp-modal-top-w: 3px;
+  --erp-modal-close-top: -14px;
+  --erp-modal-close-right: -14px;
+  --erp-modal-close-bg: var(--erp-text);
+  --erp-modal-close-fg: var(--erp-on-primary);
+  --erp-modal-close-border: var(--erp-border);
+  --erp-modal-close-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+  --erp-modal-close-hover-bg: var(--erp-danger);
+  --erp-modal-close-hover-fg: var(--erp-on-primary);
   --erp-doc-sheet-bg: var(--erp-bg);
   --erp-doc-sheet-pad: 20px;
   --erp-doc-paper-bw: 1px;
@@ -588,6 +596,14 @@
   --erp-fx-badge-display: block;
   --erp-detail-side-display: flex;
   --erp-modal-top-w: 0px;
+  --erp-modal-close-top: 10px;
+  --erp-modal-close-right: 12px;
+  --erp-modal-close-bg: transparent;
+  --erp-modal-close-fg: #6b7380;
+  --erp-modal-close-border: transparent;
+  --erp-modal-close-shadow: none;
+  --erp-modal-close-hover-bg: #eef0f3;
+  --erp-modal-close-hover-fg: #1f2530;
   --erp-doc-sheet-bg: #ffffff;
   --erp-doc-sheet-pad: 14px 18px 12px;
   --erp-doc-paper-bw: 0px;
@@ -1273,26 +1289,27 @@ html:has(.erp) body {
    내려도 이 X는 모달 바깥 기준으로 고정된 채 그대로 보인다. */
 .erp-modal-window-close {
   position: absolute;
-  top: -14px;
-  right: -14px;
+  top: var(--erp-modal-close-top);
+  right: var(--erp-modal-close-right);
   z-index: 2;
   width: 28px;
   height: 28px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--erp-border);
+  border: 1px solid var(--erp-modal-close-border);
   border-radius: var(--erp-radius-circle, 0);
-  background: var(--erp-text);
-  color: var(--erp-on-primary);
+  background: var(--erp-modal-close-bg);
+  color: var(--erp-modal-close-fg);
   font-size: var(--erp-font-lg);
   line-height: 1;
-  box-shadow: var(--erp-shadow-md);
+  box-shadow: var(--erp-modal-close-shadow);
 }
 
 .erp-modal-window-close:hover {
-  background: var(--erp-danger);
-  border-color: var(--erp-danger);
+  background: var(--erp-modal-close-hover-bg);
+  color: var(--erp-modal-close-hover-fg);
+  border-color: var(--erp-modal-close-hover-bg);
 }
 
 /* 공지사항/할일/사용자 정보처럼 필드 몇 개짜리 단순한 폼을 담는 모달 —
