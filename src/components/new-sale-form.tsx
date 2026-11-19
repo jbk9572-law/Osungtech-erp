@@ -45,6 +45,7 @@ import {
 import { useKeyedRows } from "@/lib/use-keyed-rows";
 import { useDraftAutosave } from "@/lib/use-draft-autosave";
 import { DraftResumeBanner } from "@/components/draft-resume-banner";
+import { DraftSavedIndicator } from "@/components/draft-saved-indicator";
 import {
   PaperCalcGridRows,
   PaperCalcHiddenInputs,
@@ -319,7 +320,7 @@ export function NewSaleForm({
   // 날아가지 않게, 신규 등록일 때만(수정 화면은 "임시저장 값 vs 실제
   // 저장된 값"이 헷갈릴 수 있어 제외) 이 브라우저에 임시저장한다.
   const draftKey = initial?.id ? null : "erp-draft:sale:new";
-  const { draft, draftLoaded, save: saveDraft, clear: clearDraft } = useDraftAutosave<SaleDraft>(draftKey);
+  const { draft, draftLoaded, save: saveDraft, clear: clearDraft, savedAt } = useDraftAutosave<SaleDraft>(draftKey);
   const [draftChoiceMade, setDraftChoiceMade] = useState(false);
   const showDraftBanner = !initial?.id && draftLoaded && !!draft && draftHasContent(draft) && !draftChoiceMade;
 
@@ -994,7 +995,7 @@ export function NewSaleForm({
       )}
       <PaperCalcOverrideInput pc={pc} />
 
-      {showDraftBanner && <DraftResumeBanner onResume={resumeDraft} onDiscard={discardDraft} />}
+      {showDraftBanner && <DraftResumeBanner onResume={resumeDraft} onDiscard={discardDraft} />}<DraftSavedIndicator savedAt={savedAt} />
 
       <PaperCalcLinkedGuide pc={pc} includeCopied />
 

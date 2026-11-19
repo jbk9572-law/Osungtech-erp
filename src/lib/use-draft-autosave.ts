@@ -23,6 +23,8 @@ export function useDraftAutosave<T>(key: string | null) {
   // 미리 계산한 뒤 setState를 한 번만 부르는 방식으로 피한다.
   const [state, setState] = useState<{ loaded: boolean; value: T | null }>({ loaded: false, value: null });
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // 마지막으로 임시저장이 실제로 기록된 시각 — 화면의 "임시저장 14:31" 표시용(DraftSavedIndicator).
+  const [savedAt, setSavedAt] = useState<number | null>(null);
 
   useEffect(() => {
     let value: T | null = null;
@@ -53,6 +55,7 @@ export function useDraftAutosave<T>(key: string | null) {
       timerRef.current = setTimeout(() => {
         try {
           localStorage.setItem(key, JSON.stringify(data));
+          setSavedAt(Date.now());
         } catch {
           // 저장 공간 부족, 프라이빗 브라우징 모드 등 — 임시저장은 편의
           // 기능일 뿐이라 조용히 포기한다(실제 저장/제출과는 무관).
@@ -67,10 +70,11 @@ export function useDraftAutosave<T>(key: string | null) {
     if (timerRef.current) clearTimeout(timerRef.current);
     try {
       localStorage.removeItem(key);
+      setSavedAt(null);
     } catch {
       // 위와 같은 이유로 무시.
     }
   }, [key]);
 
-  return { draft, draftLoaded, save, clear };
+  return { draft, draftLoaded, save, clear, savedAt };
 }
