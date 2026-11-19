@@ -137,3 +137,23 @@ describe("get_purchase_order_payment_status", () => {
     expect(s[cash]).toEqual({ s: "paid", o: 0 });
   });
 });
+
+describe("get_*_last_order_dates", () => {
+  it("요청한 거래처/공급처의 마지막 거래일만 돌려주고, 다른 회사 것은 제외한다", async () => {
+    await h.db.exec(latestFunctionSql("get_customer_last_order_dates"));
+    await h.db.exec(latestFunctionSql("get_supplier_last_order_dates"));
+    const a = await addSale("2026-11-01", 100);
+    await addSale("2026-11-09", 100);
+    const c = await h.db.query<{ customer_id: string; last_order_date: Date | string }>(
+      `select * from public.get_customer_last_order_dates($1::uuid[])`,
+      [[h.ids.customer]],
+    );
+    expect(String(c.rows[0].last_order_date)).toContain("2026");
+    expect(new Date(c.rows[0].last_order_date).toISOString().slice(0, 10)).toBe("2026-11-09");
+    await h.db.query(`update public.sales_orders set tenant_id = gen_random_uuid() where id = $1`, [a]);
+    const c2 = await h.db.query(`select * from public.get_customer_last_order_dates($1::uuid[])`, [[h.ids.customer]]);
+    expect(c2.rows.length).toBe(1); // 남은 같은 회사 전표(11-09)만
+    const s = await h.db.query(`select * from public.get_supplier_last_order_dates($1::uuid[])`, [[h.ids.supplier]]);
+    expect(s.rows.length).toBe(0);
+  });
+});

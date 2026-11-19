@@ -8,19 +8,26 @@ export function PartyBalanceMeta({
   label,
   balance,
   oldestUnpaidDate,
+  lastOrderDate,
 }: {
   label: string;
   balance: number | undefined;
   oldestUnpaidDate?: string | null;
+  /** 최근 거래일(YYYY-MM-DD) — 거래가 한 번도 없으면 비워 둔다. */
+  lastOrderDate?: string | null;
 }) {
-  if (!balance || balance <= 0) return null;
-  const status = partyCreditStatus(balance, oldestUnpaidDate);
+  const hasBalance = !!balance && balance > 0;
+  if (!hasBalance && !lastOrderDate) return null;
+  const status = hasBalance ? partyCreditStatus(balance, oldestUnpaidDate) : "ok";
   const badge = status === "ok" ? null : PARTY_CREDIT_BADGE[status];
   return (
     <div className="erp-split-list-row-meta">
-      <span>
-        {label} <b>{formatNumber(balance)}</b>
-      </span>
+      {hasBalance && (
+        <span>
+          {label} <b>{formatNumber(balance)}</b>
+        </span>
+      )}
+      {lastOrderDate && <span>최근 거래 {lastOrderDate}</span>}
       {badge && <GridBadge tone={badge.tone}>{badge.label}</GridBadge>}
     </div>
   );
