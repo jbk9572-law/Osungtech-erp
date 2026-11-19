@@ -4559,6 +4559,11 @@ a.erp-detail-tab:hover:not(.active) {
   white-space: nowrap;
 }
 
+.erp-statusbar-selection b {
+  color: var(--erp-text);
+  font-variant-numeric: tabular-nums;
+}
+
 .erp-statusbar .sep {
   color: var(--erp-glyph-muted);
 }

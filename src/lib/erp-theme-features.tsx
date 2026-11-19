@@ -16,13 +16,15 @@ export type ThemeFeatures = {
   stockNear: boolean;
   /** 거래처/공급처 폼에 결제조건 입력칸을 보여준다. */
   partnerPaymentTerms: boolean;
+  /** 표에서 드래그로 고른 칸의 합계/평균을 하단 상태바에 보여준다. */
+  gridSelectionStats: boolean;
 };
 
-const CLASSIC_FEATURES: ThemeFeatures = { rowNumbers: false, groupedHeader: false, stockNear: false, partnerPaymentTerms: false };
+const CLASSIC_FEATURES: ThemeFeatures = { rowNumbers: false, groupedHeader: false, stockNear: false, partnerPaymentTerms: false, gridSelectionStats: false };
 
 const THEME_FEATURES: Record<string, ThemeFeatures> = {
   "classic-light": CLASSIC_FEATURES,
-  "grid-modern": { rowNumbers: true, groupedHeader: true, stockNear: true, partnerPaymentTerms: true },
+  "grid-modern": { rowNumbers: true, groupedHeader: true, stockNear: true, partnerPaymentTerms: true, gridSelectionStats: true },
 };
 
 const ThemeFeaturesContext = createContext<ThemeFeatures>(CLASSIC_FEATURES);
