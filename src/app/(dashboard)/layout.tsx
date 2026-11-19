@@ -142,6 +142,7 @@ export default async function DashboardLayout({
   return (
     <ErpShell
       isDemo={isDemo}
+      theme={tenant?.theme}
       companyName={company?.name}
       logoUrl={company?.logo_mark_url}
       email={user.email ?? null}
