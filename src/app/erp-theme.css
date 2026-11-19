@@ -528,6 +528,9 @@
   --erp-grid-cell-px: 8px;
   --erp-grid-zebra-bg: #f8f9fc;
   --erp-control-h-cell: 28px;
+  --erp-control-h-md: 30px;
+  --erp-control-h-sm: 26px;
+  --erp-control-h-xs: 22px;
   --erp-badge-radius: 9px;
   --erp-badge-px: 7px;
   --erp-badge-weight: 700;
