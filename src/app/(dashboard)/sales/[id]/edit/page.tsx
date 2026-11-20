@@ -1,3 +1,5 @@
+import { attachFormulaRows } from "@/lib/item-formulas";
+import { loadInputFormulas } from "@/lib/input-formulas-server";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { NewSaleForm } from "@/components/new-sale-form";
@@ -134,6 +136,16 @@ export default async function EditSalePage({
     }));
 
   const effectiveInventory = resolveEffectiveInventory(products ?? []);
+  // 입력 때 쓴 계산식(품목 칸의 fx) — 줄 값이 식의 결과와 맞는 것만 붙는다(lib/item-formulas.ts).
+  const formulas = attachFormulaRows(
+    (items ?? []).map((item) => ({
+      productId: item.product_id,
+      customName: item.custom_name,
+      quantity: item.quantity,
+      price: Number(item.unit_price),
+    })),
+    await loadInputFormulas(supabase, "sales_order", order.id),
+  );
 
   return (
     <div>
@@ -184,12 +196,14 @@ export default async function EditSalePage({
           isSample: order.is_sample,
           taxType: order.tax_type,
           evidenceType: order.evidence_type,
-          items: (items ?? []).map((item) => ({
+          items: (items ?? []).map((item, i) => ({
             productId: item.product_id,
             customName: item.custom_name,
             spec: item.spec,
             quantity: item.quantity,
             unitPrice: Number(item.unit_price),
+            quantityFormula: formulas[i].quantityFormula,
+            unitPriceFormula: formulas[i].unitPriceFormula,
             remark: item.remark,
             lotNumber: item.lot_number,
             sourcePurchaseItemId: item.source_purchase_item_id ?? null,

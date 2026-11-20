@@ -96,11 +96,25 @@ export function ItemEntryBlock<P extends Product>({
                     />
                   </td>
                   <td>
-                    <NumberInput value={row.quantity} onChange={(n) => onUpdate(row.key, { quantity: n })} allowFormula className="erp-input" />
+                    <NumberInput
+                      value={row.quantity}
+                      onChange={(n) => onUpdate(row.key, { quantity: n })}
+                      allowFormula
+                      formula={row.quantityFormula}
+                      onFormulaChange={(f) => onUpdate(row.key, { quantityFormula: f })}
+                      className="erp-input"
+                    />
                   </td>
                   {withPrice && (
                     <td>
-                      <NumberInput value={row.unitPrice} onChange={(n) => onUpdate(row.key, { unitPrice: n })} className="erp-input" />
+                      <NumberInput
+                        value={row.unitPrice}
+                        onChange={(n) => onUpdate(row.key, { unitPrice: n })}
+                        allowFormula
+                        formula={row.unitPriceFormula}
+                        onFormulaChange={(f) => onUpdate(row.key, { unitPriceFormula: f })}
+                        className="erp-input"
+                      />
                     </td>
                   )}
                   {withPrice && <td className="num">{formatNumber(row.quantity * row.unitPrice)}</td>}

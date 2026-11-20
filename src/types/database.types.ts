@@ -2829,6 +2829,117 @@ export type Database = {
           },
         ];
       };
+      stock_loans: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          customer_id: string;
+          warehouse_id: string;
+          loan_date: string;
+          due_date: string | null;
+          status: "open" | "returned" | "cancelled";
+          memo: string | null;
+          is_demo: boolean;
+          created_by: string | null;
+          created_at: string;
+          closed_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          tenant_id?: string;
+          customer_id: string;
+          warehouse_id: string;
+          loan_date?: string;
+          due_date?: string | null;
+          status?: "open" | "returned" | "cancelled";
+          memo?: string | null;
+          is_demo?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+          closed_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          customer_id?: string;
+          warehouse_id?: string;
+          loan_date?: string;
+          due_date?: string | null;
+          status?: "open" | "returned" | "cancelled";
+          memo?: string | null;
+          is_demo?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+          closed_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "stock_loans_customer_id_fkey";
+            columns: ["customer_id"];
+            isOneToOne: false;
+            referencedRelation: "customers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "stock_loans_warehouse_id_fkey";
+            columns: ["warehouse_id"];
+            isOneToOne: false;
+            referencedRelation: "warehouses";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      stock_loan_items: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          loan_id: string;
+          product_id: string;
+          quantity: number;
+          returned_quantity: number;
+          remark: string | null;
+          is_demo: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id?: string;
+          loan_id: string;
+          product_id: string;
+          quantity: number;
+          returned_quantity?: number;
+          remark?: string | null;
+          is_demo?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          loan_id?: string;
+          product_id?: string;
+          quantity?: number;
+          returned_quantity?: number;
+          remark?: string | null;
+          is_demo?: boolean;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "stock_loan_items_loan_id_fkey";
+            columns: ["loan_id"];
+            isOneToOne: false;
+            referencedRelation: "stock_loans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "stock_loan_items_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       stock_transfers: {
         Row: {
           id: string;
@@ -3001,6 +3112,45 @@ export type Database = {
           office_lng?: number | null;
           office_radius_m?: number;
           updated_at?: string;
+        };
+        Relationships: [];
+      };
+      input_formulas: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          is_demo: boolean;
+          entity: string;
+          entity_id: string;
+          line_key: string;
+          field: string;
+          formula: string;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id?: string;
+          is_demo?: boolean;
+          entity: string;
+          entity_id: string;
+          line_key: string;
+          field: string;
+          formula: string;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          is_demo?: boolean;
+          entity?: string;
+          entity_id?: string;
+          line_key?: string;
+          field?: string;
+          formula?: string;
+          created_by?: string | null;
+          created_at?: string;
         };
         Relationships: [];
       };
@@ -6185,6 +6335,25 @@ export type Database = {
         Args: { p_id: string };
         Returns: void;
       };
+      create_stock_loan: {
+        Args: {
+          p_customer_id: string;
+          p_warehouse_id: string;
+          p_loan_date: string;
+          p_due_date: string | null;
+          p_memo: string | null;
+          p_items: Json;
+        };
+        Returns: string;
+      };
+      return_stock_loan: {
+        Args: { p_loan_id: string; p_items: Json };
+        Returns: string;
+      };
+      cancel_stock_loan: {
+        Args: { p_loan_id: string };
+        Returns: undefined;
+      };
       create_stock_transfer_with_items: {
         Args: {
           p_from_warehouse_id: string;
@@ -6359,6 +6528,10 @@ export type Database = {
       get_supplier_last_order_dates: {
         Args: { p_supplier_ids: string[] };
         Returns: { supplier_id: string; last_order_date: string }[];
+      };
+      ensure_company_profile: {
+        Args: Record<string, never>;
+        Returns: undefined;
       };
       get_customer_balances: {
         Args: Record<string, never>;

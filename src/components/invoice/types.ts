@@ -13,10 +13,12 @@ export type Company = {
   email: string | null;
   greeting_message: string | null;
   seal_image_url?: string | null;
+  /** 대시보드 배경 로고(원형) — 새 서식(N)의 워터마크로 쓴다. 안 올린 회사는 워터마크 없음. */
+  logo_mark_url?: string | null;
 } | null;
 
-// 서식: B형(공급받는자는 상호+貴下만) / A형(공급받는자도 사업자번호·대표자·주소·업태·종목을 모두 채움).
-export type InvoiceForm = "A" | "B";
+// 서식: B형(엔택스 원본 복제, 공급받는자는 상호+貴下만) / A형(엔택스 A형 복제, 공급받는자 사업자 정보까지) / N(우리가 설계한 새 공용 서식, 모던 테마 기본).
+export type InvoiceForm = "A" | "B" | "N";
 
 // A형의 공급받는자 칸에 채우는 상대 사업자 정보(거래처 또는 공급처 한 곳).
 export type InvoiceParty = {

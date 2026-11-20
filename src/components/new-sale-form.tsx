@@ -16,7 +16,7 @@ import { NumberInput } from "@/components/number-input";
 import { RemarkActionCells, SpecLotUnitCells } from "@/components/erp/order-form-row-cells";
 import { QuantityWithBoxInput } from "@/components/quantity-with-box-input";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
-import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
+import { KeyboardHintBar, ORDER_GRID_KEY_HINTS } from "@/components/erp/keyboard-hint-bar";
 import { ErpSelect } from "@/components/erp/erp-select";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { TodoImportPopover } from "@/components/todo-import-popover";
@@ -26,6 +26,7 @@ import { normalizeLotNumber } from "@/lib/lot-number";
 import {
   focusSameColumnNextRow,
   focusGridArrowNav,
+  focusGridRowShortcuts,
 } from "@/lib/grid-enter-nav";
 import {
   getOpenTodos,
@@ -45,7 +46,12 @@ import {
 import { useKeyedRows } from "@/lib/use-keyed-rows";
 import { useDraftAutosave } from "@/lib/use-draft-autosave";
 import { DraftResumeBanner } from "@/components/draft-resume-banner";
-import { DraftSavedIndicator } from "@/components/draft-saved-indicator";
+import { OrderRowStockCell, OrderRowStockHint, rowStockRemaining } from "@/components/order-row-stock-hint";
+import { useThemeFeatures } from "@/lib/erp-theme-features";
+import { ManualPriceToggle } from "@/components/order-manual-price-toggle";
+import { OrderTotalsRow } from "@/components/erp/order-totals-row";
+import { PartyContextStrip } from "@/components/erp/party-context-strip";
+import { useDocSheetClass, VoucherBasicHead, VoucherChip, VoucherFooter, VoucherAddRow, VoucherDocNoChip, VoucherTitle, VoucherToggleChip, VoucherWarning } from "@/components/erp/voucher-chrome";
 import {
   PaperCalcGridRows,
   PaperCalcHiddenInputs,
@@ -72,7 +78,7 @@ type Product = {
   unit?: string | null;
   price: number;
   stock?: number;
-  base_package_qty?: number | null;
+  base_package_qty?: number | null; parent_product_id?: string | null;
 };
 type CustomerPrice = {
   customer_id: string;
@@ -101,6 +107,9 @@ type Row = {
   lotNumber: string;
   quantity: number;
   unitPrice: number;
+  // 수량·단가 칸에 엑셀식("=600*2")으로 입력했을 때 그 식 — 저장해서 다시 열어도 보이게 한다(lib/item-formulas).
+  quantityFormula?: string | null;
+  unitPriceFormula?: string | null;
   manualPrice: boolean;
   remark: string;
   // 입고 불러오기로 가져온 줄이 나갈 입고분(매입 품목) id — 저장 때 연결 기록으로만 남긴다(재고 차감은 선입선출 그대로). 품목을 바꾸면 비운다.
@@ -149,6 +158,8 @@ export type SaleInitial = {
     spec?: string | null;
     quantity: number;
     unitPrice: number;
+    quantityFormula?: string | null;
+    unitPriceFormula?: string | null;
     remark?: string | null;
     lotNumber?: string | null;
     sourcePurchaseItemId?: string | null;
@@ -169,6 +180,7 @@ export function NewSaleForm({
   submitLabel = "매출 등록",
   backParam,
   initialIsReturn = false,
+  initialIsSample = false,
   initialColWidths,
   paperCalcEnabled = true,
 }: {
@@ -199,6 +211,7 @@ export function NewSaleForm({
   // 신규 등록 화면에서 매출/수금/반품 3버튼 중 "반품"으로 들어온 경우에만
   // 쓴다(NewSaleTypeSwitcher 참고) — 수정 화면은 initial.isReturn을 그대로 쓴다.
   initialIsReturn?: boolean;
+  initialIsSample?: boolean;
   // 페이지(서버 컴포넌트)가 미리 조회해 내려준 품목 그리드 칸 너비 —
   // useResizableColumns 참고, 마운트 후 재조회로 인한 폭 "확 늘어남"
   // 깜빡임을 없애기 위한 값이다.
@@ -243,7 +256,7 @@ export function NewSaleForm({
   // 증빙유형을 현금영수증/카드매출전표/계산서로 정해두면, 그 증빙이 이미
   // 세금계산서를 대신하므로 "세금계산서 작성" 진입점을 숨긴다. 아직
   // 안 정했으면(기본값, 빈 문자열=null) 평소대로 세금계산서 작성 가능.
-  const [evidenceType, setEvidenceType] = useState(initial?.evidenceType ?? "");
+  const [evidenceType, setEvidenceType] = useState(initial?.evidenceType ?? (initialIsSample ? "샘플증정" : ""));
   // 인쇄되는 거래명세표의 No와 값을 맞출 수 있게, 비워두면 자동 채번되는
   // 전표번호를 직접 입력/수정할 수 있게 한다.
   const [docNo, setDocNo] = useState(
@@ -267,7 +280,7 @@ export function NewSaleForm({
   // resolvePrice/useEffect 참고), 증빙유형이 자동으로 "샘플증정"으로
   // 맞춰져 세금계산서 발행 대상에서도 자동으로 빠진다
   // (canIssueTaxInvoice가 null/"세금계산서" 외의 값은 전부 걸러낸다).
-  const [isSample, setIsSample] = useState(initial?.isSample ?? false);
+  const [isSample, setIsSample] = useState(initial?.isSample ?? initialIsSample);
   function handleSampleChange(checked: boolean) {
     setIsSample(checked);
     if (checked) {
@@ -303,6 +316,8 @@ export function NewSaleForm({
           lotNumber: item.lotNumber ?? "",
           quantity: item.quantity,
           unitPrice: item.unitPrice,
+          quantityFormula: item.quantityFormula ?? null,
+          unitPriceFormula: item.unitPriceFormula ?? null,
           manualPrice: (!item.productId && !!item.customName) || item.unitPrice === 0,
           remark: item.remark ?? "",
           sourcePurchaseItemId: item.sourcePurchaseItemId ?? null,
@@ -395,9 +410,7 @@ export function NewSaleForm({
     if (state?.redirectTo) clearDraft();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
-  // 서버 액션에서 직접 redirect()를 부르면 모달(인터셉트 라우트)로 열려
-  // 있던 이 폼이 항상 전체 페이지로 튕겨나가버린다 — 액션은 이동할 경로만
-  // 반환하고, 실제 이동은 여기서 클라이언트 라우터로 한다.
+  // 서버 액션의 redirect()는 모달로 열린 폼을 전체 페이지로 튕겨내므로, 액션은 경로만 반환하고 이동은 클라이언트 라우터로 한다.
   useFormRedirect(state);
   // 품목 그리드 칸 너비 — 마우스로 드래그해서 직접 조절할 수 있고, 조절한
   // 값은 DB에 저장되어 다음에 열어도, 다른 직원 화면에서도 유지된다.
@@ -409,7 +422,8 @@ export function NewSaleForm({
     ITEM_GRID_COLUMN_PX_WIDTHS,
     initialColWidths,
   );
-  const itemGridTotalWidth = Object.values<number>(colWidths).reduce((a, b) => a + b, 0);
+  const { voucherLayout } = useThemeFeatures();
+  const itemGridTotalWidth = Object.values<number>(colWidths).reduce((a, b) => a + b, 0) + (voucherLayout ? 180 - colWidths.unit - colWidths.remark : 0);
   // 등록 실패 메시지는 실제로 다시 제출하기 전까지는 useActionState가 값을
   // 갱신하지 않는다. 값을 수정한 뒤에도 이전 실패 메시지가 그대로 남아있으면
   // "고쳤는데도 계속 실패한다"고 오해하게 되므로, 입력을 건드리는 순간
@@ -604,9 +618,7 @@ export function NewSaleForm({
     return lookupPartyProductValue(noteMap, forCustomerId, productId) ?? null;
   }
 
-  // 수정 화면에서는 product.stock이 "이 거래로 이미 출고 처리된 뒤"의 현재
-  // 재고라, 원래 수량 그대로 비교하면 항상 부족한 것처럼 보인다. 이 거래가
-  // 원래 갖고 있던 수량만큼은 되돌려받은 셈 치고 비교해야 한다.
+  // 수정 화면의 product.stock은 이 거래가 이미 출고된 뒤의 재고라, 이 거래의 원래 수량은 되돌려받은 셈 치고 비교해야 한다.
   const originalQtyByProduct = useMemo(() => {
     const map = new Map<string, number>();
     for (const item of initial?.items ?? []) {
@@ -616,11 +628,7 @@ export function NewSaleForm({
     return map;
   }, [initial]);
 
-  // 관리번호(롯)별로 같은 상품을 여러 줄에 나눠 입력하는 경우(코드베이스
-  // 전반에서 흔한 패턴), 재고 부족 여부는 그 줄 하나가 아니라 이 주문에
-  // 걸린 같은 상품의 모든 줄을 합쳐서 따져야 한다 — 줄마다 따로 보면
-  // 재고 50개인데 30개씩 두 줄(합계 60개)을 넣어도 각 줄은 "여유 있음"
-  // 으로 보여 실제로는 부족한데 경고가 안 뜬다.
+  // 같은 상품을 관리번호(롯)별로 여러 줄에 나눠 넣을 수 있으므로, 재고 부족은 줄 하나가 아니라 이 주문의 같은 상품 전체 합계로 따진다.
   const rowQtyByProduct = useMemo(() => {
     const map = new Map<string, number>();
     for (const row of rows) {
@@ -629,6 +637,11 @@ export function NewSaleForm({
     }
     return map;
   }, [rows]);
+  const stockShortages = isReturn ? [] : [...rowQtyByProduct].flatMap(([pid, qty]) => {
+    const p = products.find((x) => x.id === pid);
+    const short = p ? -rowStockRemaining({ stock: p.stock ?? 0, originalQty: originalQtyByProduct.get(pid) ?? 0, quantity: qty, totalQty: qty, isReturn: false }).remaining : 0;
+    return p && short > 0 ? [{ name: p.name, short, unit: p.unit ?? "" }] : [];
+  });
 
   function resolvePrice(forCustomerId: string, productId: string) {
     // 샘플(무상증정)이면 거래처 단가/품목 기본가와 무관하게 항상 0원 —
@@ -854,6 +867,8 @@ export function NewSaleForm({
         spec: row.manualSpec ? row.spec : null,
         quantity: row.quantity,
         unitPrice: row.unitPrice,
+        quantityFormula: row.quantityFormula ?? null,
+        unitPriceFormula: row.unitPriceFormula ?? null,
         remark: row.remark || null,
         lotNumber: row.lotNumber || null,
         sourcePurchaseItemId: row.productId ? row.sourcePurchaseItemId || null : null,
@@ -907,22 +922,23 @@ export function NewSaleForm({
     );
   }
 
+  const docSheetClass = useDocSheetClass();
+  const appendRowIfFilled = () => {
+    const filled = !!(rows[rows.length - 1]?.productId || rows[rows.length - 1]?.customName?.trim());
+    if (filled) addRow();
+    return filled;
+  };
+  const saveButtons = <FormSaveButtons isEdit={!!initial?.id} pending={pending} submitRef={submitRef} label={isReturn ? `반품 ${initial?.id ? "수정" : "등록"}` : submitLabel} />;
+
   return (
     <form
       ref={formRef}
       action={formAction}
-      className="erp-doc-sheet"
+      className={docSheetClass}
       onKeyDown={(e) => {
         preventEnterSubmit(e);
-        // ESC는 이 화면에서 "그냥 닫기"가 아니라 F7과 같은 "저장 후
-        // 닫기"로 동작한다(실패하면 에러만 뜨고 안 닫힘 — 기존 저장
-        // 버튼 로직을 그대로 탄다). 상단 툴바의 "✕" 버튼은 그대로 저장
-        // 없이 즉시 닫힌다 — 사용자가 그 둘을 구분해 쓸 수 있게 한다.
-        // stopPropagation으로 이 keydown이 window까지 올라가는 걸 막아,
-        // 모달 셸/페이지의 "그냥 닫기" ESC 핸들러가 같은 키 입력에
-        // 동시에 반응해 저장이 끝나기 전에 먼저 닫혀버리는 걸 막는다.
-        // (자동완성 드롭다운의 ESC는 캡처 단계에서 먼저 소비되므로 여기
-        // 도달 전에 이미 처리되어 있다 — 드롭다운만 닫히고 저장은 안 됨.)
+        // ESC = F7과 같은 "저장 후 닫기"(실패하면 에러만 뜨고 안 닫힘). 상단 ✕는 저장 없이 닫기. stopPropagation으로
+        // 모달 셸/페이지의 "그냥 닫기" ESC가 같은 키에 반응해 저장 전에 닫히는 걸 막는다(자동완성 ESC는 캡처 단계에서 먼저 소비됨).
         if (e.key === "Escape") {
           e.stopPropagation();
           submitRef.current?.click();
@@ -946,7 +962,13 @@ export function NewSaleForm({
       }}
     >
       <div className="erp-doc-paper flex flex-col gap-6">
-      <h2 className="erp-doc-title">{isReturn ? "반 품 전 표" : "매 출 전 표"}</h2>
+      <VoucherTitle title={isReturn ? "반품전표" : "매출전표"} savedAt={savedAt}>
+        <VoucherDocNoChip value={docNo} onChange={setDocNo} />
+        <VoucherToggleChip checked={isCarryover} onChange={setIsCarryover}>이월 처리</VoucherToggleChip>
+        {initial?.id && isReturn && <VoucherChip tone="warning">반품</VoucherChip>}
+        {initial?.id && isSample && <VoucherChip>샘플</VoucherChip>}
+      </VoucherTitle>
+      <PartyContextStrip kind="customer" partyId={customerId} partyName={customers.find((x) => x.id === customerId)?.name ?? ""} />
       <LocationAllocationModal
         open={allocationModalOpen}
         items={multiLocationItems}
@@ -995,7 +1017,7 @@ export function NewSaleForm({
       )}
       <PaperCalcOverrideInput pc={pc} />
 
-      {showDraftBanner && <DraftResumeBanner onResume={resumeDraft} onDiscard={discardDraft} />}<DraftSavedIndicator savedAt={savedAt} />
+      {showDraftBanner && <DraftResumeBanner onResume={resumeDraft} onDiscard={discardDraft} />}
 
       <PaperCalcLinkedGuide pc={pc} includeCopied />
 
@@ -1036,17 +1058,14 @@ export function NewSaleForm({
       )}
 
       <div>
-        <div className="erp-form-section-head">
-          <span className="erp-eyebrow erp-u-m-0">기본정보</span>
-          <FormSaveButtons isEdit={!!initial?.id} pending={pending} submitRef={submitRef} label={isReturn ? `반품 ${initial?.id ? "수정" : "등록"}` : submitLabel} />
-        </div>
+        <VoucherBasicHead actions={saveButtons} />
         {!!(messageDismissed ? undefined : state) && (
           <div style={{ padding: "8px 14px 0" }}>
             <FormMessage state={messageDismissed ? undefined : state} />
           </div>
         )}
         <div className="erp-field-grid">
-          <div className="erp-field erp-span-2">
+          <div className="erp-field erp-vf-hide erp-span-2">
             <label htmlFor="sale-docno">No</label>
             <input
               id="sale-docno"
@@ -1059,7 +1078,7 @@ export function NewSaleForm({
               title="비워두면 자동으로 채번됩니다. 인쇄되는 거래명세표의 No와 같은 번호입니다."
             />
           </div>
-          <div className="erp-field erp-span-4">
+          <div className="erp-field erp-vf-party erp-span-4">
             <label htmlFor="sale-customer">출고처</label>
             <PartySearchSelect
               id="sale-customer"
@@ -1070,7 +1089,7 @@ export function NewSaleForm({
               placeholder="출고처명 검색"
             />
           </div>
-          <div className="erp-field erp-span-2">
+          <div className="erp-field erp-vf-date erp-span-2">
             <label htmlFor="sale-order-date">거래일자</label>
             <input
               id="sale-order-date"
@@ -1083,7 +1102,7 @@ export function NewSaleForm({
             />
           </div>
           {warehouses.length > 1 && (
-            <div className="erp-field erp-span-2">
+            <div className="erp-field erp-vf-wh erp-span-2">
               <label htmlFor="sale-warehouse">출고창고</label>
               <ErpSelect
                 id="sale-warehouse"
@@ -1095,7 +1114,7 @@ export function NewSaleForm({
               />
             </div>
           )}
-          <div className={`erp-field ${warehouses.length > 1 ? "erp-span-2" : "erp-span-4"}`}>
+          <div className={`erp-field erp-vf-deliv ${warehouses.length > 1 ? "erp-span-2" : "erp-span-4"}`}>
             <label htmlFor="sale-delivery-method">배송방법</label>
             <ErpSelect
               id="sale-delivery-method"
@@ -1104,7 +1123,7 @@ export function NewSaleForm({
               options={[{ value: "", label: "-" }, ...DELIVERY_METHODS.map((m) => ({ value: m, label: m }))]}
             />
           </div>
-          <div className="erp-field erp-span-2">
+          <div className="erp-field erp-vf-tax erp-span-2">
             <label htmlFor="sale-tax-type">과세구분</label>
             <ErpSelect
               id="sale-tax-type"
@@ -1113,7 +1132,7 @@ export function NewSaleForm({
               options={TAX_TYPES.map((t) => ({ value: t, label: t }))}
             />
           </div>
-          <div className="erp-field erp-span-4">
+          <div className="erp-field erp-vf-evid erp-span-4">
             <label htmlFor="sale-evidence-type">증빙유형</label>
             <ErpSelect
               id="sale-evidence-type"
@@ -1122,7 +1141,7 @@ export function NewSaleForm({
               options={[{ value: "", label: "(미정)" }, ...EVIDENCE_TYPES.map((t) => ({ value: t, label: t }))]}
             />
           </div>
-          <div className="erp-field erp-span-6">
+          <div className="erp-field erp-vf-memo erp-span-6">
             <label htmlFor="sale-memo">적요 (선택)</label>
             <input
               id="sale-memo"
@@ -1133,12 +1152,10 @@ export function NewSaleForm({
               className="erp-input erp-u-w-full"
             />
           </div>
-          <PaymentMethodFields alwaysCredit={alwaysCredit} paymentMethod={paymentMethod} onPaymentMethodChange={setPaymentMethod} />
+          <PaymentMethodFields alwaysCredit={alwaysCredit} paymentMethod={paymentMethod} onPaymentMethodChange={setPaymentMethod} onAlwaysCreditChange={setAlwaysCredit} />
           <div className="erp-form-options">
-            <CarryoverToggle checked={isCarryover} onChange={setIsCarryover} monthLabel={nextMonthLabel(orderDate)} />
-            <FormCheckOption checked={isSample} onChange={handleSampleChange} tone="info">
-              샘플(무상증정)
-            </FormCheckOption>
+            {!voucherLayout && <CarryoverToggle checked={isCarryover} onChange={setIsCarryover} monthLabel={nextMonthLabel(orderDate)} />}
+            {!voucherLayout && <FormCheckOption checked={isSample} onChange={handleSampleChange} tone="info">샘플(무상증정)</FormCheckOption>}
             <AlwaysCreditOption checked={alwaysCredit} onChange={setAlwaysCredit} />
           </div>
         </div>
@@ -1272,16 +1289,18 @@ export function NewSaleForm({
           >
             <thead>
               <tr>
+                {voucherLayout && <th style={{ width: 40 }}>No</th>}
                 {resizableTh("product", "품목")}
                 {resizableTh("spec", "규격")}
                 {resizableTh("lotNumber", "관리번호")}
-                {resizableTh("unit", "단위")}
-                {resizableTh("quantity", "수량", "num")}
-                {resizableTh("price", "단가", "num")}
+                {!voucherLayout && resizableTh("unit", "단위")}
+                {resizableTh("quantity", "수량", "num erp-th-key")}
+                {resizableTh("price", "단가", "num erp-th-key")}
                 {resizableTh("supplyAmount", "공급가액", "num")}
                 {resizableTh("tax", "세액", "num")}
                 {resizableTh("total", "합계", "num")}
-                {resizableTh("remark", "비고")}
+                {voucherLayout && <th style={{ width: 140 }}>재고 확인</th>}
+                {!voucherLayout && resizableTh("remark", "비고")}
                 <th style={{ width: colWidths.actions }} />
               </tr>
             </thead>
@@ -1289,16 +1308,19 @@ export function NewSaleForm({
               onKeyDown={(e) => {
                 focusSameColumnNextRow(e);
                 focusGridArrowNav(e);
+                focusGridRowShortcuts(e, { onAppendRow: appendRowIfFilled });
               }}
             >
               <PaperCalcGridRows pc={pc} />
-              {rows.map((row) => {
+              {rows.map((row, rowIndex) => {
                 const product = products.find((p) => p.id === row.productId);
+                const stockProps = product && row.productId ? { stock: product.stock ?? 0, originalQty: originalQtyByProduct.get(row.productId) ?? 0, unit: product.unit ?? "", quantity: row.quantity, totalQty: rowQtyByProduct.get(row.productId) ?? row.quantity, isReturn } : null;
                 const recentPrice = row.productId
                   ? resolvePrice(customerId, row.productId)
                   : 0;
                 return (
                   <tr key={row.key}>
+                    {voucherLayout && <td className="erp-u-muted num">{rowIndex + 1}</td>}
                     <td>
                       {row.isCustomEntry ? (
                         <input
@@ -1329,7 +1351,7 @@ export function NewSaleForm({
                         </>
                       )}
                       <label
-                        className="mt-1 flex items-center gap-1 text-[10.5px] erp-u-muted"
+                        className="mt-1 flex items-center gap-1 text-[10.5px] erp-u-muted erp-cell-aux"
                       >
                         <input
                           type="checkbox"
@@ -1372,6 +1394,8 @@ export function NewSaleForm({
                           updateRow(row.key, { quantity: n })
                         }
                         allowFormula
+                        formula={row.quantityFormula}
+                        onFormulaChange={(f) => updateRow(row.key, { quantityFormula: f })}
                         basePackageQty={product?.base_package_qty}
                       />
                     </td>
@@ -1380,86 +1404,24 @@ export function NewSaleForm({
                         placeholder="단가"
                         value={row.unitPrice}
                         onChange={(n) => updateRow(row.key, { unitPrice: n })}
+                        allowFormula
+                        formula={row.unitPriceFormula}
+                        onFormulaChange={(f) => updateRow(row.key, { unitPriceFormula: f })}
                         disabled={isSample || !row.manualPrice}
                         className="erp-input w-full disabled:bg-[var(--erp-bg-disabled)] disabled:text-[var(--erp-text-muted)]"
                       />
                       {row.productId && customerId && !isSample && (
-                        <label
-                          className="mt-1 flex items-center justify-end gap-1 text-[10.5px] erp-u-muted"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={row.manualPrice}
-                            onChange={(e) => {
-                              const manualPrice = e.target.checked;
-                              updateRow(row.key, {
-                                manualPrice,
-                                ...(manualPrice
-                                  ? {}
-                                  : { unitPrice: recentPrice }),
-                              });
-                            }}
-                          />
-                          직접입력
-                        </label>
+                        <ManualPriceToggle
+                          checked={row.manualPrice}
+                          onChange={(manualPrice) =>
+                            updateRow(row.key, { manualPrice, ...(manualPrice ? {} : { unitPrice: recentPrice }) })
+                          }
+                        />
                       )}
                     </td>
                     <td className="num">
                       {formatNumber((row.quantity * row.unitPrice))}원
-                      {row.productId &&
-                        product &&
-                        (() => {
-                          const availableStock =
-                            (product.stock ?? 0) +
-                            (originalQtyByProduct.get(row.productId) ?? 0);
-                          const unit = product.unit ?? "";
-                          // 반품은 출고가 아니라 입고(재고 증가)이므로 부족
-                          // 여부를 따질 필요가 없다 — 늘어난 뒤 수량만 보여준다.
-                          if (isReturn) {
-                            const afterReturn = availableStock + row.quantity;
-                            return (
-                              <p
-                                className="text-[10.5px] erp-u-danger"
-                              >
-                                재고 {formatNumber(availableStock)}
-                                {unit} + 반품 {formatNumber(row.quantity)}
-                                {unit} = {formatNumber(afterReturn)}
-                                {unit}
-                              </p>
-                            );
-                          }
-                          // "재고 900"만 보여주면 이 출고를 반영하기 전인지 후인지
-                          // 헷갈린다는 지적이 있어, 계산식 그대로 보여준다 —
-                          // 재고에서 이번 출고량을 뺀 잔여 수량이 마이너스면
-                          // 그 자체로 초과분을 뜻하므로 빨간색으로 강조한다.
-                          // 같은 상품이 이 주문 안에서 여러 줄로 나뉘어 있으면
-                          // (관리번호별 분할 등) 그 줄들의 합계로 부족 여부를
-                          // 판단해야 실제 재고를 넘는 걸 놓치지 않는다.
-                          const totalQty =
-                            rowQtyByProduct.get(row.productId) ?? row.quantity;
-                          const remaining = availableStock - totalQty;
-                          const short = remaining < 0;
-                          return (
-                            <p
-                              className="text-[10.5px]"
-                              style={{
-                                color: short
-                                  ? "var(--erp-danger)"
-                                  : "var(--erp-primary)",
-                              }}
-                            >
-                              재고 {formatNumber(availableStock)}
-                              {unit} - 출고 {formatNumber(row.quantity)}
-                              {unit}
-                              {totalQty !== row.quantity &&
-                                ` (합계 ${formatNumber(totalQty)}${unit})`}
-                              {" = "}
-                              {formatNumber(remaining)}
-                              {unit}
-                              {short && " (부족)"}
-                            </p>
-                          );
-                        })()}
+                      {!voucherLayout && stockProps && <OrderRowStockHint {...stockProps} />}
                     </td>
                     <td
                       className="num erp-u-muted"
@@ -1474,6 +1436,7 @@ export function NewSaleForm({
                       ))}
                       원
                     </td>
+                    {voucherLayout && <td>{stockProps && <OrderRowStockCell {...stockProps} />}</td>}
                     <RemarkActionCells
                       remark={row.remark}
                       onRemarkChange={(remark) => updateRow(row.key, { remark })}
@@ -1484,22 +1447,10 @@ export function NewSaleForm({
                   </tr>
                 );
               })}
+              <VoucherAddRow colSpan={11} onAdd={addRow} />
             </tbody>
             <tfoot>
-              <tr className="erp-u-bg-page">
-                <td className="erp-u-bold" colSpan={6}>
-                  합계
-                </td>
-                <td className="num" colSpan={5}>
-                  <div className="erp-u-muted">
-                    공급가액 {formatNumber(supplyAmount)}원 · 부가세{" "}
-                    {formatNumber(taxAmount)}원
-                  </div>
-                  <div className="erp-doc-total">
-                    {formatNumber(total)}원
-                  </div>
-                </td>
-              </tr>
+              <OrderTotalsRow count={rows.filter((r) => r.productId || r.customName).length} quantity={rows.reduce((n, r) => n + r.quantity, 0)} supply={supplyAmount} tax={taxAmount} total={total} classicSpans={[6, 5]} voucherLeadSpan={4} voucherTrailSpan={2} />
             </tfoot>
           </table>
         </div>
@@ -1521,13 +1472,8 @@ export function NewSaleForm({
           />
         </div>
 
-        <KeyboardHintBar
-          items={[
-            { key: "Tab", label: "다음 칸" },
-            { key: "F7", label: "저장" },
-            { key: "Esc", label: "저장 후 닫기" },
-          ]}
-        />
+        <VoucherWarning shortages={stockShortages} />
+        <KeyboardHintBar items={ORDER_GRID_KEY_HINTS} />
 
         {rows.some(
           (r) =>
@@ -1561,6 +1507,7 @@ export function NewSaleForm({
           </div>
         )}
       </div>
+      <VoucherFooter supply={supplyAmount} tax={taxAmount} total={total} actions={saveButtons} />
       </div>
     </form>
   );

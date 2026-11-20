@@ -1,3 +1,6 @@
+import { loadInputFormulas } from "@/lib/input-formulas-server";
+import { attachFormulaRows } from "@/lib/item-formulas";
+import { FormulaMark } from "@/components/grid/formula-mark";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -26,7 +29,7 @@ export async function PurchaseQuoteRequestDetailPanel({ id, closeHref }: { id: s
       .maybeSingle(),
     supabase
       .from("purchase_quote_request_items")
-      .select("id, spec, quantity, remark, products(sku, name)")
+      .select("id, product_id, spec, quantity, remark, products(sku, name)")
       .eq("purchase_quote_request_id", id),
     supabase.from("purchase_quote_prices").select("purchase_quote_request_item_id, supplier_id, unit_price").eq("purchase_quote_request_id", id),
     supabase.from("suppliers").select("id, name").limit(1000),
@@ -41,6 +44,12 @@ export async function PurchaseQuoteRequestDetailPanel({ id, closeHref }: { id: s
   for (const p of prices ?? []) {
     priceByItemAndSupplier.set(`${p.purchase_quote_request_item_id}:${p.supplier_id}`, Number(p.unit_price));
   }
+
+  // 입력 때 쓴 계산식(fx) — 줄 값이 식의 결과와 맞는 것만 붙는다(lib/item-formulas.ts).
+  const formulas = attachFormulaRows(
+    (items ?? []).map((i) => ({ productId: i.product_id, quantity: Number(i.quantity), price: 0 })),
+    await loadInputFormulas(supabase, "purchase_quote_request", id),
+  );
 
   const priceFormItems = (items ?? []).map((item) => ({
     id: item.id,
@@ -95,11 +104,14 @@ export async function PurchaseQuoteRequestDetailPanel({ id, closeHref }: { id: s
             </tr>
           </thead>
           <tbody>
-            {(items ?? []).map((item) => (
+            {(items ?? []).map((item, idx) => (
               <tr key={item.id}>
                 <td>{item.products?.name ?? "-"}</td>
                 <td>{item.spec ?? "-"}</td>
-                <td className="num">{formatNumber(Number(item.quantity))}</td>
+                <td className="num">
+                  {formatNumber(Number(item.quantity))}
+                  <FormulaMark formula={formulas[idx].quantityFormula} value={formatNumber(Number(item.quantity))} />
+                </td>
                 <td className="erp-u-muted">{item.remark ?? "-"}</td>
                 {targetSuppliers.map((s) => {
                   const price = priceByItemAndSupplier.get(`${item.id}:${s.id}`);
@@ -126,7 +138,7 @@ export async function PurchaseQuoteRequestDetailPanel({ id, closeHref }: { id: s
         {!items?.length ? (
           <p className="erp-grid-empty">견적 요청 품목이 없습니다.</p>
         ) : (
-          (items ?? []).map((item) => (
+          (items ?? []).map((item, idx) => (
             <div className="erp-row-card" key={item.id}>
               <div className="erp-row-card-head">
                 <span className="erp-row-card-partner">{item.products?.name ?? "-"}</span>
@@ -138,7 +150,10 @@ export async function PurchaseQuoteRequestDetailPanel({ id, closeHref }: { id: s
                 </div>
                 <div>
                   <dt>수량</dt>
-                  <dd>{formatNumber(Number(item.quantity))}</dd>
+                  <dd>
+                    {formatNumber(Number(item.quantity))}
+                    <FormulaMark formula={formulas[idx].quantityFormula} value={formatNumber(Number(item.quantity))} />
+                  </dd>
                 </div>
                 {targetSuppliers.map((s) => {
                   const price = priceByItemAndSupplier.get(`${item.id}:${s.id}`);

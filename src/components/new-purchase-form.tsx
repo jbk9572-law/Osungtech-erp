@@ -12,11 +12,12 @@ import { NumberInput } from "@/components/number-input";
 import { RemarkActionCells, SpecLotUnitCells } from "@/components/erp/order-form-row-cells";
 import { QuantityWithBoxInput } from "@/components/quantity-with-box-input";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
-import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
+import { KeyboardHintBar, ORDER_GRID_KEY_HINTS } from "@/components/erp/keyboard-hint-bar";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import {
   focusSameColumnNextRow,
   focusGridArrowNav,
+  focusGridRowShortcuts,
 } from "@/lib/grid-enter-nav";
 import { TodoImportPopover } from "@/components/todo-import-popover";
 import { AlwaysCreditOption, CarryoverToggle, FormSaveButtons, PaymentMethodFields } from "@/components/erp/order-form-fields";
@@ -42,7 +43,11 @@ import {
 import { useKeyedRows } from "@/lib/use-keyed-rows";
 import { useDraftAutosave } from "@/lib/use-draft-autosave";
 import { DraftResumeBanner } from "@/components/draft-resume-banner";
-import { DraftSavedIndicator } from "@/components/draft-saved-indicator";
+import { ManualPriceToggle } from "@/components/order-manual-price-toggle";
+import { useThemeFeatures } from "@/lib/erp-theme-features";
+import { OrderTotalsRow } from "@/components/erp/order-totals-row";
+import { PartyContextStrip } from "@/components/erp/party-context-strip";
+import { useDocSheetClass, VoucherBasicHead, VoucherAddRow, VoucherDocNoChip, VoucherFooter, VoucherTitle, VoucherToggleChip } from "@/components/erp/voucher-chrome";
 import {
   PaperCalcGridRows,
   PaperCalcHiddenInputs,
@@ -73,11 +78,8 @@ type Product = {
 type Row = {
   key: number;
   productId: string;
-  // 품목마스터 없이 1회성으로 입력하는 줄(예: "소프너 교체")일 때만 쓴다 —
-  // productId는 빈 문자열로 두고 이 이름을 그대로 저장한다. 재고 연동 없이
-  // 매입 합계에만 잡힌다(inventory_transactions은 생성되지 않음). "매출도
-  // 같이 등록"(alsoCreateSale) 모드에서는 서버에서 막고 있어 이 폼에서도
-  // 그 모드일 때는 켤 수 없다.
+  // 품목마스터 없이 1회성으로 입력하는 줄(예: "소프너 교체")일 때만 쓴다 — productId는 빈 문자열, 이 이름을 그대로 저장하고
+  // 재고 연동 없이 매입 합계에만 잡힌다. "매출도 같이 등록" 모드에서는 서버가 막으므로 켤 수 없다.
   customName: string;
   isCustomEntry: boolean;
   spec: string;
@@ -85,12 +87,10 @@ type Row = {
   lotNumber: string;
   quantity: number;
   unitCost: number;
+  quantityFormula?: string | null; unitPriceFormula?: string | null; // 엑셀식 입력("=600*2") 저장용 — lib/item-formulas
   manualPrice: boolean;
   remark: string;
-  // "매출도 같이 등록"을 켰을 때만 쓴다. 기본은 매입수량을 그대로 따라가지만
-  // (전량 당일출고 가정), 일부만 출고하고 나머지는 재고로 남기는 경우를 위해
-  // 독립적으로 고칠 수 있다 — 한 번 직접 고치면(manualSaleQuantity) 이후
-  // 매입수량이 바뀌어도 더 이상 따라가지 않는다.
+  // "매출도 같이 등록"일 때만 쓴다. 기본은 매입수량을 따라가지만(전량 당일출고 가정) 직접 고치면(manualSaleQuantity) 더 이상 안 따라간다.
   saleQuantity: number;
   manualSaleQuantity: boolean;
   // 매출 단가 — 출고처의 거래처별 단가(customer_product_prices)를 우선
@@ -149,6 +149,8 @@ export type PurchaseInitial = {
     spec?: string | null;
     quantity: number;
     unitCost: number;
+    quantityFormula?: string | null;
+    unitPriceFormula?: string | null;
     remark?: string | null;
     lotNumber?: string | null;
   }[];
@@ -262,6 +264,7 @@ export function NewPurchaseForm({
   // 이 체크박스로 명시적으로 관리한다(매출 등록 폼과 동일한 방식).
   // "매출도 같이 등록"(당일 즉시 출고)과는 개념이 겹치지 않아 같이 켤 필요가
   // 없으므로, 아래 alsoCreateSale이 켜지면 이 체크박스는 숨긴다.
+  const { voucherLayout } = useThemeFeatures();
   const [isCarryover, setIsCarryover] = useState(
     initial?.isCarryover ?? false,
   );
@@ -362,6 +365,8 @@ export function NewPurchaseForm({
           lotNumber: item.lotNumber ?? "",
           quantity: item.quantity,
           unitCost: item.unitCost,
+          quantityFormula: item.quantityFormula ?? null,
+          unitPriceFormula: item.unitPriceFormula ?? null,
           manualPrice: (!item.productId && !!item.customName) || item.unitCost === 0,
           remark: item.remark ?? "",
           saleQuantity: item.quantity,
@@ -517,7 +522,7 @@ export function NewPurchaseForm({
         resizingCol: baseCols.resizingCol ?? splitCols.resizingCol,
       }
     : baseCols;
-  const itemGridTotalWidth = Object.values<number>(colWidths).reduce((a, b) => a + b, 0);
+  const itemGridTotalWidth = Object.values<number>(colWidths).reduce((a, b) => a + b, 0) + (voucherLayout ? 40 - colWidths.unit - colWidths.remark : 0);
   // 등록 실패 메시지는 실제로 다시 제출하기 전까지는 useActionState가 값을
   // 갱신하지 않는다. 값을 수정한 뒤에도 이전 실패 메시지가 그대로 남아있으면
   // "고쳤는데도 계속 실패한다"고 오해하게 되므로, 입력을 건드리는 순간
@@ -862,6 +867,8 @@ export function NewPurchaseForm({
         spec: row.manualSpec ? row.spec : null,
         quantity: row.quantity,
         unitCost: row.unitCost,
+        quantityFormula: row.quantityFormula ?? null,
+        unitPriceFormula: row.unitPriceFormula ?? null,
         remark: row.remark || null,
         lotNumber: row.lotNumber || null,
       })),
@@ -958,11 +965,19 @@ export function NewPurchaseForm({
     );
   }
 
+  const docSheetClass = useDocSheetClass();
+  const appendRowIfFilled = () => {
+    const filled = !!(rows[rows.length - 1]?.productId || rows[rows.length - 1]?.customName?.trim());
+    if (filled) addRow();
+    return filled;
+  };
+  const saveButtons = <FormSaveButtons isEdit={!!initial?.id} pending={pending} submitRef={submitRef} label={submitLabel} />;
+
   return (
     <form
       ref={formRef}
       action={formAction}
-      className="erp-doc-sheet"
+      className={docSheetClass}
       onKeyDown={(e) => {
         preventEnterSubmit(e);
         // new-sale-form.tsx와 동일 — ESC를 F7과 같은 "저장 후 닫기"로
@@ -991,7 +1006,10 @@ export function NewPurchaseForm({
       }}
     >
       <div className="erp-doc-paper flex flex-col gap-6">
-      <h2 className="erp-doc-title">매 입 전 표</h2>
+      <VoucherTitle title="매입전표" savedAt={savedAt}>
+        <VoucherDocNoChip value={docNo} onChange={setDocNo} />
+        {!alsoCreateSale && <VoucherToggleChip checked={isCarryover} onChange={setIsCarryover}>이월 처리</VoucherToggleChip>}
+      </VoucherTitle>
       <LocationAllocationModal
         open={allocationModalOpen}
         items={multiLocationItems}
@@ -1014,6 +1032,7 @@ export function NewPurchaseForm({
           requestAnimationFrame(() => formRef.current?.requestSubmit(lastSubmitterRef.current ?? undefined));
         }}
       />
+      <PartyContextStrip kind="supplier" partyId={supplierId} partyName={suppliers.find((x) => x.id === supplierId)?.name ?? ""} />
       {initial?.id && <input type="hidden" name="id" value={initial.id} />}
       {backParam && <input type="hidden" name="back" value={backParam} />}
       <input type="hidden" name="doc_no" value={docNo} />
@@ -1055,7 +1074,7 @@ export function NewPurchaseForm({
       )}
       <PaperCalcOverrideInput pc={pc} />
 
-      {showDraftBanner && <DraftResumeBanner onResume={resumeDraft} onDiscard={discardDraft} />}<DraftSavedIndicator savedAt={savedAt} />
+      {showDraftBanner && <DraftResumeBanner onResume={resumeDraft} onDiscard={discardDraft} />}
 
       {isCarryover && !alsoCreateSale && (
         <PageGuide tone="warning">
@@ -1068,17 +1087,14 @@ export function NewPurchaseForm({
       <PaperCalcLinkedGuide pc={pc} includeCopied={false} />
 
       <div>
-        <div className="erp-form-section-head">
-          <span className="erp-eyebrow erp-u-m-0">기본정보</span>
-          <FormSaveButtons isEdit={!!initial?.id} pending={pending} submitRef={submitRef} label={submitLabel} />
-        </div>
+        <VoucherBasicHead actions={saveButtons} />
         {!!(messageDismissed ? undefined : state) && (
           <div style={{ padding: "8px 14px 0" }}>
             <FormMessage state={messageDismissed ? undefined : state} />
           </div>
         )}
         <div className="erp-field-grid">
-          <div className="erp-field erp-span-2">
+          <div className="erp-field erp-vf-hide erp-span-2">
             <label htmlFor="purchase-docno">No</label>
             <input
               id="purchase-docno"
@@ -1091,7 +1107,7 @@ export function NewPurchaseForm({
               title="비워두면 자동으로 채번됩니다. 인쇄되는 거래명세표의 No와 같은 번호입니다."
             />
           </div>
-          <div className="erp-field erp-span-4">
+          <div className="erp-field erp-vf-party erp-span-4">
             <label htmlFor="purchase-supplier">공급처</label>
             <PartySearchSelect
               id="purchase-supplier"
@@ -1102,7 +1118,7 @@ export function NewPurchaseForm({
               placeholder="공급처명 검색"
             />
           </div>
-          <div className="erp-field erp-span-2">
+          <div className="erp-field erp-vf-date erp-span-2">
             <label htmlFor="purchase-date">매입일자</label>
             <input
               id="purchase-date"
@@ -1115,7 +1131,7 @@ export function NewPurchaseForm({
             />
           </div>
           {warehouses.length > 1 && (
-            <div className="erp-field erp-span-2">
+            <div className="erp-field erp-vf-wh erp-span-2">
               <label htmlFor="purchase-warehouse">입고창고</label>
               <ErpSelect
                 id="purchase-warehouse"
@@ -1127,7 +1143,7 @@ export function NewPurchaseForm({
               />
             </div>
           )}
-          <div className={`erp-field ${warehouses.length > 1 ? "erp-span-2" : "erp-span-4"}`}>
+          <div className={`erp-field erp-vf-deliv ${warehouses.length > 1 ? "erp-span-2" : "erp-span-4"}`}>
             <label htmlFor="purchase-delivery-method">입고방법</label>
             <ErpSelect
               id="purchase-delivery-method"
@@ -1136,7 +1152,7 @@ export function NewPurchaseForm({
               options={[{ value: "", label: "-" }, ...DELIVERY_METHODS.map((m) => ({ value: m, label: m }))]}
             />
           </div>
-          <div className="erp-field erp-span-2">
+          <div className="erp-field erp-vf-tax erp-span-2">
             <label htmlFor="purchase-tax-type">과세구분</label>
             <ErpSelect
               id="purchase-tax-type"
@@ -1145,7 +1161,7 @@ export function NewPurchaseForm({
               options={TAX_TYPES.map((t) => ({ value: t, label: t }))}
             />
           </div>
-          <div className="erp-field erp-span-4">
+          <div className="erp-field erp-vf-evid erp-span-4">
             <label htmlFor="purchase-evidence-type">증빙유형</label>
             <ErpSelect
               id="purchase-evidence-type"
@@ -1154,7 +1170,7 @@ export function NewPurchaseForm({
               options={[{ value: "", label: "(미정)" }, ...EVIDENCE_TYPES.map((t) => ({ value: t, label: t }))]}
             />
           </div>
-          <div className="erp-field erp-span-6">
+          <div className="erp-field erp-vf-memo erp-span-6">
             <label htmlFor="purchase-memo">적요 (선택)</label>
             <input
               id="purchase-memo"
@@ -1165,9 +1181,9 @@ export function NewPurchaseForm({
               className="erp-input erp-u-w-full"
             />
           </div>
-          <PaymentMethodFields alwaysCredit={alwaysCredit} paymentMethod={paymentMethod} onPaymentMethodChange={setPaymentMethod} />
+          <PaymentMethodFields alwaysCredit={alwaysCredit} paymentMethod={paymentMethod} onPaymentMethodChange={setPaymentMethod} onAlwaysCreditChange={setAlwaysCredit} />
           <div className="erp-form-options">
-            {!alsoCreateSale && <CarryoverToggle checked={isCarryover} onChange={setIsCarryover} monthLabel={nextMonthLabel(purchaseDate)} />}
+            {!alsoCreateSale && !voucherLayout && <CarryoverToggle checked={isCarryover} onChange={setIsCarryover} monthLabel={nextMonthLabel(purchaseDate)} />}
             <AlwaysCreditOption checked={alwaysCredit} onChange={setAlwaysCredit} />
           </div>
           {!initial?.id && customers.length > 0 && (
@@ -1302,18 +1318,19 @@ export function NewPurchaseForm({
           >
             <thead>
               <tr>
+                {voucherLayout && <th style={{ width: 40 }}>No</th>}
                 {resizableTh("product", "품목")}
                 {resizableTh("spec", "규격")}
                 {resizableTh("lotNumber", "관리번호")}
-                {resizableTh("unit", "단위")}
-                {resizableTh(alsoCreateSale ? "quantityIn" : "quantity", "입고수량", "num")}
+                {!voucherLayout && resizableTh("unit", "단위")}
+                {resizableTh(alsoCreateSale ? "quantityIn" : "quantity", "입고수량", "num erp-th-key")}
                 {alsoCreateSale && resizableTh("quantityOut", "출고수량", "num")}
-                {resizableTh(alsoCreateSale ? "priceIn" : "price", "매입단가", "num")}
+                {resizableTh(alsoCreateSale ? "priceIn" : "price", "매입단가", "num erp-th-key")}
                 {alsoCreateSale && resizableTh("priceOut", "매출단가", "num")}
                 {resizableTh("supplyAmount", "공급가액", "num")}
                 {resizableTh("tax", "세액", "num")}
                 {resizableTh("total", "합계", "num")}
-                {resizableTh("remark", "비고")}
+                {!voucherLayout && resizableTh("remark", "비고")}
                 <th style={{ width: colWidths.actions }} />
               </tr>
             </thead>
@@ -1321,6 +1338,7 @@ export function NewPurchaseForm({
               onKeyDown={(e) => {
                 focusSameColumnNextRow(e);
                 focusGridArrowNav(e);
+                focusGridRowShortcuts(e, { onAppendRow: appendRowIfFilled });
               }}
             >
               <PaperCalcGridRows pc={pc} dashAfterQuantity={alsoCreateSale} dashAfterUnit={alsoCreateSale} />
@@ -1329,6 +1347,7 @@ export function NewPurchaseForm({
                 const recentCost = resolveCost(supplierId, row.productId);
                 return (
                   <tr key={row.key}>
+                    {voucherLayout && <td className="erp-u-muted num">{rows.indexOf(row) + 1}</td>}
                     <td>
                       {row.isCustomEntry ? (
                         <input
@@ -1360,7 +1379,7 @@ export function NewPurchaseForm({
                       )}
                       {!alsoCreateSale && (
                         <label
-                          className="mt-1 flex items-center gap-1 text-[10.5px] erp-u-muted"
+                          className="mt-1 flex items-center gap-1 text-[10.5px] erp-u-muted erp-cell-aux"
                         >
                           <input
                             type="checkbox"
@@ -1409,6 +1428,8 @@ export function NewPurchaseForm({
                           })
                         }
                         allowFormula
+                        formula={row.quantityFormula}
+                        onFormulaChange={(f) => updateRow(row.key, { quantityFormula: f })}
                         basePackageQty={product?.base_package_qty}
                       />
                     </td>
@@ -1424,7 +1445,6 @@ export function NewPurchaseForm({
                           }
                           basePackageQty={product?.base_package_qty}
                           label="출고수량"
-                          allowFormula
                           className="erp-input w-full"
                         />
                         {row.saleQuantity > row.quantity && (
@@ -1440,28 +1460,19 @@ export function NewPurchaseForm({
                         placeholder="매입단가"
                         value={row.unitCost}
                         onChange={(n) => updateRow(row.key, { unitCost: n })}
+                        allowFormula
+                        formula={row.unitPriceFormula}
+                        onFormulaChange={(f) => updateRow(row.key, { unitPriceFormula: f })}
                         disabled={!row.manualPrice}
                         className="erp-input w-full disabled:bg-[var(--erp-bg-disabled)] disabled:text-[var(--erp-text-muted)]"
                       />
                       {row.productId && (
-                        <label
-                          className="mt-1 flex items-center justify-end gap-1 text-[10.5px] erp-u-muted"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={row.manualPrice}
-                            onChange={(e) => {
-                              const manualPrice = e.target.checked;
-                              updateRow(row.key, {
-                                manualPrice,
-                                ...(manualPrice
-                                  ? {}
-                                  : { unitCost: recentCost }),
-                              });
-                            }}
-                          />
-                          직접입력
-                        </label>
+                        <ManualPriceToggle
+                          checked={row.manualPrice}
+                          onChange={(manualPrice) =>
+                            updateRow(row.key, { manualPrice, ...(manualPrice ? {} : { unitCost: recentCost }) })
+                          }
+                        />
                       )}
                     </td>
                     {alsoCreateSale && (
@@ -1505,24 +1516,10 @@ export function NewPurchaseForm({
                   </tr>
                 );
               })}
+              <VoucherAddRow colSpan={alsoCreateSale ? 12 : 10} onAdd={addRow} />
             </tbody>
             <tfoot>
-              <tr className="erp-u-bg-page">
-                <td className="erp-u-bold"
-                  colSpan={alsoCreateSale ? 8 : 6}
-                >
-                  매입 합계
-                </td>
-                <td className="num" colSpan={5}>
-                  <div className="erp-u-muted">
-                    공급가액 {formatNumber(supplyAmount)}원 · 부가세{" "}
-                    {formatNumber(taxAmount)}원
-                  </div>
-                  <div className="erp-doc-total">
-                    {formatNumber(total)}원
-                  </div>
-                </td>
-              </tr>
+              <OrderTotalsRow count={rows.filter((r) => r.productId || r.customName).length} quantity={rows.reduce((n, r) => n + r.quantity, 0)} supply={supplyAmount} tax={taxAmount} total={total} label="매입 합계" classicSpans={[alsoCreateSale ? 8 : 6, voucherLayout ? 4 : 5]} voucherLeadSpan={4} voucherTrailSpan={1} classicOnly={alsoCreateSale} />
             </tfoot>
           </table>
         </div>
@@ -1544,13 +1541,7 @@ export function NewPurchaseForm({
           />
         </div>
 
-        <KeyboardHintBar
-          items={[
-            { key: "Tab", label: "다음 칸" },
-            { key: "F7", label: "저장" },
-            { key: "Esc", label: "저장 후 닫기" },
-          ]}
-        />
+        <KeyboardHintBar items={ORDER_GRID_KEY_HINTS} />
 
         {rows.some(
           (r) =>
@@ -1590,8 +1581,8 @@ export function NewPurchaseForm({
           </div>
         )}
       </div>
+      <VoucherFooter supply={supplyAmount} tax={taxAmount} total={total} actions={saveButtons} />
       </div>
-
     </form>
   );
 }

@@ -1,9 +1,8 @@
 import { formatKstDate } from "@/lib/kst-date";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { PrintButton } from "@/components/print-button";
 import { formatNumber } from "@/lib/format-number";
+import { PrintToolbar } from "@/components/erp/print-toolbar";
 
 // 실물(완제품/반제품)과 함께 사내·외부 업체를 오가는 생산지시서(작업지시서)
 // 출력물. 공정 수는 품목마다 달라 10개씩 고정 칸 높이로 페이지를 나누고
@@ -60,12 +59,7 @@ export default async function WorkOrderPrintPage({ params }: { params: Promise<{
 
   return (
     <div className="mx-auto print-page-margin" style={{ width: 760, maxWidth: "100%", color: "#000" }}>
-      <div className="mb-4 flex items-center justify-between print:hidden">
-        <Link href={`/production/${id}`} className="erp-btn erp-btn-dark">
-          목록으로
-        </Link>
-        <PrintButton />
-      </div>
+      <PrintToolbar closeHref={`/production/${id}`} title="생산지시서 인쇄" />
 
       {pages.map((pageSteps, pageIndex) => {
         const isFirst = pageIndex === 0;

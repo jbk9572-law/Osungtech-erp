@@ -17,6 +17,7 @@ import {
 } from "@/lib/tax-invoice-rows";
 import { TaxInvoiceItemsGrid } from "@/components/tax-invoice-items-grid";
 import { formatNumber } from "@/lib/format-number";
+import { DocSubmitBar, VoucherTitle, useDocSheetClass } from "@/components/erp/voucher-chrome";
 
 export type SupplierInfo = {
   name: string | null;
@@ -69,8 +70,9 @@ export function TaxInvoiceForm({
 
   const { validRows, totalSupply, totalTax, totalAmount, itemsJson } = summarizeTaxInvoiceRows(rows);
 
+  const docSheetClass = useDocSheetClass();
   return (
-    <form action={formAction} onKeyDown={preventEnterSubmit} className="erp-doc-sheet">
+    <form action={formAction} onKeyDown={preventEnterSubmit} className={docSheetClass}>
       <div className="erp-doc-paper flex flex-col gap-3">
         <input type="hidden" name="sales_order_id" value={salesOrderId} />
         <input type="hidden" name="items" value={itemsJson} />
@@ -78,7 +80,7 @@ export function TaxInvoiceForm({
         <input type="hidden" name="tax_amount" value={totalTax} />
         <input type="hidden" name="total_amount" value={totalAmount} />
 
-        <h2 className="erp-doc-title">세 금 계 산 서</h2>
+        <VoucherTitle title="세금계산서" savedAt={null} />
 
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           <div className="erp-detail erp-u-mt-0">
@@ -227,16 +229,17 @@ export function TaxInvoiceForm({
           </div>
         </div>
 
-        <FormMessage state={state} />
-
-        <button
-          ref={submitRef}
-          type="submit"
-          className="erp-btn erp-btn-primary erp-form-submit"
-          disabled={pending || validRows.length === 0}
-        >
-          {pending ? "발행 중..." : "F7 세금계산서 발행"}
-        </button>
+        <DocSubmitBar>
+          <FormMessage state={state} />
+          <button
+            ref={submitRef}
+            type="submit"
+            className="erp-btn erp-btn-primary erp-form-submit"
+            disabled={pending || validRows.length === 0}
+          >
+            {pending ? "발행 중..." : "F7 세금계산서 발행"}
+          </button>
+        </DocSubmitBar>
       </div>
     </form>
   );

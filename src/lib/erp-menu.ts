@@ -131,6 +131,8 @@ export const MENU_GROUPS: MenuGroup[] = [
     label: "재고관리",
     items: [
       { label: "재고현황", href: "/inventory" },
+      // 빌려줬다가 돌려받는 거래(별도 장부) — 등록은 매출 전표 등록의 "일시반출" 탭, 반납·취소는 이 화면.
+      { label: "일시반출 현황", href: "/inventory/loans" },
       { label: "재고 실사", href: "/inventory/count" },
       { label: "QR 자동실사", href: "/inventory/count/scan" },
       { label: "QR 라벨 인쇄", href: "/inventory/qr-labels" },

@@ -8,6 +8,7 @@ import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { ItemEntryBlock } from "@/components/erp/item-entry-block";
 import { blankItemRow, buildItemRow, isBlankItemRow, validItemRows, type ItemEntryRow } from "@/lib/item-entry-rows";
+import { DocSubmitBar, VoucherTitle, useDocSheetClass } from "@/components/erp/voucher-chrome";
 
 export function NewPurchaseQuoteRequestForm({
   today,
@@ -39,18 +40,25 @@ export function NewPurchaseQuoteRequestForm({
 
   const validRows = validItemRows(rows);
   const itemsJson = JSON.stringify(
-    validRows.map((r) => ({ productId: r.productId, spec: r.spec || null, quantity: r.quantity, remark: r.remark || null }))
+    validRows.map((r) => ({
+      productId: r.productId,
+      spec: r.spec || null,
+      quantity: r.quantity,
+      quantityFormula: r.quantityFormula ?? null,
+      remark: r.remark || null,
+    }))
   );
 
+  const docSheetClass = useDocSheetClass();
   return (
-    <form action={formAction} onKeyDown={preventEnterSubmit} className="erp-doc-sheet">
+    <form action={formAction} onKeyDown={preventEnterSubmit} className={docSheetClass}>
       <div className="erp-doc-paper flex flex-col gap-3">
       {supplierIds.map((id) => (
         <input key={id} type="hidden" name="supplier_id" value={id} />
       ))}
       <input type="hidden" name="items" value={itemsJson} />
 
-      <h2 className="erp-doc-title">구 매 견 적 요 청 서</h2>
+      <VoucherTitle title="구매견적요청서" savedAt={null} />
 
       <div className="erp-doc-header">
         <div className="erp-doc-header-row erp-doc-header-row-full">
@@ -106,6 +114,7 @@ export function NewPurchaseQuoteRequestForm({
         onMobileAdd={addMobileItem}
       />
 
+      <DocSubmitBar>
       <div className="erp-form-actions">
         <button
           ref={submitRef}
@@ -117,6 +126,7 @@ export function NewPurchaseQuoteRequestForm({
         </button>
         <FormMessage state={state} />
       </div>
+      </DocSubmitBar>
       </div>
     </form>
   );

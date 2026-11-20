@@ -1,8 +1,7 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { PrintButton } from "@/components/print-button";
 import { formatNumber } from "@/lib/format-number";
+import { PrintToolbar } from "@/components/erp/print-toolbar";
 
 // 개인카드로 쓴 문서는 "지급결의양식", 법인카드(하나/신한)로 쓴 문서는
 // "사용내역" 큰 제목에 어느 카드인지 작게 덧붙여 표시한다 — 실제로는
@@ -82,12 +81,7 @@ export default async function PaymentRequestPrintPage({ params }: { params: Prom
 
   return (
     <div className="mx-auto print-page-margin" style={{ width: 620, maxWidth: "100%" }}>
-      <div className="mb-4 flex items-center justify-between print:hidden">
-        <Link href={`/reports/payment-requests/${id}`} className="erp-btn erp-btn-dark print:hidden">
-          목록으로
-        </Link>
-        <PrintButton />
-      </div>
+      <PrintToolbar closeHref={`/reports/payment-requests/${id}`} title="지급결의서 인쇄" />
 
       {/* 아래 명세표(일자15% 사용처27% 용도16% 금액18% 비고24%)와 세로선을 완전히
           맞추려고, 이 표도 같은 5칸 폭을 colgroup으로 그대로 쓴다 — title은

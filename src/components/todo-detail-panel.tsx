@@ -1,3 +1,6 @@
+import { FormulaMark } from "@/components/grid/formula-mark";
+import { loadInputFormulas } from "@/lib/input-formulas-server";
+import { attachFormulaRows } from "@/lib/item-formulas";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { DeleteButton } from "@/components/delete-button";
@@ -68,7 +71,13 @@ export async function TodoDetailPanel({ id }: { id: string }) {
     notFound();
   }
 
-  const items: TodoInitialItem[] = Array.isArray(row.items) ? (row.items as TodoInitialItem[]) : [];
+  const storedItems: TodoInitialItem[] = Array.isArray(row.items) ? (row.items as TodoInitialItem[]) : [];
+  // 입력 때 쓴 계산식(fx) — 줄 값이 식의 결과와 맞는 것만 붙는다(lib/item-formulas.ts).
+  const formulas = attachFormulaRows(
+    storedItems.map((item) => ({ productId: item.productId, quantity: item.quantity, price: 0 })),
+    await loadInputFormulas(supabase, "todo", row.id),
+  );
+  const items: TodoInitialItem[] = storedItems.map((item, i) => ({ ...item, quantityFormula: formulas[i].quantityFormula }));
 
   let paperCalcSizes: PaperCalcSizeRow[] = [];
   let paperCalcTotalSheet = 0;
@@ -272,6 +281,7 @@ export async function TodoDetailPanel({ id }: { id: string }) {
                             <td className="erp-u-muted">{item.lotNumber || "-"}</td>
                             <td className="num">
                               {formatNumber(item.quantity)} {product?.unit ?? ""}
+                              <FormulaMark formula={item.quantityFormula} value={formatNumber(item.quantity)} />
                             </td>
                           </tr>
                         );
@@ -303,6 +313,7 @@ export async function TodoDetailPanel({ id }: { id: string }) {
                             <dt>수량</dt>
                             <dd>
                               {formatNumber(item.quantity)} {product?.unit ?? ""}
+                              <FormulaMark formula={item.quantityFormula} value={formatNumber(item.quantity)} />
                             </dd>
                           </div>
                         </dl>

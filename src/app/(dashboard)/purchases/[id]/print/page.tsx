@@ -1,14 +1,15 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { PrintButton } from "@/components/print-button";
 import { PrintOptionBar } from "@/components/print-option-bar";
-import { CloseButton } from "@/components/erp/close-button";
 import { InvoicePage, type InvoiceCopies, type InvoiceLayout } from "@/components/invoice/InvoicePage";
 import { toInvoiceParty, type InvoiceForm, type InvoiceItem } from "@/components/invoice/types";
 import { formatPaperCalcSizeLines, mergePaperCalcInputItems } from "@/modules/paper-calc/public";
 import { PAPER_STOCK_SKU } from "@/modules/paper-calc/public";
 import { getSupplierBalance } from "@/lib/ar-ap";
 import { calcVatForTaxType } from "@/lib/tax";
+import { PrintToolbar } from "@/components/erp/print-toolbar";
+import { INVOICE_FORM_OPTIONS, invoiceFormParam, resolveInvoiceForm } from "@/lib/invoice-form";
+import { getTenantTheme } from "@/lib/tenant-theme";
 
 // 매출(sales/[id]/print)에는 있던 인쇄 화면이 매입에는 아예 없었다 —
 // 전체 감사에서 발견. 매입은 거래처(공급처)별 전용 서식(출고증 등)이
@@ -26,11 +27,11 @@ export default async function PurchasePrintPage({
   const { copies: copiesParam, layout: layoutParam, balance: balanceParam, lot: lotParam } = sp;
   const copies: InvoiceCopies = copiesParam === "receiver" || copiesParam === "supplier" ? copiesParam : "both";
   const layout: InvoiceLayout = layoutParam === "full" ? "full" : "half";
-  // 서식: 기본은 지금까지 쓰던 B형. ?form=a 일 때만 A형(공급받는자 사업자 정보까지 채움).
-  const form: InvoiceForm = sp.form === "a" ? "A" : "B";
   const showBalance = balanceParam === "show";
   const showLot = lotParam === "show";
   const supabase = await createClient();
+  // 서식: ?form=a/b 로 직접 고른 값이 우선, 없으면 회사 테마의 기본 서식(클래식 B형 / grid-modern 새 서식 N). A형·N은 공급받는자 사업자 정보까지 채운다.
+  const form: InvoiceForm = resolveInvoiceForm(sp.form, await getTenantTheme(supabase));
 
   const [{ data: order }, { data: items }, { data: company }, { data: paperCalcs }] = await Promise.all([
     supabase.from("purchase_orders").select("*, suppliers(*)").eq("id", id).maybeSingle(),
@@ -98,12 +99,7 @@ export default async function PurchasePrintPage({
 
   return (
     <div className={`mx-auto max-w-5xl print:mx-0 print:max-w-none ${layout === "half" ? "print-page-wrapper" : ""}`}>
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 print:hidden">
-        <CloseButton href="/purchases" className="erp-btn erp-btn-dark print:hidden">
-          목록으로
-        </CloseButton>
-        <PrintButton autoPrint={false} />
-      </div>
+      <PrintToolbar closeHref="/purchases" title="입고명세표 인쇄" autoPrint={false} />
       <PrintOptionBar
         basePath={`/purchases/${id}/print`}
         params={sp}
@@ -111,11 +107,8 @@ export default async function PurchasePrintPage({
           {
             key: "form",
             label: "서식",
-            current: form === "A" ? "a" : "b",
-            options: [
-              { value: "b", label: "B형" },
-              { value: "a", label: "A형" },
-            ],
+            current: invoiceFormParam(form),
+            options: INVOICE_FORM_OPTIONS,
           },
           {
             key: "copies",

@@ -1,8 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { PrintButton } from "@/components/print-button";
+import { PrintToolbar } from "@/components/erp/print-toolbar";
 import { PrintOptionBar } from "@/components/print-option-bar";
-import { CloseButton } from "@/components/erp/close-button";
 import { DeliveryNoteDoc } from "@/components/delivery-note-doc";
 import {
   SnsFiltechCanvas,
@@ -15,6 +14,8 @@ import { formatPaperCalcSizeLines, mergePaperCalcInputItems } from "@/modules/pa
 import { PAPER_STOCK_SKU } from "@/modules/paper-calc/public";
 import { getCustomerBalance } from "@/lib/ar-ap";
 import { calcVatForTaxType } from "@/lib/tax";
+import { INVOICE_FORM_OPTIONS, invoiceFormParam, resolveInvoiceForm } from "@/lib/invoice-form";
+import { getTenantTheme } from "@/lib/tenant-theme";
 
 export default async function SalesPrintPage({
   params,
@@ -29,8 +30,6 @@ export default async function SalesPrintPage({
   const copies: InvoiceCopies =
     copiesParam === "receiver" || copiesParam === "supplier" ? copiesParam : "both";
   const layout: InvoiceLayout = layoutParam === "full" ? "full" : "half";
-  // 서식: 기본은 지금까지 쓰던 B형. ?form=a 일 때만 A형(공급받는자 사업자 정보까지 채움).
-  const form: InvoiceForm = sp.form === "a" ? "A" : "B";
   // 실무에서 거의 안 쓰는 기능이라 기본은 "표기 안함" — 명시적으로
   // ?balance=show를 눌러야만 전잔금/총잔금 칸에 실제 잔액이 찍힌다.
   const showBalance = balanceParam === "show";
@@ -38,6 +37,8 @@ export default async function SalesPrintPage({
   // 칸에 같이 찍히게 한다.
   const showLot = lotParam === "show";
   const supabase = await createClient();
+  // 서식: ?form=a/b 로 직접 고른 값이 우선, 없으면 회사 테마의 기본 서식(클래식 B형 / grid-modern 새 서식 N). A형·N은 공급받는자 사업자 정보까지 채운다.
+  const form: InvoiceForm = resolveInvoiceForm(sp.form, await getTenantTheme(supabase));
 
   const [{ data: order }, { data: items }, { data: company }, { data: paperCalcs }] = await Promise.all([
     supabase.from("sales_orders").select("*, customers(*)").eq("id", id).maybeSingle(),
@@ -81,12 +82,7 @@ export default async function SalesPrintPage({
 
       return (
         <div>
-          <div className="mb-4 flex items-center justify-between print:hidden">
-            <CloseButton href="/sales" className="erp-btn erp-btn-dark print:hidden">
-              목록으로
-            </CloseButton>
-            <PrintButton />
-          </div>
+          <PrintToolbar closeHref="/sales" title="출고증 인쇄" />
           {/* 실제 PDF 벡터 좌표를 그대로 옮긴 정밀 재현이라 폭을 줄이면
               레이아웃이 깨진다 — 모바일에서 줄이는 대신, 표처럼
               가로스크롤로 전체를 볼 수 있게 한다(.erp의 overflow-x:
@@ -126,12 +122,7 @@ export default async function SalesPrintPage({
 
       return (
         <div>
-          <div className="mb-4 flex items-center justify-between print:hidden">
-            <CloseButton href="/sales" className="erp-btn erp-btn-dark print:hidden">
-              목록으로
-            </CloseButton>
-            <PrintButton />
-          </div>
+          <PrintToolbar closeHref="/sales" title="출고증 인쇄" />
           <div className="overflow-x-auto print:overflow-visible">
             <div className="mx-auto print:mx-0" style={{ width: "595.32pt" }}>
               <ZenithTechCanvas
@@ -169,12 +160,7 @@ export default async function SalesPrintPage({
 
       return (
         <div>
-          <div className="mb-4 flex items-center justify-between print:hidden">
-            <CloseButton href="/sales" className="erp-btn erp-btn-dark print:hidden">
-              목록으로
-            </CloseButton>
-            <PrintButton />
-          </div>
+          <PrintToolbar closeHref="/sales" title="출고증 인쇄" />
           <div className="overflow-x-auto print:overflow-visible">
             <div className="mx-auto print:mx-0" style={{ width: "595.32pt" }}>
               <KtSolutionCanvas
@@ -205,12 +191,7 @@ export default async function SalesPrintPage({
 
     return (
       <div className="mx-auto max-w-3xl print-page-wrapper">
-        <div className="mb-4 flex items-center justify-between print:hidden">
-          <CloseButton href="/sales" className="erp-btn erp-btn-dark print:hidden">
-            목록으로
-          </CloseButton>
-          <PrintButton />
-        </div>
+        <PrintToolbar closeHref="/sales" title="출고증 인쇄" />
         <DeliveryNoteDoc
           company={company}
           customerName={order.customers?.name ?? ""}
@@ -279,12 +260,7 @@ export default async function SalesPrintPage({
     <div
       className={`mx-auto max-w-5xl print:mx-0 print:max-w-none ${layout === "half" ? "print-page-wrapper" : ""}`}
     >
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 print:hidden">
-        <CloseButton href="/sales" className="erp-btn erp-btn-dark print:hidden">
-          목록으로
-        </CloseButton>
-        <PrintButton autoPrint={false} />
-      </div>
+      <PrintToolbar closeHref="/sales" title={`${docType} 인쇄`} autoPrint={false} />
       <PrintOptionBar
         basePath={`/sales/${id}/print`}
         params={sp}
@@ -292,11 +268,8 @@ export default async function SalesPrintPage({
           {
             key: "form",
             label: "서식",
-            current: form === "A" ? "a" : "b",
-            options: [
-              { value: "b", label: "B형" },
-              { value: "a", label: "A형" },
-            ],
+            current: invoiceFormParam(form),
+            options: INVOICE_FORM_OPTIONS,
           },
           {
             key: "copies",

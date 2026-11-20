@@ -1,8 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { PrintButton } from "@/components/print-button";
-import { CloseButton } from "@/components/erp/close-button";
 import { PayslipDoc } from "@/components/payslip-doc";
+import { PrintToolbar } from "@/components/erp/print-toolbar";
 
 // 접근 제어는 RLS(payslips_select: user_id = auth.uid() or is_admin())에
 // 그대로 맡긴다 — 본인/관리자가 아니면 이 select 자체가 null을 돌려주고
@@ -27,12 +26,7 @@ export default async function PayslipPrintPage({ params }: { params: Promise<{ i
 
   return (
     <div className="mx-auto max-w-3xl print-page-wrapper">
-      <div className="mb-4 flex items-center justify-between print:hidden">
-        <CloseButton href="/hr/payroll" className="erp-btn erp-btn-dark print:hidden">
-          급여관리로 돌아가기
-        </CloseButton>
-        <PrintButton />
-      </div>
+      <PrintToolbar closeHref="/hr/payroll" closeLabel="급여관리로 돌아가기" title="급여명세서 인쇄" />
       <PayslipDoc
         company={company}
         employeeName={payslip.profiles?.full_name ?? "구성원"}

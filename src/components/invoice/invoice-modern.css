@@ -1,0 +1,248 @@
+/* 새 거래명세표 서식(InvoiceCopyModern) — 종이(인쇄물) 전용 스타일.
+   화면 테마(--erp-*)와 무관하게 항상 같은 모양이어야 하므로 색은 인쇄용 고정값이다(색 혼합도 미리 계산해 둠 — 오래된 브라우저/인쇄 엔진에서도 같게 나온다).
+   받는자 보관용 = 파랑, 공급자 보관용 = 빨강(실제 거래명세표 관례). 선은 가늘고 연하게, 바깥 테두리만 조금 굵게. */
+.invm-copy {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  break-inside: avoid;
+  color: #1d2433;
+  font-family: "Malgun Gothic", "Noto Sans KR", system-ui, sans-serif;
+  font-size: 12px;
+  line-height: 1.3;
+}
+.invm-copy,
+.invm-copy * {
+  box-sizing: border-box;
+}
+.invm-blue {
+  --invm-c: #2450c8;
+  --invm-ln: #7793dd;
+  --invm-tint: #edf1fb;
+  --invm-tint2: #f6f8fd;
+}
+.invm-red {
+  --invm-c: #d23030;
+  --invm-ln: #e37f7f;
+  --invm-tint: #fbeeee;
+  --invm-tint2: #fdf7f7;
+}
+.invm-wm {
+  position: absolute;
+  left: 50%;
+  top: 57%;
+  width: 230px;
+  height: 230px;
+  object-fit: contain;
+  transform: translate(-50%, -50%);
+  opacity: 0.07;
+  pointer-events: none;
+  z-index: 0;
+}
+.invm-copy > *:not(.invm-wm) {
+  position: relative;
+  z-index: 1;
+}
+.invm-head {
+  display: grid;
+  grid-template-columns: 1fr 232px;
+  gap: 12px;
+  align-items: stretch;
+  margin-bottom: 6px;
+}
+.invm-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 4px 10px;
+  border: 1.5px solid var(--invm-c);
+  border-radius: 3px;
+}
+.invm-title h1 {
+  margin: 0;
+  padding-left: 0.32em;
+  color: var(--invm-c);
+  font-size: 25px;
+  font-weight: 800;
+  letter-spacing: 0.32em;
+}
+.invm-title span {
+  color: var(--invm-c);
+  font-size: 11px;
+  font-weight: 700;
+}
+.invm-copy table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-variant-numeric: tabular-nums;
+}
+.invm-copy td,
+.invm-copy th {
+  height: 23px;
+  padding: 3px 7px;
+  border: 1px solid var(--invm-ln);
+  overflow: hidden;
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+.invm-copy th,
+.invm-k {
+  background: var(--invm-tint);
+  color: var(--invm-c);
+  font-weight: 700;
+  text-align: center;
+}
+.invm-k {
+  padding: 3px 2px;
+}
+.invm-box {
+  margin-bottom: 6px;
+  border: 1.5px solid var(--invm-c);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.invm-head .invm-box {
+  margin: 0;
+}
+.invm-box table tr:first-child > * {
+  border-top: 0;
+}
+.invm-box table tr > *:first-child {
+  border-left: 0;
+}
+.invm-box table tr > *:last-child {
+  border-right: 0;
+}
+.invm-box table tr:last-child > * {
+  border-bottom: 0;
+}
+.invm-meta td,
+.invm-meta th {
+  height: 25px;
+}
+.invm-meta col:nth-child(1) { width: 42px; }
+.invm-meta col:nth-child(3) { width: 34px; }
+.invm-meta col:nth-child(4) { width: 44px; }
+.invm-vl {
+  width: 24px;
+  padding: 0 !important;
+  background: var(--invm-tint);
+  color: var(--invm-c);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.3em;
+  text-align: center;
+  writing-mode: vertical-rl;
+}
+.invm-v { font-weight: 600; }
+.invm-n { text-align: right; }
+.invm-c { text-align: center; }
+.invm-bn {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+.invm-rep {
+  position: relative;
+}
+.invm-seal {
+  position: absolute;
+  top: -3px;
+  right: 6px;
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  opacity: 0.9;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+.invm-seal-text {
+  float: right;
+  color: #8791a0;
+  font-size: 10px;
+  font-weight: 600;
+}
+/* 공급자/공급받는자 표 — 열 폭 */
+.invm-party col:nth-child(1),
+.invm-party col:nth-child(6) { width: 24px; }
+.invm-party col:nth-child(2),
+.invm-party col:nth-child(7) { width: 58px; }
+.invm-party col:nth-child(4),
+.invm-party col:nth-child(9) { width: 46px; }
+.invm-party col:nth-child(5),
+.invm-party col:nth-child(10) { width: 96px; }
+/* 품목 표 */
+.invm-items col:nth-child(1) { width: 52px; }
+.invm-items col:nth-child(3) { width: 44px; }
+.invm-items col:nth-child(4) { width: 72px; }
+.invm-items col:nth-child(5) { width: 66px; }
+.invm-items col:nth-child(6) { width: 92px; }
+.invm-items col:nth-child(7) { width: 78px; }
+.invm-items col:nth-child(8) { width: 70px; }
+.invm-items td {
+  height: 20px;
+  padding-block: 2px;
+}
+.invm-full .invm-items td {
+  height: 33px;
+}
+.invm-items tr.invm-z td {
+  background: var(--invm-tint2);
+}
+.invm-items td.invm-ref {
+  padding-left: 18px;
+  color: #6b7684;
+  font-size: 10.5px;
+}
+/* 합계 표 */
+.invm-tot col:nth-child(1) { width: 62px; }
+.invm-tot col:nth-child(3) { width: 62px; }
+.invm-tot col:nth-child(4) { width: 100px; }
+.invm-tot col:nth-child(5) { width: 62px; }
+.invm-tot col:nth-child(6) { width: 100px; }
+.invm-tot td,
+.invm-tot th {
+  height: 24px;
+}
+.invm-sum {
+  font-size: 14px !important;
+  font-weight: 800;
+}
+.invm-sum small {
+  font-size: 12px;
+  font-weight: 600;
+}
+/* 하단: 안내/연락처 + 인수자 */
+.invm-foot {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: end;
+  margin-top: auto;
+  padding-top: 4px;
+  color: #556070;
+  font-size: 10.5px;
+}
+.invm-foot b {
+  color: #1d2433;
+}
+.invm-sign {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+.invm-sign small {
+  color: #8791a0;
+  font-size: 9.5px;
+}
+.invm-sign i {
+  display: inline-block;
+  width: 110px;
+  height: 15px;
+  border-bottom: 1px solid #1d2433;
+  vertical-align: bottom;
+}

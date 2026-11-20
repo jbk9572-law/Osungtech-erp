@@ -85,6 +85,7 @@ export function QuickAddProductSearch({
       </span>
       <input
         ref={inputRef}
+        data-quick-add-search
         type="text"
         value={query}
         placeholder={placeholder}

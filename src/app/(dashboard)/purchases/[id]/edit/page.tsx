@@ -1,3 +1,5 @@
+import { attachFormulaRows } from "@/lib/item-formulas";
+import { loadInputFormulas } from "@/lib/input-formulas-server";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { NewPurchaseForm } from "@/components/new-purchase-form";
@@ -118,6 +120,17 @@ export default async function EditPurchasePage({
     );
   }
 
+  // 입력 때 쓴 계산식(품목 칸의 fx) — 줄 값이 식의 결과와 맞는 것만 붙는다(lib/item-formulas.ts).
+  const formulas = attachFormulaRows(
+    (items ?? []).map((item) => ({
+      productId: item.product_id,
+      customName: item.custom_name,
+      quantity: item.quantity,
+      price: Number(item.unit_cost),
+    })),
+    await loadInputFormulas(supabase, "purchase_order", order.id),
+  );
+
   const priceHistory = (history ?? [])
     .filter((row): row is typeof row & { product_id: string } => row.product_id !== null)
     .map((row) => ({
@@ -163,12 +176,14 @@ export default async function EditPurchasePage({
           isCarryover: order.is_carryover,
           taxType: order.tax_type,
           evidenceType: order.evidence_type,
-          items: (items ?? []).map((item) => ({
+          items: (items ?? []).map((item, i) => ({
             productId: item.product_id,
             customName: item.custom_name,
             spec: item.spec,
             quantity: item.quantity,
             unitCost: Number(item.unit_cost),
+            quantityFormula: formulas[i].quantityFormula,
+            unitPriceFormula: formulas[i].unitPriceFormula,
             remark: item.remark,
             lotNumber: item.lot_number,
           })),

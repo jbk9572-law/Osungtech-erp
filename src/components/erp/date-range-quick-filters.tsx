@@ -21,19 +21,23 @@ export function DateRangeQuickFilters({
   monthButtons,
   from,
   to,
+  extraParams,
 }: {
   basePath: string;
   presets: DatePreset[];
   monthButtons: DatePreset[];
   from: string | undefined;
   to: string | undefined;
+  /** 기간 말고 유지해야 하는 주소 값(예: 보기 방식 view=all) */
+  extraParams?: Record<string, string>;
 }) {
+  const extra = Object.entries(extraParams ?? {}).map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}&`).join("");
   return (
     <div className="erp-date-presets erp-u-mb-8">
       {[...presets, ...monthButtons].map((preset) => (
         <Link
           key={preset.label}
-          href={`${basePath}?from=${preset.from}&to=${preset.to}`}
+          href={`${basePath}?${extra}from=${preset.from}&to=${preset.to}`}
           prefetch={false}
           className={`erp-date-preset-btn${from === preset.from && to === preset.to ? " active" : ""}`}
         >

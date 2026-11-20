@@ -15,3 +15,14 @@ export function KeyboardHintBar({ items }: { items: { key: string; label: string
     </div>
   );
 }
+
+// 매출/매입 품목 표가 같이 쓰는 단축키 안내 — focusSameColumnNextRow·focusGridRowShortcuts(lib/grid-enter-nav.ts)가 실제로 하는 동작만 적는다.
+export const ORDER_GRID_KEY_HINTS = [
+  { key: "Tab", label: "다음 칸" },
+  { key: "Enter", label: "아래 칸 · 마지막 줄이면 줄 추가" },
+  { key: "Ctrl+F", label: "품목 검색" },
+  { key: "Ctrl+D", label: "위 값으로 채우기" },
+  { key: "Ctrl+Del", label: "줄 삭제" },
+  { key: "F7", label: "저장" },
+  { key: "Esc", label: "저장 후 닫기" },
+];

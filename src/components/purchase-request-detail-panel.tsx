@@ -1,3 +1,6 @@
+import { loadInputFormulas } from "@/lib/input-formulas-server";
+import { attachFormulaRows } from "@/lib/item-formulas";
+import { FormulaMark } from "@/components/grid/formula-mark";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -56,7 +59,7 @@ export async function PurchaseRequestDetailPanel({
         .maybeSingle(),
       supabase
         .from("purchase_request_items")
-        .select("id, spec, quantity, estimated_unit_price, remark, products(sku, name)")
+        .select("id, product_id, spec, quantity, estimated_unit_price, remark, products(sku, name)")
         .eq("purchase_request_id", id),
       supabase.from("warehouses").select("id, name").order("name"),
       getCurrentActor(supabase),
@@ -83,6 +86,11 @@ export async function PurchaseRequestDetailPanel({
   const presets = presetsRaw.map((p) => ({ id: p.id, name: p.name, approverIds: p.approver_ids, referenceIds: p.reference_ids }));
 
   const total = (items ?? []).reduce((sum, i) => sum + Number(i.quantity) * Number(i.estimated_unit_price), 0);
+  // 입력 때 쓴 계산식(fx) — 줄 값이 식의 결과와 맞는 것만 붙는다(lib/item-formulas.ts).
+  const formulas = attachFormulaRows(
+    (items ?? []).map((i) => ({ productId: i.product_id, quantity: Number(i.quantity), price: Number(i.estimated_unit_price) })),
+    await loadInputFormulas(supabase, "purchase_request", id),
+  );
   const status = resolveStatusLabel(STATUS_LABEL, row.status);
 
   return (
@@ -138,12 +146,18 @@ export async function PurchaseRequestDetailPanel({
             </tr>
           </thead>
           <tbody>
-            {(items ?? []).map((item) => (
+            {(items ?? []).map((item, idx) => (
               <tr key={item.id}>
                 <td>{item.products?.name ?? "-"}</td>
                 <td>{item.spec ?? "-"}</td>
-                <td className="num">{formatNumber(Number(item.quantity))}</td>
-                <td className="num">{formatNumber(Number(item.estimated_unit_price))}</td>
+                <td className="num">
+                  {formatNumber(Number(item.quantity))}
+                  <FormulaMark formula={formulas[idx].quantityFormula} value={formatNumber(Number(item.quantity))} />
+                </td>
+                <td className="num">
+                  {formatNumber(Number(item.estimated_unit_price))}
+                  <FormulaMark formula={formulas[idx].unitPriceFormula} value={formatNumber(Number(item.estimated_unit_price))} />
+                </td>
                 <td className="num">{formatNumber((Number(item.quantity) * Number(item.estimated_unit_price)))}</td>
                 <td>{item.remark ?? "-"}</td>
               </tr>
@@ -168,7 +182,7 @@ export async function PurchaseRequestDetailPanel({
           <p className="erp-grid-empty">등록된 품목이 없습니다.</p>
         ) : (
           <>
-            {(items ?? []).map((item) => (
+            {(items ?? []).map((item, idx) => (
               <div className="erp-row-card" key={item.id}>
                 <div className="erp-row-card-head">
                   <span className="erp-row-card-partner">{item.products?.name ?? "-"}</span>
@@ -180,11 +194,17 @@ export async function PurchaseRequestDetailPanel({
                   </div>
                   <div>
                     <dt>수량</dt>
-                    <dd>{formatNumber(Number(item.quantity))}</dd>
+                    <dd>
+                      {formatNumber(Number(item.quantity))}
+                      <FormulaMark formula={formulas[idx].quantityFormula} value={formatNumber(Number(item.quantity))} />
+                    </dd>
                   </div>
                   <div>
                     <dt>예상단가</dt>
-                    <dd>{formatNumber(Number(item.estimated_unit_price))}</dd>
+                    <dd>
+                      {formatNumber(Number(item.estimated_unit_price))}
+                      <FormulaMark formula={formulas[idx].unitPriceFormula} value={formatNumber(Number(item.estimated_unit_price))} />
+                    </dd>
                   </div>
                   <div>
                     <dt>예상금액</dt>

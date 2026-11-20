@@ -1,8 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { PrintButton } from "@/components/print-button";
-import { CloseButton } from "@/components/erp/close-button";
 import { QuotationDoc, type QuotationItem } from "@/components/quotation-doc";
+import { PrintToolbar } from "@/components/erp/print-toolbar";
 
 export default async function QuotePrintPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -35,12 +34,7 @@ export default async function QuotePrintPage({ params }: { params: Promise<{ id:
 
   return (
     <div className="mx-auto max-w-3xl print-page-wrapper">
-      <div className="mb-4 flex items-center justify-between print:hidden">
-        <CloseButton href={`/quotes/${id}`} className="erp-btn erp-btn-dark print:hidden">
-          견적서로 돌아가기
-        </CloseButton>
-        <PrintButton />
-      </div>
+      <PrintToolbar closeHref={`/quotes/${id}`} closeLabel="견적서로 돌아가기" title="견적서 인쇄" />
       <QuotationDoc
         company={company}
         customer={quote.customers}

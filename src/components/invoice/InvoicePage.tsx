@@ -1,6 +1,7 @@
 import type { ComponentProps } from "react";
 import { InvoiceCopy } from "./InvoiceCopy";
 import { InvoiceCopyA } from "./InvoiceCopyA";
+import { InvoiceCopyModern } from "./InvoiceCopyModern";
 import type { Company, InvoiceColor, InvoiceForm, InvoiceItem, InvoiceParty, CopyLabel } from "./types";
 
 export type InvoiceCopies = "both" | "receiver" | "supplier";
@@ -150,12 +151,13 @@ export function InvoicePage({
   );
 }
 
-// 서식에 따라 한 부(InvoiceCopy=B형 / InvoiceCopyA=A형)를 고른다 — 같은 props로 두 서식을 바꿔 쓸 수 있게 한다.
+// 서식에 따라 한 부(InvoiceCopy=B형 / InvoiceCopyA=A형 / InvoiceCopyModern=새 서식 N)를 고른다 — 같은 props로 두 서식을 바꿔 쓸 수 있게 한다.
 function Copy({
   form,
   customer,
   ...rest
 }: ComponentProps<typeof InvoiceCopy> & { form: InvoiceForm; customer?: InvoiceParty | null }) {
+  if (form === "N") return <InvoiceCopyModern {...rest} customer={customer} />;
   if (form === "A") return <InvoiceCopyA {...rest} customer={customer} />;
   return <InvoiceCopy {...rest} />;
 }

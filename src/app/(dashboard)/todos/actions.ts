@@ -1,5 +1,7 @@
 "use server";
 
+import { withoutFormulaFields } from "@/lib/item-formulas";
+import { saveInputFormulas } from "@/lib/input-formulas-server";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient, getUser } from "@/lib/supabase/server";
@@ -15,6 +17,7 @@ export type TodoItemInput = {
   spec?: string | null;
   quantity: number;
   lotNumber?: string | null;
+  quantityFormula?: unknown; // 입력칸 계산식 — 저장은 input_formulas(할일 목록 JSON에는 넣지 않는다)
 };
 
 export type OpenTodoSummary = {
@@ -139,7 +142,7 @@ export async function createTodo(_prevState: FormState, formData: FormData): Pro
     .insert({
       title,
       memo,
-      items,
+      items: withoutFormulaFields(items),
       todo_type: todoType,
       ship_date: todoType === "both" && shipDateRaw ? shipDateRaw : null,
       // 유형에 맞는 쪽만 저장한다: 매입/매입+출고 → 공급업체, 매출/매입+출고 → 거래처.
@@ -154,6 +157,8 @@ export async function createTodo(_prevState: FormState, formData: FormData): Pro
   if (error || !todo) {
     return { error: `등록에 실패했습니다${error ? `: ${error.message}` : ""}` };
   }
+
+  await saveInputFormulas(supabase, "todo", todo.id, items);
 
   const paperCalcWarning = await attachPaperCalcToTodo(supabase, todo.id, pendingPaperCalc);
 
@@ -217,7 +222,7 @@ export async function updateTodo(_prevState: FormState, formData: FormData): Pro
     .update({
       title,
       memo,
-      items,
+      items: withoutFormulaFields(items),
       todo_type: todoType,
       ship_date: todoType === "both" && shipDateRaw ? shipDateRaw : null,
       supplier_id: todoType !== "sale" && supplierId ? supplierId : null,
@@ -232,6 +237,8 @@ export async function updateTodo(_prevState: FormState, formData: FormData): Pro
     onForbidden: "수정에 실패했습니다. 본인이 등록한 할일만 수정할 수 있습니다.",
   });
   if (updateError) return updateError;
+
+  await saveInputFormulas(supabase, "todo", id, items);
 
   revalidatePath("/todos");
   revalidatePath("/dashboard");

@@ -1,5 +1,7 @@
 "use server";
 
+import { withoutFormulaFields } from "@/lib/item-formulas";
+import { saveInputFormulas } from "@/lib/input-formulas-server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -12,6 +14,7 @@ type QuoteRequestItemInput = {
   spec: string | null;
   quantity: number;
   remark: string | null;
+  quantityFormula?: unknown; // 입력칸 계산식(저장은 input_formulas, DB 함수에는 넘기지 않는다)
 };
 
 function parseItems(raw: string): QuoteRequestItemInput[] {
@@ -37,7 +40,7 @@ export async function createPurchaseQuoteRequest(_prevState: FormState, formData
     p_supplier_ids: supplierIds,
     p_request_date: requestDate || todayKstStr(),
     p_memo: memo || null,
-    p_items: items,
+    p_items: withoutFormulaFields(items),
   });
 
   if (error || !requestId) {
@@ -45,6 +48,8 @@ export async function createPurchaseQuoteRequest(_prevState: FormState, formData
   }
 
   revalidatePath("/purchase-quote-requests");
+  await saveInputFormulas(supabase, "purchase_quote_request", requestId, items);
+
   redirect(`/purchase-quote-requests/${requestId}`);
 }
 
