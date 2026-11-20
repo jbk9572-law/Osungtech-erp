@@ -14,6 +14,7 @@ import { createTodo } from "@/app/(dashboard)/todos/actions";
 import { formatNumber } from "@/lib/format-number";
 import { PageGuide } from "@/components/erp/page-guide";
 import { FormSection } from "@/components/erp/page-header";
+import { SplitFilterColumn, type SplitFilterGroup } from "@/components/erp/split-filter-column";
 
 const DEFAULT_LIST_LIMIT = 300;
 const LIST_LIMIT_STEP = 300;
@@ -39,9 +40,12 @@ function summarizeItems(
 export default async function TodosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; warning?: string; limit?: string; id?: string }>;
+  searchParams: Promise<{ q?: string; warning?: string; limit?: string; id?: string; status?: string; type?: string; owner?: string }>;
 }) {
-  const { q, warning, limit: limitParam, id } = await searchParams;
+  const { q, warning, limit: limitParam, id, status: statusParam, type: typeParam, owner: ownerParam } = await searchParams;
+  const status = statusParam === "active" || statusParam === "overdue" || statusParam === "done" ? statusParam : "all";
+  const type = typeParam === "purchase" || typeParam === "sale" || typeParam === "both" ? typeParam : "all";
+  const owner = ownerParam && isUuid(ownerParam) ? ownerParam : "all";
   const selectedId = id && isUuid(id) ? id : undefined;
   const parsedLimit = limitParam ? parseInt(limitParam, 10) : NaN;
   const limit =
@@ -60,6 +64,7 @@ export default async function TodosPage({
         sale_done_at: string | null;
         due_date: string | null;
         done: boolean;
+        created_by: string | null;
         profiles: { full_name: string | null } | null;
         suppliers: { name: string } | null;
         customers: { name: string } | null;
@@ -68,7 +73,7 @@ export default async function TodosPage({
           supabase
             .from("todos")
             .select(
-              "id, title, memo, items, todo_type, ship_date, purchase_done_at, sale_done_at, due_date, done, profiles!created_by(full_name), suppliers(name), customers(name)",
+              "id, title, memo, items, todo_type, ship_date, purchase_done_at, sale_done_at, due_date, done, created_by, profiles!created_by(full_name), suppliers(name), customers(name)",
             )
             .order("done", { ascending: true })
             .order("due_date", { ascending: true, nullsFirst: false })
@@ -93,8 +98,8 @@ export default async function TodosPage({
       ),
       // 요약카드(전체/진행중/기한초과/완료)는 화면에 보이는 목록이 limit으로
       // 잘려도 항상 실제 전체 건수를 반영해야 한다.
-      fetchAllRows<{ done: boolean; due_date: string | null }>((from, to) =>
-        supabase.from("todos").select("done, due_date").range(from, to),
+      fetchAllRows<{ done: boolean; due_date: string | null; todo_type: string; created_by: string | null; profiles: { full_name: string | null } | null }>((from, to) =>
+        supabase.from("todos").select("done, due_date, todo_type, created_by, profiles!created_by(full_name)").range(from, to),
       ),
       fetchAllRows<{ id: string; name: string }>((from, to) =>
         supabase.from("suppliers").select("id, name").order("name").range(from, to),
@@ -109,13 +114,19 @@ export default async function TodosPage({
   const todayStr = todayKstStr();
 
   const keyword = q?.trim().toLowerCase();
+  const isOverdue = (r: { done: boolean; due_date: string | null }) => !r.done && !!r.due_date && r.due_date < todayStr;
+  const passesFilters = (r: { done: boolean; due_date: string | null; todo_type: string; created_by: string | null }) =>
+    (status === "all" || (status === "active" ? !r.done : status === "done" ? r.done : isOverdue(r))) &&
+    (type === "all" || r.todo_type === type) &&
+    (owner === "all" || r.created_by === owner);
+  const filteredRows = allRows.filter(passesFilters);
   const rows = keyword
-    ? allRows.filter((r) => {
+    ? filteredRows.filter((r) => {
         const items = Array.isArray(r.items) ? (r.items as TodoItemInput[]) : [];
         const itemNames = items.map((item) => productNameById.get(item.productId));
         return matchesSearch(keyword, r.title, r.memo, r.suppliers?.name, r.customers?.name, ...itemNames);
       })
-    : allRows;
+    : filteredRows;
 
   const totalCount = summaryRows.length;
   const doneCount = summaryRows.filter((r) => r.done).length;
@@ -123,19 +134,67 @@ export default async function TodosPage({
     (r) => !r.done && !!r.due_date && r.due_date < todayStr,
   ).length;
   const inProgressCount = totalCount - doneCount;
+  const typeLabels: Record<string, string> = { purchase: "매입", sale: "매출 출고", both: "매입+출고" };
+  const typeCounts = new Map<string, number>();
+  const ownerCounts = new Map<string, { name: string; count: number }>();
+  for (const r of summaryRows) {
+    typeCounts.set(r.todo_type, (typeCounts.get(r.todo_type) ?? 0) + 1);
+    if (r.created_by) {
+      const o = ownerCounts.get(r.created_by) ?? { name: r.profiles?.full_name ?? "이름 없음", count: 0 };
+      o.count += 1;
+      ownerCounts.set(r.created_by, o);
+    }
+  }
 
   const listParams = new URLSearchParams();
   if (q) listParams.set("q", q);
   if (limitParam) listParams.set("limit", limitParam);
+  // 필터 열의 현재 선택(상태·유형·담당)은 목록 이동·행 선택·더보기에서도 유지한다.
+  const filterParams = new URLSearchParams(listParams);
+  if (status !== "all") filterParams.set("status", status);
+  if (type !== "all") filterParams.set("type", type);
+  if (owner !== "all") filterParams.set("owner", owner);
   const rowHref = (todoId: string) => {
-    const p = new URLSearchParams(listParams);
+    const p = new URLSearchParams(filterParams);
     p.set("id", todoId);
     return `/todos?${p.toString()}`;
   };
-  const moreParams = new URLSearchParams(listParams);
+  const moreParams = new URLSearchParams(filterParams);
   moreParams.set("limit", String(limit + LIST_LIMIT_STEP));
   const moreHref = `/todos?${moreParams.toString()}`;
-  const newHref = listParams.toString() ? `/todos?${listParams.toString()}` : "/todos";
+  const newHref = filterParams.toString() ? `/todos?${filterParams.toString()}` : "/todos";
+  // 필터 항목 하나만 바꾼 주소 — 나머지 선택은 그대로, 열어 둔 행(id)은 닫는다.
+  const filterHref = (key: "status" | "type" | "owner", value: string) => {
+    const p = new URLSearchParams(filterParams);
+    if (value === "all") p.delete(key);
+    else p.set(key, value);
+    return p.toString() ? `/todos?${p.toString()}` : "/todos";
+  };
+  const filterGroups: SplitFilterGroup[] = [
+    {
+      heading: "상태",
+      items: [
+        { key: "all", label: "전체", count: totalCount },
+        { key: "active", label: "진행중", count: inProgressCount },
+        { key: "overdue", label: "기한초과", count: overdueCount },
+        { key: "done", label: "완료", count: doneCount },
+      ].map((it) => ({ ...it, active: status === it.key, href: filterHref("status", it.key) })),
+    },
+    {
+      heading: "유형",
+      items: [
+        { key: "all", label: "전체", count: totalCount },
+        ...(["purchase", "sale", "both"] as const).map((t) => ({ key: t, label: typeLabels[t], count: typeCounts.get(t) ?? 0 })),
+      ].map((it) => ({ ...it, active: type === it.key, href: filterHref("type", it.key) })),
+    },
+    {
+      heading: "담당",
+      items: [
+        { key: "all", label: "전체", count: totalCount },
+        ...[...ownerCounts.entries()].sort((a, b) => b[1].count - a[1].count).map(([oid, o]) => ({ key: oid, label: o.name, count: o.count })),
+      ].map((it) => ({ ...it, active: owner === it.key, href: filterHref("owner", it.key) })),
+    },
+  ];
 
   return (
     <div className="erp-comm-shell">
@@ -160,32 +219,8 @@ export default async function TodosPage({
         </PageGuide>
       )}
 
-      <div className="erp-kpi-row erp-u-mb-s4">
-        <div className="erp-home-panel erp-kpi-card">
-          <div className="erp-kpi-label">전체 할일</div>
-          <div className="erp-kpi-value">{formatNumber(totalCount)}건</div>
-        </div>
-        <div className="erp-home-panel erp-kpi-card">
-          <div className="erp-kpi-label">진행중</div>
-          <div className="erp-kpi-value erp-u-text">
-            {formatNumber(inProgressCount)}건
-          </div>
-        </div>
-        <div className="erp-home-panel erp-kpi-card">
-          <div className="erp-kpi-label">기한초과</div>
-          <div className="erp-kpi-value" style={{ color: overdueCount ? "var(--erp-danger)" : undefined }}>
-            {formatNumber(overdueCount)}건
-          </div>
-        </div>
-        <div className="erp-home-panel erp-kpi-card">
-          <div className="erp-kpi-label">완료</div>
-          <div className="erp-kpi-value erp-u-muted">
-            {formatNumber(doneCount)}건
-          </div>
-        </div>
-      </div>
-
-      <div className="erp-split-shell" data-mobile-view={selectedId ? "detail" : "list"}>
+      <div className="erp-split3-shell" data-mobile-view={selectedId ? "detail" : "list"}>
+        <SplitFilterColumn ariaLabel="할일 필터" groups={filterGroups} />
         <section className="erp-split-list">
           <div className="erp-split-list-head">
             <span>할 일 목록</span>
@@ -199,6 +234,9 @@ export default async function TodosPage({
             className="erp-field-grid erp-u-gap-s2"
             style={{ margin: "var(--erp-space-3)", padding: "var(--erp-space-3)" }}
           >
+            {status !== "all" && <input type="hidden" name="status" value={status} />}
+            {type !== "all" && <input type="hidden" name="type" value={type} />}
+            {owner !== "all" && <input type="hidden" name="owner" value={owner} />}
             <div className="erp-field erp-span-12">
               <input
                 type="text"

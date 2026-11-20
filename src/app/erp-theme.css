@@ -4122,6 +4122,19 @@ a.erp-detail-tab:hover:not(.active) {
   color: var(--erp-text);
 }
 
+/* B형 필터 열의 묶음 머리글(상태·유형·담당) */
+.erp-split3-filter-heading {
+  padding: 8px 10px 4px;
+  font-size: var(--erp-font-xs);
+  font-weight: 700;
+  color: var(--erp-text-muted);
+}
+.erp-split3-filter-group + .erp-split3-filter-group {
+  margin-top: 6px;
+  padding-top: 4px;
+  border-top: 1px solid var(--erp-divider);
+}
+
 /* F2/F5/F8 같은 실제 키보드 단축키를 화면 하단에 작게 보여주는 힌트
    바 — KeyboardShortcuts에 이미 등록된 동작인데 화면엔 안 보이던
    것을 가시화한다(새 기능이 아니라 있던 기능을 드러내는 것). */
@@ -4800,6 +4813,34 @@ a.erp-detail-tab:hover:not(.active) {
   .erp-cat-sidebar {
     max-height: none;
     margin-bottom: 10px;
+  }
+  /* B형 필터 열 — 좁은 화면에서는 세로로 길게 쌓지 않고, 묶음마다 가로 한 줄(좌우로 밀어 넘김)로 눕힌다 */
+  .erp-cat-sidebar.erp-split3-filter {
+    gap: 6px;
+    padding: 6px;
+    overflow-y: visible;
+  }
+  .erp-split3-filter .erp-split3-filter-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .erp-split3-filter .erp-split3-filter-group + .erp-split3-filter-group {
+    margin-top: 0;
+    padding-top: 6px;
+  }
+  .erp-split3-filter .erp-split3-filter-heading {
+    flex: none;
+    padding: 0 6px 0 4px;
+  }
+  .erp-split3-filter .erp-cat-item {
+    flex: none;
+    width: auto;
+    gap: 6px;
+    min-height: 32px;
+    white-space: nowrap;
   }
 
   /* split3-shell을 쓰는 화면(메일함/공지사항)의 상세(메일 본문/글

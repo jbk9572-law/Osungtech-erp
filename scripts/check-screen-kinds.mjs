@@ -27,6 +27,18 @@ function walk(dir, out = []) {
   return out;
 }
 
+// 3분할 화면은 필터 열을 자식 목록 컴포넌트(@/components/...)에서 그리기도 하므로, 가져오는 컴포넌트 안에 필터 열이 있으면 인정한다.
+function hasFilterColumn(code) {
+  if (/erp-split3-filter|<SplitFilterColumn\b/.test(code)) return true;
+  for (const m of code.matchAll(/from\s+"@\/([^"]+)"/g)) {
+    for (const ext of [".tsx", "/index.tsx"]) {
+      const f = path.join(src, m[1] + ext);
+      if (existsSync(f) && /<SplitFilterColumn\b/.test(readFileSync(f, "utf8"))) return true;
+    }
+  }
+  return false;
+}
+
 const current = { split2: [], accordion: [], trailingLink: [], split3NoFilter: [] };
 for (const file of walk(src)) {
   const rel = path.relative(src, file).split(path.sep).join("/");
@@ -36,7 +48,7 @@ for (const file of walk(src)) {
   if (/erp-split-shell/.test(code)) current.split2.push(rel);
   if (/<OrderDetailPanel\b/.test(code)) current.accordion.push(rel);
   if (/(상세|수정) →/.test(code)) current.trailingLink.push(rel);
-  if (/erp-split3-shell/.test(code) && !/erp-split3-filter/.test(code)) current.split3NoFilter.push(rel);
+  if (/erp-split3-shell/.test(code) && !hasFilterColumn(code)) current.split3NoFilter.push(rel);
 }
 for (const k of Object.keys(current)) current[k].sort();
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { SplitFilterColumn } from "@/components/erp/split-filter-column";
 import { formatKstDate } from "@/lib/kst-date";
 import { useMemo, useState } from "react";
 import Link from "next/link";
@@ -60,19 +61,10 @@ export function TenantListBody({
 
   return (
     <>
-      <div className="erp-cat-sidebar">
-        {FILTERS.map((f) => (
-          <button
-            key={f.key}
-            type="button"
-            onClick={() => setFilter(f.key)}
-            className={`erp-cat-item${filter === f.key ? " active" : ""}`}
-          >
-            <span>{f.label}</span>
-            <span className="cnt">{filterCounts[f.key]}</span>
-          </button>
-        ))}
-      </div>
+      <SplitFilterColumn
+        ariaLabel="요금제 필터"
+        groups={[{ items: FILTERS.map((f) => ({ key: f.key, label: f.label, count: filterCounts[f.key], active: filter === f.key, onSelect: () => setFilter(f.key) })) }]}
+      />
 
       <section className="erp-split-list">
         <div className="erp-split-list-head">

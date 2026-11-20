@@ -11,6 +11,7 @@ import { MailAttachmentChip } from "@/components/mail/mail-attachment-chip";
 import { PaperclipIcon, MailIcon } from "@/components/erp/groupware-icons";
 import { requireFeatureEnabled } from "@/lib/require-feature-enabled";
 import { formatNumber } from "@/lib/format-number";
+import { SplitFilterColumn } from "@/components/erp/split-filter-column";
 import { getAttachmentDownloadUrl } from "@/lib/storage/upload-attachment";
 
 type Folder = "INBOX" | "SENT";
@@ -31,9 +32,10 @@ function initial(name: string | null, address: string | null): string {
 export default async function MailPage({
   searchParams,
 }: {
-  searchParams: Promise<{ folder?: string; id?: string; compose?: string }>;
+  searchParams: Promise<{ folder?: string; id?: string; compose?: string; status?: string }>;
 }) {
-  const { folder: folderParam, id, compose: composeParam } = await searchParams;
+  const { folder: folderParam, id, compose: composeParam, status: statusParam } = await searchParams;
+  const status: "all" | "unread" | "attach" = statusParam === "unread" || statusParam === "attach" ? statusParam : "all";
   const folder: Folder = folderParam === "SENT" ? "SENT" : "INBOX";
   // id가 있으면(메일을 보고 있으면) 작성 모드는 무시한다 — 둘이 동시에
   // 켜질 일은 없지만(작성 버튼은 /mail?folder=...&compose=1만 가리킴),
@@ -106,8 +108,15 @@ export default async function MailPage({
     })
   );
 
-  const newHref = `/mail?folder=${folder}`;
-  const composeHref = `/mail?folder=${folder}&compose=1`;
+  // 필터 열의 건수·거르기는 불러온 최근 100건 기준(목록과 같은 범위).
+  const loaded = messages ?? [];
+  const unreadCount = loaded.filter((m) => !m.is_read).length;
+  const attachCount = loaded.filter((m) => m.has_attachments).length;
+  const visible = status === "unread" ? loaded.filter((m) => !m.is_read) : status === "attach" ? loaded.filter((m) => m.has_attachments) : loaded;
+  const statusQuery = status === "all" ? "" : `&status=${status}`;
+
+  const newHref = `/mail?folder=${folder}${statusQuery}`;
+  const composeHref = `/mail?folder=${folder}&compose=1${statusQuery}`;
 
   return (
     <div className="erp-comm-shell">
@@ -130,27 +139,39 @@ export default async function MailPage({
       />
 
       <div className="erp-split3-shell" data-mobile-view={id || compose ? "detail" : "list"}>
-        <nav className="erp-cat-sidebar" aria-label="메일함 폴더">
-          <Link href="/mail?folder=INBOX" className={`erp-cat-item${folder === "INBOX" ? " active" : ""}`}>
-            <span>받은편지함</span>
-          </Link>
-          <Link href="/mail?folder=SENT" className={`erp-cat-item${folder === "SENT" ? " active" : ""}`}>
-            <span>보낸편지함</span>
-          </Link>
-        </nav>
+        <SplitFilterColumn
+          ariaLabel="메일 필터"
+          groups={[
+            {
+              heading: "폴더",
+              items: [
+                { key: "INBOX", label: "받은편지함", active: folder === "INBOX", href: "/mail?folder=INBOX" },
+                { key: "SENT", label: "보낸편지함", active: folder === "SENT", href: "/mail?folder=SENT" },
+              ],
+            },
+            {
+              heading: "상태",
+              items: [
+                { key: "all", label: "전체", count: loaded.length, active: status === "all", href: `/mail?folder=${folder}` },
+                { key: "unread", label: "안읽음", count: unreadCount, active: status === "unread", href: `/mail?folder=${folder}&status=unread` },
+                { key: "attach", label: "첨부 있음", count: attachCount, active: status === "attach", href: `/mail?folder=${folder}&status=attach` },
+              ],
+            },
+          ]}
+        />
 
         <section className="erp-split-list">
           <div className="erp-split-list-head">
             <span>{folder === "INBOX" ? "받은편지함" : "보낸편지함"}</span>
             <span className="erp-u-muted erp-u-normal">
-              총 {formatNumber((messages ?? []).length)}건
+              총 {formatNumber(visible.length)}건
             </span>
           </div>
           <div className="erp-split-list-body">
-            {(messages ?? []).map((m) => (
+            {visible.map((m) => (
               <Link
                 key={m.id}
-                href={`/mail?folder=${folder}&id=${m.id}`}
+                href={`/mail?folder=${folder}&id=${m.id}${statusQuery}`}
                 className={`erp-mail-row${m.id === id ? " active" : ""}`}
               >
                 <span className={`erp-avatar erp-mail-row-avatar${m.is_read ? " muted" : ""}`} aria-hidden>
@@ -177,7 +198,7 @@ export default async function MailPage({
             ))}
             <SplitListFiller
               icon={<MailIcon />}
-              title={(messages ?? []).length === 0 ? "메일이 없습니다" : folder === "INBOX" ? "받은 메일이 이게 전부예요" : "보낸 메일이 이게 전부예요"}
+              title={visible.length === 0 ? "메일이 없습니다" : folder === "INBOX" ? "받은 메일이 이게 전부예요" : "보낸 메일이 이게 전부예요"}
               actionHref={composeHref}
               actionLabel="F2 메일쓰기"
             />
