@@ -151,7 +151,7 @@ export function InvoicePage({
   );
 }
 
-// 서식에 따라 한 부(InvoiceCopy=B형 / InvoiceCopyA=A형 / InvoiceCopyModern=엘보닉스 N-A형/N-B형)를 고른다 — 같은 props로 두 서식을 바꿔 쓸 수 있게 한다.
+// 서식에 따라 한 부(InvoiceCopy=B형 / InvoiceCopyA=A형 / InvoiceCopyModern=엘보닉스 A형/B형)를 고른다 — 같은 props로 두 서식을 바꿔 쓸 수 있게 한다.
 function Copy({
   form,
   customer,

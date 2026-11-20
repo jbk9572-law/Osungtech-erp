@@ -50,7 +50,7 @@ export function InvoiceCopyModern({
   showSummary?: boolean;
   summaryItems?: InvoiceItem[];
   balance?: number;
-  /** N-B형 — 공급받는자는 상호+貴下만 크게(사업자 정보 칸 생략). N-A형(기본)은 사업자 정보까지 채운다. 2연식·전지 둘 다 같다. */
+  /** 엘보닉스 B형 — 공급받는자는 상호+貴下만 크게(사업자 정보 칸 생략). 엘보닉스 A형(기본)은 사업자 정보까지 채운다. 2연식·전지 둘 다 같다. */
   buyerBrief?: boolean;
 }) {
   const buyer: InvoiceParty = customer ?? { name: customerName, business_number: null, representative_name: null, address: null, business_type: null, business_item: null };
@@ -239,7 +239,7 @@ function PartyHead({ label, bn }: { label: string; bn: string | null }) {
   );
 }
 
-// N-B형의 공급받는자 칸 — 세로 라벨 + 상호(큰 글씨) + 貴下. 네 줄을 한 칸으로 합친다.
+// 엘보닉스 B형의 공급받는자 칸 — 세로 라벨 + 상호(큰 글씨) + 貴下. 네 줄을 한 칸으로 합친다.
 function BuyerBrief({ name }: { name: string }) {
   return (
     <>

@@ -137,7 +137,7 @@
   writing-mode: vertical-rl;
 }
 .invm-v { font-weight: 600; }
-/* N-B형 — 공급받는자 상호를 크게, 貴下는 작게 오른쪽 */
+/* 엘보닉스 B형 — 공급받는자 상호를 크게, 貴下는 작게 오른쪽 */
 .invm-buyer-brief {
   padding: 4px 10px !important;
   text-align: center;

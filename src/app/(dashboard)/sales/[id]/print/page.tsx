@@ -37,7 +37,7 @@ export default async function SalesPrintPage({
   // 칸에 같이 찍히게 한다.
   const showLot = lotParam === "show";
   const supabase = await createClient();
-  // 서식: ?form=a/b/n 으로 직접 고른 값(그 회사가 쓸 수 있는 것만)이 우선, 없으면 회사 테마의 기본 서식(클래식 B형 / grid-modern 엘보닉스 N-A형). 고를 수 있는 서식은 회사마다 다르다(N-A·N-B형=모던 그리드, 엔택스 A·B형=오성테크만). A형·N-A형은 공급받는자 사업자 정보까지 채운다.
+  // 서식: ?form=a/b/n 으로 직접 고른 값(그 회사가 쓸 수 있는 것만)이 우선, 없으면 회사 테마의 기본 서식(클래식 B형 / 오성테크 외 전부·grid-modern 엘보닉스 A형). 고를 수 있는 서식은 회사마다 다르다(엘보닉스 A·B형=기본, 엔택스 A·B형=오성테크만). 엔택스 A형·엘보닉스 A형은 공급받는자 사업자 정보까지 채운다.
   const invoiceScope = await getTenantInvoiceScope(supabase);
   const form: InvoiceForm = resolveInvoiceForm(sp.form, invoiceScope);
   const formGroup = invoiceFormOptionGroup(form, invoiceScope);
