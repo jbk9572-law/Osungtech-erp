@@ -18,12 +18,14 @@ test.describe("신규 등록 화면 (실제 입력)", () => {
 
   test("매출 등록: 거래처·품목·수량을 입력하고 저장하면 매출이 생성된다", async ({ page }) => {
     await page.goto("/sales/new");
-    await expect(page.getByText("매 출 전 표")).toBeVisible();
+    // 클래식 "매 출 전 표" / 모던 "매출전표"
+    await expect(page.getByText(/매\s*출\s*전\s*표/).first()).toBeVisible();
     // 품목 표 머리글의 열 너비 조절 손잡이(공용 ResizableTh)가 그려진다.
     await expect(page.locator(".erp-col-resize-handle").first()).toBeVisible();
     // 공용 폼 조각(이월 체크박스 / 항상 외상·결제방법 / 저장 버튼)이 그려진다.
-    await expect(page.getByText(/실적으로 이월/)).toBeVisible();
-    await expect(page.getByText("항상 외상")).toBeVisible();
+    // 이월 옵션: 클래식 "N월 실적으로 이월" / 모던 "이월 처리". 결제: 클래식 "항상 외상" 체크 / 모던 결제 선택 칸(voucherLayout).
+    await expect(page.getByText(/실적으로 이월|이월 처리/).first()).toBeVisible();
+    await expect(page.getByText("항상 외상").or(page.getByText(/결제/).first())).toBeVisible();
     await expect(page.getByRole("button", { name: /F7 매출 등록/ })).toBeVisible();
 
     await page.locator("#sale-customer").fill("샌드박스");
@@ -48,8 +50,8 @@ test.describe("신규 등록 화면 (실제 입력)", () => {
     await page.goto("/purchases/new");
     await expect(page.locator("#purchase-supplier")).toBeVisible();
     await expect(page.locator(".erp-col-resize-handle").first()).toBeVisible();
-    await expect(page.getByText(/실적으로 이월/)).toBeVisible();
-    await expect(page.getByText("항상 외상")).toBeVisible();
+    await expect(page.getByText(/실적으로 이월|이월 처리/).first()).toBeVisible();
+    await expect(page.getByText("항상 외상").or(page.getByText(/결제/).first())).toBeVisible();
 
     await page.locator("#purchase-supplier").fill("샌드박스");
     await page.locator("#purchase-supplier").press("Enter");

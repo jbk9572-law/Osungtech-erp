@@ -31,6 +31,11 @@ test("상세 모달 → 닫기 → 목록으로 돌아가고 다른 모달이 �
   const row = page.locator("tbody tr.cursor-pointer").first();
   test.skip((await row.count()) === 0, "샌드박스에 매출 데이터가 없어 건너뜀");
   await row.click();
+  // 모던 테마(넓은 화면): 행 클릭은 오른쪽 상세 패널 선택 — 상세 모달은 패널의 [상세 보기]로 연다. 클래식/좁은 화면: 행 클릭이 바로 상세 모달.
+  const panel = page.locator("aside.erp-detail-side");
+  if (await panel.isVisible({ timeout: 3000 }).catch(() => false)) {
+    await panel.getByRole("link", { name: "상세 보기" }).click();
+  }
   await expect(page.locator(".erp-modal[role='dialog']")).toBeVisible({ timeout: 15000 });
   await closeModal(page);
   await noModal(page);

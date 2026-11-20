@@ -6,6 +6,7 @@ test.describe("단축키", () => {
     await page.locator('input[placeholder*="출고처명"]').click();
     await page.keyboard.press("F2");
     await expect(page).toHaveURL(/\/sales\/new/);
-    await expect(page.getByText("매 출 전 표")).toBeVisible();
+    // 클래식은 "매 출 전 표", 모던(새 전표 화면)은 "매출전표" — 글자 사이 공백 유무와 상관없이 찾는다.
+    await expect(page.getByText(/매\s*출\s*전\s*표/).first()).toBeVisible();
   });
 });
