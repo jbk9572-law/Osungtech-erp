@@ -6,7 +6,8 @@ import { ClickableRow } from "@/components/clickable-row";
 import { formatNumber } from "@/lib/format-number";
 import { GridBadge } from "@/components/grid/badge";
 import { GridGroupHeaderRow } from "@/components/grid/group-header-row";
-import { useThemeFeatures } from "@/lib/erp-theme-features";
+import { useSideSplit, useThemeFeatures } from "@/lib/erp-theme-features";
+import { BalanceSidePanel } from "@/components/grid/balance-side-panel";
 
 export type BalanceRow = {
   id: string;
@@ -53,6 +54,7 @@ export function BalanceGridTable({
   totalLabel,
   paidLabel,
   emptyLabel,
+  detailKind,
 }: {
   rows: BalanceRow[];
   hrefBase: string;
@@ -67,11 +69,16 @@ export function BalanceGridTable({
   totalLabel: string;
   paidLabel: string;
   emptyLabel: string;
+  // 거래처(customer)/공급처(supplier) 현황이면 지정 — 테마 기능이 켜진 넓은 화면에서 행을 누르면 이동하지 않고 오른쪽 패널에 보여준다.
+  // 외주비정산처럼 패널 데이터가 없는 화면은 생략(기존처럼 이동).
+  detailKind?: "customer" | "supplier";
 }) {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 } | null>({ key: "balance", dir: -1 });
   const [agingFilter, setAgingFilter] = useState<Filter>("all");
   const { rowNumbers } = useThemeFeatures();
+  const sideSplit = useSideSplit() && !!detailKind;
+  const [activeId, setActiveId] = useState<string | null>(null);
 
   // daysOverdue를 넘겨주는 화면(미수금현황)에서만 연체 열/필터를 보여준다.
   const showAging = rows.some((r) => r.daysOverdue !== undefined);
@@ -95,6 +102,8 @@ export function BalanceGridTable({
     if (!sort) return filteredRows;
     return [...filteredRows].sort((a, b) => compareValues(a, b, sort.key) * sort.dir);
   }, [filteredRows, sort]);
+
+  const activeRow = sortedRows.find((r) => r.id === activeId) ?? null;
 
   function toggleSort(key: SortKey) {
     setSort((prev) => {
@@ -166,6 +175,8 @@ export function BalanceGridTable({
         </div>
       )}
 
+      <div className={sideSplit ? "erp-master-detail" : undefined}>
+      <div className={sideSplit ? "erp-master-detail-main" : undefined}>
       <div className="erp-grid-wrap has-card-view">
         <table className="erp-grid">
           <thead>
@@ -183,7 +194,12 @@ export function BalanceGridTable({
           </thead>
           <tbody>
             {sortedRows.map((b, i) => (
-              <ClickableRow key={b.id} href={rowHref(b.id)}>
+              <ClickableRow
+                key={b.id}
+                href={rowHref(b.id)}
+                className={sideSplit && activeId === b.id ? "master-active" : undefined}
+                onActivate={sideSplit ? () => setActiveId(b.id) : undefined}
+              >
                 {rowNumbers && (
                   <td className="erp-col-no">
                     <span className="erp-row-no">{i + 1}</span>
@@ -220,6 +236,18 @@ export function BalanceGridTable({
             )}
           </tbody>
         </table>
+      </div>
+      </div>
+      {sideSplit && detailKind && (
+        <BalanceSidePanel
+          kind={detailKind}
+          row={activeRow}
+          hrefBase={hrefBase}
+          badge={agingBadge(activeRow?.daysOverdue)}
+          totalLabel={totalLabel}
+          paidLabel={paidLabel}
+        />
+      )}
       </div>
 
       <div className="erp-row-card-list">

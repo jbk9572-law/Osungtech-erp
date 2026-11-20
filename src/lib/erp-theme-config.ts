@@ -25,13 +25,15 @@ export type ThemeFeatures = {
   kpiStrip: boolean;
   /** 재고현황에 재고 수준 막대·부족 줄 띠·재고금액 칸·묶음 머리글을 보여준다. */
   stockInsights: boolean;
+  /** 재고현황·미수금/미지급금현황에서 행을 누르면 이동하지 않고 오른쪽 상세 패널에 보여준다(넓은 화면만). */
+  listSidePanel: boolean;
 };
 
-export const CLASSIC_FEATURES: ThemeFeatures = { defaultInvoiceForm: "B", rowNumbers: false, groupedHeader: false, stockNear: false, partnerPaymentTerms: false, gridSelectionStats: false, paymentStatusColumn: false, voucherLayout: false, kpiStrip: false, stockInsights: false };
+export const CLASSIC_FEATURES: ThemeFeatures = { defaultInvoiceForm: "B", rowNumbers: false, groupedHeader: false, stockNear: false, partnerPaymentTerms: false, gridSelectionStats: false, paymentStatusColumn: false, voucherLayout: false, kpiStrip: false, stockInsights: false, listSidePanel: false };
 
 export const THEME_FEATURES: Record<string, ThemeFeatures> = {
   "classic-light": CLASSIC_FEATURES,
-  "grid-modern": { defaultInvoiceForm: "N", rowNumbers: true, groupedHeader: true, stockNear: true, partnerPaymentTerms: true, gridSelectionStats: true, paymentStatusColumn: true, voucherLayout: true, kpiStrip: true, stockInsights: true },
+  "grid-modern": { defaultInvoiceForm: "N", rowNumbers: true, groupedHeader: true, stockNear: true, partnerPaymentTerms: true, gridSelectionStats: true, paymentStatusColumn: true, voucherLayout: true, kpiStrip: true, stockInsights: true, listSidePanel: true },
 };
 
 export function getThemeFeatures(theme: string | null | undefined): ThemeFeatures {

@@ -3632,6 +3632,66 @@ form.erp-field-grid {
   gap: var(--erp-space-2);
   padding: var(--erp-space-2) var(--erp-space-4) var(--erp-space-4);
 }
+/* 오른쪽 패널의 구역(미수 전표·창고별 재고 등)과 바로가기 — DetailSideShell */
+.erp-detail-side-sec {
+  padding: var(--erp-space-2) var(--erp-space-4);
+}
+.erp-detail-side-sec h4 {
+  margin: 0 0 var(--erp-space-1);
+  color: var(--erp-text-muted);
+  font-size: var(--erp-font-sm);
+  font-weight: 700;
+}
+.erp-detail-side-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: var(--erp-space-3);
+  padding: var(--erp-space-1) 0;
+  border-bottom: 1px solid var(--erp-divider);
+  font-variant-numeric: tabular-nums;
+}
+.erp-detail-side-row:last-of-type {
+  border-bottom: 0;
+}
+.erp-detail-side-mid {
+  color: var(--erp-text-muted);
+}
+.erp-detail-side-row.is-danger .erp-detail-side-mid {
+  color: var(--erp-danger);
+}
+.erp-detail-side-row.is-warn .erp-detail-side-mid {
+  color: var(--erp-warning);
+}
+.erp-detail-side-note {
+  margin: 0;
+  padding: var(--erp-space-1) 0;
+  color: var(--erp-text-muted);
+  font-size: var(--erp-font-sm);
+}
+.erp-detail-side-danger {
+  color: var(--erp-danger);
+}
+.erp-detail-side-success {
+  color: var(--erp-success);
+}
+.erp-detail-side-link {
+  display: flex;
+  align-items: baseline;
+  gap: var(--erp-space-2);
+  padding: var(--erp-space-1) 0;
+  color: var(--erp-text);
+  text-decoration: none;
+}
+.erp-detail-side-link em {
+  color: var(--erp-text-muted);
+  font-style: normal;
+  font-size: var(--erp-font-sm);
+}
+.erp-detail-side-link i {
+  margin-left: auto;
+  color: var(--erp-primary);
+  font-style: normal;
+}
 /* 좁은 화면(≤1100px)에서는 오른쪽 패널 대신 항상 기존 행 아래 아코디언을 쓴다. */
 @media (max-width: 1100px) {
   .erp-detail-side {

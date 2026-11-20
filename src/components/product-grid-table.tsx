@@ -17,7 +17,8 @@ import { RowCheckbox } from "@/components/grid/row-checkbox";
 import { formatNumber } from "@/lib/format-number";
 import { ErpSelect } from "@/components/erp/erp-select";
 import { GridToolbar } from "@/components/grid/grid-toolbar";
-import { ROW_NO_WIDTH, useThemeFeatures } from "@/lib/erp-theme-features";
+import { ROW_NO_WIDTH, useSideSplit, useThemeFeatures } from "@/lib/erp-theme-features";
+import { InventorySidePanel } from "@/components/grid/inventory-side-panel";
 import { GridGroupHeaderRow } from "@/components/grid/group-header-row";
 import { STOCK_STATUS_BADGE, isLowStock, stockStatus, type StockStatus } from "@/lib/stock-status";
 
@@ -129,6 +130,10 @@ export function ProductGridTable({
   const { rowNumbers, stockNear, stockInsights } = useThemeFeatures();
   // 재고 수준 막대·재고금액 칸·묶음 머리글은 재고현황(inventory)에서 테마 기능이 켜졌을 때만.
   const insights = stockInsights && mode === "inventory";
+  // 재고현황은 넓은 화면(테마 기능)에서 행을 누르면 이동하지 않고 오른쪽 패널에 보여준다 — 이동은 패널의 "상세·입출고내역"으로.
+  const sideSplit = useSideSplit() && mode === "inventory";
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const activeRow = sortedRows.find((r) => r.id === activeId) ?? null;
   // 근접 단계는 테마 기능이 켜졌을 때만 — 꺼져 있으면 클래식과 같은 두 단계(재주문 필요/정상).
   const statusOf = (r: ProductGridRow): StockStatus => {
     const s = stockStatus(r.quantity, r.reorderPoint);
@@ -248,6 +253,8 @@ export function ProductGridTable({
           ]}
         />
       )}
+      <div className={sideSplit ? "erp-master-detail" : undefined}>
+      <div className={sideSplit ? "erp-master-detail-main" : undefined}>
       <div className="erp-grid-wrap has-card-view">
         <table className="erp-grid">
         <thead>
@@ -293,7 +300,8 @@ export function ProductGridTable({
               <ClickableRow
                 key={row.id}
                 href={href}
-                className={[isRowSelected ? "selected" : "", insights && status === "low" ? "erp-row-low" : ""].filter(Boolean).join(" ") || undefined}
+                className={[isRowSelected ? "selected" : "", insights && status === "low" ? "erp-row-low" : "", sideSplit && activeId === row.id ? "master-active" : ""].filter(Boolean).join(" ") || undefined}
+                onActivate={sideSplit ? () => setActiveId(row.id) : undefined}
               >
                 {allowBulkDelete && (
                   <td style={tdCheckbox}>
@@ -355,6 +363,9 @@ export function ProductGridTable({
           )}
         </tbody>
       </table>
+      </div>
+      </div>
+      {sideSplit && <InventorySidePanel row={activeRow} status={activeRow ? statusOf(activeRow) : "ok"} />}
       </div>
 
       <div className="erp-row-card-toolbar">
