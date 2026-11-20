@@ -1,9 +1,5 @@
 {
-  "split2": [
-    "app/(dashboard)/approvals/lines/page.tsx",
-    "components/activity-log-list-body.tsx",
-    "components/failure-log-list-body.tsx"
-  ],
+  "split2": [],
   "accordion": [
     "components/portal-orders-grid-table.tsx",
     "components/purchase-grid-table.tsx",
@@ -15,6 +11,7 @@
   ],
   "classicFrozen": [
     "app/(dashboard)/approvals/classic.tsx",
+    "app/(dashboard)/approvals/lines/classic.tsx",
     "app/(dashboard)/customers/classic.tsx",
     "app/(dashboard)/hr/documents/classic.tsx",
     "app/(dashboard)/official-documents/classic.tsx",
