@@ -603,6 +603,13 @@ export function MessengerPage({
   // 상태 2개는 erp-messenger-split3 스코프의 별도 규칙으로 추가한다
   // (erp-theme.css 참고) — 그래서 roster/rooms는 그대로 넘기고
   // chat/newGroup만 "detail"로 합친다.
+  const chatFilters = [
+    ["all", "전체", channels.length],
+    ["unread", "안읽음", channels.filter((c) => unseenChannelIds.has(c.id) && !mutedIds.has(c.id)).length],
+    ["dm", "1:1", channels.filter((c) => c.type === "dm").length],
+    ["group", "그룹", channels.filter((c) => c.type === "group").length],
+    ["muted", "알림 꺼짐", channels.filter((c) => mutedIds.has(c.id)).length],
+  ] as const;
   const visibleChannels = channels.filter((c) =>
     chatFilter === "unread" ? unseenChannelIds.has(c.id) && !mutedIds.has(c.id) : chatFilter === "muted" ? mutedIds.has(c.id) : chatFilter === "all" ? true : c.type === chatFilter,
   );
@@ -651,13 +658,7 @@ export function MessengerPage({
           groups={[
             {
               heading: "대화",
-              items: ([
-                ["all", "전체", channels.length],
-                ["unread", "안읽음", channels.filter((c) => unseenChannelIds.has(c.id) && !mutedIds.has(c.id)).length],
-                ["dm", "1:1", channels.filter((c) => c.type === "dm").length],
-                ["group", "그룹", channels.filter((c) => c.type === "group").length],
-                ["muted", "알림 꺼짐", channels.filter((c) => mutedIds.has(c.id)).length],
-              ] as const).map(([key, label, count]) => ({ key, label, count, active: chatFilter === key, onSelect: () => setChatFilter(key) })),
+              items: chatFilters.map(([key, label, count]) => ({ key, label, count, active: chatFilter === key, onSelect: () => setChatFilter(key) })),
             },
           ]}
         >
@@ -701,6 +702,13 @@ export function MessengerPage({
             <button type="button" className="erp-btn erp-u-minw-0 erp-u-text-sm" onClick={() => setView("newGroup")}>
               + 그룹
             </button>
+          </div>
+          <div className="erp-messenger-mobile-filter erp-date-presets">
+            {chatFilters.map(([key, label]) => (
+              <button key={key} type="button" onClick={() => setChatFilter(key)} className={`erp-date-preset-btn${chatFilter === key ? " active" : ""}`}>
+                {label}
+              </button>
+            ))}
           </div>
           {channelError && (
             <p className="erp-u-danger erp-u-text-sm" style={{ padding: "8px 12px 0" }}>{channelError}</p>

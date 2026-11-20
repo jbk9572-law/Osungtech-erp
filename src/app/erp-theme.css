@@ -4094,6 +4094,10 @@ a.erp-detail-tab:hover:not(.active) {
   font: inherit;
   color: inherit;
 }
+/* 메신저 좁은 화면 채팅방 탭의 대화 필터 칩 — 넓은 화면은 왼쪽 필터 열을 쓰므로 숨김 */
+.erp-messenger-mobile-filter {
+  display: none;
+}
 /* 필터 열 오른쪽 칸 전체를 차지하는 목록(상세 칸이 없는 탭 — 예: 임시저장) */
 .erp-split3-shell > .erp-split3-rest {
   grid-column: 2 / -1;
@@ -5879,6 +5883,11 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
     color: var(--erp-on-primary);
     background: var(--erp-primary);
     border-color: var(--erp-primary);
+  }
+
+  .erp-messenger-mobile-filter {
+    display: flex;
+    padding: 6px 8px 0;
   }
 
   .erp-messenger-split3[data-mobile-view="rooms"] .erp-cat-sidebar {
