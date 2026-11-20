@@ -153,7 +153,7 @@ export function PartyListA({
         ]}
       />
       {bar}
-      <div className="erp-u-flex erp-u-justify-end erp-u-mb-8">
+      <div className="erp-sheet-tools">
         <SheetColumnMenu labels={PARTY_COLS.map((_, i) => labelOf(i))} hidden={hidden} onToggle={toggleHidden} />
       </div>
       <div className={sideSplit ? "erp-master-detail" : undefined}>

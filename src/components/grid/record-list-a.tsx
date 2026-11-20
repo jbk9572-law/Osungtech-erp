@@ -75,7 +75,7 @@ export function RecordListA({
   return (
     <>
       {bulkDelete && bar}
-      <div className="erp-u-flex erp-u-justify-end erp-u-mb-8">
+      <div className="erp-sheet-tools">
         <SheetColumnMenu labels={columns.map((c) => c.label)} hidden={hidden} onToggle={toggleHidden} />
       </div>
       <div className={sideSplit ? "erp-master-detail" : undefined}>
