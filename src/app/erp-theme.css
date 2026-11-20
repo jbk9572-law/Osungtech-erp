@@ -377,6 +377,7 @@
   --erp-detail-side-display: none;
   /* 전표(등록 모달) 틀 — 클래식은 "종이 카드", grid-modern은 틀 없이 밀집 시트 */
   --erp-modal-top-w: 3px;
+  --erp-modal-close-band: 0px;
   --erp-modal-close-top: -14px;
   --erp-modal-close-right: -14px;
   --erp-modal-close-bg: var(--erp-text);
@@ -598,6 +599,7 @@
   --erp-fx-badge-display: block;
   --erp-detail-side-display: flex;
   --erp-modal-top-w: 0px;
+  --erp-modal-close-band: 40px;
   --erp-modal-close-top: 10px;
   --erp-modal-close-right: 12px;
   --erp-modal-close-bg: transparent;
@@ -1367,6 +1369,14 @@ html:has(.erp) body {
 .erp-modal-body {
   padding: 16px;
   overflow-y: auto;
+  /* 모달 모서리를 따라 바닥 두 모서리를 둥글게 자른다 — 본문(스크롤 영역)이 모서리를 안 자르면 바닥에 붙는 하단 바·안내 줄의 배경이
+     각진 채 모달 모서리 밖으로 비어져 나온다(전표 모달 왼쪽 아래 모서리 R 없음). */
+  border-radius: 0 0 var(--erp-radius-3xl, 0) var(--erp-radius-3xl, 0);
+}
+/* 닫기(✕)가 모달 안쪽 오른쪽 위에 떠 있는 테마(--erp-modal-close-band > 0)는 본문 위에 ✕ 자리(띠)를 남긴다 — 첫 줄 오른쪽 끝의 버튼·탭이 ✕와 겹치지 않게.
+   제목줄을 가진 모달(전표 제목줄 .erp-voucher-titlebar · 단순 모달 .erp-modal-title)은 자기 제목줄이 ✕ 자리를 비우므로 제외. */
+.erp-modal:not(:has(.erp-voucher-titlebar)):not(:has(.erp-modal-title)) > .erp-modal-body {
+  padding-top: max(16px, var(--erp-modal-close-band));
 }
 
 /* 모달(.erp-modal-body) 안에서 .erp-detail을 쓰면 모달 자신의 상단
