@@ -5,7 +5,7 @@
 //  4) 2 초과 숫자 colSpan 직접 입력 금지 — spanOf(...)로 보이는 칸 수를 계산해야 한다
 import fs from "node:fs";
 
-const files = ["src/components/sales-grid-table.tsx", "src/components/purchase-grid-table.tsx"];
+const files = ["src/components/sales-grid/modern.tsx", "src/components/sales-grid/classic.tsx", "src/components/purchase-grid/modern.tsx", "src/components/purchase-grid/classic.tsx"];
 const errors = [];
 
 function rowCells(seg) {

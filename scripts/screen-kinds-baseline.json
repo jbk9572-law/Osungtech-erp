@@ -1,19 +1,14 @@
 {
   "split2": [],
-  "accordion": [
-    "components/portal-orders-grid-table.tsx",
-    "components/purchase-grid-table.tsx",
-    "components/sales-grid-table.tsx"
-  ],
+  "accordion": [],
   "trailingLink": [],
-  "split3NoFilter": [
-    "components/erp/messenger-page.tsx"
-  ],
+  "split3NoFilter": [],
   "classicFrozen": [
     "app/(dashboard)/approvals/classic.tsx",
     "app/(dashboard)/approvals/lines/classic.tsx",
     "app/(dashboard)/customers/classic.tsx",
     "app/(dashboard)/hr/documents/classic.tsx",
+    "app/(dashboard)/mail/classic.tsx",
     "app/(dashboard)/official-documents/classic.tsx",
     "app/(dashboard)/products/classic.tsx",
     "app/(dashboard)/purchase-quote-requests/classic.tsx",
@@ -22,6 +17,10 @@
     "app/(dashboard)/reports/payment-requests/classic.tsx",
     "app/(dashboard)/sales-activities/classic.tsx",
     "app/(dashboard)/subcontractors/classic.tsx",
-    "app/(dashboard)/suppliers/classic.tsx"
+    "app/(dashboard)/suppliers/classic.tsx",
+    "app/(dashboard)/todos/classic.tsx",
+    "components/erp/messenger/classic.tsx",
+    "components/purchase-grid/classic.tsx",
+    "components/sales-grid/classic.tsx"
   ]
 }
