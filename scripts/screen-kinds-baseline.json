@@ -1,9 +1,6 @@
 {
   "split2": [
     "app/(dashboard)/approvals/lines/page.tsx",
-    "app/(dashboard)/approvals/page.tsx",
-    "app/(dashboard)/hr/documents/page.tsx",
-    "app/(dashboard)/official-documents/official-documents-list.tsx",
     "components/activity-log-list-body.tsx",
     "components/failure-log-list-body.tsx"
   ],
@@ -17,7 +14,10 @@
     "components/erp/messenger-page.tsx"
   ],
   "classicFrozen": [
+    "app/(dashboard)/approvals/classic.tsx",
     "app/(dashboard)/customers/classic.tsx",
+    "app/(dashboard)/hr/documents/classic.tsx",
+    "app/(dashboard)/official-documents/classic.tsx",
     "app/(dashboard)/products/classic.tsx",
     "app/(dashboard)/purchase-quote-requests/classic.tsx",
     "app/(dashboard)/purchase-requests/classic.tsx",

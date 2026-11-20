@@ -4083,6 +4083,10 @@ a.erp-detail-tab:hover:not(.active) {
   flex: 1;
 }
 
+/* 필터 열 오른쪽 칸 전체를 차지하는 목록(상세 칸이 없는 탭 — 예: 임시저장) */
+.erp-split3-shell > .erp-split3-rest {
+  grid-column: 2 / -1;
+}
 @media (min-width: 769px) {
   .erp-split3-shell > * + * {
     margin-left: calc(-1 * var(--erp-split3-overlap));
