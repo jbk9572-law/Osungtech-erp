@@ -719,8 +719,7 @@ export function MessengerPage({
                 key={c.id}
                 type="button"
                 onClick={() => openChannel(c.id)}
-                className={`erp-messenger-channel-row${view === "chat" && c.id === activeChannelId ? " active" : ""}`}
-                style={{ position: "relative" }}
+                className={`erp-messenger-channel-row erp-u-relative${view === "chat" && c.id === activeChannelId ? " active" : ""}`}
               >
                 <span className="erp-u-mr-8 erp-u-inline-flex">
                   <ChannelAvatar channel={c} profileNames={profileNames} currentUserId={currentUserId} />

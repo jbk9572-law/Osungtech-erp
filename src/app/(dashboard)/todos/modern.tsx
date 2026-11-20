@@ -246,8 +246,7 @@ export default async function TodosPage({
               return (
                 <div
                   key={row.id}
-                  className={`erp-split-list-row${row.id === selectedId ? " active" : ""}`}
-                  style={{ display: "flex", alignItems: "flex-start", gap: "var(--erp-space-2)" }}
+                  className={`erp-split-list-row erp-u-flex erp-u-items-start erp-u-gap-s2${row.id === selectedId ? " active" : ""}`}
                 >
                   <TodoCheckbox id={row.id} done={row.done} label={row.title} />
                   <Link href={rowHref(row.id)} className="erp-todo-row-link">

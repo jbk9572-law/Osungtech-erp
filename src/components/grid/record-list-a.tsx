@@ -84,8 +84,7 @@ export function RecordListA({
             <table className="erp-grid">
               <thead>
                 <tr>
-                  {bulkDelete && <th className="erp-col-check" aria-label="선택" />}
-                  <RowNoHead />
+                  <RowNoHead checkbox={bulkDelete ? <span aria-hidden /> : undefined} />
                   {columns.map((c, i) =>
                     !isVisible(i) ? null : sortable ? (
                       <SortableTh key={c.label} label={c.label} col={i} sort={sort} ariaSort={ariaSort(i)} onSort={toggleSort} num={c.num} />
@@ -105,12 +104,10 @@ export function RecordListA({
                     className={activeId === r.id ? "master-active" : undefined}
                     onActivate={sideSplit ? () => setActiveId(r.id) : undefined}
                   >
-                    {bulkDelete && (
-                      <td className="erp-col-check" onClick={(e) => e.stopPropagation()}>
-                        <input type="checkbox" checked={selected.has(r.id)} onChange={() => toggle(r.id)} aria-label={`${bulkDelete.labelOf(r.id)} 선택`} />
-                      </td>
-                    )}
-                    <RowNoCell n={i + 1} />
+                    <RowNoCell
+                      n={i + 1}
+                      checkbox={bulkDelete ? <input type="checkbox" checked={selected.has(r.id)} onChange={() => toggle(r.id)} onClick={(e) => e.stopPropagation()} aria-label={`${bulkDelete.labelOf(r.id)} 선택`} /> : undefined}
+                    />
                     {r.cells.map((cell, ci) =>
                       isVisible(ci) ? (
                         <td key={ci} className={columns[ci]?.num ? "num" : undefined}>
@@ -122,7 +119,7 @@ export function RecordListA({
                 ))}
                 {!rows.length && (
                   <tr>
-                    <td colSpan={visibleCount + 1 + (bulkDelete ? 1 : 0)} className="erp-grid-empty">
+                    <td colSpan={visibleCount + 2} className="erp-grid-empty">
                       {emptyMessage}
                     </td>
                   </tr>

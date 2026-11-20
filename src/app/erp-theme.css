@@ -61,6 +61,7 @@
 .erp-u-normal { font-weight: 400 !important; }
 .erp-u-flex { display: flex !important; }
 .erp-u-items-center { align-items: center !important; }
+.erp-u-items-start { align-items: flex-start !important; }
 .erp-u-justify-between { justify-content: space-between !important; }
 .erp-u-relative { position: relative !important; }
 .erp-u-text-center { text-align: center !important; }
@@ -5310,6 +5311,13 @@ a.erp-detail-tab:hover:not(.active) {
 .erp-sheet:focus-visible {
   outline: 2px solid var(--erp-primary);
   outline-offset: -2px;
+}
+/* 번호 + 체크박스가 한 칸에 같이 있는 칸 — 번호만 있는 칸보다 조금 넓게 */
+.erp-grid th.erp-col-no:has(> input),
+.erp-grid td.erp-col-no:has(> input),
+.erp-grid th.erp-col-no:has(> span[aria-hidden]),
+.erp-grid td.erp-col-no:has(> span[aria-hidden]) {
+  width: 64px;
 }
 /* 체크박스만 있는 좁은 칸(일괄 선택) */
 .erp-grid th.erp-col-check,

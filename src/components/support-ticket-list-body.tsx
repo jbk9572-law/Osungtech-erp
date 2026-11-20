@@ -76,8 +76,7 @@ export function SupportTicketListBody({ tickets }: { tickets: SupportTicketRow[]
                 key={t.id}
                 type="button"
                 onClick={() => setSelectedId(t.id)}
-                className={`erp-split-list-row${t.id === selectedId ? " active" : ""}`}
-                style={{ width: "100%", textAlign: "left", border: "none", background: "none", cursor: "pointer" }}
+                className={`erp-split-list-row erp-split-list-row-btn${t.id === selectedId ? " active" : ""}`}
               >
                 <span className="erp-u-bold">
                   #{t.doc_no} {t.subject}

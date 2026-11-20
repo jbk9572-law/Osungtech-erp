@@ -12,7 +12,7 @@ import { ListSummaryBar } from "@/components/grid/list-summary-bar";
 import { SheetColumnMenu, SortableTh } from "@/components/grid/sheet-parts";
 import { useBulkDelete } from "@/components/erp/use-bulk-delete";
 import type { FormState } from "@/components/form-message";
-import { useSideSplit, useThemeFeatures } from "@/lib/erp-theme-features";
+import { useSideSplit } from "@/lib/erp-theme-features";
 import { formatNumber } from "@/lib/format-number";
 import { startRouteProgress } from "@/lib/route-progress";
 import { useRowKeyboard, useSheetTable } from "@/lib/use-sheet-table";
@@ -81,7 +81,6 @@ export function PartyListA({
   emptyMessage: string;
 }) {
   const sideSplit = useSideSplit();
-  const { groupedHeader } = useThemeFeatures();
   const [filter, setFilter] = useState<Filter>("all");
   const [activeId, setActiveId] = useState<string | null>(null);
 
@@ -163,7 +162,7 @@ export function PartyListA({
             <table className="erp-grid">
               <thead>
                 <GridGroupHeaderRow
-                  before={1 + (groupedHeader ? 1 : 0)}
+                  before={1}
                   groups={[
                     { span: groupSpan(PARTY_GROUPS[0]), label: partyLabel },
                     { span: groupSpan(PARTY_GROUPS[1]), label: kind === "customer" ? "미수금" : "미지급금" },
@@ -171,8 +170,7 @@ export function PartyListA({
                   ].filter((g) => g.span > 0)}
                 />
                 <tr>
-                  <th className="erp-col-check" aria-label="선택" />
-                  <RowNoHead />
+                  <RowNoHead checkbox={<span aria-hidden />} />
                   {PARTY_COLS.map((_, i) =>
                     isVisible(i) ? <SortableTh key={i} label={labelOf(i)} col={i} sort={sort} ariaSort={ariaSort(i)} onSort={toggleSort} num={i === 5} /> : null,
                   )}
@@ -198,10 +196,7 @@ export function PartyListA({
                       className={activeId === r.id ? "master-active" : undefined}
                       onActivate={sideSplit ? () => setActiveId(r.id) : undefined}
                     >
-                      <td className="erp-col-check" onClick={(e) => e.stopPropagation()}>
-                        <input type="checkbox" checked={selected.has(r.id)} onChange={() => toggle(r.id)} aria-label={`${r.name} 선택`} />
-                      </td>
-                      <RowNoCell n={i + 1} />
+                      <RowNoCell n={i + 1} checkbox={<input type="checkbox" checked={selected.has(r.id)} onChange={() => toggle(r.id)} onClick={(e) => e.stopPropagation()} aria-label={`${r.name} 선택`} />} />
                       {cells.filter((_, ci) => isVisible(ci))}
                     </ClickableRow>
                   );

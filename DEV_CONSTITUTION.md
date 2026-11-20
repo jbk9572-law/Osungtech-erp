@@ -211,6 +211,21 @@
 
 기준선(`scripts/screen-kinds-baseline.json`)은 "지금 남아 있는 옛 방식"의 목록이다 — 화면을 A/B/C로 옮길 때마다 목록에서 빼고(`--write`) 줄여 나간다. 늘리지는 못한다.
 
+## 13. 테마별로 화면 코드를 나눈다 — 클래식은 동결, 모던만 발전시킨다
+
+모던(grid-modern)과 클래식은 화면 코드를 **공유하지 않는다**(사용자 지시). 클래식 화면은 `classic.tsx`(동결본)에
+그대로 두고 새 기능·수정은 하지 않는다. 모던은 `modern.tsx`에서 A/B/C 규칙(원칙 12)대로 만든다. 화면 입구(`page.tsx`)는
+테마만 보고 둘 중 하나를 보여 주는 얇은 분기 파일이다.
+- `classic.tsx`를 새로 만드는 것은 자동검사(`check-screen-kinds`의 classicFrozen)가 막는다 — 필요하면 먼저 상의한다.
+- 공용 부품(필터 열·표 동작 등)은 클래식 모양을 바꾸지 않도록 테마 기능 플래그(`useThemeFeatures`)로 모던에서만 새 모양을 쓴다.
+- 인라인 스타일 예산에서는 `classic.tsx`를 뺀다(모던 기준만 줄여 나간다).
+
+## 14. 스프레드시트형 목록의 공통 동작은 공용 훅으로
+
+A형 목록(표)의 열 정렬·열 보이기/숨기기·↑↓ 행 이동·Enter 열기·Ctrl+C 행 복사는 `useSheetTable`/`useRowKeyboard`
+(`src/lib/use-sheet-table.ts`)와 `SheetColumnMenu`/`SortableTh`(`components/grid/sheet-parts.tsx`)만 쓴다.
+기간+검색 폼은 `DateRangeSearchForm`, 한 줄 검색은 `ListSearchForm`, 제목줄은 `ListTitleBar`/`ListPageHeader`를 쓴다 — 화면마다 다시 짜지 않는다.
+
 ## 적용 방법
 
 - 새 작업을 시작하기 전에 이 문서를 먼저 확인한다.

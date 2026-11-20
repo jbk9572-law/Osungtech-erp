@@ -37,8 +37,7 @@ export function SplitListBulkSelect({
       {rows.map((row) => (
         <div
           key={row.id}
-          className={`erp-split-list-row${row.active ? " active" : ""}`}
-          style={{ display: "flex", alignItems: "flex-start", gap: 6 }}
+          className={`erp-split-list-row erp-u-flex erp-u-items-start erp-u-gap-6${row.active ? " active" : ""}`}
         >
           <input className="erp-u-mt-3"
             type="checkbox"

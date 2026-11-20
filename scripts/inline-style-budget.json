@@ -1,9 +1,9 @@
 {
-  "spacing": 99,
+  "spacing": 97,
   "font": 39,
-  "color-border": 81,
-  "layout": 70,
+  "color-border": 79,
+  "layout": 63,
   "size": 75,
   "other": 57,
-  "mappable": 33
+  "mappable": 25
 }
