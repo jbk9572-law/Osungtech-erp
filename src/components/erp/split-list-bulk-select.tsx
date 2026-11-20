@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useState, type ReactNode } from "react";
-import { BulkDeleteBar } from "@/components/bulk-delete-bar";
+import type { ReactNode } from "react";
+import { useBulkDelete } from "@/components/erp/use-bulk-delete";
 import type { FormState } from "@/components/form-message";
 
 export type SplitListBulkRow = {
@@ -29,51 +29,11 @@ export function SplitListBulkSelect({
   warningText: string;
   emptyMessage: string;
 }) {
-  const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [confirmText, setConfirmText] = useState("");
-  const [state, formAction, pending] = useActionState<FormState, FormData>(bulkDeleteAction, undefined);
-
-  const [lastState, setLastState] = useState(state);
-  if (state !== lastState) {
-    setLastState(state);
-    if (state?.success) {
-      setSelected(new Set());
-      setConfirmText("");
-    }
-  }
-
-  function toggleRow(id: string) {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-    setConfirmText("");
-  }
-
-  const selectedNames = rows.filter((r) => selected.has(r.id)).map((r) => r.label);
-  const namePreview =
-    selectedNames.length > 3
-      ? `${selectedNames.slice(0, 3).join(", ")} 외 ${selectedNames.length - 3}건`
-      : selectedNames.join(", ");
+  const { selected, toggle: toggleRow, bar } = useBulkDelete(bulkDeleteAction, rows, warningText);
 
   return (
     <>
-      {selected.size > 0 && (
-        <div className="erp-u-m-8">
-          <BulkDeleteBar
-            formAction={formAction}
-            pending={pending}
-            state={state}
-            selectedIds={[...selected]}
-            namePreview={namePreview}
-            warningText={warningText}
-            confirmText={confirmText}
-            onConfirmTextChange={setConfirmText}
-          />
-        </div>
-      )}
+      {bar}
       {rows.map((row) => (
         <div
           key={row.id}

@@ -5138,6 +5138,11 @@ a.erp-detail-tab:hover:not(.active) {
 .erp-grid td.erp-col-no {
   width: 44px;
 }
+/* 체크박스만 있는 좁은 칸(일괄 선택) */
+.erp-grid th.erp-col-check,
+.erp-grid td.erp-col-check {
+  width: 32px;
+}
 
 /* 재고현황 — 부족 줄은 왼쪽 띠, 재고수량 칸 아래 안전재고 대비 막대(테마 기능 stockInsights) */
 .erp-grid tbody tr.erp-row-low > td:first-child {

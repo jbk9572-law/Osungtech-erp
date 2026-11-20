@@ -13,6 +13,10 @@ import { isUuid } from "@/lib/is-uuid";
 import type { Database } from "@/types/database.types";
 import { formatNumber } from "@/lib/format-number";
 import { getAllSupplierBalances } from "@/lib/ar-ap";
+import { PartyPageA } from "@/components/grid/party-page-a";
+import { daysSince } from "@/lib/ar-ap";
+import { getTenantTheme } from "@/lib/tenant-theme";
+import { getThemeFeatures } from "@/lib/erp-theme-config";
 import { PartyBalanceMeta } from "@/components/grid/party-balance-meta";
 import { fetchSupplierLastOrderDates } from "@/lib/party-last-order";
 
@@ -90,6 +94,42 @@ export default async function SuppliersPage({
   const currentHref = selectedId
     ? `/suppliers?${new URLSearchParams({ ...(q ? { q } : {}), ...(limitParam ? { limit: limitParam } : {}), id: selectedId }).toString()}`
     : newHref;
+
+  // 모던 테마(listSidePanel)는 A형 — 표 + 오른쪽 상세 패널. 클래식은 아래 기존 2분할 그대로.
+  if (getThemeFeatures(await getTenantTheme(supabase)).listSidePanel) {
+    return (
+      <PartyPageA
+        kind="supplier"
+        title="거래처관리 &gt; 공급처관리"
+        basePath="/suppliers"
+        rows={suppliers.map((c) => {
+          const b = balanceMap.get(c.id);
+          return {
+            id: c.id,
+            code: c.supplier_code,
+            name: c.name,
+            person: c.representative_name ?? c.contact_name,
+            phone: c.phone,
+            total: b?.total ?? 0,
+            paid: b?.paid ?? 0,
+            balance: b?.balance ?? 0,
+            daysOverdue: b && b.balance > 0 && b.oldestUnpaidDate ? daysSince(b.oldestUnpaidDate) : 0,
+            lastOrderDate: lastOrderMap.get(c.id) ?? null,
+          };
+        })}
+        q={q}
+        hasMore={hasMore}
+        moreHref={moreHref}
+        moreStep={LIST_LIMIT_STEP}
+        partyLabel="공급처"
+        balanceLabel="미지급 잔액"
+        searchPlaceholder="업체명, 사업자번호, 담당자 검색"
+        bulkDeleteAction={bulkDeleteSuppliers}
+        warningText="관련 매입/상품 내역이 있는 공급처는 삭제되지 않습니다."
+        emptyMessage="조건에 맞는 공급처가 없습니다."
+      />
+    );
+  }
 
   return (
     <div>
