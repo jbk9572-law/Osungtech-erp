@@ -31,7 +31,8 @@ for (const s of SCREENS) {
     const title = page.locator("h1.erp-h1").first();
     if (!(await title.isVisible({ timeout: 30_000 }).catch(() => false))) {
       // 실패 원인을 로그에서 바로 볼 수 있게 화면에 보이는 글자 일부를 남긴다.
-      const seen = (await page.locator("body").innerText().catch(() => "")).replace(/\s+/g, " ").slice(0, 300);
+      const all = (await page.locator("body").innerText().catch(() => "")).replace(/\s+/g, " ");
+      const seen = `(전체 ${all.length}자, 끝 400자) ${all.slice(-400)}`; // 앞부분은 메뉴라 끝쪽에 본문(로딩/오류 문구)이 있다
       throw new Error(`제목줄(h1.erp-h1)이 없다. url=${page.url()} 화면 글자: ${seen}`);
     }
     await expect(page.getByText("일시적인 오류로 화면을 불러오지 못했습니다")).toHaveCount(0);
