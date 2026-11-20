@@ -40,6 +40,7 @@ import { useColumnVisibility } from "@/lib/use-column-visibility";
 import { ColumnVisibilityMenu, type ColumnVisibilityOption } from "@/components/grid/column-visibility-menu";
 import { GridToolbar } from "@/components/grid/grid-toolbar";
 import { useGridCheckboxWidth, useThemeFeatures } from "@/lib/erp-theme-features";
+import { useListRowOpen } from "@/lib/use-list-row-open";
 import { visibleColumnCount } from "@/lib/grid-columns";
 import { GridGroupHeaderRow } from "@/components/grid/group-header-row";
 import { GridRowLegend } from "@/components/grid/row-legend";
@@ -261,6 +262,7 @@ export function PurchaseGridTable({
 
   const checkW = useGridCheckboxWidth();
   const { rowNumbers } = useThemeFeatures();
+  const openRow = useListRowOpen(toggleAccordion);
   const thSticky1 = stickyHeaderStyle(0, checkW);
   const thSticky2 = stickyHeaderStyle(checkW, STICKY_2_WIDTH, {
     borderRight: "1px solid var(--erp-border)",
@@ -343,7 +345,7 @@ export function PurchaseGridTable({
       <tr
         key={row.key}
         className={`cursor-pointer${isRowSelected ? " selected" : isActive ? " master-active" : ""}${rowDayClass(rowDay(row.date))}${carryoverRowClass(row.isCarryover, !!opts.compactDate)}`}
-        onClick={() => opts.selectable && !hasTextSelection() && toggleAccordion(row.key)}
+        onClick={() => opts.selectable && !hasTextSelection() && openRow(row.key, detailHref)}
       >
         <td style={opts.compactDate ? tdSticky1Carryover : tdSticky1}>
           {opts.selectable && row.orderId && (
