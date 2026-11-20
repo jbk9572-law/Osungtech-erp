@@ -2,17 +2,11 @@
   "split2": [
     "app/(dashboard)/approvals/lines/page.tsx",
     "app/(dashboard)/approvals/page.tsx",
-    "app/(dashboard)/customers/page.tsx",
     "app/(dashboard)/hr/documents/page.tsx",
     "app/(dashboard)/official-documents/official-documents-list.tsx",
     "app/(dashboard)/products/page.tsx",
-    "app/(dashboard)/purchase-quote-requests/page.tsx",
-    "app/(dashboard)/purchase-requests/page.tsx",
-    "app/(dashboard)/quotes/page.tsx",
-    "app/(dashboard)/reports/payment-requests/page.tsx",
     "app/(dashboard)/sales-activities/page.tsx",
     "app/(dashboard)/subcontractors/page.tsx",
-    "app/(dashboard)/suppliers/page.tsx",
     "components/activity-log-list-body.tsx",
     "components/failure-log-list-body.tsx"
   ],
@@ -24,5 +18,13 @@
   "trailingLink": [],
   "split3NoFilter": [
     "components/erp/messenger-page.tsx"
+  ],
+  "classicFrozen": [
+    "app/(dashboard)/customers/classic.tsx",
+    "app/(dashboard)/purchase-quote-requests/classic.tsx",
+    "app/(dashboard)/purchase-requests/classic.tsx",
+    "app/(dashboard)/quotes/classic.tsx",
+    "app/(dashboard)/reports/payment-requests/classic.tsx",
+    "app/(dashboard)/suppliers/classic.tsx"
   ]
 }
