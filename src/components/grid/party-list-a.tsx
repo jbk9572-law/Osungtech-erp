@@ -100,7 +100,7 @@ export function PartyListA({
       ),
     [rows, filter, recentSince],
   );
-  const { ordered, sort, toggleSort, hidden, toggleHidden, isVisible, ariaSort } = useSheetTable(visible, partyValue);
+  const { ordered, sort, toggleSort, widths, setWidth, hidden, toggleHidden, isVisible, ariaSort } = useSheetTable(visible, partyValue);
   const router = useRouter();
   const balanceSum = rows.reduce((n, r) => n + (r.balance > 0 ? r.balance : 0), 0);
 
@@ -172,7 +172,7 @@ export function PartyListA({
                 <tr>
                   <RowNoHead checkbox={<span aria-hidden />} />
                   {PARTY_COLS.map((_, i) =>
-                    isVisible(i) ? <SortableTh key={i} label={labelOf(i)} col={i} sort={sort} ariaSort={ariaSort(i)} onSort={toggleSort} num={i === 5} /> : null,
+                    isVisible(i) ? <SortableTh key={i} label={labelOf(i)} col={i} sort={sort} ariaSort={ariaSort(i)} onSort={toggleSort} num={i === 5} width={widths[i]} onResize={(px) => setWidth(i, px)} /> : null,
                   )}
                 </tr>
               </thead>

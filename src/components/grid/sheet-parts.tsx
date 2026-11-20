@@ -1,15 +1,36 @@
 "use client";
 
-import type { SortState } from "@/lib/use-sheet-table";
+import type { CSSProperties, PointerEvent } from "react";
+import { MIN_COL_WIDTH, type SortState } from "@/lib/use-sheet-table";
 
-// 정렬 가능한 머리글 칸 — 누르면 오름 → 내림 → 해제.
-export function SortableTh({ label, col, sort, ariaSort, onSort, num }: { label: string; col: number; sort: SortState; ariaSort: "ascending" | "descending" | "none"; onSort: (col: number) => void; num?: boolean }) {
+// 머리글 오른쪽 끝의 너비 조절 손잡이 — 끌어서 열 너비를 바꾸고, 더블클릭하면 원래대로.
+function ResizeHandle({ onResize }: { onResize: (px: number | null) => void }) {
+  const start = (e: PointerEvent<HTMLSpanElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const th = e.currentTarget.parentElement as HTMLElement;
+    const startX = e.clientX;
+    const startW = th.getBoundingClientRect().width;
+    const move = (ev: globalThis.PointerEvent) => onResize(Math.max(MIN_COL_WIDTH, startW + ev.clientX - startX));
+    const up = () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+  };
+  return <span className="erp-col-resizer" role="separator" aria-orientation="vertical" aria-label="열 너비 조절" onPointerDown={start} onDoubleClick={() => onResize(null)} onClick={(e) => e.stopPropagation()} />;
+}
+
+// 정렬 가능한 머리글 칸 — 누르면 오름 → 내림 → 해제. width/onResize를 주면 너비 조절 손잡이가 붙는다.
+export function SortableTh({ label, col, sort, ariaSort, onSort, num, width, onResize }: { label: string; col: number; sort: SortState; ariaSort: "ascending" | "descending" | "none"; onSort: (col: number) => void; num?: boolean; width?: number; onResize?: (px: number | null) => void }) {
   return (
-    <th className={num ? "num" : undefined} aria-sort={ariaSort}>
+    <th className={`${num ? "num " : ""}${width ? "erp-th-sized" : ""}`.trim() || undefined} aria-sort={ariaSort} style={width ? ({ "--col-w": `${width}px` } as CSSProperties) : undefined}>
       <button type="button" onClick={() => onSort(col)} className="erp-th-btn">
         {label}
         {sort?.col === col ? (sort.dir === 1 ? " ▲" : " ▼") : ""}
       </button>
+      {onResize && <ResizeHandle onResize={onResize} />}
     </th>
   );
 }

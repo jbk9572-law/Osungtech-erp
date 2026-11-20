@@ -2,6 +2,8 @@
 
 import { useMemo, useState, type KeyboardEvent } from "react";
 
+export const MIN_COL_WIDTH = 48;
+
 // 스프레드시트형 목록의 공용 동작 — 열 정렬·열 숨김·방향키 행 이동·행 복사(TSV). A형 목록(RecordListA/PartyListA)이 같이 쓴다(개발헌법 12번).
 export type SortState = { col: number; dir: 1 | -1 } | null;
 export type CellValue = string | number | null | undefined;
@@ -17,6 +19,15 @@ function compare(a: CellValue, b: CellValue): number {
 export function useSheetTable<T extends { id: string }>(rows: T[], valueOf: (row: T, col: number) => CellValue) {
   const [sort, setSort] = useState<SortState>(null);
   const [hidden, setHidden] = useState<Set<number>>(new Set());
+  // 끌어서 바꾼 열 너비(px) — 이 화면을 연 동안만 유지한다(저장하지 않음)
+  const [widths, setWidths] = useState<Record<number, number>>({});
+  const setWidth = (col: number, px: number | null) =>
+    setWidths((p) => {
+      const next = { ...p };
+      if (px === null) delete next[col];
+      else next[col] = Math.max(MIN_COL_WIDTH, Math.round(px));
+      return next;
+    });
 
   const ordered = useMemo(() => {
     if (!sort) return rows;
@@ -35,7 +46,7 @@ export function useSheetTable<T extends { id: string }>(rows: T[], valueOf: (row
       return next;
     });
   const ariaSort = (col: number): "ascending" | "descending" | "none" => (sort?.col === col ? (sort.dir === 1 ? "ascending" : "descending") : "none");
-  return { ordered, sort, toggleSort, hidden, toggleHidden, isVisible: (col: number) => !hidden.has(col), ariaSort };
+  return { ordered, sort, toggleSort, widths, setWidth, hidden, toggleHidden, isVisible: (col: number) => !hidden.has(col), ariaSort };
 }
 
 // 목록 위에서 ↑/↓로 행 이동, Enter로 열기, Ctrl+C로 선택한 행을 탭 구분 텍스트로 복사 — 입력칸·버튼에서 누른 키는 건드리지 않는다.

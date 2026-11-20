@@ -150,7 +150,7 @@ export default async function ApprovalsPage({
                       <td>{formatKstDateTime(d.created_at)}</td>
                       <td>{d.title || "(제목 없음)"}</td>
                       <td>
-                        <div className="flex items-center gap-1">
+                        <div className="erp-u-flex erp-u-items-center erp-u-gap-4">
                           <Link
                             href={`/approvals/new?draft=${d.id}`}
                             className="erp-btn erp-btn-primary"

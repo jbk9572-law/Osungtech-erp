@@ -256,17 +256,17 @@ export default async function ApprovalLinesPage({
         <div className="erp-split-detail">
           {selected ? (
             <>
-              <h2 className="mb-1 text-base font-bold erp-u-text">
+              <h2 className="erp-u-mb-4 text-base erp-u-bold erp-u-text">
                 {selected.name}
               </h2>
-              <p className="mb-5 text-xs erp-u-muted">
+              <p className="erp-u-mb-20 erp-u-text-compact erp-u-muted">
                 만든이 {selected.profiles?.full_name ?? "-"}
               </p>
 
-              <div className="mb-2 text-xs font-bold erp-u-muted">
+              <div className="erp-u-mb-8 erp-u-text-compact erp-u-bold erp-u-muted">
                 결재자 순서
               </div>
-              <div className="mb-5 flex flex-wrap items-center gap-1.5">
+              <div className="erp-u-mb-20 erp-u-flex erp-u-wrap erp-u-items-center erp-u-gap-6">
                 {selected.approver_ids.map((aid, i) => (
                   <span className="erp-u-items-center erp-u-inline-flex erp-u-gap-s2" key={aid}>
                     <span style={chipStyle}>
@@ -280,10 +280,10 @@ export default async function ApprovalLinesPage({
                 ))}
               </div>
 
-              <div className="mb-2 text-xs font-bold erp-u-muted">
+              <div className="erp-u-mb-8 erp-u-text-compact erp-u-bold erp-u-muted">
                 참조자
               </div>
-              <div className="mb-5 flex flex-wrap items-center gap-1.5">
+              <div className="erp-u-mb-20 erp-u-flex erp-u-wrap erp-u-items-center erp-u-gap-6">
                 {selected.reference_ids.map((rid) => (
                   <span key={rid} style={chipStyle}>
                     <span style={chipAvatarStyle("#64748b")}>{(nameById[rid] ?? "구성원")[0]}</span>
@@ -291,13 +291,13 @@ export default async function ApprovalLinesPage({
                   </span>
                 ))}
                 {selected.reference_ids.length === 0 && (
-                  <span className="text-xs erp-u-muted">
+                  <span className="erp-u-text-compact erp-u-muted">
                     없음
                   </span>
                 )}
               </div>
 
-              <div className="flex gap-2">
+              <div className="erp-u-flex erp-u-gap-8">
                 <Link href={`/approvals/lines/${selected.id}/edit`} className="erp-btn">
                   수정
                 </Link>

@@ -5307,6 +5307,27 @@ a.erp-detail-tab:hover:not(.active) {
   white-space: nowrap;
   cursor: pointer;
 }
+/* 열 너비 조절(스프레드시트형 목록) — 머리글 오른쪽 끝 손잡이, 끈 너비는 --col-w */
+.erp-th-sized {
+  width: var(--col-w);
+  min-width: var(--col-w);
+  max-width: var(--col-w);
+}
+.erp-col-resizer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  touch-action: none;
+  user-select: none;
+}
+.erp-col-resizer:hover,
+.erp-col-resizer:active {
+  background: var(--erp-primary);
+  opacity: 0.35;
+}
 /* 방향키로 행을 옮기는 표 — 포커스가 표 영역에 있음을 윤곽선으로 */
 .erp-sheet:focus-visible {
   outline: 2px solid var(--erp-primary);

@@ -270,7 +270,7 @@ export default async function TodosPage({
               );
             })}
             {!rows.length && (
-              <p className="p-3 text-xs erp-u-muted">
+              <p className="erp-u-p-12 erp-u-text-compact erp-u-muted">
                 {q ? "검색 결과가 없습니다." : "등록된 할 일이 없습니다."}
               </p>
             )}

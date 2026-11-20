@@ -220,14 +220,14 @@ export default async function MailPage({
           ) : (
             <>
               <MarkAsRead messageId={selected.id} isRead={selected.is_read} />
-              <h2 className="mb-2 text-base font-bold text-[var(--erp-text)]">
+              <h2 className="erp-u-mb-8 text-base erp-u-bold text-[var(--erp-text)]">
                 {selected.subject || "(제목 없음)"}
               </h2>
-              <div className="mb-3 erp-u-flex erp-u-items-center erp-u-gap-10">
+              <div className="erp-u-mb-12 erp-u-flex erp-u-items-center erp-u-gap-10">
                 <span className="erp-avatar" style={{ width: 32, height: 32 }} aria-hidden>
                   {initial(selected.from_name, selected.from_address)}
                 </span>
-                <div className="text-xs erp-u-muted">
+                <div className="erp-u-text-compact erp-u-muted">
                   <p>
                     보낸사람: {selected.from_name || selected.from_address || "-"}
                     {selected.from_name && selected.from_address ? ` <${selected.from_address}>` : ""}
@@ -244,7 +244,7 @@ export default async function MailPage({
               </div>
 
               {attachmentLinks.length > 0 && (
-                <div className="mb-3 flex flex-wrap gap-2">
+                <div className="erp-u-mb-12 erp-u-flex erp-u-wrap erp-u-gap-8">
                   {attachmentLinks.map((att) => (
                     <MailAttachmentChip
                       key={att.id}
