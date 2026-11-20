@@ -43,6 +43,7 @@ import { useGridCheckboxWidth, useThemeFeatures } from "@/lib/erp-theme-features
 import { visibleColumnCount } from "@/lib/grid-columns";
 import { GridGroupHeaderRow } from "@/components/grid/group-header-row";
 import { GridRowLegend } from "@/components/grid/row-legend";
+import { orderSelectionChips } from "@/lib/order-selection-chips";
 
 // 매출(sales-grid-table.tsx)과 같은 이유로 계정별로 끌 수 있는 칸만
 // 여기 올린다 — 날짜/공급처/품목명/수량/금액 같은 핵심 칸은 빼서 못
@@ -284,10 +285,21 @@ export function PurchaseGridTable({
         dateLabel: activeRow.date
           ? formatKstDate(activeRow.date)
           : "-",
+        ...orderSelectionChips({
+          kindLabel: activeRow.kind === "payment" ? "지급" : "매입",
+          kindTone: activeRow.kind === "payment" ? "ok" : "info",
+          taxType: activeRow.taxType,
+          paymentStatus: activeRow.paymentStatus,
+          paymentLabels: { paid: "지급완료", partial: "일부지급", unpaid: "미지급" },
+          skipPayment: activeRow.kind === "payment",
+          invoiceLabel: activeRow.invoiceReceived ? "계산서 수취" : null,
+          isCarryover: activeRow.isCarryover,
+        }),
         meta: [
-          { label: "구분", value: activeRow.kind === "payment" ? "지급" : "매입" },
           ...(activeRow.docNo != null ? [{ label: "전표번호", value: String(activeRow.docNo) }] : []),
           ...(activeRow.authorName ? [{ label: "담당", value: activeRow.authorName }] : []),
+          ...(activeRow.deliveryMethod ? [{ label: "입고방법", value: activeRow.deliveryMethod }] : []),
+          ...(activeRow.evidenceType ? [{ label: "증빙유형", value: activeRow.evidenceType }] : []),
           ...(activeRow.remark ? [{ label: "비고", value: activeRow.remark }] : []),
         ],
         detailHref: activeRow.orderId ? `/purchases/${activeRow.orderId}${backParam ? `?back=${backParam}` : ""}` : undefined,

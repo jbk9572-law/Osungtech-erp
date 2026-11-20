@@ -38,6 +38,7 @@ import { useGridCheckboxWidth, useThemeFeatures } from "@/lib/erp-theme-features
 import { visibleColumnCount } from "@/lib/grid-columns";
 import { GridGroupHeaderRow } from "@/components/grid/group-header-row";
 import { GridRowLegend } from "@/components/grid/row-legend";
+import { salesRowChips } from "@/components/grid/sales-row-chips";
 
 // 핵심 칸(체크박스/날짜/거래처/품목/수량/공급가액/세액/작업)은 끌 수
 // 없게 여기 안 넣는다 — 나머지만 "컬럼 설정"에서 계정별로 켜고 끈다.
@@ -297,14 +298,13 @@ export function SalesGridTable({
           ? formatKstDate(activeRow.date)
           : "-",
         isReturn: activeRow.isReturn,
+        ...salesRowChips(activeRow),
         meta: [
-          { label: "구분", value: activeRow.kind === "collection" ? "수금" : activeRow.isReturn ? "반품" : activeRow.isSample ? "샘플" : "매출" },
-          ...(activeRow.docNo != null ? [{ label: "전표번호", value: String(activeRow.docNo) }] : []),
-          ...(activeRow.authorName ? [{ label: "담당", value: activeRow.authorName }] : []),
+          ...(activeRow.docNo != null ? [{ label: "전표번호", value: String(activeRow.docNo) }] : []), ...(activeRow.authorName ? [{ label: "담당", value: activeRow.authorName }] : []),
+          ...(activeRow.deliveryMethod ? [{ label: "배송방법", value: activeRow.deliveryMethod }] : []), ...(activeRow.evidenceType ? [{ label: "증빙유형", value: activeRow.evidenceType }] : []),
           ...(activeRow.remark ? [{ label: "비고", value: activeRow.remark }] : []),
         ],
-        detailHref: activeRow.orderId ? `/sales/${activeRow.orderId}${backParam ? `?back=${backParam}` : ""}` : undefined,
-        printHref: activeRow.orderId && activeRow.kind === "sale" ? `/sales/${activeRow.orderId}/print` : undefined,
+        detailHref: activeRow.orderId ? `/sales/${activeRow.orderId}${backParam ? `?back=${backParam}` : ""}` : undefined, printHref: activeRow.orderId && activeRow.kind === "sale" ? `/sales/${activeRow.orderId}/print` : undefined,
         items:
           activeRow.items ??
           (activeRow.kind === "sale"

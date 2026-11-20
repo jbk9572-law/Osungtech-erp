@@ -3540,7 +3540,8 @@ form.erp-field-grid {
   background: currentColor;
 }
 
-/* 선택 전표 상세 — 목록 오른쪽 고정 패널(OrderSidePanel). 표시 여부는 테마 토큰. */
+/* 선택 전표 상세 — 목록 오른쪽 고정 패널(OrderSidePanel · DetailSideShell). 표시 여부는 테마 토큰.
+   모양: 윗줄 강조색(상태에 따라 파랑/초록/노랑/빨강, data-tone) → 제목+색 칩 → 키값 → 구역(왼쪽 색 막대 제목) → 합계 상자 → 버튼. */
 .erp-master-detail {
   display: flex;
   align-items: flex-start;
@@ -3551,62 +3552,117 @@ form.erp-field-grid {
   min-width: 0;
 }
 .erp-detail-side {
+  --erp-side-accent: var(--erp-primary);
   display: var(--erp-detail-side-display);
   flex-direction: column;
-  flex: 0 0 320px;
-  width: 320px;
+  flex: 0 0 340px;
+  width: 340px;
   position: sticky;
   top: 0;
   max-height: 80vh;
   overflow: auto;
   background: var(--erp-panel);
   border: 1px solid var(--erp-border-strong);
+  border-top: 3px solid var(--erp-side-accent);
   border-radius: var(--erp-radius-2xl, 0);
   font-size: var(--erp-font-base);
+}
+.erp-detail-side[data-tone="danger"] {
+  --erp-side-accent: var(--erp-danger);
+}
+.erp-detail-side[data-tone="warn"] {
+  --erp-side-accent: var(--erp-warning);
+}
+.erp-detail-side[data-tone="success"] {
+  --erp-side-accent: var(--erp-success);
 }
 .erp-detail-side-empty {
   margin: 0;
   padding: var(--erp-space-5);
   color: var(--erp-text-muted);
 }
-.erp-detail-side-head {
+.erp-detail-side-hero {
   display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: var(--erp-space-3);
-  padding: var(--erp-space-4) var(--erp-space-4) var(--erp-space-2);
+  flex-direction: column;
+  gap: var(--erp-space-1);
+  padding: var(--erp-space-4);
+  background: var(--erp-bg-subtle);
+  border-bottom: 1px solid var(--erp-divider);
 }
-.erp-detail-side-head span {
+.erp-detail-side-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--erp-space-1);
+}
+.erp-detail-side-title {
+  font-size: var(--erp-font-lg);
+  font-weight: 800;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.erp-detail-side-date {
   color: var(--erp-text-muted);
   font-variant-numeric: tabular-nums;
 }
 .erp-detail-side-kv {
   margin: 0;
-  padding: 0 var(--erp-space-4) var(--erp-space-3);
+  padding: var(--erp-space-2) var(--erp-space-4);
   border-bottom: 1px solid var(--erp-divider);
 }
 .erp-detail-side-kv > div {
   display: grid;
-  grid-template-columns: 64px minmax(0, 1fr);
-  padding: 3px 0;
+  grid-template-columns: 72px minmax(0, 1fr);
+  padding: var(--erp-space-1) 0;
+}
+.erp-detail-side-kv > div + div {
+  border-top: 1px dashed var(--erp-divider);
 }
 .erp-detail-side-kv dt {
   color: var(--erp-text-muted);
+  font-size: var(--erp-font-sm);
 }
 .erp-detail-side-kv dd {
   margin: 0;
   font-weight: 600;
   overflow-wrap: anywhere;
 }
-.erp-detail-side-items {
-  padding: var(--erp-space-2) var(--erp-space-4);
+/* 구역(품목내역·미결제 전표·창고별 재고 등) — 제목 앞에 강조색 막대 */
+.erp-detail-side-sec {
+  padding: var(--erp-space-3) var(--erp-space-4) var(--erp-space-2);
 }
+.erp-detail-side-sec h4 {
+  display: flex;
+  align-items: baseline;
+  gap: var(--erp-space-2);
+  margin: 0 0 var(--erp-space-2);
+  padding-left: var(--erp-space-2);
+  border-left: 3px solid var(--erp-side-accent);
+  font-size: var(--erp-font-md);
+  font-weight: 800;
+}
+.erp-detail-side-sec h4 em {
+  color: var(--erp-text-muted);
+  font-size: var(--erp-font-sm);
+  font-style: normal;
+  font-weight: 500;
+}
+/* 품목 한 줄 — 옅은 카드로 줄마다 구분 */
 .erp-detail-side-item {
-  padding: var(--erp-space-2) 0;
-  border-bottom: 1px solid var(--erp-divider);
+  margin-bottom: var(--erp-space-1);
+  padding: var(--erp-space-2) var(--erp-space-3);
+  background: var(--erp-bg-subtle);
+  border-left: 2px solid var(--erp-border-strong);
+  border-radius: var(--erp-radius-lg, 0);
+}
+.erp-detail-side-item-name {
+  font-weight: 700;
 }
 .erp-detail-side-item-name span {
   color: var(--erp-text-muted);
+  font-weight: 500;
+}
+.erp-detail-side-lot {
+  margin-left: var(--erp-space-1);
 }
 .erp-detail-side-item-num {
   display: flex;
@@ -3619,10 +3675,17 @@ form.erp-field-grid {
 .erp-detail-side-item-num b {
   color: var(--erp-text);
 }
+.erp-detail-side-item-note {
+  margin-top: 2px;
+  color: var(--erp-text-muted);
+  font-size: var(--erp-font-sm);
+}
+/* 합계 상자 — 색을 넣어 숫자 묶음이 한눈에 보이게, 합계는 강조색 */
 .erp-detail-side-total {
   margin: var(--erp-space-2) var(--erp-space-4);
   padding: var(--erp-space-3);
-  background: var(--erp-bg-subtle);
+  background: var(--erp-info-bg);
+  border: 1px solid var(--erp-divider);
   border-radius: var(--erp-radius-lg, 0);
   font-variant-numeric: tabular-nums;
 }
@@ -3635,6 +3698,7 @@ form.erp-field-grid {
   margin-top: var(--erp-space-1);
   padding-top: var(--erp-space-1);
   border-top: 1px solid var(--erp-divider);
+  color: var(--erp-side-accent);
   font-weight: 800;
   font-size: var(--erp-font-lg);
 }
@@ -3643,27 +3707,11 @@ form.erp-field-grid {
   gap: var(--erp-space-2);
   padding: var(--erp-space-2) var(--erp-space-4) var(--erp-space-4);
 }
-/* 목록 탭(erp-date-preset-btn) 안의 건수 — 테마 기능 denseLists */
-.erp-date-preset-count {
-  margin-left: var(--erp-space-1);
-  font-variant-numeric: tabular-nums;
-  opacity: 0.75;
+.erp-detail-side-actions .erp-btn {
+  flex: 1 1 0;
+  justify-content: center;
 }
-/* 전자결재 목록: 지금 내 승인을 기다리는 줄은 왼쪽 띠로 구분 */
-.erp-split-list-row.is-my-turn {
-  box-shadow: inset 3px 0 0 var(--erp-warning);
-}
-
-/* 오른쪽 패널의 구역(미수 전표·창고별 재고 등)과 바로가기 — DetailSideShell */
-.erp-detail-side-sec {
-  padding: var(--erp-space-2) var(--erp-space-4);
-}
-.erp-detail-side-sec h4 {
-  margin: 0 0 var(--erp-space-1);
-  color: var(--erp-text-muted);
-  font-size: var(--erp-font-sm);
-  font-weight: 700;
-}
+/* 목록형 구역의 줄(미결제 전표·창고별 재고·최근 입출고)과 바로가기 — DetailSideShell */
 .erp-detail-side-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto;
@@ -3680,9 +3728,11 @@ form.erp-field-grid {
 }
 .erp-detail-side-row.is-danger .erp-detail-side-mid {
   color: var(--erp-danger);
+  font-weight: 700;
 }
 .erp-detail-side-row.is-warn .erp-detail-side-mid {
   color: var(--erp-warning);
+  font-weight: 700;
 }
 .erp-detail-side-note {
   margin: 0;
