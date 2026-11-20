@@ -441,6 +441,9 @@
      않게 했다(디자인 캔버스로 반복 다듬은 결과 — 큰 패널/작은
      행(카드)/버튼/말풍선 네 가지 역할마다 모서리 반경을 다르게 둬서
      전부 똑같은 반경 하나를 쓰던 것보다 위계가 또렷하다). */
+  /* B형 3분할 칸 사이 간격/겹침 — 모던 테마는 간격 0 + 테두리 1px 겹침(한 덩어리 띠), 클래식은 떨어진 카드 */
+  --erp-split3-gap: 10px;
+  --erp-split3-overlap: 0px;
   --erp-comm-radius: 16px;
   --erp-comm-radius-row: 11px;
   --erp-comm-radius-pill: 9px;
@@ -654,7 +657,9 @@
   --erp-radius-circle: 50%;
   --erp-radius-pill: 999px;
   /* 그룹웨어(할일·메일·공지·게시판) B형 — 시안은 평평한 띠/행(둥근 떠 있는 카드 아님). 말풍선(메신저)은 그대로. */
-  --erp-comm-radius: var(--erp-radius-xl);
+  --erp-split3-gap: 0px;
+  --erp-split3-overlap: 1px;
+  --erp-comm-radius: 0;
   --erp-comm-radius-row: 0;
   --erp-comm-radius-pill: var(--erp-radius-md);
   --erp-comm-shadow: none;
@@ -4072,10 +4077,16 @@ a.erp-detail-tab:hover:not(.active) {
 .erp-split3-shell {
   display: grid;
   grid-template-columns: minmax(140px, 0.2fr) minmax(200px, 0.2fr) minmax(0, 0.6fr);
-  gap: 10px;
+  gap: var(--erp-split3-gap);
   align-items: stretch;
   min-height: 0;
   flex: 1;
+}
+
+@media (min-width: 769px) {
+  .erp-split3-shell > * + * {
+    margin-left: calc(-1 * var(--erp-split3-overlap));
+  }
 }
 
 .erp-cat-sidebar {

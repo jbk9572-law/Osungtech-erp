@@ -4,6 +4,7 @@ import { attachFormulaRows } from "@/lib/item-formulas";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
+import { TodoCompleteButton } from "@/components/todo-complete-button";
 import { DeleteButton } from "@/components/delete-button";
 import { TodoForm, type TodoInitialItem } from "@/components/todo-form";
 import { PaperCalcNavLink } from "@/modules/paper-calc/ui";
@@ -331,7 +332,8 @@ export async function TodoDetailPanel({ id, mode = "edit" }: { id: string; mode?
             )}
             {mode === "view" && allowManage ? (
               <div className="erp-toolbar erp-u-mt-12">
-                <Link href={`/todos/${row.id}`} className="erp-btn erp-btn-primary">
+                <TodoCompleteButton id={row.id} done={row.done} />
+                <Link href={`/todos/${row.id}`} className="erp-btn">
                   수정
                 </Link>
                 <DeleteButton action={deleteTodo} id={row.id} confirmMessage="이 할 일을 삭제하시겠습니까?" />

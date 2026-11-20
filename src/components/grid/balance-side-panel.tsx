@@ -59,12 +59,17 @@ export function BalanceSidePanel({
             ]
           : [{ label: "결제조건", value: loading ? "…" : (data?.paymentTerms ?? "-") }]),
       ],
-      totals: [
-        { label: totalLabel, value: formatNumber(row.total) },
-        { label: paidLabel, value: formatNumber(row.paid) },
-        { label: kind === "customer" ? "미수 잔액" : "미지급 잔액", value: formatNumber(row.balance), tone: row.balance > 0 ? "danger" : undefined, strong: true },
-        ...(profile ? [{ label: "최근 거래", value: profile.lastOrderDate ?? "-", strong: true }] : []),
-      ],
+      totals: profile
+        ? [
+            { label: kind === "customer" ? "미수 잔액" : "미지급 잔액", value: formatNumber(row.balance), tone: row.balance > 0 ? "danger" : undefined },
+            { label: totalLabel + " 누계", value: formatNumber(row.total) },
+            { label: "최근 거래", value: profile.lastOrderDate ?? "-", strong: true },
+          ]
+        : [
+            { label: totalLabel, value: formatNumber(row.total) },
+            { label: paidLabel, value: formatNumber(row.paid) },
+            { label: kind === "customer" ? "미수 잔액" : "미지급 잔액", value: formatNumber(row.balance), tone: row.balance > 0 ? "danger" : undefined, strong: true },
+          ],
       sections: [
         {
           heading: "미결제 전표 (오래된 순)",
