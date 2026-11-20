@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { createRowsHistory } from "@/lib/rows-history";
 
 // 매출/매입 등록, 보관위치 일괄등록처럼 "빈 줄 하나로 시작 → 품목 검색/
 // 할일·입고 가져오기로 채워진 줄을 추가/중간삽입/삭제"하는 그리드 폼
@@ -10,9 +11,63 @@ import { useState } from "react";
 export function useKeyedRows<Row extends { key: number }>(
   initialRows: Row[],
   makeBlankRow: (key: number) => Row,
+  // idleUndoShortcut: 줄 삭제 버튼을 마우스로 누르는 등으로 포커스가 아무 데도 없을 때(document.body)도 Ctrl+Z / Ctrl+Y를 받는다.
+  // 한 화면에 줄 입력 폼이 둘 이상 동시에 떠 있으면 둘 다 반응하므로, 폼이 하나뿐인 전표 등록(매출/매입)만 켠다.
+  opts: { idleUndoShortcut?: boolean } = {},
 ) {
   const [rows, setRows] = useState<Row[]>(initialRows);
   const [nextKey, setNextKey] = useState(initialRows.length);
+
+  // 되돌리기/다시 실행(Ctrl+Z / Ctrl+Y) — 줄 상태가 어떤 경로로 바뀌든(setRows 직접 호출 포함) 바뀐 뒤에 기록한다.
+  // 폼마다 setRows를 여기저기서 직접 부르므로, 호출부를 일일이 고치지 않고 rows가 바뀐 것을 보고 쌓는다.
+  const [history] = useState(() => createRowsHistory<Row[]>());
+  const committed = useRef<Row[]>(initialRows);
+  const restoring = useRef(false);
+  useEffect(() => {
+    if (rows === committed.current) return;
+    if (restoring.current) {
+      // 되돌리기/다시 실행으로 바뀐 것 — 새 기록을 쌓지 않는다.
+      restoring.current = false;
+      committed.current = rows;
+      return;
+    }
+    const prev = committed.current;
+    const structural = prev.length !== rows.length || prev.some((r, i) => r.key !== rows[i]?.key);
+    history.record(prev, structural);
+    committed.current = rows;
+  }, [rows, history]);
+
+  /** 한 단계 되돌린다. 되돌릴 것이 없으면 false. */
+  const undoRows = useCallback((): boolean => {
+    const prev = history.undo(committed.current);
+    if (!prev) return false;
+    restoring.current = true;
+    setRows(prev);
+    return true;
+  }, [history]);
+
+  const redoRows = useCallback((): boolean => {
+    const next = history.redo(committed.current);
+    if (!next) return false;
+    restoring.current = true;
+    setRows(next);
+    return true;
+  }, [history]);
+
+  const idleUndo = opts.idleUndoShortcut ?? false;
+  useEffect(() => {
+    if (!idleUndo) return;
+    const onKey = (e: KeyboardEvent) => {
+      // 표 안에서 눌렀다면 표의 키 처리(focusGridRowShortcuts)가 이미 처리하고 preventDefault 했다 — 그 처리로 포커스가 사라져
+      // activeElement가 body가 된 뒤라도 여기서 한 번 더 되돌리지 않게 defaultPrevented를 먼저 본다.
+      if (e.defaultPrevented || !(e.ctrlKey || e.metaKey) || e.altKey || document.activeElement !== document.body) return;
+      const k = e.key.toLowerCase();
+      const handled = k === "z" && !e.shiftKey ? undoRows() : k === "y" || (k === "z" && e.shiftKey) ? redoRows() : false;
+      if (handled) e.preventDefault();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [idleUndo, undoRows, redoRows]);
 
   function addRow() {
     setRows((prev) => [...prev, makeBlankRow(nextKey)]);
@@ -61,5 +116,11 @@ export function useKeyedRows<Row extends { key: number }>(
     setNextKey((k) => k + 1);
   }
 
-  return { rows, setRows, nextKey, addRow, insertRowAfter, removeRow, addFilledRow, addFilledRows, resetToBlank };
+  // 저장 성공 뒤 폼을 비울 때(resetToBlank)는 이전 입력을 되돌릴 일이 없으므로 기록도 비운다.
+  const resetToBlankAndClear = () => {
+    resetToBlank();
+    history.clear();
+  };
+
+  return { rows, setRows, nextKey, addRow, insertRowAfter, removeRow, addFilledRow, addFilledRows, resetToBlank: resetToBlankAndClear, undoRows, redoRows };
 }

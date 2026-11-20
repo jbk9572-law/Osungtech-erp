@@ -67,6 +67,11 @@ export function NumberInput({
   if (!focused && value !== prevValue) {
     setPrevValue(value);
     setText(formatNumber(value));
+  } else if (focused && !text.trim().startsWith("=") && parseNumber(text) !== value) {
+    // 입력 중인데 바깥에서 값이 바뀐 경우(Ctrl+Z 되돌리기 등) — 지금 보이는 글자가 만드는 값과 부모의 값이 다르면 보이는 글자도 새 값에 맞춘다.
+    // (내가 친 글자는 곧바로 부모 값이 되므로 평소 입력에서는 두 값이 항상 같다. prevValue는 입력 중에 갱신하지 않으므로 기준으로 쓸 수 없다.)
+    setPrevValue(value);
+    setText(formatNumber(value));
   }
 
   // 값과 맞는 식만 유효하다 — 식을 지우지 않고 값만 바뀐 경우(상품 선택으로 단가 자동입력 등)에 옛 식이 남아 보이지 않게.

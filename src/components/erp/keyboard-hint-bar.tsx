@@ -23,6 +23,7 @@ export const ORDER_GRID_KEY_HINTS = [
   { key: "Ctrl+F", label: "품목 검색" },
   { key: "Ctrl+D", label: "위 값으로 채우기" },
   { key: "Ctrl+Del", label: "줄 삭제" },
+  { key: "Ctrl+Z", label: "되돌리기 (Ctrl+Y 다시)" },
   { key: "F7", label: "저장" },
   { key: "Esc", label: "저장 후 닫기" },
 ];

@@ -354,7 +354,7 @@ export function NewPurchaseForm({
       manualSalePrice: false,
     };
   }
-  const { rows, setRows, addRow, insertRowAfter, removeRow, addFilledRow, addFilledRows } = useKeyedRows<Row>(
+  const { rows, setRows, addRow, insertRowAfter, removeRow, addFilledRow, addFilledRows, undoRows, redoRows } = useKeyedRows<Row>(
     initial?.items.length
       ? initial.items.map((item, i) => ({
           key: i,
@@ -398,7 +398,7 @@ export function NewPurchaseForm({
             };
           })
         : [makeBlankRow(0)],
-    makeBlankRow,
+    makeBlankRow, { idleUndoShortcut: true },
   );
   // 이 폼에서 "빈 줄"의 기준 — 검색/가져오기로 채워진 줄(들)을 넣을 때
   // 아직 아무것도 안 고른 첫 줄이면 그 줄을 교체한다(quickAddProduct/
@@ -1358,7 +1358,7 @@ export function NewPurchaseForm({
               onKeyDown={(e) => {
                 focusSameColumnNextRow(e);
                 focusGridArrowNav(e);
-                focusGridRowShortcuts(e, { onAppendRow: appendRowIfFilled });
+                focusGridRowShortcuts(e, { onAppendRow: appendRowIfFilled, onUndo: undoRows, onRedo: redoRows });
               }}
             >
               <PaperCalcGridRows pc={pc} dashAfterQuantity={alsoCreateSale} dashAfterUnit={alsoCreateSale} />

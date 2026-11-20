@@ -341,6 +341,7 @@
   --erp-grid-head-weight: 800;
   --erp-grid-head-fg: #182338;
   --erp-grid-zebra-bg: #fafbfc;
+  --erp-grid-body-bg: transparent;
   --erp-row-bar-w: 3px;
   --erp-badge-radius: 999px;
   --erp-badge-px: 9px;
@@ -565,6 +566,7 @@
   --erp-grid-row-h: 28px;
   --erp-grid-cell-px: 8px;
   --erp-grid-zebra-bg: #f8f9fc;
+  --erp-grid-body-bg: var(--erp-panel);
   --erp-control-h-cell: 28px;
   --erp-control-h-md: 30px;
   --erp-control-h-sm: 26px;
@@ -2577,6 +2579,9 @@ form.erp-field-grid {
 
 /* ── 6. Data grid ──────────────────────────────────────────── */
 .erp-grid-wrap {
+  /* 표 본문 바탕 — 칸이 투명하면 표 뒤의 페이지 색이 비치는데 고정(sticky) 칸은 불투명이라 둘이 달라 보인다.
+     테마가 --erp-grid-body-bg를 불투명 색으로 주면 표 전체가 같은 바탕 위에 놓인다(모던 그리드). 클래식은 transparent(기존 모양). */
+  background: var(--erp-grid-body-bg, transparent);
   border: 1px solid var(--erp-border-strong);
   border-radius: var(--erp-radius-2xl, 0);
   overflow: auto;
@@ -2704,16 +2709,21 @@ form.erp-field-grid {
    자꾸 놓친다 — 한 줄씩 걸러 옅게 배경을 넣어 가로 방향 가독성을 더한다.
    특이도가 hover/selected 규칙과 같아서(:nth-child도 가상클래스),
    아래쪽에 나오는 hover/selected가 소스 순서상 항상 우선한다. */
+/* --erp-row-bg: 행의 현재 배경색을 고정(sticky) 칸에도 알려 주는 변수 — grid-sticky.ts의 stickyCellStyle이 읽는다.
+   행 배경을 바꾸는 규칙(줄무늬·hover·selected·master-active)은 반드시 이 변수도 같이 바꿔야 고정 칸이 혼자 흰색으로 남지 않는다. */
 .erp-grid tbody tr:nth-child(even) {
   background: var(--erp-grid-zebra-bg);
+  --erp-row-bg: var(--erp-grid-zebra-bg);
 }
 
 .erp-grid tbody tr:hover {
   background: var(--erp-hover);
+  --erp-row-bg: var(--erp-hover);
 }
 
 .erp-grid tbody tr.selected {
   background: var(--erp-selected);
+  --erp-row-bg: var(--erp-selected);
   font-weight: 600;
   /* border 대신 inset box-shadow를 쓴다 — border-collapse: collapse인
      표에서 tr에 직접 border를 주면 인접 행과 폭을 다투며 레이아웃이
@@ -2742,6 +2752,7 @@ form.erp-field-grid {
    과는 별개 상태라 다른 톤을 쓴다. */
 .erp-grid tbody tr.master-active {
   background: var(--erp-info-bg);
+  --erp-row-bg: var(--erp-info-bg);
   box-shadow: inset 3px 0 0 var(--erp-primary);
 }
 
