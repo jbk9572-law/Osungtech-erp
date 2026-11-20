@@ -28,7 +28,12 @@ for (const s of SCREENS) {
     await page.waitForLoadState("domcontentloaded");
     if (!new URL(page.url()).pathname.startsWith(s.path)) test.skip(true, "이 회사는 이 기능을 꺼 두어 다른 화면으로 이동했다");
     // 제목줄이 보이고, 앱 오류 화면("일시적인 오류로…")이 아니다.
-    await expect(page.locator("h1.erp-h1").first()).toBeVisible({ timeout: 30_000 });
+    const title = page.locator("h1.erp-h1").first();
+    if (!(await title.isVisible({ timeout: 30_000 }).catch(() => false))) {
+      // 실패 원인을 로그에서 바로 볼 수 있게 화면에 보이는 글자 일부를 남긴다.
+      const seen = (await page.locator("body").innerText().catch(() => "")).replace(/\s+/g, " ").slice(0, 300);
+      throw new Error(`제목줄(h1.erp-h1)이 없다. url=${page.url()} 화면 글자: ${seen}`);
+    }
     await expect(page.getByText("일시적인 오류로 화면을 불러오지 못했습니다")).toHaveCount(0);
     if (s.table) await expect(page.locator("table.erp-grid, .erp-grid-empty, .erp-row-card-list").first()).toBeVisible();
   });

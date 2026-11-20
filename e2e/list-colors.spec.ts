@@ -14,6 +14,8 @@ test.describe("목록 행 구분", () => {
     const future = kstDate(3);
     const lastMonth = new Date(Date.now() + 9 * 3600 * 1000);
     lastMonth.setUTCDate(0); // 지난달 말일
+    // 재고가 모자라면 매출이 막히므로(음수 재고 금지) 먼저 넉넉히 입고해 둔다.
+    await createPurchase(api, { date: today, memo: `${tag} 재고`, quantity: 50 });
     await createSale(api, { date: today, memo: `${tag} 오늘` });
     await createSale(api, { date: future, memo: `${tag} 예약` });
     await createSale(api, { date: lastMonth.toISOString().slice(0, 10), memo: `${tag} 이월`, carryover: true });

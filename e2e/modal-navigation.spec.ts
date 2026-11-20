@@ -48,7 +48,8 @@ test("모달이 열린 채로 상단 탭을 눌러 이동하면 모달이 남지
   await page.goto("/sales");
   await page.locator('a[href="/sales/new"]').first().click();
   await expect(page.locator(".erp-modal[role='dialog']")).toBeVisible({ timeout: 15000 });
-  await page.locator(".erp-titlebar-home").click();
+  // 모던의 모달은 화면 전체를 덮어 마우스로는 탭을 못 누른다 — 링크 이동(키보드·뒤로가기와 같은 경로)만 시험한다.
+  await page.locator(".erp-titlebar-home").evaluate((el) => (el as HTMLElement).click());
   await expect(page).toHaveURL(/\/dashboard/, { timeout: 20000 });
   await noModal(page);
 });

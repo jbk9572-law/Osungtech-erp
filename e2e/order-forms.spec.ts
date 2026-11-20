@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { createSandboxApi, type SandboxApi } from "./support/api";
-import { cleanupTagged, uniqueTag } from "./support/orders";
+import { kstDate } from "./support/api";
+import { cleanupTagged, createPurchase, uniqueTag } from "./support/orders";
 
 // 매출/매입 "신규 등록 화면"(품목 입력 표, 거래처 검색, 저장)을 실제로 사람처럼 쓰는
 // 테스트 — 두 폼은 코드의 절반가량이 복사본이라, 공용 부품으로 합치는 작업이 폼을
@@ -17,6 +18,8 @@ test.describe("신규 등록 화면 (실제 입력)", () => {
   });
 
   test("매출 등록: 거래처·품목·수량을 입력하고 저장하면 매출이 생성된다", async ({ page }) => {
+    // 재고가 모자라면 매출이 막히므로(음수 재고 금지) 먼저 입고해 둔다.
+    await createPurchase(api, { date: kstDate(0), memo: `${tag} 재고`, quantity: 20 });
     await page.goto("/sales/new");
     // 클래식 "매 출 전 표" / 모던 "매출전표"
     await expect(page.getByText(/매\s*출\s*전\s*표/).first()).toBeVisible();
