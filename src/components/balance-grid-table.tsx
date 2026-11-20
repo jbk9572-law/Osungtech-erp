@@ -6,6 +6,7 @@ import { ClickableRow } from "@/components/clickable-row";
 import { formatNumber } from "@/lib/format-number";
 import { GridBadge } from "@/components/grid/badge";
 import { GridGroupHeaderRow } from "@/components/grid/group-header-row";
+import { RowNoCell, RowNoHead } from "@/components/grid/row-no-cell";
 import { useSideSplit, useThemeFeatures } from "@/lib/erp-theme-features";
 import { BalanceSidePanel } from "@/components/grid/balance-side-panel";
 
@@ -183,7 +184,7 @@ export function BalanceGridTable({
             {/* 묶음 머리글(테마 기능) — 매출/수금/잔액 세 칸을 "금액(원)"으로 묶는다. 앞: [No]+이름, 뒤: [연체]+상세 */}
             <GridGroupHeaderRow before={(rowNumbers ? 1 : 0) + 1} span={3} after={(showAging ? 1 : 0) + 1} label="금액(원)" />
             <tr>
-              {rowNumbers && <th className="erp-col-no"><span className="erp-row-no">No</span></th>}
+              <RowNoHead />
               {sortableHeader(partyLabel, "name")}
               {sortableHeader(totalLabel, "total", "num")}
               {sortableHeader(paidLabel, "paid", "num")}
@@ -200,11 +201,7 @@ export function BalanceGridTable({
                 className={sideSplit && activeId === b.id ? "master-active" : undefined}
                 onActivate={sideSplit ? () => setActiveId(b.id) : undefined}
               >
-                {rowNumbers && (
-                  <td className="erp-col-no">
-                    <span className="erp-row-no">{i + 1}</span>
-                  </td>
-                )}
+                <RowNoCell n={i + 1} />
                 <td>{b.name}</td>
                 <td className="num">{formatNumber(b.total)}</td>
                 <td className="num">{formatNumber(b.paid)}</td>

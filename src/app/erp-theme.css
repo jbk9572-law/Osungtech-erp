@@ -3632,6 +3632,17 @@ form.erp-field-grid {
   gap: var(--erp-space-2);
   padding: var(--erp-space-2) var(--erp-space-4) var(--erp-space-4);
 }
+/* 목록 탭(erp-date-preset-btn) 안의 건수 — 테마 기능 denseLists */
+.erp-date-preset-count {
+  margin-left: var(--erp-space-1);
+  font-variant-numeric: tabular-nums;
+  opacity: 0.75;
+}
+/* 전자결재 목록: 지금 내 승인을 기다리는 줄은 왼쪽 띠로 구분 */
+.erp-split-list-row.is-my-turn {
+  box-shadow: inset 3px 0 0 var(--erp-warning);
+}
+
 /* 오른쪽 패널의 구역(미수 전표·창고별 재고 등)과 바로가기 — DetailSideShell */
 .erp-detail-side-sec {
   padding: var(--erp-space-2) var(--erp-space-4);

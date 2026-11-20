@@ -5,6 +5,11 @@ import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ListPageHeader, FormSection } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
 import { GridBadge } from "@/components/grid/badge";
+import { KpiStripFrame } from "@/components/erp/kpi-strip-frame";
+import { RowNoCell, RowNoHead } from "@/components/grid/row-no-cell";
+import { DetailSideShell } from "@/components/grid/detail-side-shell";
+import { getTenantTheme } from "@/lib/tenant-theme";
+import { getThemeFeatures } from "@/lib/erp-theme-config";
 import { ClockInOutPanel } from "@/components/clock-in-out-panel";
 import { LeaveRequestForm } from "@/components/leave-request-form";
 import { AttendanceCorrectionForm } from "@/components/attendance-correction-form";
@@ -40,6 +45,8 @@ export default async function AttendancePage() {
   await requireFeatureEnabled(supabase, "hr");
   const user = await getUser();
   const { isAdmin } = await getCurrentActor(supabase);
+  // 테마 기능(오른쪽 연차 패널) — 서버에서 이 회사 테마를 읽어 그 기능이 켜진 회사에서만 패널을 그린다.
+  const sidePanel = getThemeFeatures(await getTenantTheme(supabase)).listSidePanel;
   const today = todayKstStr();
   const year = Number(today.slice(0, 4));
   const week = getWeekRange(today);
@@ -182,6 +189,8 @@ export default async function AttendancePage() {
         결재선을 타므로, 진행 상황은 기안함에서도 확인할 수 있습니다.
       </PageGuide>
 
+      <div className={sidePanel ? "erp-master-detail" : undefined}>
+      <div className={sidePanel ? "erp-master-detail-main" : undefined}>
       <ClockInOutPanel
         clockedIn={!!todayRecord?.clock_in_at}
         clockedOut={!!todayRecord?.clock_out_at}
@@ -193,7 +202,8 @@ export default async function AttendancePage() {
         clockOutAction={clockOut}
       />
 
-      <div className="erp-kpi-row erp-u-mb-16">
+      <KpiStripFrame stackClassName="erp-u-mb-16">
+      <div className="erp-kpi-row">
         <div className="erp-home-panel erp-kpi-card">
           <div className="erp-kpi-label">{year}년 연차 총일수</div>
           <div className="erp-kpi-value">{formatNumber(totalDays)}일</div>
@@ -234,6 +244,7 @@ export default async function AttendancePage() {
           </div>
         </div>
       </div>
+      </KpiStripFrame>
 
       <FormSection tabLabel="휴가 신청">
         <LeaveRequestForm action={requestLeave} today={today} orgTree={orgTree} presets={presets} profileNameById={profileNameById} />
@@ -268,6 +279,7 @@ export default async function AttendancePage() {
               <table className="erp-grid">
                 <thead>
                   <tr>
+                    <RowNoHead />
                     <th>구성원</th>
                     <th className="num" style={{ width: 120 }}>
                       이번주 근무시간
@@ -276,10 +288,11 @@ export default async function AttendancePage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {teamWarnings.map(({ userId, hours }) => {
+                  {teamWarnings.map(({ userId, hours }, i) => {
                     const tone = weeklyHoursTone(hours);
                     return (
                       <tr key={userId}>
+                        <RowNoCell n={i + 1} />
                         <td>{profileNameById[userId] ?? "구성원"}</td>
                         <td className="num">{formatNumber(hours)}시간</td>
                         <td>
@@ -326,6 +339,7 @@ export default async function AttendancePage() {
               <table className="erp-grid">
                 <thead>
                   <tr>
+                    <RowNoHead />
                     <th style={{ width: 100 }}>신청자</th>
                     <th style={{ width: 200 }}>기간</th>
                     <th style={{ width: 90 }}>구분</th>
@@ -337,8 +351,9 @@ export default async function AttendancePage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {(pendingLeaves ?? []).map((l) => (
+                  {(pendingLeaves ?? []).map((l, i) => (
                     <tr key={l.id}>
+                      <RowNoCell n={i + 1} />
                       <td>{l.profiles?.full_name ?? "-"}</td>
                       <td>
                         {l.start_date.replaceAll("-", ".")} ~ {l.end_date.replaceAll("-", ".")}
@@ -408,6 +423,7 @@ export default async function AttendancePage() {
               <table className="erp-grid">
                 <thead>
                   <tr>
+                    <RowNoHead />
                     <th style={{ width: 200 }}>기간</th>
                     <th style={{ width: 90 }}>구분</th>
                     <th className="num" style={{ width: 80 }}>
@@ -419,10 +435,11 @@ export default async function AttendancePage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {(myLeaves ?? []).map((l) => {
+                  {(myLeaves ?? []).map((l, i) => {
                     const status = resolveStatusLabel(STATUS_LABEL, l.status);
                     return (
                       <tr key={l.id}>
+                        <RowNoCell n={i + 1} />
                         <td>
                           {l.start_date.replaceAll("-", ".")} ~ {l.end_date.replaceAll("-", ".")}
                         </td>
@@ -535,6 +552,7 @@ export default async function AttendancePage() {
               <table className="erp-grid">
                 <thead>
                   <tr>
+                    <RowNoHead />
                     <th style={{ width: 100 }}>날짜</th>
                     <th style={{ width: 110 }}>정정 출근</th>
                     <th style={{ width: 110 }}>정정 퇴근</th>
@@ -544,10 +562,11 @@ export default async function AttendancePage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {(myCorrections ?? []).map((c) => {
+                  {(myCorrections ?? []).map((c, i) => {
                     const status = resolveStatusLabel(STATUS_LABEL, c.status);
                     return (
                       <tr key={c.id}>
+                        <RowNoCell n={i + 1} />
                         <td>{c.work_date.replaceAll("-", ".")}</td>
                         <td>{fmtTime(c.requested_clock_in_at) ?? "-"}</td>
                         <td>{fmtTime(c.requested_clock_out_at) ?? "-"}</td>
@@ -637,6 +656,38 @@ export default async function AttendancePage() {
             </>
           )}
         </div>
+      </div>
+      </div>
+      {sidePanel && (
+        <DetailSideShell
+          ariaLabel="내 연차 현황"
+          emptyText=""
+          content={{
+            title: "내 연차 현황",
+            subtitle: `${year}년`,
+            totals: [
+              { label: "연차 총일수", value: `${formatNumber(totalDays)}일` },
+              { label: "사용(승인 기준)", value: `${formatNumber(usedThisYear)}일` },
+              { label: "잔여", value: `${formatNumber(remaining)}일`, tone: remaining < 0 ? "danger" : "success", strong: true },
+            ],
+            sections: [
+              {
+                heading: "진행 중인 휴가 신청",
+                rows: (myLeaves ?? [])
+                  .filter((l) => l.status === "pending")
+                  .slice(0, 5)
+                  .map((l) => ({
+                    left: l.start_date === l.end_date ? l.start_date.slice(5) : `${l.start_date.slice(5)} ~ ${l.end_date.slice(5)}`,
+                    mid: LEAVE_UNIT_LABEL[l.leave_unit as LeaveUnit] ?? l.leave_unit,
+                    right: `${formatNumber(Number(l.days))}일`,
+                  })),
+                emptyText: "진행 중인 신청이 없습니다.",
+              },
+            ],
+            links: [{ label: "전자결재 기안함", href: "/approvals" }],
+          }}
+        />
+      )}
       </div>
     </div>
   );

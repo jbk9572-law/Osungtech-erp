@@ -5,7 +5,7 @@ export type InvoiceFormChoice = "A" | "B" | "N" | "NB";
 /** 이 회사가 어떤 서식을 쓸 수 있는지 가르는 값 — 테마(tenants.theme)와 회사 식별자(tenants.slug). */
 export type InvoiceScope = { theme: string | null | undefined; slug: string | null | undefined };
 
-// 엔택스 복제형(A·B형)은 엔택스 서식을 쓰는 회사(지금은 오성테크)에만 보인다. 다른 회사는 전부 엘보닉스 A·B형이 기본이고, 엔택스 서식은 선택지로도 나오지 않는다.
+// 엔택스 복제형(A·B형)은 엔택스 서식을 쓰는 회사(지금은 오성테크)에만 보인다. 다른 회사에는 엔택스 서식이 선택지로도 나오지 않는다.
 // 새 회사가 엔택스 서식을 쓰게 되면 이 목록에만 slug를 추가한다.
 export const ENTAX_FORM_TENANT_SLUGS: readonly string[] = ["osungtech"];
 
@@ -14,13 +14,15 @@ const FORM_PARAM: Record<InvoiceFormChoice, "n" | "nb" | "a" | "b"> = { N: "n", 
 
 /**
  * 이 회사가 쓸 수 있는 서식 목록(선택지 순서).
- * - 오성테크(엔택스 서식을 쓰는 회사) 외 모든 회사: 엘보닉스 A형·B형(둘 다 2연식·전지) — 테마와 무관하게 기본
- * - 오성테크: 모던 그리드면 엘보닉스 A·B형 + 엔택스 B·A형, 클래식이면 엔택스 B·A형(예전 그대로)
+ * - 엘보닉스 A형·B형(둘 다 2연식·전지)은 모던 그리드 테마에서만 선택지로 나온다 — 클래식 화면에는 나오지 않는다.
+ * - 엔택스 B형·A형은 오성테크(엔택스 서식을 쓰는 회사)에서만 나온다.
+ * - 클래식 + 오성테크 아님: 고를 서식이 없어 인쇄가 막히지 않게 엘보닉스 A형 하나로 인쇄하고, 선택줄은 감춘다(아래 invoiceFormOptionGroup).
  */
 export function availableInvoiceForms(scope: InvoiceScope): InvoiceFormChoice[] {
   const isEntaxTenant = !!scope.slug && ENTAX_FORM_TENANT_SLUGS.includes(scope.slug);
-  if (!isEntaxTenant) return ["N", "NB"];
-  return getThemeFeatures(scope.theme).defaultInvoiceForm === "N" ? ["N", "NB", "B", "A"] : ["B", "A"];
+  const isModern = getThemeFeatures(scope.theme).defaultInvoiceForm === "N";
+  if (isModern) return isEntaxTenant ? ["N", "NB", "B", "A"] : ["N", "NB"];
+  return isEntaxTenant ? ["B", "A"] : ["N"];
 }
 
 // 명세표 인쇄 서식 고르기 — 주소의 ?form=n / a / b 가 이 회사가 쓸 수 있는 서식이면 그것(직원이 직접 고른 것)이 우선이고,

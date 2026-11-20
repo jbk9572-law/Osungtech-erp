@@ -7,10 +7,12 @@ const OTHER_MODERN = { theme: "grid-modern", slug: "acme" };
 const OTHER_CLASSIC = { theme: "classic-light", slug: "acme" };
 
 describe("availableInvoiceForms — 회사마다 보이는 서식이 다르다", () => {
-  it("오성테크 외 모든 회사는 테마와 무관하게 엘보닉스 A·B형(엔택스는 안 보임)", () => {
-    for (const s of [OTHER_MODERN, OTHER_CLASSIC, { theme: null, slug: null }]) {
-      expect(availableInvoiceForms(s)).toEqual(["N", "NB"]);
-    }
+  it("엘보닉스 A·B형은 모던 그리드에서만 선택지(엔택스는 안 보임)", () => {
+    expect(availableInvoiceForms(OTHER_MODERN)).toEqual(["N", "NB"]);
+  });
+  it("클래식 + 오성테크 아님은 선택지 없이 엘보닉스 A형 하나(인쇄가 막히지 않게)", () => {
+    expect(availableInvoiceForms(OTHER_CLASSIC)).toEqual(["N"]);
+    expect(availableInvoiceForms({ theme: null, slug: null })).toEqual(["N"]);
   });
   it("오성테크는 클래식이면 엔택스 B·A형, 모던이면 엘보닉스까지 4개", () => {
     expect(availableInvoiceForms(OSUNG_CLASSIC)).toEqual(["B", "A"]);
@@ -29,7 +31,8 @@ describe("resolveInvoiceForm", () => {
   });
   it("직접 고른 값은 그 회사가 쓸 수 있을 때만 따른다", () => {
     expect(resolveInvoiceForm("a", OSUNG_MODERN)).toBe("A");
-    expect(resolveInvoiceForm("nb", OTHER_CLASSIC)).toBe("NB");
+    expect(resolveInvoiceForm("nb", OTHER_MODERN)).toBe("NB");
+    expect(resolveInvoiceForm("nb", OTHER_CLASSIC)).toBe("N"); // 클래식 화면에는 엘보닉스 B형이 안 나온다
     expect(resolveInvoiceForm("a", OTHER_MODERN)).toBe("N"); // 주소를 직접 쳐도 다른 회사는 엔택스 서식이 안 나온다
     expect(resolveInvoiceForm("n", OSUNG_CLASSIC)).toBe("B"); // 오성테크 클래식은 엘보닉스형이 안 나온다
   });
@@ -46,8 +49,11 @@ describe("invoiceFormOptionGroup", () => {
     expect(invoiceFormParam("A")).toBe("a");
     expect(invoiceFormParam("B")).toBe("b");
   });
-  it("일반 회사는 엘보닉스 A·B형만", () => {
-    expect(invoiceFormOptionGroup("N", OTHER_CLASSIC)?.options.map((o) => o.label)).toEqual(["엘보닉스 A형", "엘보닉스 B형"]);
+  it("모던 그리드 일반 회사는 엘보닉스 A·B형만", () => {
+    expect(invoiceFormOptionGroup("N", OTHER_MODERN)?.options.map((o) => o.label)).toEqual(["엘보닉스 A형", "엘보닉스 B형"]);
+  });
+  it("클래식 일반 회사는 고를 게 없어 서식 줄 자체가 없다", () => {
+    expect(invoiceFormOptionGroup("N", OTHER_CLASSIC)).toBeNull();
   });
   it("오성테크 모던은 이름이 붙은 4개", () => {
     const g = invoiceFormOptionGroup("N", OSUNG_MODERN);
