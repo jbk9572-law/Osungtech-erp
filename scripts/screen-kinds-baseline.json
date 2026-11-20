@@ -21,10 +21,7 @@
     "components/purchase-grid-table.tsx",
     "components/sales-grid-table.tsx"
   ],
-  "trailingLink": [
-    "components/balance-grid-table.tsx",
-    "components/product-grid-table.tsx"
-  ],
+  "trailingLink": [],
   "split3NoFilter": [
     "components/erp/messenger-page.tsx"
   ]
