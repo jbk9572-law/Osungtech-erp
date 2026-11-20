@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { GridBadge, type BadgeTone } from "@/components/grid/badge";
+import { DateRangeSearchForm } from "@/components/erp/date-range-search-form";
 import { DateRangeQuickFilters } from "@/components/erp/date-range-quick-filters";
 import { getQuickDatePresets, getYearMonthButtons } from "@/lib/date-presets";
 import { matchesSearch } from "@/lib/search-match";
@@ -74,36 +74,7 @@ export default async function PurchaseRequestsPage({
     <>
       <DateRangeQuickFilters basePath="/purchase-requests" presets={presets} monthButtons={monthButtons} from={from} to={to} />
 
-      <form method="get" id="purchase-requests-search-form" className="erp-field-grid">
-        <div className="erp-field erp-span-2">
-          <label htmlFor="pr-search-from">시작일</label>
-          <input id="pr-search-from" type="date" name="from" defaultValue={from ?? ""} className="erp-input" />
-        </div>
-        <div className="erp-field erp-span-2">
-          <label htmlFor="pr-search-to">종료일</label>
-          <input id="pr-search-to" type="date" name="to" defaultValue={to ?? ""} className="erp-input" />
-        </div>
-        <div className="erp-field erp-span-4">
-          <label htmlFor="pr-search-q">공급처 / 작성자 / 메모 검색</label>
-          <input
-            id="pr-search-q"
-            type="text"
-            name="q"
-            autoComplete="off"
-            defaultValue={q ?? ""}
-            placeholder="공급처명, 작성자, 메모"
-            className="erp-input erp-u-w-full"
-          />
-        </div>
-        <button type="submit" className="erp-btn erp-btn-primary">
-          F5 조회
-        </button>
-        {(from || to || q || limitParam) && (
-          <Link href="/purchase-requests" className="erp-btn">
-            초기화
-          </Link>
-        )}
-      </form>
+      <DateRangeSearchForm formId="purchase-requests-search-form" idPrefix="pr" from={from} to={to} q={q} qLabel="공급처 / 작성자 / 메모 검색" qPlaceholder="공급처명, 작성자, 메모" resetHref="/purchase-requests" showReset={!!(from || to || q || limitParam)} />
     </>
   );
 
@@ -118,6 +89,7 @@ export default async function PurchaseRequestsPage({
       id: r.id,
       href: `/purchase-requests/${r.id}`,
       cells: [date, supplier, writer, formatNumber(total), <GridBadge key="s" tone={status.tone}>{status.label}</GridBadge>, r.converted_purchase_order_id ? "발주전환" : "-"],
+        values: [r.request_date, supplier, writer, total, status.label, r.converted_purchase_order_id ? "발주전환" : ""],
       card: {
         title: (
           <>

@@ -5274,6 +5274,43 @@ a.erp-detail-tab:hover:not(.active) {
   flex: 1;
   min-width: 0;
 }
+/* 열 설정 메뉴(스프레드시트형 목록) */
+.erp-colmenu {
+  position: relative;
+  display: inline-block;
+}
+.erp-colmenu > summary {
+  list-style: none;
+  cursor: pointer;
+}
+.erp-colmenu > summary::-webkit-details-marker {
+  display: none;
+}
+.erp-colmenu-list {
+  position: absolute;
+  right: 0;
+  z-index: 20;
+  min-width: 160px;
+  margin-top: 4px;
+  padding: var(--erp-space-2);
+  background: var(--erp-panel);
+  border: 1px solid var(--erp-border-strong);
+  border-radius: var(--erp-radius-md, 0);
+  box-shadow: var(--erp-shadow-md);
+}
+.erp-colmenu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--erp-space-2);
+  padding: var(--erp-space-1) var(--erp-space-2);
+  white-space: nowrap;
+  cursor: pointer;
+}
+/* 방향키로 행을 옮기는 표 — 포커스가 표 영역에 있음을 윤곽선으로 */
+.erp-sheet:focus-visible {
+  outline: 2px solid var(--erp-primary);
+  outline-offset: -2px;
+}
 /* 체크박스만 있는 좁은 칸(일괄 선택) */
 .erp-grid th.erp-col-check,
 .erp-grid td.erp-col-check {

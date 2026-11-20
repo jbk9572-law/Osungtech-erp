@@ -1,5 +1,7 @@
+import { ListTitleBar } from "@/components/erp/page-header";
 import Link from "next/link";
 import { GuardedLink } from "@/components/erp/guarded-link";
+import { ListSearchForm } from "@/components/erp/list-search-form";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { PartyListA, type PartyListRow } from "@/components/grid/party-list-a";
 import type { FormState } from "@/components/form-message";
@@ -52,17 +54,19 @@ export function PartyPageA({
           Escape: { href: "/dashboard" },
         }}
       />
-      <div className="erp-page-toolbar erp-detail-header-row">
-        <h1 className="erp-h1">{title}</h1>
-        <div className="erp-toolbar erp-u-mb-0">
+      <ListTitleBar
+        title={<>{title}</>}
+        actions={
+          <>
           <GuardedLink href={`${basePath}/new`} className="erp-btn erp-btn-primary">
             F2 신규
           </GuardedLink>
           <Link href={q ? `${basePath}?q=${encodeURIComponent(q)}` : basePath} className="erp-btn">
             새로고침
           </Link>
-        </div>
-      </div>
+          </>
+        }
+      />
       <PartyListA
         kind={kind}
         rows={rows}
@@ -72,12 +76,7 @@ export function PartyPageA({
         partyLabel={partyLabel}
         balanceLabel={balanceLabel}
         searchSlot={
-          <form id={formId} method="get" className="erp-party-search">
-            <input type="text" name="q" autoComplete="off" defaultValue={q ?? ""} placeholder={searchPlaceholder} className="erp-input" />
-            <button type="submit" className="erp-btn erp-btn-primary">
-              F5 조회
-            </button>
-          </form>
+          <ListSearchForm formId={formId} q={q} placeholder={searchPlaceholder} ariaLabel={`${partyLabel} 검색`} resetHref={basePath} />
         }
         bulkDeleteAction={bulkDeleteAction}
         warningText={warningText}

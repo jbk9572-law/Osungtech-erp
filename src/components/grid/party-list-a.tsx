@@ -2,16 +2,20 @@
 
 import { useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ClickableRow } from "@/components/clickable-row";
 import { GridBadge } from "@/components/grid/badge";
 import { GridGroupHeaderRow } from "@/components/grid/group-header-row";
 import { RowNoCell, RowNoHead } from "@/components/grid/row-no-cell";
 import { BalanceSidePanel } from "@/components/grid/balance-side-panel";
 import { ListSummaryBar } from "@/components/grid/list-summary-bar";
+import { SheetColumnMenu, SortableTh } from "@/components/grid/sheet-parts";
 import { useBulkDelete } from "@/components/erp/use-bulk-delete";
 import type { FormState } from "@/components/form-message";
 import { useSideSplit, useThemeFeatures } from "@/lib/erp-theme-features";
 import { formatNumber } from "@/lib/format-number";
+import { startRouteProgress } from "@/lib/route-progress";
+import { useRowKeyboard, useSheetTable } from "@/lib/use-sheet-table";
 import type { BalanceRow } from "@/components/balance-grid-table";
 
 export type PartyListRow = {
@@ -37,6 +41,13 @@ type Filter = "all" | "balance" | "overdue" | "recent";
 function creditBadge(r: PartyListRow): { tone: "ok" | "warn" | "danger"; label: string } {
   if (r.daysOverdue <= 0) return { tone: "ok", label: "정상" };
   return { tone: r.daysOverdue >= 90 ? "danger" : "warn", label: `D+${r.daysOverdue}` };
+}
+
+// 열 정의(표 머리글·정렬·열 설정이 같이 쓴다) — 묶음 머리글(거래처 5 | 미수금 2 | 거래 1)과 순서가 같다.
+const PARTY_COLS = ["코드", "명", "대표", "연락처", "결제조건", "잔액", "연체", "최근 거래"] as const;
+const PARTY_GROUPS = [{ from: 0, to: 4 }, { from: 5, to: 6 }, { from: 7, to: 7 }] as const;
+function partyValue(r: PartyListRow, col: number) {
+  return [r.code, r.name, r.person, r.phone, r.paymentTerms, r.balance, r.daysOverdue, r.lastOrderDate][col];
 }
 
 // 거래처·공급처관리의 A형(업무 목록) 화면 — 빠른 필터 칩 + 요약 줄 + 묶음 머리글 표 + 오른쪽 상세 패널(340px). 행 클릭=패널, 수정·상세 이동은 패널 버튼.
@@ -90,10 +101,27 @@ export function PartyListA({
       ),
     [rows, filter, recentSince],
   );
+  const { ordered, sort, toggleSort, hidden, toggleHidden, isVisible, ariaSort } = useSheetTable(visible, partyValue);
+  const router = useRouter();
   const balanceSum = rows.reduce((n, r) => n + (r.balance > 0 ? r.balance : 0), 0);
 
   const { selected, toggle, bar } = useBulkDelete(bulkDeleteAction, visible.map((r) => ({ id: r.id, label: r.name })), warningText);
-  const active = visible.find((r) => r.id === activeId) ?? null;
+  const active = ordered.find((r) => r.id === activeId) ?? null;
+  const onKeyDown = useRowKeyboard(
+    ordered.map((r) => r.id),
+    activeId,
+    setActiveId,
+    (id) => {
+      startRouteProgress();
+      router.push(`${hrefBase}/${id}`);
+    },
+    (id) => {
+      const r = ordered.find((x) => x.id === id);
+      return r ? PARTY_COLS.map((_, c) => partyValue(r, c) ?? "").join("\t") : "";
+    },
+  );
+  const labelOf = (i: number) => (i === 1 ? partyLabel + "명" : i === 5 ? balanceLabel : PARTY_COLS[i]);
+  const groupSpan = (g: { from: number; to: number }) => PARTY_COLS.slice(g.from, g.to + 1).filter((_, k) => isVisible(g.from + k)).length;
   const activeRow: BalanceRow | null = active
     ? { id: active.id, name: active.name, total: active.total, paid: active.paid, balance: active.balance, daysOverdue: active.daysOverdue }
     : null;
@@ -126,62 +154,61 @@ export function PartyListA({
         ]}
       />
       {bar}
+      <div className="erp-u-flex erp-u-justify-end erp-u-mb-8">
+        <SheetColumnMenu labels={PARTY_COLS.map((_, i) => labelOf(i))} hidden={hidden} onToggle={toggleHidden} />
+      </div>
       <div className={sideSplit ? "erp-master-detail" : undefined}>
         <div className={sideSplit ? "erp-master-detail-main" : undefined}>
-          <div className="erp-grid-wrap has-card-view">
+          <div className="erp-grid-wrap has-card-view erp-sheet" tabIndex={0} onKeyDown={onKeyDown} aria-label="목록 — 위아래 방향키로 행 이동, Enter로 열기, Ctrl+C로 행 복사">
             <table className="erp-grid">
               <thead>
                 <GridGroupHeaderRow
                   before={1 + (groupedHeader ? 1 : 0)}
                   groups={[
-                    { span: 5, label: partyLabel },
-                    { span: 2, label: kind === "customer" ? "미수금" : "미지급금" },
-                    { span: 1, label: "거래" },
-                  ]}
+                    { span: groupSpan(PARTY_GROUPS[0]), label: partyLabel },
+                    { span: groupSpan(PARTY_GROUPS[1]), label: kind === "customer" ? "미수금" : "미지급금" },
+                    { span: groupSpan(PARTY_GROUPS[2]), label: "거래" },
+                  ].filter((g) => g.span > 0)}
                 />
                 <tr>
                   <th className="erp-col-check" aria-label="선택" />
                   <RowNoHead />
-                  <th>코드</th>
-                  <th>{partyLabel}명</th>
-                  <th>대표</th>
-                  <th>연락처</th>
-                  <th>결제조건</th>
-                  <th className="num">{balanceLabel}</th>
-                  <th>연체</th>
-                  <th>최근 거래</th>
+                  {PARTY_COLS.map((_, i) =>
+                    isVisible(i) ? <SortableTh key={i} label={labelOf(i)} col={i} sort={sort} ariaSort={ariaSort(i)} onSort={toggleSort} num={i === 5} /> : null,
+                  )}
                 </tr>
               </thead>
               <tbody>
-                {visible.map((r, i) => {
+                {ordered.map((r, i) => {
                   const { tone, label } = creditBadge(r);
+                  const cells = [
+                    <td key={0} className="erp-u-muted">{r.code}</td>,
+                    <td key={1} className="erp-u-bold">{r.name}</td>,
+                    <td key={2}>{r.person ?? "-"}</td>,
+                    <td key={3}>{r.phone ?? "-"}</td>,
+                    <td key={4} className="erp-u-muted">{r.paymentTerms ?? "-"}</td>,
+                    <td key={5} className={`num${r.balance > 0 ? " erp-u-danger erp-u-bold" : ""}`}>{formatNumber(r.balance)}</td>,
+                    <td key={6}><GridBadge tone={tone}>{label}</GridBadge></td>,
+                    <td key={7} className="erp-u-muted">{r.lastOrderDate ? r.lastOrderDate.slice(5).replace("-", "/") : "-"}</td>,
+                  ];
                   return (
                     <ClickableRow
                       key={r.id}
                       href={`${hrefBase}/${r.id}`}
-                      className={sideSplit && activeId === r.id ? "master-active" : undefined}
+                      className={activeId === r.id ? "master-active" : undefined}
                       onActivate={sideSplit ? () => setActiveId(r.id) : undefined}
                     >
                       <td className="erp-col-check" onClick={(e) => e.stopPropagation()}>
                         <input type="checkbox" checked={selected.has(r.id)} onChange={() => toggle(r.id)} aria-label={`${r.name} 선택`} />
                       </td>
                       <RowNoCell n={i + 1} />
-                      <td className="erp-u-muted">{r.code}</td>
-                      <td className="erp-u-bold">{r.name}</td>
-                      <td>{r.person ?? "-"}</td>
-                      <td>{r.phone ?? "-"}</td>
-                      <td className="erp-u-muted">{r.paymentTerms ?? "-"}</td>
-                      <td className={`num${r.balance > 0 ? " erp-u-danger erp-u-bold" : ""}`}>{formatNumber(r.balance)}</td>
-                      <td>
-                        <GridBadge tone={tone}>{label}</GridBadge>
-                      </td>
-                      <td className="erp-u-muted">{r.lastOrderDate ? r.lastOrderDate.slice(5).replace("-", "/") : "-"}</td>
+                      {cells.filter((_, ci) => isVisible(ci))}
                     </ClickableRow>
                   );
                 })}
                 {!visible.length && (
                   <tr>
-                    <td colSpan={10} className="erp-grid-empty">
+                    <td colSpan={PARTY_COLS.filter((_, i) => isVisible(i)).length + 2} className="erp-grid-empty">
                       {emptyMessage}
                     </td>
                   </tr>
@@ -216,7 +243,7 @@ export function PartyListA({
       </div>
 
       <div className="erp-row-card-list">
-        {visible.map((r) => {
+        {ordered.map((r) => {
           const { tone, label } = creditBadge(r);
           return (
             <Link key={r.id} href={`${hrefBase}/${r.id}`} className="erp-row-card">

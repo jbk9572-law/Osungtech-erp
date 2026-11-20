@@ -5,7 +5,7 @@ import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { PageGuide } from "@/components/erp/page-guide";
 import { GridBadge } from "@/components/grid/badge";
 import { OfficialDocumentDetailPanel } from "@/components/official-document-detail-panel";
-import { SplitDetailEmpty, SplitListFiller } from "@/components/erp/page-header";
+import { SplitDetailEmpty, SplitListFiller, ListTitleBar } from "@/components/erp/page-header";
 import { GuardedLink } from "@/components/erp/guarded-link";
 import { SplitFilterColumn } from "@/components/erp/split-filter-column";
 import { DocumentIcon } from "@/components/erp/groupware-icons";
@@ -99,9 +99,10 @@ export async function OfficialDocumentsList({ box, id, status: statusParam }: { 
   return (
     <div className="erp-comm-shell">
       <KeyboardShortcuts shortcuts={{ F2: { href: "/official-documents/new" }, Escape: { href: selectedId ? listHref : "/dashboard" } }} />
-      <div className="erp-page-toolbar erp-detail-header-row">
-        <h1 className="erp-h1">공문관리 &gt; {TABS.find((t) => t.key === box)?.label}</h1>
-        <div className="erp-toolbar erp-u-mb-0">
+      <ListTitleBar
+        title={<>공문관리 &gt; {TABS.find((t) => t.key === box)?.label}</>}
+        actions={
+          <>
           <GuardedLink href="/official-documents/new" className="erp-btn erp-btn-primary">
             F2 새 공문
           </GuardedLink>
@@ -110,8 +111,9 @@ export async function OfficialDocumentsList({ box, id, status: statusParam }: { 
               목록
             </Link>
           )}
-        </div>
-      </div>
+          </>
+        }
+      />
 
       <PageGuide>
         결재까지는 전자결재와 같은 결재선을 타고, 결재가 끝나면 문서번호가 부여됩니다. 발송은 이메일 주소가 있는 수신처는 자동 발송을 시도하고, 그 외에는 직접 발송 처리로 기록합니다.

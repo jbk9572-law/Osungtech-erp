@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { TodoCheckbox } from "@/components/todo-checkbox";
 import { TodoDetailPanel } from "@/components/todo-detail-panel";
 import { GuardedLink } from "@/components/erp/guarded-link";
+import { ListSearchForm } from "@/components/erp/list-search-form";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { todayKstStr } from "@/lib/kst-date";
 import { GridBadge } from "@/components/grid/badge";
@@ -12,7 +13,7 @@ import { matchesSearch } from "@/lib/search-match";
 import { isUuid } from "@/lib/is-uuid";
 import { formatNumber } from "@/lib/format-number";
 import { PageGuide } from "@/components/erp/page-guide";
-import { SplitDetailEmpty } from "@/components/erp/page-header";
+import { SplitDetailEmpty, ListTitleBar } from "@/components/erp/page-header";
 import { CheckCircleIcon } from "@/components/erp/groupware-icons";
 import { SplitFilterColumn, type SplitFilterGroup } from "@/components/erp/split-filter-column";
 
@@ -192,9 +193,10 @@ export default async function TodosPage({
   return (
     <div className="erp-comm-shell">
       <KeyboardShortcuts shortcuts={{ F2: { href: "/todos/new" }, Escape: { href: selectedId ? newHref : "/dashboard" } }} />
-      <div className="erp-page-toolbar erp-detail-header-row">
-        <h1 className="erp-h1">할일관리</h1>
-        <div className="erp-toolbar erp-u-mb-0">
+      <ListTitleBar
+        title={<>할일관리</>}
+        actions={
+          <>
           <GuardedLink href="/todos/new" className="erp-btn erp-btn-primary">
             F2 새 할일
           </GuardedLink>
@@ -203,8 +205,9 @@ export default async function TodosPage({
               목록
             </Link>
           )}
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {warning && (
         <PageGuide tone="warning" className="font-medium">
@@ -221,15 +224,20 @@ export default async function TodosPage({
               총 {formatNumber(rows.length)}건
             </span>
           </div>
-          <form id="todos-search-form" method="get" className="erp-party-search erp-u-p-8">
-            {status !== "all" && <input type="hidden" name="status" value={status} />}
-            {type !== "all" && <input type="hidden" name="type" value={type} />}
-            {owner !== "all" && <input type="hidden" name="owner" value={owner} />}
-            <GuardedLink href="/todos/new" className="erp-btn erp-btn-primary erp-u-nowrap">
-              + 새 할일
-            </GuardedLink>
-            <input type="text" name="q" autoComplete="off" defaultValue={q ?? ""} placeholder="제목·거래처·품목 검색" className="erp-input" aria-label="할일 검색" />
-          </form>
+          <ListSearchForm
+            formId="todos-search-form"
+            className="erp-u-p-8"
+            q={q}
+            placeholder="제목·거래처·품목 검색"
+            ariaLabel="할일 검색"
+            hideSubmit
+            hidden={{ ...(status !== "all" ? { status } : {}), ...(type !== "all" ? { type } : {}), ...(owner !== "all" ? { owner } : {}) }}
+            leading={
+              <GuardedLink href="/todos/new" className="erp-btn erp-btn-primary erp-u-nowrap">
+                + 새 할일
+              </GuardedLink>
+            }
+          />
           <div className="erp-split-list-body">
             {rows.map((row) => {
               const overdue = !row.done && !!row.due_date && row.due_date < todayStr;

@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { GuardedLink } from "@/components/erp/guarded-link";
 import Link from "next/link";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
-import { SplitDetailEmpty, SplitListFiller } from "@/components/erp/page-header";
+import { SplitDetailEmpty, SplitListFiller, ListTitleBar } from "@/components/erp/page-header";
 import { SplitFilterColumn, type SplitFilterGroup } from "@/components/erp/split-filter-column";
 import { DocumentIcon } from "@/components/erp/groupware-icons";
 import { GridBadge } from "@/components/grid/badge";
@@ -76,9 +76,10 @@ export default async function DocumentsPage({ searchParams }: { searchParams: Pr
   return (
     <div className="erp-comm-shell">
       <KeyboardShortcuts shortcuts={{ F2: { href: "/hr/documents/new" }, Escape: { href: selectedId ? listHref : "/dashboard" } }} />
-      <div className="erp-page-toolbar erp-detail-header-row">
-        <h1 className="erp-h1">그룹웨어 &gt; 문서함</h1>
-        <div className="erp-toolbar erp-u-mb-0">
+      <ListTitleBar
+        title={<>그룹웨어 &gt; 문서함</>}
+        actions={
+          <>
           <GuardedLink href="/hr/documents/new" className="erp-btn erp-btn-primary">
             F2 새 문서
           </GuardedLink>
@@ -90,8 +91,9 @@ export default async function DocumentsPage({ searchParams }: { searchParams: Pr
               목록
             </Link>
           )}
-        </div>
-      </div>
+          </>
+        }
+      />
 
       <div className="erp-split3-shell" data-mobile-view={selectedId ? "detail" : "list"}>
         <SplitFilterColumn ariaLabel="문서 필터" groups={groups} />

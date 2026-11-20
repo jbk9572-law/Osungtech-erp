@@ -72,6 +72,7 @@ export default async function PaymentRequestsPage() {
       id: row.id,
       href: `/reports/payment-requests/${row.id}`,
       cells: [label, paymentRequestDocTitle(row.card_type), period, formatNumber(total), row.profiles?.full_name ?? "-", badge],
+        values: [label, paymentRequestDocTitle(row.card_type), row.period_from, total, row.profiles?.full_name ?? null, status.label],
       card: {
         title: (
           <>

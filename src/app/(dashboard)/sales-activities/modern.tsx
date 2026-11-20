@@ -1,10 +1,10 @@
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { RecordPageA } from "@/components/grid/record-page-a";
 import type { RecordRow } from "@/components/grid/record-list-a";
 import { PageGuide } from "@/components/erp/page-guide";
 import { GridBadge } from "@/components/grid/badge";
 import { NextActionCheckbox } from "@/components/next-action-checkbox";
+import { DateRangeSearchForm } from "@/components/erp/date-range-search-form";
 import { DateRangeQuickFilters } from "@/components/erp/date-range-quick-filters";
 import { getQuickDatePresets, getYearMonthButtons } from "@/lib/date-presets";
 import { matchesSearch } from "@/lib/search-match";
@@ -90,6 +90,7 @@ export default async function SalesActivitiesPage({
       id: a.id,
       href: `/sales-activities/${a.id}`,
       cells: [date, customer, <GridBadge key="t" tone="muted">{a.activity_type}</GridBadge>, a.subject, a.next_action_date ? a.next_action_date.replaceAll("-", ".") : "-"],
+      values: [a.activity_date, customer, a.activity_type, a.subject, a.next_action_date],
       card: {
         title: (
           <>
@@ -161,36 +162,7 @@ export default async function SalesActivitiesPage({
 
       <DateRangeQuickFilters basePath="/sales-activities" presets={presets} monthButtons={monthButtons} from={from} to={to} />
 
-      <form method="get" id="sales-activities-search-form" className="erp-field-grid">
-        <div className="erp-field erp-span-2">
-          <label htmlFor="sa-search-from">시작일</label>
-          <input id="sa-search-from" type="date" name="from" defaultValue={from ?? ""} className="erp-input" />
-        </div>
-        <div className="erp-field erp-span-2">
-          <label htmlFor="sa-search-to">종료일</label>
-          <input id="sa-search-to" type="date" name="to" defaultValue={to ?? ""} className="erp-input" />
-        </div>
-        <div className="erp-field erp-span-4">
-          <label htmlFor="sa-search-q">거래처 / 제목 / 내용 검색</label>
-          <input
-            id="sa-search-q"
-            type="text"
-            name="q"
-            autoComplete="off"
-            defaultValue={q ?? ""}
-            placeholder="거래처명, 제목, 내용"
-            className="erp-input erp-u-w-full"
-          />
-        </div>
-        <button type="submit" className="erp-btn erp-btn-primary">
-          F5 조회
-        </button>
-        {(from || to || q || limitParam) && (
-          <Link href="/sales-activities" className="erp-btn">
-            초기화
-          </Link>
-        )}
-      </form>
+      <DateRangeSearchForm formId="sales-activities-search-form" idPrefix="sa" from={from} to={to} q={q} qLabel="거래처 / 제목 / 내용 검색" qPlaceholder="거래처명, 제목, 내용" resetHref="/sales-activities" showReset={!!(from || to || q || limitParam)} />
     </>
   );
 

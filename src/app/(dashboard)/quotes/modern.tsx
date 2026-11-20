@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { QuoteStatusBadge } from "@/components/quote-status-badge";
+import { DateRangeSearchForm } from "@/components/erp/date-range-search-form";
 import { DateRangeQuickFilters } from "@/components/erp/date-range-quick-filters";
 import { getQuickDatePresets, getYearMonthButtons } from "@/lib/date-presets";
 import { matchesSearch } from "@/lib/search-match";
@@ -70,36 +70,7 @@ export default async function QuotesPage({
     <>
       <DateRangeQuickFilters basePath="/quotes" presets={presets} monthButtons={monthButtons} from={from} to={to} />
 
-      <form method="get" id="quotes-search-form" className="erp-field-grid">
-        <div className="erp-field erp-span-2">
-          <label htmlFor="quotes-search-from">시작일</label>
-          <input id="quotes-search-from" type="date" name="from" defaultValue={from ?? ""} className="erp-input" />
-        </div>
-        <div className="erp-field erp-span-2">
-          <label htmlFor="quotes-search-to">종료일</label>
-          <input id="quotes-search-to" type="date" name="to" defaultValue={to ?? ""} className="erp-input" />
-        </div>
-        <div className="erp-field erp-span-4">
-          <label htmlFor="quotes-search-q">거래처 / 견적번호 / 메모 검색</label>
-          <input
-            id="quotes-search-q"
-            type="text"
-            name="q"
-            autoComplete="off"
-            defaultValue={q ?? ""}
-            placeholder="거래처명, 견적번호, 메모"
-            className="erp-input erp-u-w-full"
-          />
-        </div>
-        <button type="submit" className="erp-btn erp-btn-primary">
-          F5 조회
-        </button>
-        {(from || to || q || limitParam) && (
-          <Link href="/quotes" className="erp-btn">
-            초기화
-          </Link>
-        )}
-      </form>
+      <DateRangeSearchForm formId="quotes-search-form" idPrefix="quotes" from={from} to={to} q={q} qLabel="거래처 / 견적번호 / 메모 검색" qPlaceholder="거래처명, 견적번호, 메모" resetHref="/quotes" showReset={!!(from || to || q || limitParam)} />
     </>
   );
 
@@ -112,6 +83,7 @@ export default async function QuotesPage({
       id: quote.id,
       href: `/quotes/${quote.id}`,
       cells: [`#${quote.doc_no}`, customer, date, quote.valid_until ? quote.valid_until.replaceAll("-", ".") : "-", formatNumber(total), <QuoteStatusBadge key="s" status={quote.status} />],
+        values: [quote.doc_no, customer, quote.quote_date, quote.valid_until, total, quote.status],
       card: {
         title: (
           <>

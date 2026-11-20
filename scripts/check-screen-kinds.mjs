@@ -40,7 +40,7 @@ function hasFilterColumn(code) {
 }
 
 // classic.tsx = 클래식 테마 전용 동결본 — 모던과 코드를 공유하지 않고 그대로 둔다. 옛 방식 검사에서 빼되, 목록(classicFrozen)은 기준선으로 늘지 못하게 막는다.
-const current = { split2: [], accordion: [], trailingLink: [], split3NoFilter: [], classicFrozen: [] };
+const current = { split2: [], accordion: [], trailingLink: [], split3NoFilter: [], classicFrozen: [], rawTitle: [] };
 for (const file of walk(src)) {
   const rel = path.relative(src, file).split(path.sep).join("/");
   const text = readFileSync(file, "utf8");
@@ -54,6 +54,8 @@ for (const file of walk(src)) {
   if (/<OrderDetailPanel\b/.test(code)) current.accordion.push(rel);
   if (/(상세|수정) →/.test(code)) current.trailingLink.push(rel);
   if (/erp-split3-shell/.test(code) && !hasFilterColumn(code)) current.split3NoFilter.push(rel);
+  // 제목줄은 공용 ListTitleBar/ListPageHeader로 — <h1 className="erp-h1">를 손으로 다시 짜지 않는다.
+  if (/className="erp-h1"/.test(code) && !/components\/erp\/page-header\.tsx$/.test(rel)) current.rawTitle.push(rel);
 }
 for (const k of Object.keys(current)) current[k].sort();
 
@@ -63,11 +65,12 @@ if (process.argv.includes("--write")) {
   process.exit(0);
 }
 
-const base = existsSync(baselinePath) ? JSON.parse(readFileSync(baselinePath, "utf8")) : { split2: [], accordion: [], trailingLink: [], split3NoFilter: [], classicFrozen: [] };
+const base = existsSync(baselinePath) ? JSON.parse(readFileSync(baselinePath, "utf8")) : { split2: [], accordion: [], trailingLink: [], split3NoFilter: [], classicFrozen: [], rawTitle: [] };
 const HINT = {
   split2: "2분할(erp-split-shell)을 새로 쓰지 마세요 — 업무 목록은 A(표 + 오른쪽 상세 패널), 소통형은 B(3분할 + 필터 열)로 만드세요.",
   accordion: "아코디언 상세(OrderDetailPanel)를 새로 쓰지 마세요 — A는 오른쪽 상세 패널(OrderSidePanel/DetailSideShell)을 씁니다.",
   trailingLink: "표 끝 \"상세 →\"/\"수정 →\" 칸을 새로 만들지 마세요 — 행 클릭 = 패널, 패널의 [상세 보기]/[수정] 버튼이 그 역할입니다.",
+  rawTitle: "제목줄을 손으로 짜지 마세요 — ListTitleBar(제목+툴바 한 줄) 또는 ListPageHeader를 쓰세요(개발헌법 3번).",
   classicFrozen: "classic.tsx(클래식 동결본)를 새로 만들지 마세요 — 새 화면은 A/B/C로 만들고 테마 분기가 필요하면 먼저 상의하세요.",
   split3NoFilter: "3분할(erp-split3-shell)에는 왼쪽 필터 열(erp-split3-filter)이 있어야 합니다(개발헌법 12번 B형).",
 };

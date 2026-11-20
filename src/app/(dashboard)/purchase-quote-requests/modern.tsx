@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { RecordPageA } from "@/components/grid/record-page-a";
 import type { RecordRow } from "@/components/grid/record-list-a";
 import { GridBadge } from "@/components/grid/badge";
+import { DateRangeSearchForm } from "@/components/erp/date-range-search-form";
 import { DateRangeQuickFilters } from "@/components/erp/date-range-quick-filters";
 import { getQuickDatePresets, getYearMonthButtons } from "@/lib/date-presets";
 import { matchesSearch } from "@/lib/search-match";
@@ -71,36 +71,7 @@ export default async function PurchaseQuoteRequestsPage({
     <>
       <DateRangeQuickFilters basePath="/purchase-quote-requests" presets={presets} monthButtons={monthButtons} from={from} to={to} />
 
-      <form method="get" id="purchase-quote-requests-search-form" className="erp-field-grid">
-        <div className="erp-field erp-span-2">
-          <label htmlFor="pqr-search-from">시작일</label>
-          <input id="pqr-search-from" type="date" name="from" defaultValue={from ?? ""} className="erp-input" />
-        </div>
-        <div className="erp-field erp-span-2">
-          <label htmlFor="pqr-search-to">종료일</label>
-          <input id="pqr-search-to" type="date" name="to" defaultValue={to ?? ""} className="erp-input" />
-        </div>
-        <div className="erp-field erp-span-4">
-          <label htmlFor="pqr-search-q">매입처 / 메모 검색</label>
-          <input
-            id="pqr-search-q"
-            type="text"
-            name="q"
-            autoComplete="off"
-            defaultValue={q ?? ""}
-            placeholder="매입처명, 메모"
-            className="erp-input erp-u-w-full"
-          />
-        </div>
-        <button type="submit" className="erp-btn erp-btn-primary">
-          F5 조회
-        </button>
-        {(from || to || q || limitParam) && (
-          <Link href="/purchase-quote-requests" className="erp-btn">
-            초기화
-          </Link>
-        )}
-      </form>
+      <DateRangeSearchForm formId="purchase-quote-requests-search-form" idPrefix="pqr" from={from} to={to} q={q} qLabel="매입처 / 메모 검색" qPlaceholder="매입처명, 메모" resetHref="/purchase-quote-requests" showReset={!!(from || to || q || limitParam)} />
     </>
   );
 
@@ -115,6 +86,7 @@ export default async function PurchaseQuoteRequestsPage({
       id: r.id,
       href: `/purchase-quote-requests/${r.id}`,
       cells: [date, targets || "-", `${itemCount}건`, r.selected_supplier?.name ?? "-", badge],
+        values: [r.request_date, targets, itemCount, r.selected_supplier?.name ?? null, closed ? "확정완료" : "비교중"],
       card: {
         title: (
           <>

@@ -1,6 +1,6 @@
 import { withPageTiming } from "@/lib/page-timing";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { ListSearchForm } from "@/components/erp/list-search-form";
 import { RecordPageA } from "@/components/grid/record-page-a";
 import type { RecordRow } from "@/components/grid/record-list-a";
 import { bulkDeleteProducts } from "@/app/(dashboard)/products/actions";
@@ -61,6 +61,7 @@ async function ProductsPage({ searchParams }: { searchParams: Promise<{ q?: stri
       id: p.id,
       href: `/products/${p.id}`,
       cells: [p.sku, p.name, p.spec ?? "-", p.unit ?? "-", p.price == null ? "-" : formatNumber(p.price), derived ? <GridBadge key="d" tone="info">파생</GridBadge> : "-"],
+      values: [p.sku, p.name, p.spec, p.unit, p.price, derived ? "파생" : ""],
       card: {
         title: <span className="erp-row-card-partner">{p.name}</span>,
         sub: [p.sku, p.spec].filter(Boolean).join(" · "),
@@ -87,17 +88,7 @@ async function ProductsPage({ searchParams }: { searchParams: Promise<{ q?: stri
       newLabel="신규"
       searchFormId="products-search-form"
       filters={
-        <form id="products-search-form" method="get" className="erp-party-search erp-u-mb-8">
-          <input type="text" name="q" autoComplete="off" defaultValue={q ?? ""} placeholder="상품명, SKU, 규격 검색" className="erp-input" aria-label="품목 검색" />
-          <button type="submit" className="erp-btn erp-btn-primary">
-            F5 조회
-          </button>
-          {q && (
-            <Link href="/products" className="erp-btn">
-              초기화
-            </Link>
-          )}
-        </form>
+        <ListSearchForm formId="products-search-form" q={q} placeholder="상품명, SKU, 규격 검색" ariaLabel="품목 검색" resetHref="/products" />
       }
       columns={[{ label: "SKU" }, { label: "품목명" }, { label: "규격" }, { label: "단위" }, { label: "판매가", num: true }, { label: "구분" }]}
       rows={rows}

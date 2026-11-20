@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { ListSearchForm } from "@/components/erp/list-search-form";
 import { PageGuide } from "@/components/erp/page-guide";
 import { RecordPageA } from "@/components/grid/record-page-a";
 import type { RecordRow } from "@/components/grid/record-list-a";
@@ -53,6 +53,7 @@ export default async function SubcontractorsPage({ searchParams }: { searchParam
       id: s.id,
       href: `/subcontractors/${s.id}`,
       cells: [s.name, s.contact_name ?? "-", s.phone ?? "-"],
+      values: [s.name, s.contact_name, s.phone],
       card: { title: <span className="erp-row-card-partner">{s.name}</span>, sub: [s.contact_name, s.phone].filter(Boolean).join(" · ") },
       panel: {
         title: s.name,
@@ -77,17 +78,7 @@ export default async function SubcontractorsPage({ searchParams }: { searchParam
             <PageGuide>
               본청으로부터 받은 작업 중 일부 공정(예: PCB)을 다시 맡기는 외부 업체입니다. 포털 계정을 발급하면 업체가 직접 로그인해 배정된 공정의 LOT을 시작/완료/배송 처리할 수 있습니다.
             </PageGuide>
-            <form id="subcontractors-search-form" method="get" className="erp-party-search erp-u-mb-8">
-              <input type="text" name="q" autoComplete="off" defaultValue={q ?? ""} placeholder="업체명, 담당자, 연락처 검색" className="erp-input" aria-label="하청업체 검색" />
-              <button type="submit" className="erp-btn erp-btn-primary">
-                F5 조회
-              </button>
-              {q && (
-                <Link href="/subcontractors" className="erp-btn">
-                  초기화
-                </Link>
-              )}
-            </form>
+            <ListSearchForm formId="subcontractors-search-form" q={q} placeholder="업체명, 담당자, 연락처 검색" ariaLabel="하청업체 검색" resetHref="/subcontractors" />
           </>
         }
         columns={[{ label: "업체명" }, { label: "담당자" }, { label: "연락처" }]}

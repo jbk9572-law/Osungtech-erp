@@ -22,5 +22,14 @@
     "components/erp/messenger/classic.tsx",
     "components/purchase-grid/classic.tsx",
     "components/sales-grid/classic.tsx"
+  ],
+  "rawTitle": [
+    "app/(dashboard)/purchases/[id]/edit/page.tsx",
+    "app/(dashboard)/sales/[id]/edit/page.tsx",
+    "app/(dashboard)/sales/[id]/tax-invoice/correct/page.tsx",
+    "app/(dashboard)/sales/[id]/tax-invoice/page.tsx",
+    "app/(dashboard)/subcontractor-payables/page.tsx",
+    "app/platform-admin/page.tsx",
+    "components/todo-detail-panel.tsx"
   ]
 }

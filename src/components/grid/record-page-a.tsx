@@ -1,3 +1,4 @@
+import { ListTitleBar } from "@/components/erp/page-header";
 import type { ComponentProps, ReactNode } from "react";
 import Link from "next/link";
 import { GuardedLink } from "@/components/erp/guarded-link";
@@ -49,14 +50,16 @@ export function RecordPageA({
           Escape: { href: "/dashboard" },
         }}
       />
-      <div className="erp-page-toolbar erp-detail-header-row">
-        <h1 className="erp-h1">{title}</h1>
-        <div className="erp-toolbar erp-u-mb-0">
+      <ListTitleBar
+        title={<>{title}</>}
+        actions={
+          <>
           <GuardedLink href={newHref ?? `${basePath}/new`} className="erp-btn erp-btn-primary">
             F2 {newLabel}
           </GuardedLink>
-        </div>
-      </div>
+          </>
+        }
+      />
       {filters}
       <div className="erp-u-text-compact erp-u-muted erp-u-mb-8">총 {formatNumber(rows.length)}건</div>
       <RecordListA
