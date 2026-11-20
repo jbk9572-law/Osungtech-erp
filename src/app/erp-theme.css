@@ -4933,6 +4933,90 @@ a.erp-detail-tab:hover:not(.active) {
   display: inline-block;
 }
 
+/* 요약 틀(KpiStripFrame) — 기본은 위아래로 쌓고, 테마 기능 kpiStrip이 켜지면 얇은 한 줄 띠(타일 4칸 + 분포 막대) */
+.erp-kpi-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.erp-kpi-stack > .erp-kpi-row {
+  margin-bottom: 0;
+}
+.erp-kpi-band {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  margin-bottom: var(--erp-space-3);
+  background: var(--erp-panel);
+  border: 1px solid var(--erp-border);
+  border-radius: var(--erp-radius-md);
+  overflow: hidden;
+}
+.erp-kpi-band .erp-kpi-row {
+  gap: 0;
+  margin-bottom: 0;
+}
+.erp-kpi-band .erp-kpi-row .erp-home-panel {
+  border: 0;
+  border-right: 1px solid var(--erp-divider);
+  border-radius: 0;
+  box-shadow: none;
+}
+.erp-kpi-band .erp-kpi-row .erp-home-panel:last-child {
+  border-right: 0;
+}
+.erp-kpi-band .erp-kpi-card {
+  padding: var(--erp-space-2) var(--erp-space-4);
+}
+.erp-kpi-band .erp-kpi-label {
+  margin-bottom: 2px;
+  font-size: var(--erp-font-sm);
+  font-weight: 500;
+}
+.erp-kpi-band .erp-aging-dist {
+  margin-bottom: 0;
+  padding: var(--erp-space-2) var(--erp-space-4) var(--erp-space-3);
+  border-top: 1px solid var(--erp-divider);
+}
+.erp-kpi-band .erp-aging-dist-bar {
+  height: 8px;
+}
+
+@media (max-width: 640px) {
+  /* 모바일은 타일이 2칸씩 두 줄 — 오른쪽 칸 구분선은 없애고 첫 줄 아래에 가로선을 둔다 */
+  .erp-kpi-band .erp-kpi-row .erp-home-panel:nth-child(2n) {
+    border-right: 0;
+  }
+  .erp-kpi-band .erp-kpi-row .erp-home-panel:nth-child(-n + 2) {
+    border-bottom: 1px solid var(--erp-divider);
+  }
+}
+
+/* 번호(No)만 있는 좁은 칸 — 표가 자동으로 넓혀 주지 않게 폭을 고정한다 */
+.erp-grid th.erp-col-no,
+.erp-grid td.erp-col-no {
+  width: 44px;
+}
+
+/* 재고현황 — 부족 줄은 왼쪽 띠, 재고수량 칸 아래 안전재고 대비 막대(테마 기능 stockInsights) */
+.erp-grid tbody tr.erp-row-low > td:first-child {
+  box-shadow: inset 3px 0 0 var(--erp-danger);
+}
+.erp-stock-bar {
+  height: 4px;
+  margin-top: 3px;
+  background: var(--erp-border);
+  border-radius: var(--erp-radius-xs, 0);
+  overflow: hidden;
+}
+.erp-stock-bar > i {
+  display: block;
+  height: 100%;
+  background: var(--erp-primary);
+}
+.erp-stock-bar.is-low > i {
+  background: var(--erp-danger);
+}
+
 /* 재고 실사: 평소엔 이력만 보이다가, "+ 새 실사 시작"을 누르기 전까지는
    품목 246개짜리 큰 표 대신 이 안내 박스만 보인다(모조지계산의 "저장된
    계산 → + 새로 계산하기"와 같은 자리 아끼기). */

@@ -5,6 +5,8 @@ import Link from "next/link";
 import { ClickableRow } from "@/components/clickable-row";
 import { formatNumber } from "@/lib/format-number";
 import { GridBadge } from "@/components/grid/badge";
+import { GridGroupHeaderRow } from "@/components/grid/group-header-row";
+import { useThemeFeatures } from "@/lib/erp-theme-features";
 
 export type BalanceRow = {
   id: string;
@@ -69,6 +71,7 @@ export function BalanceGridTable({
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 } | null>({ key: "balance", dir: -1 });
   const [agingFilter, setAgingFilter] = useState<Filter>("all");
+  const { rowNumbers } = useThemeFeatures();
 
   // daysOverdue를 넘겨주는 화면(미수금현황)에서만 연체 열/필터를 보여준다.
   const showAging = rows.some((r) => r.daysOverdue !== undefined);
@@ -166,7 +169,10 @@ export function BalanceGridTable({
       <div className="erp-grid-wrap has-card-view">
         <table className="erp-grid">
           <thead>
+            {/* 묶음 머리글(테마 기능) — 매출/수금/잔액 세 칸을 "금액(원)"으로 묶는다. 앞: [No]+이름, 뒤: [연체]+상세 */}
+            <GridGroupHeaderRow before={(rowNumbers ? 1 : 0) + 1} span={3} after={(showAging ? 1 : 0) + 1} label="금액(원)" />
             <tr>
+              {rowNumbers && <th className="erp-col-no"><span className="erp-row-no">No</span></th>}
               {sortableHeader(partyLabel, "name")}
               {sortableHeader(totalLabel, "total", "num")}
               {sortableHeader(paidLabel, "paid", "num")}
@@ -176,8 +182,13 @@ export function BalanceGridTable({
             </tr>
           </thead>
           <tbody>
-            {sortedRows.map((b) => (
+            {sortedRows.map((b, i) => (
               <ClickableRow key={b.id} href={rowHref(b.id)}>
+                {rowNumbers && (
+                  <td className="erp-col-no">
+                    <span className="erp-row-no">{i + 1}</span>
+                  </td>
+                )}
                 <td>{b.name}</td>
                 <td className="num">{formatNumber(b.total)}</td>
                 <td className="num">{formatNumber(b.paid)}</td>
@@ -202,7 +213,7 @@ export function BalanceGridTable({
             ))}
             {!sortedRows.length && (
               <tr>
-                <td colSpan={showAging ? 6 : 5} className="erp-grid-empty">
+                <td colSpan={(showAging ? 6 : 5) + (rowNumbers ? 1 : 0)} className="erp-grid-empty">
                   {query.trim() ? "검색 결과가 없습니다." : emptyLabel}
                 </td>
               </tr>
