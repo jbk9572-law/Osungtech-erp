@@ -43,8 +43,8 @@ export function RecordListA({
   panelAriaLabel: string;
   panelEmptyText: string;
   emptyMessage: string;
-  /** 주면 맨 앞에 체크박스 칸이 생기고 선택 일괄삭제(확인 코드)가 켜진다. */
-  bulkDelete?: { action: (state: FormState, formData: FormData) => Promise<FormState>; warningText: string; labelOf: (id: string) => string };
+  /** 주면 맨 앞에 체크박스 칸이 생기고 선택 일괄삭제(확인 코드)가 켜진다. 서버 화면에서 넘기므로 함수는 담지 않는다(행 이름은 panel.title). */
+  bulkDelete?: { action: (state: FormState, formData: FormData) => Promise<FormState>; warningText: string };
 }) {
   const sideSplit = useSideSplit();
   const router = useRouter();
@@ -55,7 +55,7 @@ export function RecordListA({
   const noopAction = async () => undefined;
   const { selected, toggle, bar } = useBulkDelete(
     bulkDelete?.action ?? noopAction,
-    rows.map((r) => ({ id: r.id, label: bulkDelete?.labelOf(r.id) ?? r.id })),
+    rows.map((r) => ({ id: r.id, label: r.panel.title })),
     bulkDelete?.warningText ?? "",
   );
   const onKeyDown = useRowKeyboard(
@@ -106,7 +106,7 @@ export function RecordListA({
                   >
                     <RowNoCell
                       n={i + 1}
-                      checkbox={bulkDelete ? <input type="checkbox" checked={selected.has(r.id)} onChange={() => toggle(r.id)} onClick={(e) => e.stopPropagation()} aria-label={`${bulkDelete.labelOf(r.id)} 선택`} /> : undefined}
+                      checkbox={bulkDelete ? <input type="checkbox" checked={selected.has(r.id)} onChange={() => toggle(r.id)} onClick={(e) => e.stopPropagation()} aria-label={`${r.panel.title} 선택`} /> : undefined}
                     />
                     {r.cells.map((cell, ci) =>
                       isVisible(ci) ? (

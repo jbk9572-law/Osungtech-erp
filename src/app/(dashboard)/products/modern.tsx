@@ -53,9 +53,7 @@ async function ProductsPage({ searchParams }: { searchParams: Promise<{ q?: stri
   if (q) moreParams.set("q", q);
   moreParams.set("limit", String(limit + LIST_LIMIT_STEP));
 
-  const nameById = new Map<string, string>();
   const rows: RecordRow[] = products.map((p) => {
-    nameById.set(p.id, p.name);
     const derived = !!p.parent_product_id;
     return {
       id: p.id,
@@ -100,7 +98,6 @@ async function ProductsPage({ searchParams }: { searchParams: Promise<{ q?: stri
       bulkDelete={{
         action: bulkDeleteProducts,
         warningText: "관련 매입/매출 내역이 있는 품목은 삭제되지 않습니다.",
-        labelOf: (id) => nameById.get(id) ?? id,
       }}
     />
   );

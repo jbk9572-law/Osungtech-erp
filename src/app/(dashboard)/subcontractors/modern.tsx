@@ -46,9 +46,7 @@ export default async function SubcontractorsPage({ searchParams }: { searchParam
   if (q) moreParams.set("q", q);
   moreParams.set("limit", String(limit + LIST_LIMIT_STEP));
 
-  const nameById = new Map<string, string>();
   const rows: RecordRow[] = list.map((s) => {
-    nameById.set(s.id, s.name);
     return {
       id: s.id,
       href: `/subcontractors/${s.id}`,
@@ -91,7 +89,6 @@ export default async function SubcontractorsPage({ searchParams }: { searchParam
         bulkDelete={{
           action: bulkDeleteSubcontractors,
           warningText: "발급된 포털 계정도 함께 삭제됩니다.",
-          labelOf: (id) => nameById.get(id) ?? id,
         }}
       />
     </>

@@ -60,12 +60,10 @@ export default async function PaymentRequestsPage() {
 
 
   // 모던 테마(grid-modern) 전용 A형 화면 — 클래식은 classic.tsx(동결본).
-  const labelById = new Map<string, string>();
   const recordRows: RecordRow[] = rows.map((row) => {
     const total = (row.payment_request_line_items ?? []).reduce((sum, item) => sum + Number(item.amount), 0);
     const status = resolveStatusLabel(STATUS_LABEL, row.status);
     const label = row.department || row.title || paymentRequestDocTitle(row.card_type);
-    labelById.set(row.id, label);
     const period = formatPeriod(row.period_from, row.period_to);
     const badge = <GridBadge tone={status.tone}>{status.label}</GridBadge>;
     return {
@@ -131,7 +129,6 @@ export default async function PaymentRequestsPage() {
       bulkDelete={{
         action: bulkDeletePaymentRequests,
         warningText: "지급결의서 삭제는 되돌릴 수 없습니다. 첨부된 영수증 파일도 함께 삭제됩니다.",
-        labelOf: (rid) => labelById.get(rid) ?? rid,
       }}
     />
   );
