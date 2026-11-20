@@ -13,6 +13,7 @@ import { isUuid } from "@/lib/is-uuid";
 import type { Database } from "@/types/database.types";
 import { formatNumber } from "@/lib/format-number";
 import { getAllSupplierBalances } from "@/lib/ar-ap";
+import { kstDateStrOffset } from "@/lib/kst-date";
 import { PartyPageA } from "@/components/grid/party-page-a";
 import { daysSince } from "@/lib/ar-ap";
 import { getTenantTheme } from "@/lib/tenant-theme";
@@ -110,6 +111,10 @@ export default async function SuppliersPage({
             name: c.name,
             person: c.representative_name ?? c.contact_name,
             phone: c.phone,
+            email: c.email,
+            businessNumber: c.business_number,
+            address: c.address,
+            paymentTerms: c.payment_terms,
             total: b?.total ?? 0,
             paid: b?.paid ?? 0,
             balance: b?.balance ?? 0,
@@ -117,6 +122,8 @@ export default async function SuppliersPage({
             lastOrderDate: lastOrderMap.get(c.id) ?? null,
           };
         })}
+        detailHrefBase="/payables"
+        recentSince={kstDateStrOffset(-30)}
         q={q}
         hasMore={hasMore}
         moreHref={moreHref}

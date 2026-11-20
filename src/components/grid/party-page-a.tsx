@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { GuardedLink } from "@/components/erp/guarded-link";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { PartyListA, type PartyListRow } from "@/components/grid/party-list-a";
 import type { FormState } from "@/components/form-message";
@@ -11,6 +12,8 @@ export function PartyPageA({
   title,
   basePath,
   rows,
+  detailHrefBase,
+  recentSince,
   q,
   hasMore,
   moreHref,
@@ -26,6 +29,8 @@ export function PartyPageA({
   title: string;
   basePath: string;
   rows: PartyListRow[];
+  detailHrefBase: string;
+  recentSince: string;
   q?: string;
   hasMore: boolean;
   moreHref: string;
@@ -50,29 +55,30 @@ export function PartyPageA({
       <div className="erp-page-toolbar erp-detail-header-row">
         <h1 className="erp-h1">{title}</h1>
         <div className="erp-toolbar erp-u-mb-0">
-          <Link href={`${basePath}/new`} className="erp-btn erp-btn-primary">
+          <GuardedLink href={`${basePath}/new`} className="erp-btn erp-btn-primary">
             F2 신규
-          </Link>
+          </GuardedLink>
           <Link href={q ? `${basePath}?q=${encodeURIComponent(q)}` : basePath} className="erp-btn">
             새로고침
           </Link>
         </div>
       </div>
-      <form id={formId} method="get" className="erp-search-row erp-u-mb-8">
-        <div className="erp-field">
-          <input type="text" name="q" autoComplete="off" defaultValue={q ?? ""} placeholder={searchPlaceholder} className="erp-input erp-u-w-full" />
-        </div>
-        <button type="submit" className="erp-btn erp-btn-primary">
-          F5 조회
-        </button>
-        <span className="erp-u-muted erp-u-text-compact">총 {formatNumber(rows.length)}건</span>
-      </form>
       <PartyListA
         kind={kind}
         rows={rows}
         hrefBase={basePath}
+        detailHrefBase={detailHrefBase}
+        recentSince={recentSince}
         partyLabel={partyLabel}
         balanceLabel={balanceLabel}
+        searchSlot={
+          <form id={formId} method="get" className="erp-party-search">
+            <input type="text" name="q" autoComplete="off" defaultValue={q ?? ""} placeholder={searchPlaceholder} className="erp-input" />
+            <button type="submit" className="erp-btn erp-btn-primary">
+              F5 조회
+            </button>
+          </form>
+        }
         bulkDeleteAction={bulkDeleteAction}
         warningText={warningText}
         emptyMessage={emptyMessage}

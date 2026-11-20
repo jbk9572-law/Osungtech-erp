@@ -1,19 +1,18 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { TodoCheckbox } from "@/components/todo-checkbox";
-import { TodoForm } from "@/components/todo-form";
 import { TodoDetailPanel } from "@/components/todo-detail-panel";
+import { GuardedLink } from "@/components/erp/guarded-link";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { todayKstStr } from "@/lib/kst-date";
 import { GridBadge } from "@/components/grid/badge";
 import { fetchAllRows, fetchLimitedRows } from "@/lib/fetch-all-rows";
 import { matchesSearch } from "@/lib/search-match";
 import { isUuid } from "@/lib/is-uuid";
-import { isPaperCalcEnabled } from "@/modules/paper-calc/public";
-import { createTodo } from "@/app/(dashboard)/todos/actions";
 import { formatNumber } from "@/lib/format-number";
 import { PageGuide } from "@/components/erp/page-guide";
-import { FormSection } from "@/components/erp/page-header";
+import { SplitDetailEmpty } from "@/components/erp/page-header";
+import { CheckCircleIcon } from "@/components/erp/groupware-icons";
 import { SplitFilterColumn, type SplitFilterGroup } from "@/components/erp/split-filter-column";
 
 const DEFAULT_LIST_LIMIT = 300;
@@ -51,7 +50,7 @@ export default async function TodosPage({
   const limit =
     Number.isFinite(parsedLimit) && parsedLimit > 0 ? parsedLimit : DEFAULT_LIST_LIMIT;
   const supabase = await createClient();
-  const [{ rows: allRows, hasMore }, products, summaryRows, suppliers, customers, paperCalcEnabled] =
+  const [{ rows: allRows, hasMore }, products, summaryRows] =
     await Promise.all([
       fetchLimitedRows<{
         id: string;
@@ -101,13 +100,6 @@ export default async function TodosPage({
       fetchAllRows<{ done: boolean; due_date: string | null; todo_type: string; created_by: string | null; profiles: { full_name: string | null } | null }>((from, to) =>
         supabase.from("todos").select("done, due_date, todo_type, created_by, profiles!created_by(full_name)").range(from, to),
       ),
-      fetchAllRows<{ id: string; name: string }>((from, to) =>
-        supabase.from("suppliers").select("id, name").order("name").range(from, to),
-      ),
-      fetchAllRows<{ id: string; name: string }>((from, to) =>
-        supabase.from("customers").select("id, name").order("name").range(from, to),
-      ),
-      isPaperCalcEnabled(supabase),
     ]);
 
   const productNameById = new Map(products.map((p) => [p.id, p.name]));
@@ -198,13 +190,13 @@ export default async function TodosPage({
 
   return (
     <div className="erp-comm-shell">
-      <KeyboardShortcuts shortcuts={{ F2: { href: newHref }, Escape: { href: selectedId ? newHref : "/dashboard" } }} />
+      <KeyboardShortcuts shortcuts={{ F2: { href: "/todos/new" }, Escape: { href: selectedId ? newHref : "/dashboard" } }} />
       <div className="erp-page-toolbar erp-detail-header-row">
         <h1 className="erp-h1">할일관리</h1>
         <div className="erp-toolbar erp-u-mb-0">
-          <Link href={newHref} className="erp-btn erp-btn-primary">
-            F2 글쓰기
-          </Link>
+          <GuardedLink href="/todos/new" className="erp-btn erp-btn-primary">
+            F2 새 할일
+          </GuardedLink>
           {selectedId && (
             <Link href={newHref} className="erp-btn">
               목록
@@ -228,30 +220,14 @@ export default async function TodosPage({
               총 {formatNumber(rows.length)}건
             </span>
           </div>
-          <form
-            id="todos-search-form"
-            method="get"
-            className="erp-field-grid erp-u-gap-s2"
-            style={{ margin: "var(--erp-space-3)", padding: "var(--erp-space-3)" }}
-          >
+          <form id="todos-search-form" method="get" className="erp-party-search erp-u-p-8">
             {status !== "all" && <input type="hidden" name="status" value={status} />}
             {type !== "all" && <input type="hidden" name="type" value={type} />}
             {owner !== "all" && <input type="hidden" name="owner" value={owner} />}
-            <div className="erp-field erp-span-12">
-              <input
-                type="text"
-                name="q"
-                autoComplete="off"
-                defaultValue={q ?? ""}
-                placeholder="제목, 메모, 품목명, 거래처 검색"
-                className="erp-input erp-u-w-full"
-              />
-            </div>
-            <div className="erp-field erp-span-12">
-              <button type="submit" className="erp-btn erp-btn-primary erp-u-w-full">
-                조회
-              </button>
-            </div>
+            <GuardedLink href="/todos/new" className="erp-btn erp-btn-primary erp-u-nowrap">
+              + 새 할일
+            </GuardedLink>
+            <input type="text" name="q" autoComplete="off" defaultValue={q ?? ""} placeholder="제목·거래처·품목 검색" className="erp-input" aria-label="할일 검색" />
           </form>
           <div className="erp-split-list-body">
             {rows.map((row) => {
@@ -265,20 +241,22 @@ export default async function TodosPage({
                   style={{ display: "flex", alignItems: "flex-start", gap: "var(--erp-space-2)" }}
                 >
                   <TodoCheckbox id={row.id} done={row.done} label={row.title} />
-                  <Link href={rowHref(row.id)} style={{ flex: 1, minWidth: 0, color: "inherit", textDecoration: "none" }}>
-                    <span style={row.done ? { color: "var(--erp-text-muted)" } : { fontWeight: 600 }}>
-                      {row.title}
-                    </span>
-                    {overdue && (
-                      <span className="erp-u-ml-s2">
-                        <GridBadge tone="danger">기한초과</GridBadge>
+                  <Link href={rowHref(row.id)} className="erp-todo-row-link">
+                    <span className="erp-todo-row-main">
+                      <span className={row.done ? "erp-u-muted erp-u-strike" : "erp-u-semibold"}>{row.title}</span>
+                      <span className="erp-split-list-row-sub">
+                        {[typeLabels[row.todo_type] ?? row.todo_type, partner, summarizeItems(items, productNameById)].filter(Boolean).join(" · ")}
                       </span>
-                    )}
-                    <div className="erp-split-list-row-sub">
-                      {partner && <>{partner} · </>}
-                      {summarizeItems(items, productNameById)}
-                      {row.due_date ? ` · 마감 ${row.due_date}` : ""}
-                    </div>
+                    </span>
+                    {row.done ? (
+                      <GridBadge tone="muted">완료</GridBadge>
+                    ) : overdue ? (
+                      <GridBadge tone="danger">{`${row.due_date!.slice(5).replace("-", "/")} 지남`}</GridBadge>
+                    ) : row.due_date === todayStr ? (
+                      <GridBadge tone="warn">오늘</GridBadge>
+                    ) : row.due_date ? (
+                      <GridBadge tone="muted">{row.due_date.slice(5).replace("-", "/")}</GridBadge>
+                    ) : null}
                   </Link>
                 </div>
               );
@@ -300,18 +278,9 @@ export default async function TodosPage({
 
         <div className="erp-split-detail">
           {selectedId ? (
-            <TodoDetailPanel key={selectedId} id={selectedId} />
+            <TodoDetailPanel key={selectedId} id={selectedId} mode="view" />
           ) : (
-            <FormSection tabLabel="할 일 등록">
-              <TodoForm
-                action={createTodo}
-                submitLabel="등록"
-                products={products}
-                suppliers={suppliers}
-                customers={customers}
-                paperCalcEnabled={paperCalcEnabled}
-              />
-            </FormSection>
+            <SplitDetailEmpty icon={<CheckCircleIcon />} title="할 일을 선택해주세요" hint="왼쪽 목록에서 할 일을 누르면 여기에 내용이 표시됩니다. 새 할 일은 [F2 새 할일]로 등록합니다." />
           )}
         </div>
       </div>

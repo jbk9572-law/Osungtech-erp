@@ -10,21 +10,27 @@ export function GridGroupHeaderRow({
   span,
   after,
   label,
+  groups,
 }: {
   before: number;
-  span: number;
-  after: number;
-  label: string;
+  span?: number;
+  after?: number;
+  label?: string;
+  /** 묶음이 여러 개일 때(예: 거래처 | 미수금 | 거래) — 이 목록을 주면 span/label/after 대신 이걸 그린다. 맨 앞 빈 칸 수는 before. */
+  groups?: { span: number; label: string }[];
 }) {
   const { groupedHeader } = useThemeFeatures();
   if (!groupedHeader) return null;
+  const list = groups ?? [{ span: span ?? 1, label: label ?? "" }];
   return (
     <tr className="erp-grid-group-row">
-      <th colSpan={before} aria-hidden="true" />
-      <th colSpan={span} className="erp-grid-group-label">
-        {label}
-      </th>
-      <th colSpan={after} aria-hidden="true" />
+      {before > 0 && <th colSpan={before} aria-hidden="true" />}
+      {list.map((g) => (
+        <th key={g.label} colSpan={g.span} className="erp-grid-group-label">
+          {g.label}
+        </th>
+      ))}
+      {!!after && <th colSpan={after} aria-hidden="true" />}
     </tr>
   );
 }
