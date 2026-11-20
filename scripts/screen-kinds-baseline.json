@@ -1,0 +1,38 @@
+{
+  "split2": [
+    "app/(dashboard)/approvals/lines/page.tsx",
+    "app/(dashboard)/approvals/page.tsx",
+    "app/(dashboard)/customers/page.tsx",
+    "app/(dashboard)/hr/documents/page.tsx",
+    "app/(dashboard)/official-documents/official-documents-list.tsx",
+    "app/(dashboard)/products/page.tsx",
+    "app/(dashboard)/purchase-quote-requests/page.tsx",
+    "app/(dashboard)/purchase-requests/page.tsx",
+    "app/(dashboard)/quotes/page.tsx",
+    "app/(dashboard)/reports/payment-requests/page.tsx",
+    "app/(dashboard)/sales-activities/page.tsx",
+    "app/(dashboard)/subcontractors/page.tsx",
+    "app/(dashboard)/suppliers/page.tsx",
+    "app/(dashboard)/todos/page.tsx",
+    "components/activity-log-list-body.tsx",
+    "components/failure-log-list-body.tsx"
+  ],
+  "accordion": [
+    "components/portal-orders-grid-table.tsx",
+    "components/purchase-grid-table.tsx",
+    "components/sales-grid-table.tsx"
+  ],
+  "trailingLink": [
+    "components/balance-grid-table.tsx",
+    "components/product-grid-table.tsx"
+  ],
+  "split3NoFilter": [
+    "app/(dashboard)/announcements/page.tsx",
+    "app/(dashboard)/board/page.tsx",
+    "app/(dashboard)/hr/documents/templates/page.tsx",
+    "app/(dashboard)/mail/page.tsx",
+    "app/platform-admin/page.tsx",
+    "components/erp/messenger-page.tsx",
+    "components/support-ticket-list-body.tsx"
+  ]
+}
