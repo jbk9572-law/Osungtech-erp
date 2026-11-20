@@ -1,0 +1,270 @@
+// 클래식 테마 전용 화면 — 동결본(개발헌법 12번: 새 기능·수정은 모던 쪽 modern.tsx에서만 하고, 이 파일은 클래식 사용자를 위해 그대로 둔다).
+import { withPageTiming } from "@/lib/page-timing";
+import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
+import { CreateProductForm } from "@/components/create-product-form";
+import { ExcelImportForm } from "@/components/excel-import-form";
+import { ProductDetailPanel } from "@/components/product-detail-panel";
+import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { ListPageHeader } from "@/components/erp/page-header";
+import { DeleteButton } from "@/components/delete-button";
+import { SplitListBulkSelect, type SplitListBulkRow } from "@/components/erp/split-list-bulk-select";
+import { importProductsExcel, deleteProduct, bulkDeleteProducts } from "@/app/(dashboard)/products/actions";
+import { fetchAllRows, fetchLimitedRows } from "@/lib/fetch-all-rows";
+import { matchesSearch } from "@/lib/search-match";
+import { isUuid } from "@/lib/is-uuid";
+import { formatNumber } from "@/lib/format-number";
+import { isFeatureEnabled } from "@/lib/require-feature-enabled";
+
+const DEFAULT_LIST_LIMIT = 300;
+const LIST_LIMIT_STEP = 300;
+
+type ProductQueryRow = {
+  id: string;
+  sku: string;
+  name: string;
+  spec: string | null;
+  parent_product_id: string | null;
+};
+
+const PRODUCT_COLUMNS = "id, sku, name, spec, parent_product_id";
+
+async function ProductsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; limit?: string; id?: string }>;
+}) {
+  const { q, limit: limitParam, id } = await searchParams;
+  const selectedId = id && isUuid(id) ? id : undefined;
+  const parsedLimit = limitParam ? parseInt(limitParam, 10) : NaN;
+  const limit = Number.isFinite(parsedLimit) && parsedLimit > 0 ? parsedLimit : DEFAULT_LIST_LIMIT;
+  const keyword = q?.trim().toLowerCase();
+  const supabase = await createClient();
+
+  // 검색 중이 아닐 때는(=그냥 목록을 훑어보는, 압도적으로 흔한 경우) 최근
+  // 등록순 상한(limit)까지만 가져온다 — 전체 품목을 매번 다 내려받아 필터링
+  // 없이 그대로 그리드에 그리면, 품목이 늘어날수록 한 요청 안에서 처리할
+  // 행 수가 그대로 늘어나 클라우드플레어 CPU 한도(Error 1102)를 넘기게
+  // 된다. 검색어가 있을 때는 최근 limit개 안에서만 찾으면 오래된 품목을
+  // 못 찾을 수 있으므로, 그때만 전체를 훑는다.
+  let allProducts: ProductQueryRow[];
+  let hasMore = false;
+  if (keyword) {
+    allProducts = await fetchAllRows<ProductQueryRow>((from, to) =>
+      supabase.from("products").select(PRODUCT_COLUMNS).order("created_at", { ascending: false }).range(from, to),
+    );
+  } else {
+    // .limit(limit)을 직접 걸면 limit이 PostgREST max_rows(1000, supabase/
+    // config.toml)를 넘을 때 조용히 1000건에서 잘린다 — "더보기"를 3번
+    // 누르면 limit=1200인데 1000개만 돌아와 hasMore가 false로 잘못
+    // 판정되고, 1000번째 이후 등록된 품목은 검색 없이는 영원히 안 보이게
+    // 된다(헌법검사에서 발견). customers/suppliers/subcontractors가 이미
+    // 쓰는 fetchLimitedRows로 맞춘다.
+    const result = await fetchLimitedRows<ProductQueryRow>(
+      (from, to) => supabase.from("products").select(PRODUCT_COLUMNS).order("created_at", { ascending: false }).range(from, to),
+      limit,
+    );
+    allProducts = result.rows;
+    hasMore = result.hasMore;
+  }
+
+  // 파생 SKU(모품목 선택) 기능은 이형/삼각거래가 있는 업종에서만 쓰는
+  // 개념이라, 범용 SaaS 테넌트 단위로 껐다 켤 수 있다(환경설정 > 기능
+  // 관리 "파생 SKU" 토글, require-feature-enabled.ts와 같은 disabled_
+  // features 저장소 재사용). 꺼져 있으면 모품목 후보 조회 자체를
+  // 건너뛰고 빈 배열을 내려줘 ProductForm이 필드를 숨긴다(필드 자체는
+  // parentCandidates가 비어 있으면 숨기는 기존 동작 그대로 재사용 —
+  // ProductForm을 따로 고칠 필요가 없다).
+  const derivedSkuEnabled = await isFeatureEnabled(supabase, "derived_sku");
+
+  const [categories, suppliers, parentCandidates] = await Promise.all([
+    fetchAllRows<{ id: string; name: string }>((from, to) =>
+      supabase.from("categories").select("id, name").order("name").range(from, to),
+    ),
+    fetchAllRows<{ id: string; name: string }>((from, to) =>
+      supabase.from("suppliers").select("id, name").order("name").range(from, to),
+    ),
+    // 모품목 후보 — 위 allProducts(검색/limit에 따라 달라지는 목록)와 달리
+    // "품목 추가" 폼은 항상 전체 품목 중에서 모품목을 고를 수 있어야 하므로
+    // categories/suppliers와 같은 방식(fetchAllRows)으로 따로, 전부 가져온다.
+    // 이미 다른 품목의 파생 품목인 것은 DB에서부터 제외해 다단계 구조가
+    // UI에 애초에 보이지 않게 한다(해당 제약은 트리거로도 다시 막힌다).
+    // unit/category_id까지 같이 내려줘서, 모품목을 고르면 ProductForm이
+    // 규격/단위/카테고리를 자동으로 채운다(어차피 같은 실물이라 SKU/
+    // 상품명/판매가만 새로 입력하면 되게).
+    !derivedSkuEnabled
+      ? Promise.resolve([])
+      : fetchAllRows<{
+          id: string;
+          sku: string;
+          name: string;
+          spec: string | null;
+          unit: string | null;
+          category_id: string | null;
+        }>((from, to) =>
+          supabase
+            .from("products")
+            .select("id, sku, name, spec, unit, category_id")
+            .is("parent_product_id", null)
+            .order("name")
+            .range(from, to),
+        ),
+  ]);
+
+  const products = keyword
+    ? allProducts.filter((p) => matchesSearch(keyword, p.name, p.sku, p.spec))
+    : allProducts;
+
+  const exportHref = q ? `/api/products/export?q=${encodeURIComponent(q)}` : "/api/products/export";
+  const listParams = new URLSearchParams();
+  if (q) listParams.set("q", q);
+  if (limitParam) listParams.set("limit", limitParam);
+  const rowHref = (productId: string) => {
+    const p = new URLSearchParams(listParams);
+    p.set("id", productId);
+    return `/products?${p.toString()}`;
+  };
+  const moreParams = new URLSearchParams(listParams);
+  moreParams.set("limit", String(limit + LIST_LIMIT_STEP));
+  const moreHref = `/products?${moreParams.toString()}`;
+  const newHref = listParams.toString() ? `/products?${listParams.toString()}` : "/products";
+  const currentHref = selectedId
+    ? `/products?${new URLSearchParams({ ...(q ? { q } : {}), ...(limitParam ? { limit: limitParam } : {}), id: selectedId }).toString()}`
+    : newHref;
+
+  return (
+    <div>
+      <KeyboardShortcuts
+        shortcuts={{
+          F2: { href: newHref },
+          F5: { submitFormSelector: "#products-search-form" },
+          Escape: { href: selectedId ? newHref : "/dashboard" },
+        }}
+      />
+      <div className="erp-page-toolbar erp-detail-header-row">
+        <ListPageHeader
+          title="품목관리"
+          actions={
+            <>
+              <Link href={newHref} className="erp-btn erp-btn-primary">
+                F2 신규
+              </Link>
+              <Link href={currentHref} className="erp-btn">
+                새로고침
+              </Link>
+              {selectedId && (
+                <>
+                  <Link href={newHref} className="erp-btn">
+                    목록
+                  </Link>
+                  <DeleteButton
+                    action={deleteProduct}
+                    id={selectedId}
+                    confirmMessage="이 상품을 삭제하시겠습니까? 관련 매입/매출 내역이 있으면 삭제되지 않습니다."
+                  />
+                </>
+              )}
+            </>
+          }
+        />
+      </div>
+
+      <div className="erp-split-shell" data-mobile-view={selectedId ? "detail" : "list"}>
+        <section className="erp-split-list">
+          <div className="erp-split-list-head">
+            <span>품목 목록</span>
+            <span className="erp-u-muted erp-u-normal">
+              총 {formatNumber(products.length)}건
+            </span>
+          </div>
+          <form
+            id="products-search-form"
+            method="get"
+            className="erp-search-row erp-u-p-8 erp-u-m-8"
+          >
+            <div className="erp-field">
+              <input
+                type="text"
+                name="q"
+                autoComplete="off"
+                defaultValue={q ?? ""}
+                placeholder="상품명, SKU, 규격 검색"
+                className="erp-input erp-u-w-full"
+              />
+            </div>
+            <button type="submit" className="erp-btn erp-btn-primary">
+              F5 조회
+            </button>
+          </form>
+          <div className="erp-split-list-body">
+            <SplitListBulkSelect
+              rows={products.map(
+                (p): SplitListBulkRow => ({
+                  id: p.id,
+                  href: rowHref(p.id),
+                  active: p.id === selectedId,
+                  label: p.name,
+                  content: (
+                    <>
+                      {p.name}
+                      <div className="erp-split-list-row-sub">
+                        {p.sku}
+                        {p.spec ? ` · ${p.spec}` : ""}
+                      </div>
+                    </>
+                  ),
+                }),
+              )}
+              bulkDeleteAction={bulkDeleteProducts}
+              warningText="관련 매입/매출 내역이 있는 품목은 삭제되지 않습니다."
+              emptyMessage="조건에 맞는 품목이 없습니다."
+            />
+          </div>
+          {!keyword && hasMore && (
+            <div className="erp-u-p-8 erp-u-bt-border">
+              <Link href={moreHref} className="erp-btn" style={{ width: "100%" }}>
+                더보기 (다음 {formatNumber(LIST_LIMIT_STEP)}개)
+              </Link>
+            </div>
+          )}
+        </section>
+
+        <div className="erp-split-detail">
+          {selectedId ? (
+            <ProductDetailPanel key={selectedId} id={selectedId} />
+          ) : (
+            <>
+              <div className="erp-detail erp-u-mt-0 erp-u-mb-12">
+                <div className="erp-detail-tabs">
+                  <span className="erp-detail-tab active">품목 추가</span>
+                </div>
+                <div className="erp-detail-body">
+                  <CreateProductForm
+                    categories={categories ?? []}
+                    suppliers={suppliers ?? []}
+                    parentCandidates={parentCandidates}
+                  />
+                </div>
+              </div>
+
+              <div className="erp-detail">
+                <div className="erp-detail-tabs">
+                  <span className="erp-detail-tab active">엑셀 일괄등록</span>
+                </div>
+                <div className="erp-detail-body">
+                  <ExcelImportForm
+                    action={importProductsExcel}
+                    templateHref="/templates/products-template.xlsx"
+                    exportHref={exportHref}
+                  />
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default withPageTiming("products", ProductsPage);
