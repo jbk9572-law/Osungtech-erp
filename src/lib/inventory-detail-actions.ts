@@ -4,7 +4,8 @@ import { createClient, getUser } from "@/lib/supabase/server";
 import { canViewPage } from "@/lib/department-page-access";
 
 // 재고현황 오른쪽 상세 패널 — 고른 품목 한 곳의 창고별 재고와 최근 입출고만 불러온다(목록은 품목별 합계 재고만 갖고 있다).
-// 화면과 같은 권한(canViewPage)을 확인해, 접근 권한이 없는 부서가 서버 액션 주소로 직접 호출해도 못 보게 한다.
+// 로그인과 회사 소속(RLS)을 확인한다 — 재고현황은 부서별 화면 제한 대상(RESTRICTABLE_PAGES)이 아니라서 canViewPage는 지금은 항상 통과이고,
+// 나중에 제한 대상에 추가되면 이 호출이 그대로 적용돼 화면과 같은 기준이 된다.
 // 관리번호(로트)별 잔량은 저장하는 곳이 없어(관리번호는 매입·매출 줄의 글자 값) 여기에 넣지 않는다.
 export type InventoryItemDetail = {
   warehouses: { id: string; name: string; quantity: number }[];

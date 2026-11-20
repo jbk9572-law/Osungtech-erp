@@ -13,7 +13,7 @@ export type Company = {
   email: string | null;
   greeting_message: string | null;
   seal_image_url?: string | null;
-  /** 대시보드 배경 로고(원형) — 새 서식(N)의 워터마크로 쓴다. 안 올린 회사는 워터마크 없음. */
+  /** 대시보드 배경 로고(원형) — 엘보닉스 서식(N)의 워터마크로 쓴다. 안 올린 회사는 워터마크 없음. */
   logo_mark_url?: string | null;
 } | null;
 

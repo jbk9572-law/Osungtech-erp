@@ -223,7 +223,8 @@ export function BalanceGridTable({
                   </td>
                 )}
                 <td className="num erp-u-muted">
-                  상세 →
+                  {/* 패널 모드에서는 행 클릭이 "선택"이라, 이동은 이 링크로(행 클릭 핸들러는 링크 클릭을 건너뛴다) */}
+                  {sideSplit ? <Link href={rowHref(b.id)}>상세 →</Link> : "상세 →"}
                 </td>
               </ClickableRow>
             ))}
