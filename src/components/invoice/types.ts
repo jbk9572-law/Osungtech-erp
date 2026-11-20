@@ -17,8 +17,8 @@ export type Company = {
   logo_mark_url?: string | null;
 } | null;
 
-// 서식: B형(엔택스 원본 복제, 공급받는자는 상호+貴下만) / A형(엔택스 A형 복제, 공급받는자 사업자 정보까지) / N(우리가 설계한 새 공용 서식, 모던 테마 기본).
-export type InvoiceForm = "A" | "B" | "N";
+// 서식: B형(엔택스 원본 복제, 공급받는자는 상호+貴下만) / A형(엔택스 A형 복제, 공급받는자 사업자 정보까지) / N(엘보닉스 N-A형 — 우리가 설계한 공용 서식, 공급받는자 사업자 정보까지, 모던 테마 기본) / NB(엘보닉스 N-B형 — 같은 서식에 공급받는자는 상호+貴下만). 둘 다 2연식·전지.
+export type InvoiceForm = "A" | "B" | "N" | "NB";
 
 // A형의 공급받는자 칸에 채우는 상대 사업자 정보(거래처 또는 공급처 한 곳).
 export type InvoiceParty = {

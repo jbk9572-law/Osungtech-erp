@@ -12,3 +12,13 @@ export async function getTenantTheme(supabase: SupabaseServerClient): Promise<st
     return null;
   }
 }
+
+// 인쇄 서식처럼 "이 회사가 무엇을 쓸 수 있나"를 가를 때 쓰는 값 — 테마와 회사 식별자(slug)를 한 번에 읽는다(DB 호출 1번).
+export async function getTenantInvoiceScope(supabase: SupabaseServerClient): Promise<{ theme: string | null; slug: string | null }> {
+  try {
+    const { data } = await supabase.from("tenants").select("theme, slug").maybeSingle();
+    return { theme: data?.theme ?? null, slug: data?.slug ?? null };
+  } catch {
+    return { theme: null, slug: null };
+  }
+}

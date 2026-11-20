@@ -1827,6 +1827,13 @@ html:has(.erp) body {
    34px)를 직접 컨트롤하고 있어서 감싸는 순간 그 값이 무시되기 때문이다.
 */
 @media print {
+  /* Tailwind의 print:hidden 은 레이어 안(utilities)이라, 이 파일처럼 레이어 없는 .erp-optbar·.erp-print-toolbar·.erp-btn·.erp-toolbar 의
+     display 규칙에 항상 진다 — 그래서 인쇄 옵션 줄·도구줄이 종이에 같이 찍혀 명세표가 잘렸다. 인쇄에서는 print:hidden 이 무조건 이기게 한 곳에서 못박는다
+     (클래스마다 따로 고치지 않으므로 앞으로 print:hidden 을 붙인 요소는 전부 자동으로 숨는다). */
+  .print\:hidden {
+    display: none !important;
+  }
+
   .erp-titlebar,
   .erp-ribbon,
   .erp-tree,
