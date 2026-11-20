@@ -13,6 +13,10 @@ import { formatNumber } from "@/lib/format-number";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { isUuid } from "@/lib/is-uuid";
 import { todayKstStr } from "@/lib/kst-date";
+import { getTenantTheme } from "@/lib/tenant-theme";
+import { getThemeFeatures } from "@/lib/erp-theme-config";
+import { RecordPageA } from "@/components/grid/record-page-a";
+import type { RecordRow } from "@/components/grid/record-list-a";
 
 const DEFAULT_LIST_LIMIT = 300;
 const LIST_LIMIT_STEP = 300;
@@ -77,6 +81,101 @@ export default async function QuotesPage({
   const moreHref = `/quotes?${moreParams.toString()}`;
   const newHref = listParams.toString() ? `/quotes?${listParams.toString()}` : "/quotes";
 
+  const filters = (
+    <>
+      <DateRangeQuickFilters basePath="/quotes" presets={presets} monthButtons={monthButtons} from={from} to={to} />
+
+      <form method="get" id="quotes-search-form" className="erp-field-grid">
+        <div className="erp-field erp-span-2">
+          <label htmlFor="quotes-search-from">시작일</label>
+          <input id="quotes-search-from" type="date" name="from" defaultValue={from ?? ""} className="erp-input" />
+        </div>
+        <div className="erp-field erp-span-2">
+          <label htmlFor="quotes-search-to">종료일</label>
+          <input id="quotes-search-to" type="date" name="to" defaultValue={to ?? ""} className="erp-input" />
+        </div>
+        <div className="erp-field erp-span-4">
+          <label htmlFor="quotes-search-q">거래처 / 견적번호 / 메모 검색</label>
+          <input
+            id="quotes-search-q"
+            type="text"
+            name="q"
+            autoComplete="off"
+            defaultValue={q ?? ""}
+            placeholder="거래처명, 견적번호, 메모"
+            className="erp-input erp-u-w-full"
+          />
+        </div>
+        <button type="submit" className="erp-btn erp-btn-primary">
+          F5 조회
+        </button>
+        {(from || to || q || limitParam) && (
+          <Link href="/quotes" className="erp-btn">
+            초기화
+          </Link>
+        )}
+      </form>
+    </>
+  );
+
+  // 모던 테마(listSidePanel)는 A형 — 표 + 오른쪽 상세 패널, 신규·수정은 C형 모달. 클래식은 아래 기존 2분할 그대로.
+  if (getThemeFeatures(await getTenantTheme(supabase)).listSidePanel) {
+    const rows: RecordRow[] = quotes.map((quote) => {
+      const total = (quote.quote_items ?? []).reduce((sum, i) => sum + Number(i.quantity) * Number(i.unit_price), 0);
+      const customer = quote.customers?.name ?? "-";
+      const date = quote.quote_date.replaceAll("-", ".");
+      return {
+        id: quote.id,
+        href: `/quotes/${quote.id}`,
+        cells: [`#${quote.doc_no}`, customer, date, quote.valid_until ? quote.valid_until.replaceAll("-", ".") : "-", formatNumber(total), <QuoteStatusBadge key="s" status={quote.status} />],
+        card: {
+          title: (
+            <>
+              <span className="erp-row-card-partner">{customer}</span>
+              <QuoteStatusBadge status={quote.status} />
+            </>
+          ),
+          sub: `#${quote.doc_no} · ${date}`,
+          foot: <span className="erp-row-card-amount">{formatNumber(total)}원</span>,
+        },
+        panel: {
+          title: customer,
+          subtitle: `#${quote.doc_no} · ${date}`,
+          kv: [
+            { label: "상태", value: <QuoteStatusBadge status={quote.status} /> },
+            { label: "유효기한", value: quote.valid_until ? quote.valid_until.replaceAll("-", ".") : "-" },
+            { label: "수주전환", value: quote.converted_sales_order_id ? "전환됨" : "-" },
+            { label: "메모", value: quote.memo || "-" },
+          ],
+          totals: [
+            { label: "품목", value: `${formatNumber((quote.quote_items ?? []).length)}건` },
+            { label: "견적 금액", value: formatNumber(total), strong: true },
+          ],
+          actions: [
+            { label: "수정·상세", href: `/quotes/${quote.id}` },
+            { label: "인쇄", href: `/quotes/${quote.id}/print` },
+          ],
+        },
+      };
+    });
+    return (
+      <RecordPageA
+        title="견적서관리"
+        basePath="/quotes"
+        newLabel="견적서 작성"
+        searchFormId="quotes-search-form"
+        filters={filters}
+        columns={[{ label: "견적번호" }, { label: "거래처" }, { label: "견적일" }, { label: "유효기한" }, { label: "견적 금액", num: true }, { label: "상태" }]}
+        rows={rows}
+        panelAriaLabel="선택한 견적서 상세"
+        hasMore={hasMore}
+        moreHref={moreHref}
+        moreStep={LIST_LIMIT_STEP}
+        emptyMessage="조건에 맞는 견적서가 없습니다."
+      />
+    );
+  }
+
   let formData: {
     customers: { id: string; name: string }[];
     products: { id: string; sku: string; name: string; spec: string | null; price: number }[];
@@ -114,38 +213,7 @@ export default async function QuotesPage({
         />
       </div>
 
-      <DateRangeQuickFilters basePath="/quotes" presets={presets} monthButtons={monthButtons} from={from} to={to} />
-
-      <form method="get" id="quotes-search-form" className="erp-field-grid">
-        <div className="erp-field erp-span-2">
-          <label htmlFor="quotes-search-from">시작일</label>
-          <input id="quotes-search-from" type="date" name="from" defaultValue={from ?? ""} className="erp-input" />
-        </div>
-        <div className="erp-field erp-span-2">
-          <label htmlFor="quotes-search-to">종료일</label>
-          <input id="quotes-search-to" type="date" name="to" defaultValue={to ?? ""} className="erp-input" />
-        </div>
-        <div className="erp-field erp-span-4">
-          <label htmlFor="quotes-search-q">거래처 / 견적번호 / 메모 검색</label>
-          <input
-            id="quotes-search-q"
-            type="text"
-            name="q"
-            autoComplete="off"
-            defaultValue={q ?? ""}
-            placeholder="거래처명, 견적번호, 메모"
-            className="erp-input erp-u-w-full"
-          />
-        </div>
-        <button type="submit" className="erp-btn erp-btn-primary">
-          F5 조회
-        </button>
-        {(from || to || q || limitParam) && (
-          <Link href="/quotes" className="erp-btn">
-            초기화
-          </Link>
-        )}
-      </form>
+      {filters}
 
       <div className="erp-split-shell" data-mobile-view={selectedId ? "detail" : "list"}>
         <section className="erp-split-list">

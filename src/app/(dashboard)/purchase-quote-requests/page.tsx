@@ -1,5 +1,9 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { getTenantTheme } from "@/lib/tenant-theme";
+import { getThemeFeatures } from "@/lib/erp-theme-config";
+import { RecordPageA } from "@/components/grid/record-page-a";
+import type { RecordRow } from "@/components/grid/record-list-a";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ListPageHeader } from "@/components/erp/page-header";
 import { GridBadge } from "@/components/grid/badge";
@@ -79,6 +83,96 @@ export default async function PurchaseQuoteRequestsPage({
   const moreHref = `/purchase-quote-requests?${moreParams.toString()}`;
   const newHref = listParams.toString() ? `/purchase-quote-requests?${listParams.toString()}` : "/purchase-quote-requests";
 
+  const filters = (
+    <>
+      <DateRangeQuickFilters basePath="/purchase-quote-requests" presets={presets} monthButtons={monthButtons} from={from} to={to} />
+
+      <form method="get" id="purchase-quote-requests-search-form" className="erp-field-grid">
+        <div className="erp-field erp-span-2">
+          <label htmlFor="pqr-search-from">시작일</label>
+          <input id="pqr-search-from" type="date" name="from" defaultValue={from ?? ""} className="erp-input" />
+        </div>
+        <div className="erp-field erp-span-2">
+          <label htmlFor="pqr-search-to">종료일</label>
+          <input id="pqr-search-to" type="date" name="to" defaultValue={to ?? ""} className="erp-input" />
+        </div>
+        <div className="erp-field erp-span-4">
+          <label htmlFor="pqr-search-q">매입처 / 메모 검색</label>
+          <input
+            id="pqr-search-q"
+            type="text"
+            name="q"
+            autoComplete="off"
+            defaultValue={q ?? ""}
+            placeholder="매입처명, 메모"
+            className="erp-input erp-u-w-full"
+          />
+        </div>
+        <button type="submit" className="erp-btn erp-btn-primary">
+          F5 조회
+        </button>
+        {(from || to || q || limitParam) && (
+          <Link href="/purchase-quote-requests" className="erp-btn">
+            초기화
+          </Link>
+        )}
+      </form>
+    </>
+  );
+
+  // 모던 테마(listSidePanel)는 A형 — 표 + 오른쪽 상세 패널, 신규·수정은 C형 모달. 클래식은 아래 기존 2분할 그대로.
+  if (getThemeFeatures(await getTenantTheme(supabase)).listSidePanel) {
+    const recordRows: RecordRow[] = rows.map((r) => {
+      const targets = r.target_supplier_ids.map((sid) => supplierNameById.get(sid) ?? "-").join(", ");
+      const closed = r.status === "closed";
+      const itemCount = (r.purchase_quote_request_items ?? []).length;
+      const date = r.request_date.replaceAll("-", ".");
+      const badge = <GridBadge tone={closed ? "ok" : "warn"}>{closed ? "확정완료" : "비교중"}</GridBadge>;
+      return {
+        id: r.id,
+        href: `/purchase-quote-requests/${r.id}`,
+        cells: [date, targets || "-", `${itemCount}건`, r.selected_supplier?.name ?? "-", badge],
+        card: {
+          title: (
+            <>
+              <span className="erp-row-card-partner">{targets || "-"}</span>
+              {badge}
+            </>
+          ),
+          sub: `품목 ${itemCount}건 · ${date}`,
+        },
+        panel: {
+          title: targets || "-",
+          subtitle: date,
+          badge: { tone: closed ? "ok" : "warn", label: closed ? "확정완료" : "비교중" },
+          kv: [
+            { label: "품목", value: `${itemCount}건` },
+            { label: "확정 매입처", value: r.selected_supplier?.name ?? "-" },
+            { label: "구매요청 전환", value: r.converted_purchase_request_id ? "전환됨" : "-" },
+            { label: "메모", value: r.memo || "-" },
+          ],
+          actions: [{ label: "수정·상세", href: `/purchase-quote-requests/${r.id}` }],
+        },
+      };
+    });
+    return (
+      <RecordPageA
+        title="매입관리 &gt; 구매 견적요청"
+        basePath="/purchase-quote-requests"
+        newLabel="견적요청 작성"
+        searchFormId="purchase-quote-requests-search-form"
+        filters={filters}
+        columns={[{ label: "요청일" }, { label: "대상 매입처" }, { label: "품목" }, { label: "확정 매입처" }, { label: "상태" }]}
+        rows={recordRows}
+        panelAriaLabel="선택한 견적요청 상세"
+        hasMore={hasMore}
+        moreHref={moreHref}
+        moreStep={LIST_LIMIT_STEP}
+        emptyMessage="조건에 맞는 견적요청이 없습니다."
+      />
+    );
+  }
+
   let formData: {
     suppliers: { id: string; name: string }[];
     products: { id: string; sku: string; name: string; spec: string | null }[];
@@ -120,38 +214,7 @@ export default async function PurchaseQuoteRequestsPage({
         />
       </div>
 
-      <DateRangeQuickFilters basePath="/purchase-quote-requests" presets={presets} monthButtons={monthButtons} from={from} to={to} />
-
-      <form method="get" id="purchase-quote-requests-search-form" className="erp-field-grid">
-        <div className="erp-field erp-span-2">
-          <label htmlFor="pqr-search-from">시작일</label>
-          <input id="pqr-search-from" type="date" name="from" defaultValue={from ?? ""} className="erp-input" />
-        </div>
-        <div className="erp-field erp-span-2">
-          <label htmlFor="pqr-search-to">종료일</label>
-          <input id="pqr-search-to" type="date" name="to" defaultValue={to ?? ""} className="erp-input" />
-        </div>
-        <div className="erp-field erp-span-4">
-          <label htmlFor="pqr-search-q">매입처 / 메모 검색</label>
-          <input
-            id="pqr-search-q"
-            type="text"
-            name="q"
-            autoComplete="off"
-            defaultValue={q ?? ""}
-            placeholder="매입처명, 메모"
-            className="erp-input erp-u-w-full"
-          />
-        </div>
-        <button type="submit" className="erp-btn erp-btn-primary">
-          F5 조회
-        </button>
-        {(from || to || q || limitParam) && (
-          <Link href="/purchase-quote-requests" className="erp-btn">
-            초기화
-          </Link>
-        )}
-      </form>
+      {filters}
 
       <div className="erp-split-shell" data-mobile-view={selectedId ? "detail" : "list"}>
         <section className="erp-split-list">

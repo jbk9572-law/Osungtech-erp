@@ -158,7 +158,7 @@ export function ProductGridTable({
 
   // products 모드는 체크박스 칸이 하나 더 있고, inventory 모드는 대신
   // 재고수량/상태가 안전재고 한 칸 대신 두 칸이라 결과적으로 항상 12칸이다.
-  const colCount = 12 + (rowNumbers ? 1 : 0) + (insights ? 1 : 0);
+  const colCount = 11 + (rowNumbers ? 1 : 0) + (insights ? 1 : 0);
 
   // 표의 각 행과 같은 데이터로 모바일 카드 한 장을 그린다 — 상품명/SKU/
   // 규격/단위와 재고모드의 재고수량·상태(또는 상품모드의 매입가·판매가)만
@@ -259,7 +259,7 @@ export function ProductGridTable({
         <table className="erp-grid">
         <thead>
           {/* 묶음 머리글 — 재고수량·상태·재고금액을 "재고"로 묶는다. 앞: [No]+SKU~판매가 9칸, 뒤: 상세 칸 */}
-          {insights && <GridGroupHeaderRow before={(rowNumbers ? 1 : 0) + 9} span={3} after={1} label="재고" />}
+          {insights && <GridGroupHeaderRow before={(rowNumbers ? 1 : 0) + 9} span={3} after={0} label="재고" />}
           <tr>
             {allowBulkDelete && (
               <th style={thCheckbox}>
@@ -285,7 +285,6 @@ export function ProductGridTable({
                 {insights && <th className="num">재고금액</th>}
               </>
             )}
-            <th />
           </tr>
         </thead>
         <tbody>
@@ -348,9 +347,6 @@ export function ProductGridTable({
                     {insights && <td className="num erp-u-muted">{formatNumOrDash(row.cost == null ? null : Math.max(0, row.quantity) * row.cost)}</td>}
                   </>
                 )}
-                <td className="num erp-u-muted">
-                  {mode === "products" ? "수정 →" : ""}
-                </td>
               </ClickableRow>
             );
           })}

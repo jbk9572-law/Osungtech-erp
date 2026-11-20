@@ -14,6 +14,10 @@ import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { isUuid } from "@/lib/is-uuid";
 import { formatNumber } from "@/lib/format-number";
 import { resolveStatusLabel } from "@/lib/status-label";
+import { getTenantTheme } from "@/lib/tenant-theme";
+import { getThemeFeatures } from "@/lib/erp-theme-config";
+import { RecordPageA } from "@/components/grid/record-page-a";
+import type { RecordRow } from "@/components/grid/record-list-a";
 
 const STATUS_LABEL: Record<string, { label: string; tone: "ok" | "warn" | "danger" | "muted" }> = {
   draft: { label: "작성중", tone: "muted" },
@@ -70,6 +74,84 @@ export default async function PaymentRequestsPage({
 
   const newHref = "/reports/payment-requests";
   const rowHref = (rowId: string) => `/reports/payment-requests?id=${rowId}`;
+
+  // 모던 테마(listSidePanel)는 A형 — 표 + 오른쪽 상세 패널, 신규·수정은 C형 모달(/new, /[id]). 클래식은 아래 기존 2분할 그대로.
+  if (getThemeFeatures(await getTenantTheme(supabase)).listSidePanel) {
+    const labelById = new Map<string, string>();
+    const recordRows: RecordRow[] = rows.map((row) => {
+      const total = (row.payment_request_line_items ?? []).reduce((sum, item) => sum + Number(item.amount), 0);
+      const status = resolveStatusLabel(STATUS_LABEL, row.status);
+      const label = row.department || row.title || paymentRequestDocTitle(row.card_type);
+      labelById.set(row.id, label);
+      const period = formatPeriod(row.period_from, row.period_to);
+      const badge = <GridBadge tone={status.tone}>{status.label}</GridBadge>;
+      return {
+        id: row.id,
+        href: `/reports/payment-requests/${row.id}`,
+        cells: [label, paymentRequestDocTitle(row.card_type), period, formatNumber(total), row.profiles?.full_name ?? "-", badge],
+        card: {
+          title: (
+            <>
+              <span className="erp-row-card-partner">{label}</span>
+              {badge}
+            </>
+          ),
+          sub: `${paymentRequestDocTitle(row.card_type)} · ${period}`,
+          foot: <span className="erp-row-card-amount">{formatNumber(total)}원</span>,
+        },
+        panel: {
+          title: label,
+          subtitle: paymentRequestDocTitle(row.card_type),
+          badge: { tone: status.tone === "danger" ? "danger" : status.tone === "warn" ? "warn" : "ok", label: status.label },
+          kv: [
+            { label: "기간", value: period },
+            { label: "작성자", value: row.profiles?.full_name ?? "-" },
+            { label: "등록일", value: row.created_at.slice(0, 10).replaceAll("-", ".") },
+          ],
+          totals: [
+            { label: "항목", value: `${formatNumber((row.payment_request_line_items ?? []).length)}건` },
+            { label: "지급 합계", value: formatNumber(total), strong: true },
+          ],
+          actions: [
+            { label: "수정·상세", href: `/reports/payment-requests/${row.id}` },
+            { label: "인쇄", href: `/reports/payment-requests/${row.id}/print` },
+          ],
+        },
+      };
+    });
+    return (
+      <RecordPageA
+        title="보고서 &gt; 지급결의양식"
+        basePath="/reports/payment-requests"
+        newLabel="글쓰기"
+        filters={
+          <div className="erp-detail erp-u-mt-0 erp-u-mb-12">
+            <div className="erp-detail-tabs">
+              <span className="erp-detail-tab active">오늘 지출 빠르게 기록</span>
+            </div>
+            <div className="erp-detail-body">
+              <PageGuide>
+                문서를 따로 만들지 않아도 됩니다 — 같은 부서·카드로 이번 달에 이미 쓴 문서가 있으면 거기에 이어서 추가되고, 없으면 자동으로 새로 만들어집니다.
+              </PageGuide>
+              <QuickPaymentRequestForm defaultDepartment={company?.name ?? ""} today={todayKstStr()} />
+            </div>
+          </div>
+        }
+        columns={[{ label: "부서·제목" }, { label: "양식" }, { label: "기간" }, { label: "지급 합계", num: true }, { label: "작성자" }, { label: "상태" }]}
+        rows={recordRows}
+        panelAriaLabel="선택한 지급결의서 상세"
+        hasMore={false}
+        moreHref=""
+        moreStep={0}
+        emptyMessage="등록된 지급결의서가 없습니다."
+        bulkDelete={{
+          action: bulkDeletePaymentRequests,
+          warningText: "지급결의서 삭제는 되돌릴 수 없습니다. 첨부된 영수증 파일도 함께 삭제됩니다.",
+          labelOf: (rid) => labelById.get(rid) ?? rid,
+        }}
+      />
+    );
+  }
 
   return (
     <div>

@@ -13,6 +13,10 @@ import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { isUuid } from "@/lib/is-uuid";
 import { todayKstStr } from "@/lib/kst-date";
 import { resolveStatusLabel } from "@/lib/status-label";
+import { getTenantTheme } from "@/lib/tenant-theme";
+import { getThemeFeatures } from "@/lib/erp-theme-config";
+import { RecordPageA } from "@/components/grid/record-page-a";
+import type { RecordRow } from "@/components/grid/record-list-a";
 
 const STATUS_LABEL: Record<string, { label: string; tone: BadgeTone }> = {
   draft: { label: "작성중", tone: "muted" },
@@ -81,6 +85,100 @@ export default async function PurchaseRequestsPage({
   const moreHref = `/purchase-requests?${moreParams.toString()}`;
   const newHref = listParams.toString() ? `/purchase-requests?${listParams.toString()}` : "/purchase-requests";
 
+  const filters = (
+    <>
+      <DateRangeQuickFilters basePath="/purchase-requests" presets={presets} monthButtons={monthButtons} from={from} to={to} />
+
+      <form method="get" id="purchase-requests-search-form" className="erp-field-grid">
+        <div className="erp-field erp-span-2">
+          <label htmlFor="pr-search-from">시작일</label>
+          <input id="pr-search-from" type="date" name="from" defaultValue={from ?? ""} className="erp-input" />
+        </div>
+        <div className="erp-field erp-span-2">
+          <label htmlFor="pr-search-to">종료일</label>
+          <input id="pr-search-to" type="date" name="to" defaultValue={to ?? ""} className="erp-input" />
+        </div>
+        <div className="erp-field erp-span-4">
+          <label htmlFor="pr-search-q">공급처 / 작성자 / 메모 검색</label>
+          <input
+            id="pr-search-q"
+            type="text"
+            name="q"
+            autoComplete="off"
+            defaultValue={q ?? ""}
+            placeholder="공급처명, 작성자, 메모"
+            className="erp-input erp-u-w-full"
+          />
+        </div>
+        <button type="submit" className="erp-btn erp-btn-primary">
+          F5 조회
+        </button>
+        {(from || to || q || limitParam) && (
+          <Link href="/purchase-requests" className="erp-btn">
+            초기화
+          </Link>
+        )}
+      </form>
+    </>
+  );
+
+  // 모던 테마(listSidePanel)는 A형 — 표 + 오른쪽 상세 패널, 신규·수정은 C형 모달. 클래식은 아래 기존 2분할 그대로.
+  if (getThemeFeatures(await getTenantTheme(supabase)).listSidePanel) {
+    const rows: RecordRow[] = requests.map((r) => {
+      const total = (r.purchase_request_items ?? []).reduce((sum, i) => sum + Number(i.quantity) * Number(i.estimated_unit_price), 0);
+      const status = resolveStatusLabel(STATUS_LABEL, r.status);
+      const supplier = r.suppliers?.name ?? "-";
+      const date = r.request_date.replaceAll("-", ".");
+      const writer = r.profiles?.full_name ?? "-";
+      return {
+        id: r.id,
+        href: `/purchase-requests/${r.id}`,
+        cells: [date, supplier, writer, formatNumber(total), <GridBadge key="s" tone={status.tone}>{status.label}</GridBadge>, r.converted_purchase_order_id ? "발주전환" : "-"],
+        card: {
+          title: (
+            <>
+              <span className="erp-row-card-partner">{supplier}</span>
+              <GridBadge tone={status.tone}>{status.label}</GridBadge>
+            </>
+          ),
+          sub: `${date} · ${writer}`,
+          foot: <span className="erp-row-card-amount">{formatNumber(total)}원</span>,
+        },
+        panel: {
+          title: supplier,
+          subtitle: `${date} · ${writer}`,
+          badge: { tone: status.tone === "danger" ? "danger" : status.tone === "warn" ? "warn" : "ok", label: status.label },
+          kv: [
+            { label: "작성자", value: writer },
+            { label: "발주전환", value: r.converted_purchase_order_id ? "전환됨" : "-" },
+            { label: "메모", value: r.memo || "-" },
+          ],
+          totals: [
+            { label: "품목", value: `${formatNumber((r.purchase_request_items ?? []).length)}건` },
+            { label: "예상 금액", value: formatNumber(total), strong: true },
+          ],
+          actions: [{ label: "수정·상세", href: `/purchase-requests/${r.id}` }],
+        },
+      };
+    });
+    return (
+      <RecordPageA
+        title="매입관리 &gt; 구매요청"
+        basePath="/purchase-requests"
+        newLabel="구매요청 작성"
+        searchFormId="purchase-requests-search-form"
+        filters={filters}
+        columns={[{ label: "요청일" }, { label: "공급처" }, { label: "작성자" }, { label: "예상 금액", num: true }, { label: "상태" }, { label: "발주" }]}
+        rows={rows}
+        panelAriaLabel="선택한 구매요청 상세"
+        hasMore={hasMore}
+        moreHref={moreHref}
+        moreStep={LIST_LIMIT_STEP}
+        emptyMessage="조건에 맞는 구매요청이 없습니다."
+      />
+    );
+  }
+
   let formData: {
     suppliers: { id: string; name: string }[];
     products: { id: string; sku: string; name: string; spec: string | null; cost: number }[];
@@ -120,38 +218,7 @@ export default async function PurchaseRequestsPage({
         />
       </div>
 
-      <DateRangeQuickFilters basePath="/purchase-requests" presets={presets} monthButtons={monthButtons} from={from} to={to} />
-
-      <form method="get" id="purchase-requests-search-form" className="erp-field-grid">
-        <div className="erp-field erp-span-2">
-          <label htmlFor="pr-search-from">시작일</label>
-          <input id="pr-search-from" type="date" name="from" defaultValue={from ?? ""} className="erp-input" />
-        </div>
-        <div className="erp-field erp-span-2">
-          <label htmlFor="pr-search-to">종료일</label>
-          <input id="pr-search-to" type="date" name="to" defaultValue={to ?? ""} className="erp-input" />
-        </div>
-        <div className="erp-field erp-span-4">
-          <label htmlFor="pr-search-q">공급처 / 작성자 / 메모 검색</label>
-          <input
-            id="pr-search-q"
-            type="text"
-            name="q"
-            autoComplete="off"
-            defaultValue={q ?? ""}
-            placeholder="공급처명, 작성자, 메모"
-            className="erp-input erp-u-w-full"
-          />
-        </div>
-        <button type="submit" className="erp-btn erp-btn-primary">
-          F5 조회
-        </button>
-        {(from || to || q || limitParam) && (
-          <Link href="/purchase-requests" className="erp-btn">
-            초기화
-          </Link>
-        )}
-      </form>
+      {filters}
 
       <div className="erp-split-shell" data-mobile-view={selectedId ? "detail" : "list"}>
         <section className="erp-split-list">

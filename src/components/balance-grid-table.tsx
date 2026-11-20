@@ -182,7 +182,7 @@ export function BalanceGridTable({
         <table className="erp-grid">
           <thead>
             {/* 묶음 머리글(테마 기능) — 매출/수금/잔액 세 칸을 "금액(원)"으로 묶는다. 앞: [No]+이름, 뒤: [연체]+상세 */}
-            <GridGroupHeaderRow before={(rowNumbers ? 1 : 0) + 1} span={3} after={(showAging ? 1 : 0) + 1} label="금액(원)" />
+            <GridGroupHeaderRow before={(rowNumbers ? 1 : 0) + 1} span={3} after={showAging ? 1 : 0} label="금액(원)" />
             <tr>
               <RowNoHead />
               {sortableHeader(partyLabel, "name")}
@@ -190,7 +190,6 @@ export function BalanceGridTable({
               {sortableHeader(paidLabel, "paid", "num")}
               {sortableHeader("잔액", "balance", "num")}
               {showAging && <th>연체</th>}
-              <th />
             </tr>
           </thead>
           <tbody>
@@ -219,15 +218,11 @@ export function BalanceGridTable({
                     })()}
                   </td>
                 )}
-                <td className="num erp-u-muted">
-                  {/* 패널 모드에서는 행 클릭이 "선택"이라, 이동은 이 링크로(행 클릭 핸들러는 링크 클릭을 건너뛴다) */}
-                  {sideSplit ? <Link href={rowHref(b.id)}>상세 →</Link> : "상세 →"}
-                </td>
               </ClickableRow>
             ))}
             {!sortedRows.length && (
               <tr>
-                <td colSpan={(showAging ? 6 : 5) + (rowNumbers ? 1 : 0)} className="erp-grid-empty">
+                <td colSpan={(showAging ? 5 : 4) + (rowNumbers ? 1 : 0)} className="erp-grid-empty">
                   {query.trim() ? "검색 결과가 없습니다." : emptyLabel}
                 </td>
               </tr>
