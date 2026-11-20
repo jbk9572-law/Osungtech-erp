@@ -20,6 +20,9 @@ import { buildOrgTree } from "@/lib/org-chart";
 import { isUuid } from "@/lib/is-uuid";
 import { formatNumber } from "@/lib/format-number";
 import { resolveStatusLabel } from "@/lib/status-label";
+import { ListSummaryBar } from "@/components/grid/list-summary-bar";
+import { getTenantTheme } from "@/lib/tenant-theme";
+import { getThemeFeatures } from "@/lib/erp-theme-config";
 
 const STATUS_LABEL: Record<string, { label: string; tone: "ok" | "warn" | "danger" | "muted" }> = {
   pending: { label: "결재중", tone: "warn" },
@@ -52,6 +55,21 @@ export default async function ApprovalsPage({
   const supabase = await createClient();
   await requireFeatureEnabled(supabase, "approvals");
   const user = await getUser();
+  // 테마 기능(denseLists) — 탭별 건수·요약 줄·행의 결재 단계/대기자. 꺼진 회사는 기존 화면 그대로.
+  const dense = getThemeFeatures(await getTenantTheme(supabase)).denseLists;
+  // 탭별 문서 수 — 건수만 필요해서 본문 없이 개수만 센다(head:true). 임시저장은 본인 것만.
+  const tabCounts: Record<string, number> = {};
+  if (dense) {
+    const countOf = async (key: string) => {
+      let q = supabase.from("approval_documents").select("id", { count: "exact", head: true });
+      if (key === "all") q = q.neq("status", "draft");
+      else if (key === "draft") q = q.eq("status", "draft").eq("created_by", user?.id ?? "");
+      else q = q.eq("status", key);
+      const { count } = await q;
+      return [key, count ?? 0] as const;
+    };
+    for (const [k, n] of await Promise.all(TABS.map((t) => countOf(t.key)))) tabCounts[k] = n;
+  }
 
   const tabHref = (key: string) => (key === "all" ? "/approvals" : `/approvals?status=${key}`);
   const newHref = tabHref(activeTab);
@@ -93,6 +111,7 @@ export default async function ApprovalsPage({
             className={`erp-date-preset-btn${activeTab === t.key ? " active" : ""}`}
           >
             {t.label}
+            {dense && <b className="erp-date-preset-count">{formatNumber(tabCounts[t.key] ?? 0)}</b>}
           </Link>
         ))}
       </div>
@@ -246,13 +265,34 @@ export default async function ApprovalsPage({
     }
   }
 
+  // 문서별 결재 진행(승인한 단계/전체 단계)과 지금 차례인 사람 이름 — 목록 줄 보조 정보(테마 기능)
+  const stepCountByDoc = new Map<string, { done: number; total: number }>();
+  for (const s of steps ?? []) {
+    const c = stepCountByDoc.get(s.document_id) ?? { done: 0, total: 0 };
+    c.total += 1;
+    if (s.status === "approved") c.done += 1;
+    stepCountByDoc.set(s.document_id, c);
+  }
+  const approverNameById = new Map<string, string>();
+  if (dense && currentStepByDoc.size > 0) {
+    const ids = [...new Set([...currentStepByDoc.values()].map((c) => c.approverId))];
+    const { data: names } = await selectInChunks(ids, (idChunk) => supabase.from("profiles").select("id, full_name").in("id", idChunk));
+    for (const n of names ?? []) approverNameById.set(n.id, n.full_name ?? "");
+  }
+
   const rows = (docs ?? []).map((d) => {
     const current = currentStepByDoc.get(d.id);
     const myTurn =
       d.status === "pending" &&
       !!current &&
       (current.approverId === user?.id || delegatedForIds.has(current.approverId));
-    return { ...d, myTurn };
+    const progress = stepCountByDoc.get(d.id);
+    return {
+      ...d,
+      myTurn,
+      progress: dense && progress && d.status !== "recalled" ? `${progress.done}/${progress.total}` : null,
+      waitingFor: dense && d.status === "pending" && current ? approverNameById.get(current.approverId) || null : null,
+    };
   });
 
   const listParams = new URLSearchParams();
@@ -319,6 +359,16 @@ export default async function ApprovalsPage({
         문서도 포함), 아직 상신 전인 문서는 임시저장 탭에서 이어 씁니다.
       </PageGuide>
 
+      {dense && (
+        <ListSummaryBar
+          items={[
+            { label: "총", value: `${formatNumber(rows.length)}건` },
+            { label: "내 차례", value: `${formatNumber(rows.filter((r) => r.myTurn).length)}건` },
+            { label: "결재중", value: `${formatNumber(rows.filter((r) => r.status === "pending").length)}건` },
+          ]}
+        />
+      )}
+
       <div className="erp-split-shell" data-mobile-view={selectedId ? "detail" : "list"}>
         <section className="erp-split-list">
           <div className="erp-split-list-head">
@@ -334,7 +384,7 @@ export default async function ApprovalsPage({
                 <Link
                   key={d.id}
                   href={rowHref(d.id)}
-                  className={`erp-split-list-row${d.id === selectedId ? " active" : ""}`}
+                  className={`erp-split-list-row${d.id === selectedId ? " active" : ""}${dense && d.myTurn ? " is-my-turn" : ""}`}
                 >
                   {d.title}
                   <span className="erp-u-ml-s2">
@@ -347,6 +397,8 @@ export default async function ApprovalsPage({
                   )}
                   <div className="erp-split-list-row-sub">
                     {d.profiles?.full_name ?? "-"} · {formatKstDate(d.created_at)}
+                    {d.progress ? ` · 결재 ${d.progress}` : ""}
+                    {d.waitingFor ? ` · 대기 ${d.waitingFor}` : ""}
                   </div>
                 </Link>
               );

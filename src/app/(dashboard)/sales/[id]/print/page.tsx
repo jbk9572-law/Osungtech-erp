@@ -14,8 +14,8 @@ import { formatPaperCalcSizeLines, mergePaperCalcInputItems } from "@/modules/pa
 import { PAPER_STOCK_SKU } from "@/modules/paper-calc/public";
 import { getCustomerBalance } from "@/lib/ar-ap";
 import { calcVatForTaxType } from "@/lib/tax";
-import { INVOICE_FORM_OPTIONS, invoiceFormParam, resolveInvoiceForm } from "@/lib/invoice-form";
-import { getTenantTheme } from "@/lib/tenant-theme";
+import { invoiceFormOptionGroup, resolveInvoiceForm } from "@/lib/invoice-form";
+import { getTenantInvoiceScope } from "@/lib/tenant-theme";
 
 export default async function SalesPrintPage({
   params,
@@ -37,8 +37,10 @@ export default async function SalesPrintPage({
   // 칸에 같이 찍히게 한다.
   const showLot = lotParam === "show";
   const supabase = await createClient();
-  // 서식: ?form=a/b 로 직접 고른 값이 우선, 없으면 회사 테마의 기본 서식(클래식 B형 / grid-modern 새 서식 N). A형·N은 공급받는자 사업자 정보까지 채운다.
-  const form: InvoiceForm = resolveInvoiceForm(sp.form, await getTenantTheme(supabase));
+  // 서식: ?form=a/b/n 으로 직접 고른 값(그 회사가 쓸 수 있는 것만)이 우선, 없으면 회사 테마의 기본 서식(클래식 B형 / 오성테크 외 전부·grid-modern 엘보닉스 A형). 고를 수 있는 서식은 회사마다 다르다(엘보닉스 A·B형=기본, 엔택스 A·B형=오성테크만). 엔택스 A형·엘보닉스 A형은 공급받는자 사업자 정보까지 채운다.
+  const invoiceScope = await getTenantInvoiceScope(supabase);
+  const form: InvoiceForm = resolveInvoiceForm(sp.form, invoiceScope);
+  const formGroup = invoiceFormOptionGroup(form, invoiceScope);
 
   const [{ data: order }, { data: items }, { data: company }, { data: paperCalcs }] = await Promise.all([
     supabase.from("sales_orders").select("*, customers(*)").eq("id", id).maybeSingle(),
@@ -265,12 +267,7 @@ export default async function SalesPrintPage({
         basePath={`/sales/${id}/print`}
         params={sp}
         groups={[
-          {
-            key: "form",
-            label: "서식",
-            current: invoiceFormParam(form),
-            options: INVOICE_FORM_OPTIONS,
-          },
+          ...(formGroup ? [formGroup] : []),
           {
             key: "copies",
             label: "출력",

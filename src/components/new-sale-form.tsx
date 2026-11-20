@@ -13,7 +13,8 @@ import { FormMessage } from "@/components/form-message";
 import type { FormState } from "@/components/form-message";
 import { PriceHistoryHint } from "@/components/price-history-hint";
 import { NumberInput } from "@/components/number-input";
-import { RemarkActionCells, SpecLotUnitCells } from "@/components/erp/order-form-row-cells";
+import { CustomEntryToggle, RemarkActionCells, SpecLotUnitCells } from "@/components/erp/order-form-row-cells";
+import type { RowOption } from "@/components/erp/row-options";
 import { QuantityWithBoxInput } from "@/components/quantity-with-box-input";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { KeyboardHintBar, ORDER_GRID_KEY_HINTS } from "@/components/erp/keyboard-hint-bar";
@@ -304,7 +305,7 @@ export function NewSaleForm({
       remark: "",
     };
   }
-  const { rows, setRows, addRow, insertRowAfter, removeRow, addFilledRow, addFilledRows } = useKeyedRows<Row>(
+  const { rows, setRows, addRow, insertRowAfter, removeRow, addFilledRow, addFilledRows, undoRows, redoRows } = useKeyedRows<Row>(
     initial?.items.length
       ? initial.items.map((item, i) => ({
           key: i,
@@ -323,7 +324,7 @@ export function NewSaleForm({
           sourcePurchaseItemId: item.sourcePurchaseItemId ?? null,
         }))
       : [makeBlankRow(0)],
-    makeBlankRow,
+    makeBlankRow, { idleUndoShortcut: true },
   );
   // 이 폼에서 "빈 줄"의 기준 — 검색/가져오기로 채워진 줄(들)을 넣을 때
   // 아직 아무것도 안 고른 첫 줄이면 그 줄을 교체한다(quickAddProduct/
@@ -642,6 +643,25 @@ export function NewSaleForm({
     const short = p ? -rowStockRemaining({ stock: p.stock ?? 0, originalQty: originalQtyByProduct.get(pid) ?? 0, quantity: qty, totalQty: qty, isReturn: false }).remaining : 0;
     return p && short > 0 ? [{ name: p.name, short, unit: p.unit ?? "" }] : [];
   });
+
+  // "품목없이 직접입력" 켜고 끄기 — 켜면 품목 대신 이름을 직접 적고(규격·단가 직접입력도 함께 켜짐), 끄면 직접 입력한 값을 비운다.
+  function toggleCustomEntry(key: number, isCustomEntry: boolean) {
+    updateRow(
+      key,
+      isCustomEntry
+        ? { isCustomEntry, productId: "", manualSpec: true, manualPrice: true }
+        : { isCustomEntry, customName: "", spec: "", manualSpec: false, manualPrice: false, unitPrice: 0 },
+    );
+  }
+  // 줄 단위 켜고 끄기 목록 — voucherLayout 테마의 줄 끝 [⚙ 행 옵션]에 나온다(클래식은 같은 체크가 칸 아래에 있다).
+  function rowOptionsOf(row: Row, recentPrice: number): RowOption[] {
+    const productSpec = products.find((p) => p.id === row.productId)?.spec ?? "";
+    return [
+      { key: "custom", label: "품목없이 직접입력", checked: row.isCustomEntry, onChange: (v) => toggleCustomEntry(row.key, v) },
+      ...(row.productId ? [{ key: "spec", label: "규격 직접입력", checked: row.manualSpec, onChange: (v: boolean) => updateRow(row.key, { manualSpec: v, ...(v ? {} : { spec: productSpec }) }) }] : []),
+      ...(row.productId && customerId && !isSample ? [{ key: "price", label: "단가 직접입력", checked: row.manualPrice, onChange: (v: boolean) => updateRow(row.key, { manualPrice: v, ...(v ? {} : { unitPrice: recentPrice }) }) }] : []),
+    ];
+  }
 
   function resolvePrice(forCustomerId: string, productId: string) {
     // 샘플(무상증정)이면 거래처 단가/품목 기본가와 무관하게 항상 0원 —
@@ -1308,7 +1328,7 @@ export function NewSaleForm({
               onKeyDown={(e) => {
                 focusSameColumnNextRow(e);
                 focusGridArrowNav(e);
-                focusGridRowShortcuts(e, { onAppendRow: appendRowIfFilled });
+                focusGridRowShortcuts(e, { onAppendRow: appendRowIfFilled, onUndo: undoRows, onRedo: redoRows });
               }}
             >
               <PaperCalcGridRows pc={pc} />
@@ -1350,33 +1370,7 @@ export function NewSaleForm({
                             )}
                         </>
                       )}
-                      <label
-                        className="mt-1 flex items-center gap-1 text-[10.5px] erp-u-muted erp-cell-aux"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={row.isCustomEntry}
-                          onChange={(e) => {
-                            const isCustomEntry = e.target.checked;
-                            updateRow(row.key, isCustomEntry
-                              ? {
-                                  isCustomEntry,
-                                  productId: "",
-                                  manualSpec: true,
-                                  manualPrice: true,
-                                }
-                              : {
-                                  isCustomEntry,
-                                  customName: "",
-                                  spec: "",
-                                  manualSpec: false,
-                                  manualPrice: false,
-                                  unitPrice: 0,
-                                });
-                          }}
-                        />
-                        품목없이 직접입력
-                      </label>
+                      <CustomEntryToggle checked={row.isCustomEntry} onChange={(v) => toggleCustomEntry(row.key, v)} />
                     </td>
                     <SpecLotUnitCells
                       spec={row.spec}
@@ -1443,6 +1437,7 @@ export function NewSaleForm({
                       onInsert={() => insertRowAfter(row.key)}
                       onRemove={() => removeRow(row.key)}
                       canRemove={rows.length > 1}
+                      rowOptions={rowOptionsOf(row, recentPrice)}
                     />
                   </tr>
                 );

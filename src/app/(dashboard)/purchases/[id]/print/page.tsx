@@ -8,8 +8,8 @@ import { PAPER_STOCK_SKU } from "@/modules/paper-calc/public";
 import { getSupplierBalance } from "@/lib/ar-ap";
 import { calcVatForTaxType } from "@/lib/tax";
 import { PrintToolbar } from "@/components/erp/print-toolbar";
-import { INVOICE_FORM_OPTIONS, invoiceFormParam, resolveInvoiceForm } from "@/lib/invoice-form";
-import { getTenantTheme } from "@/lib/tenant-theme";
+import { invoiceFormOptionGroup, resolveInvoiceForm } from "@/lib/invoice-form";
+import { getTenantInvoiceScope } from "@/lib/tenant-theme";
 
 // 매출(sales/[id]/print)에는 있던 인쇄 화면이 매입에는 아예 없었다 —
 // 전체 감사에서 발견. 매입은 거래처(공급처)별 전용 서식(출고증 등)이
@@ -30,8 +30,10 @@ export default async function PurchasePrintPage({
   const showBalance = balanceParam === "show";
   const showLot = lotParam === "show";
   const supabase = await createClient();
-  // 서식: ?form=a/b 로 직접 고른 값이 우선, 없으면 회사 테마의 기본 서식(클래식 B형 / grid-modern 새 서식 N). A형·N은 공급받는자 사업자 정보까지 채운다.
-  const form: InvoiceForm = resolveInvoiceForm(sp.form, await getTenantTheme(supabase));
+  // 서식: ?form=a/b/n 으로 직접 고른 값(그 회사가 쓸 수 있는 것만)이 우선, 없으면 회사 테마의 기본 서식(클래식 B형 / 오성테크 외 전부·grid-modern 엘보닉스 A형). 고를 수 있는 서식은 회사마다 다르다(엘보닉스 A·B형=기본, 엔택스 A·B형=오성테크만). 엔택스 A형·엘보닉스 A형은 공급받는자 사업자 정보까지 채운다.
+  const invoiceScope = await getTenantInvoiceScope(supabase);
+  const form: InvoiceForm = resolveInvoiceForm(sp.form, invoiceScope);
+  const formGroup = invoiceFormOptionGroup(form, invoiceScope);
 
   const [{ data: order }, { data: items }, { data: company }, { data: paperCalcs }] = await Promise.all([
     supabase.from("purchase_orders").select("*, suppliers(*)").eq("id", id).maybeSingle(),
@@ -104,12 +106,7 @@ export default async function PurchasePrintPage({
         basePath={`/purchases/${id}/print`}
         params={sp}
         groups={[
-          {
-            key: "form",
-            label: "서식",
-            current: invoiceFormParam(form),
-            options: INVOICE_FORM_OPTIONS,
-          },
+          ...(formGroup ? [formGroup] : []),
           {
             key: "copies",
             label: "출력",

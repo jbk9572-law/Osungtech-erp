@@ -31,6 +31,7 @@ export function InvoiceCopyModern({
   showSummary = true,
   summaryItems,
   balance,
+  buyerBrief = false,
 }: {
   copyLabel: CopyLabel;
   color: InvoiceColor;
@@ -49,6 +50,8 @@ export function InvoiceCopyModern({
   showSummary?: boolean;
   summaryItems?: InvoiceItem[];
   balance?: number;
+  /** 엘보닉스 B형 — 공급받는자는 상호+貴下만 크게(사업자 정보 칸 생략). 엘보닉스 A형(기본)은 사업자 정보까지 채운다. 2연식·전지 둘 다 같다. */
+  buyerBrief?: boolean;
 }) {
   const buyer: InvoiceParty = customer ?? { name: customerName, business_number: null, representative_name: null, address: null, business_type: null, business_item: null };
   const supplier: InvoiceParty = {
@@ -111,19 +114,19 @@ export function InvoiceCopyModern({
           <tbody>
             <tr>
               <PartyHead label="공급자" bn={supplier.business_number} />
-              <PartyHead label="공급받는자" bn={buyer.business_number} />
+              {buyerBrief ? <BuyerBrief name={buyer.name} /> : <PartyHead label="공급받는자" bn={buyer.business_number} />}
             </tr>
             <tr>
               <PartyName p={supplier} seal={sealUrl} showSeal />
-              <PartyName p={buyer} />
+              {!buyerBrief && <PartyName p={buyer} />}
             </tr>
             <tr>
               <PartyAddress address={supplier.address} />
-              <PartyAddress address={buyer.address} />
+              {!buyerBrief && <PartyAddress address={buyer.address} />}
             </tr>
             <tr>
               <PartyBiz p={supplier} />
-              <PartyBiz p={buyer} />
+              {!buyerBrief && <PartyBiz p={buyer} />}
             </tr>
           </tbody>
         </table>
@@ -232,6 +235,19 @@ function PartyHead({ label, bn }: { label: string; bn: string | null }) {
       <td className="invm-vl" rowSpan={4}>{label}</td>
       <td className="invm-k">등록번호</td>
       <td className="invm-v invm-bn" colSpan={3}>{bn ?? ""}</td>
+    </>
+  );
+}
+
+// 엘보닉스 B형의 공급받는자 칸 — 세로 라벨 + 상호(큰 글씨) + 貴下. 네 줄을 한 칸으로 합친다.
+function BuyerBrief({ name }: { name: string }) {
+  return (
+    <>
+      <td className="invm-vl" rowSpan={4}>공급받는자</td>
+      <td className="invm-buyer-brief" rowSpan={4} colSpan={4}>
+        <b>{name}</b>
+        <span>貴下</span>
+      </td>
     </>
   );
 }

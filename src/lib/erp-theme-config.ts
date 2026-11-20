@@ -21,13 +21,21 @@ export type ThemeFeatures = {
   paymentStatusColumn: boolean;
   /** 매출/매입 전표 등록 모달을 밀집 시트 구조(상태 칩 제목줄 + 하단 합계·저장 바)로 그린다. */
   voucherLayout: boolean;
+  /** 미수금/미지급금 현황의 요약(KPI 타일 + 연체 분포 막대)을 얇은 한 줄 띠로 그린다. */
+  kpiStrip: boolean;
+  /** 재고현황에 재고 수준 막대·부족 줄 띠·재고금액 칸·묶음 머리글을 보여준다. */
+  stockInsights: boolean;
+  /** 재고현황·미수금/미지급금현황에서 행을 누르면 이동하지 않고 오른쪽 상세 패널에 보여준다(넓은 화면만). */
+  listSidePanel: boolean;
+  /** 목록 화면에 탭별 건수·요약 줄·행 부가정보(결재 단계 등)를 더 보여준다. */
+  denseLists: boolean;
 };
 
-export const CLASSIC_FEATURES: ThemeFeatures = { defaultInvoiceForm: "B", rowNumbers: false, groupedHeader: false, stockNear: false, partnerPaymentTerms: false, gridSelectionStats: false, paymentStatusColumn: false, voucherLayout: false };
+export const CLASSIC_FEATURES: ThemeFeatures = { defaultInvoiceForm: "B", rowNumbers: false, groupedHeader: false, stockNear: false, partnerPaymentTerms: false, gridSelectionStats: false, paymentStatusColumn: false, voucherLayout: false, kpiStrip: false, stockInsights: false, listSidePanel: false, denseLists: false };
 
 export const THEME_FEATURES: Record<string, ThemeFeatures> = {
   "classic-light": CLASSIC_FEATURES,
-  "grid-modern": { defaultInvoiceForm: "N", rowNumbers: true, groupedHeader: true, stockNear: true, partnerPaymentTerms: true, gridSelectionStats: true, paymentStatusColumn: true, voucherLayout: true },
+  "grid-modern": { defaultInvoiceForm: "N", rowNumbers: true, groupedHeader: true, stockNear: true, partnerPaymentTerms: true, gridSelectionStats: true, paymentStatusColumn: true, voucherLayout: true, kpiStrip: true, stockInsights: true, listSidePanel: true, denseLists: true },
 };
 
 export function getThemeFeatures(theme: string | null | undefined): ThemeFeatures {

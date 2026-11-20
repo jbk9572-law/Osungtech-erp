@@ -5,6 +5,10 @@ import Link from "next/link";
 import { ClickableRow } from "@/components/clickable-row";
 import { formatNumber } from "@/lib/format-number";
 import { GridBadge } from "@/components/grid/badge";
+import { GridGroupHeaderRow } from "@/components/grid/group-header-row";
+import { RowNoCell, RowNoHead } from "@/components/grid/row-no-cell";
+import { useSideSplit, useThemeFeatures } from "@/lib/erp-theme-features";
+import { BalanceSidePanel } from "@/components/grid/balance-side-panel";
 
 export type BalanceRow = {
   id: string;
@@ -51,6 +55,7 @@ export function BalanceGridTable({
   totalLabel,
   paidLabel,
   emptyLabel,
+  detailKind,
 }: {
   rows: BalanceRow[];
   hrefBase: string;
@@ -65,10 +70,16 @@ export function BalanceGridTable({
   totalLabel: string;
   paidLabel: string;
   emptyLabel: string;
+  // 거래처(customer)/공급처(supplier) 현황이면 지정 — 테마 기능이 켜진 넓은 화면에서 행을 누르면 이동하지 않고 오른쪽 패널에 보여준다.
+  // 외주비정산처럼 패널 데이터가 없는 화면은 생략(기존처럼 이동).
+  detailKind?: "customer" | "supplier";
 }) {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 } | null>({ key: "balance", dir: -1 });
   const [agingFilter, setAgingFilter] = useState<Filter>("all");
+  const { rowNumbers } = useThemeFeatures();
+  const sideSplit = useSideSplit() && !!detailKind;
+  const [activeId, setActiveId] = useState<string | null>(null);
 
   // daysOverdue를 넘겨주는 화면(미수금현황)에서만 연체 열/필터를 보여준다.
   const showAging = rows.some((r) => r.daysOverdue !== undefined);
@@ -92,6 +103,8 @@ export function BalanceGridTable({
     if (!sort) return filteredRows;
     return [...filteredRows].sort((a, b) => compareValues(a, b, sort.key) * sort.dir);
   }, [filteredRows, sort]);
+
+  const activeRow = sortedRows.find((r) => r.id === activeId) ?? null;
 
   function toggleSort(key: SortKey) {
     setSort((prev) => {
@@ -163,10 +176,15 @@ export function BalanceGridTable({
         </div>
       )}
 
+      <div className={sideSplit ? "erp-master-detail" : undefined}>
+      <div className={sideSplit ? "erp-master-detail-main" : undefined}>
       <div className="erp-grid-wrap has-card-view">
         <table className="erp-grid">
           <thead>
+            {/* 묶음 머리글(테마 기능) — 매출/수금/잔액 세 칸을 "금액(원)"으로 묶는다. 앞: [No]+이름, 뒤: [연체]+상세 */}
+            <GridGroupHeaderRow before={(rowNumbers ? 1 : 0) + 1} span={3} after={(showAging ? 1 : 0) + 1} label="금액(원)" />
             <tr>
+              <RowNoHead />
               {sortableHeader(partyLabel, "name")}
               {sortableHeader(totalLabel, "total", "num")}
               {sortableHeader(paidLabel, "paid", "num")}
@@ -176,8 +194,14 @@ export function BalanceGridTable({
             </tr>
           </thead>
           <tbody>
-            {sortedRows.map((b) => (
-              <ClickableRow key={b.id} href={rowHref(b.id)}>
+            {sortedRows.map((b, i) => (
+              <ClickableRow
+                key={b.id}
+                href={rowHref(b.id)}
+                className={sideSplit && activeId === b.id ? "master-active" : undefined}
+                onActivate={sideSplit ? () => setActiveId(b.id) : undefined}
+              >
+                <RowNoCell n={i + 1} />
                 <td>{b.name}</td>
                 <td className="num">{formatNumber(b.total)}</td>
                 <td className="num">{formatNumber(b.paid)}</td>
@@ -196,19 +220,32 @@ export function BalanceGridTable({
                   </td>
                 )}
                 <td className="num erp-u-muted">
-                  상세 →
+                  {/* 패널 모드에서는 행 클릭이 "선택"이라, 이동은 이 링크로(행 클릭 핸들러는 링크 클릭을 건너뛴다) */}
+                  {sideSplit ? <Link href={rowHref(b.id)}>상세 →</Link> : "상세 →"}
                 </td>
               </ClickableRow>
             ))}
             {!sortedRows.length && (
               <tr>
-                <td colSpan={showAging ? 6 : 5} className="erp-grid-empty">
+                <td colSpan={(showAging ? 6 : 5) + (rowNumbers ? 1 : 0)} className="erp-grid-empty">
                   {query.trim() ? "검색 결과가 없습니다." : emptyLabel}
                 </td>
               </tr>
             )}
           </tbody>
         </table>
+      </div>
+      </div>
+      {sideSplit && detailKind && (
+        <BalanceSidePanel
+          kind={detailKind}
+          row={activeRow}
+          hrefBase={hrefBase}
+          badge={agingBadge(activeRow?.daysOverdue)}
+          totalLabel={totalLabel}
+          paidLabel={paidLabel}
+        />
+      )}
       </div>
 
       <div className="erp-row-card-list">

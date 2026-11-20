@@ -100,8 +100,43 @@ export function focusNextCellInRow(fromInput: HTMLElement) {
 //   · Enter  마지막 줄이면 빈 줄을 추가하고 같은 열로 이동(onAppendRow가 true를 돌려줄 때만 — 빈 줄이 무한히 쌓이지 않게 호출부가 판단)
 //   · Ctrl+D 바로 위 줄의 같은 열 값을 아래로 채운다(품목 검색칸·비활성 칸은 제외)
 //   · Ctrl+Delete 이 줄을 삭제(줄 끝의 삭제 버튼을 그대로 누른다 — 마지막 한 줄이면 버튼이 꺼져 있어 아무 일도 없다)
+//   · Ctrl+Z / Ctrl+Y(Ctrl+Shift+Z) 줄 추가·삭제·채우기·값 수정을 되돌리기/다시 실행(onUndo/onRedo를 넘긴 폼만)
 // 매출/매입/할일 품목 표가 같이 쓴다. Enter의 "아래 칸 이동"은 focusSameColumnNextRow가 먼저 처리한다.
-export function focusGridRowShortcuts(e: KeyboardEvent<HTMLTableSectionElement>, opts: { onAppendRow?: () => boolean } = {}) {
+// 줄이 사라지는 동작(되돌리기·줄 삭제) 직전에 "몇 번째 줄·몇 번째 칸에 포커스가 있었는지" 기억해 두고,
+// 동작 뒤 포커스가 표 밖으로 빠졌으면 가까운 줄의 같은 칸으로 되돌려 주는 함수를 돌려준다.
+// 포커스가 표 밖(문서 맨 위)으로 빠지면 이어지는 Ctrl+Z / Ctrl+Y 키가 표에 전달되지 않는다.
+function rememberGridFocus(tbody: HTMLTableSectionElement, target: HTMLElement): () => void {
+  const rowBefore = target.closest("tr");
+  const rowIndex = rowBefore ? Array.from(tbody.rows).indexOf(rowBefore as HTMLTableRowElement) : 0;
+  const cellBefore = target.closest("td");
+  const colIndex = cellBefore && rowBefore ? Array.from(rowBefore.children).indexOf(cellBefore) : 0;
+  return () =>
+    setTimeout(() => {
+      if (tbody.contains(document.activeElement)) return;
+      const row = tbody.rows[Math.min(Math.max(rowIndex, 0), tbody.rows.length - 1)];
+      const input = (row?.children[colIndex]?.querySelector("input:not(:disabled)") ?? row?.querySelector("input:not(:disabled)")) as HTMLInputElement | null;
+      input?.focus();
+    }, 0);
+}
+
+export function focusGridRowShortcuts(
+  e: KeyboardEvent<HTMLTableSectionElement>,
+  opts: { onAppendRow?: () => boolean; onUndo?: () => boolean; onRedo?: () => boolean } = {},
+) {
+  // Ctrl+Z 되돌리기 / Ctrl+Y(또는 Ctrl+Shift+Z) 다시 실행 — 표 안 어디에 포커스가 있든(삭제 버튼을 누른 직후 포함) 줄 상태 기록을 되돌린다.
+  // 되돌릴 것이 없으면 브라우저 기본 동작(칸 안 글자 되돌리기)을 막지 않는다.
+  if ((e.ctrlKey || e.metaKey) && !e.altKey && (opts.onUndo || opts.onRedo)) {
+    const k = e.key.toLowerCase();
+    const redo = k === "y" || (k === "z" && e.shiftKey);
+    const undo = k === "z" && !e.shiftKey;
+    // 되돌리기로 지금 포커스가 있던 줄이 사라질 수 있다 — 그러면 포커스가 문서 맨 위로 빠져 다음 Ctrl+Z가 표에 전달되지 않는다.
+    const restoreFocus = rememberGridFocus(e.currentTarget, e.target as HTMLElement);
+    if ((undo && opts.onUndo?.()) || (redo && opts.onRedo?.())) {
+      e.preventDefault();
+      restoreFocus();
+      return;
+    }
+  }
   const target = e.target as HTMLElement;
   if (target.tagName !== "INPUT") return;
   const input = target as HTMLInputElement;
@@ -137,7 +172,9 @@ export function focusGridRowShortcuts(e: KeyboardEvent<HTMLTableSectionElement>,
     const remove = row.querySelector('button[aria-label="이 줄 삭제"]') as HTMLButtonElement | null;
     if (remove && !remove.disabled) {
       e.preventDefault();
+      const restoreFocus = rememberGridFocus(e.currentTarget, input);
       remove.click();
+      restoreFocus();
     }
   }
 }

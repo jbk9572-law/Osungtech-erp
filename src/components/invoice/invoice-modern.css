@@ -137,6 +137,23 @@
   writing-mode: vertical-rl;
 }
 .invm-v { font-weight: 600; }
+/* 엘보닉스 B형 — 공급받는자 상호를 크게, 貴下는 작게 오른쪽 */
+.invm-buyer-brief {
+  padding: 4px 10px !important;
+  text-align: center;
+  white-space: normal !important;
+}
+.invm-buyer-brief b {
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+.invm-buyer-brief span {
+  margin-left: 10px;
+  color: var(--invm-c);
+  font-size: 13px;
+  font-weight: 700;
+}
 .invm-n { text-align: right; }
 .invm-c { text-align: center; }
 .invm-bn {

@@ -17,7 +17,9 @@ import { RowCheckbox } from "@/components/grid/row-checkbox";
 import { formatNumber } from "@/lib/format-number";
 import { ErpSelect } from "@/components/erp/erp-select";
 import { GridToolbar } from "@/components/grid/grid-toolbar";
-import { ROW_NO_WIDTH, useThemeFeatures } from "@/lib/erp-theme-features";
+import { ROW_NO_WIDTH, useSideSplit, useThemeFeatures } from "@/lib/erp-theme-features";
+import { InventorySidePanel } from "@/components/grid/inventory-side-panel";
+import { GridGroupHeaderRow } from "@/components/grid/group-header-row";
 import { STOCK_STATUS_BADGE, isLowStock, stockStatus, type StockStatus } from "@/lib/stock-status";
 
 export type ProductGridRow = {
@@ -41,6 +43,17 @@ type SortKey = "sku" | "name" | "cost" | "price" | "reorderPoint" | "quantity";
 // 그리드와 동일한 패턴.
 const STICKY_1_WIDTH = 90;
 const STICKY_2_WIDTH = 160;
+
+// 안전재고 대비 재고 수준 막대 — 안전재고의 2배를 가득 찬 것으로 본다. 안전재고가 없으면(미설정) 그리지 않는다.
+function StockLevelBar({ quantity, reorderPoint, low }: { quantity: number; reorderPoint: number | null; low: boolean }) {
+  if (!reorderPoint || reorderPoint <= 0) return null;
+  const pct = Math.max(0, Math.min(100, (quantity / (reorderPoint * 2)) * 100));
+  return (
+    <div className={`erp-stock-bar${low ? " is-low" : ""}`} aria-hidden="true">
+      <i style={{ width: `${pct}%` }} />
+    </div>
+  );
+}
 
 export function ProductGridTable({
   rows,
@@ -114,7 +127,13 @@ export function ProductGridTable({
     );
   }
 
-  const { rowNumbers, stockNear } = useThemeFeatures();
+  const { rowNumbers, stockNear, stockInsights } = useThemeFeatures();
+  // 재고 수준 막대·재고금액 칸·묶음 머리글은 재고현황(inventory)에서 테마 기능이 켜졌을 때만.
+  const insights = stockInsights && mode === "inventory";
+  // 재고현황은 넓은 화면(테마 기능)에서 행을 누르면 이동하지 않고 오른쪽 패널에 보여준다 — 이동은 패널의 "상세·입출고내역"으로.
+  const sideSplit = useSideSplit() && mode === "inventory";
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const activeRow = sortedRows.find((r) => r.id === activeId) ?? null;
   // 근접 단계는 테마 기능이 켜졌을 때만 — 꺼져 있으면 클래식과 같은 두 단계(재주문 필요/정상).
   const statusOf = (r: ProductGridRow): StockStatus => {
     const s = stockStatus(r.quantity, r.reorderPoint);
@@ -139,7 +158,7 @@ export function ProductGridTable({
 
   // products 모드는 체크박스 칸이 하나 더 있고, inventory 모드는 대신
   // 재고수량/상태가 안전재고 한 칸 대신 두 칸이라 결과적으로 항상 12칸이다.
-  const colCount = 12 + (rowNumbers ? 1 : 0);
+  const colCount = 12 + (rowNumbers ? 1 : 0) + (insights ? 1 : 0);
 
   // 표의 각 행과 같은 데이터로 모바일 카드 한 장을 그린다 — 상품명/SKU/
   // 규격/단위와 재고모드의 재고수량·상태(또는 상품모드의 매입가·판매가)만
@@ -234,9 +253,13 @@ export function ProductGridTable({
           ]}
         />
       )}
+      <div className={sideSplit ? "erp-master-detail" : undefined}>
+      <div className={sideSplit ? "erp-master-detail-main" : undefined}>
       <div className="erp-grid-wrap has-card-view">
         <table className="erp-grid">
         <thead>
+          {/* 묶음 머리글 — 재고수량·상태·재고금액을 "재고"로 묶는다. 앞: [No]+SKU~판매가 9칸, 뒤: 상세 칸 */}
+          {insights && <GridGroupHeaderRow before={(rowNumbers ? 1 : 0) + 9} span={3} after={1} label="재고" />}
           <tr>
             {allowBulkDelete && (
               <th style={thCheckbox}>
@@ -259,6 +282,7 @@ export function ProductGridTable({
               <>
                 {sortableHeader("재고수량", "quantity", undefined, "num")}
                 <th>상태</th>
+                {insights && <th className="num">재고금액</th>}
               </>
             )}
             <th />
@@ -273,7 +297,12 @@ export function ProductGridTable({
                 : `/inventory/item/${row.id}`;
             const isRowSelected = selected.has(row.id);
             return (
-              <ClickableRow key={row.id} href={href} className={isRowSelected ? "selected" : undefined}>
+              <ClickableRow
+                key={row.id}
+                href={href}
+                className={[isRowSelected ? "selected" : "", insights && status === "low" ? "erp-row-low" : "", sideSplit && activeId === row.id ? "master-active" : ""].filter(Boolean).join(" ") || undefined}
+                onActivate={sideSplit ? () => setActiveId(row.id) : undefined}
+              >
                 {allowBulkDelete && (
                   <td style={tdCheckbox}>
                     <RowCheckbox
@@ -311,10 +340,12 @@ export function ProductGridTable({
                   <>
                     <td className="num">
                       <QtyWithBoxes quantity={row.quantity} basePackageQty={row.basePackageQty} packUnit={row.unit} />
+                      {insights && <StockLevelBar quantity={row.quantity} reorderPoint={row.reorderPoint} low={status === "low"} />}
                     </td>
                     <td>
                       <GridBadge tone={STOCK_STATUS_BADGE[status].tone}>{STOCK_STATUS_BADGE[status].label}</GridBadge>
                     </td>
+                    {insights && <td className="num erp-u-muted">{formatNumOrDash(row.cost == null ? null : Math.max(0, row.quantity) * row.cost)}</td>}
                   </>
                 )}
                 <td className="num erp-u-muted">
@@ -332,6 +363,9 @@ export function ProductGridTable({
           )}
         </tbody>
       </table>
+      </div>
+      </div>
+      {sideSplit && <InventorySidePanel row={activeRow} status={activeRow ? statusOf(activeRow) : "ok"} />}
       </div>
 
       <div className="erp-row-card-toolbar">

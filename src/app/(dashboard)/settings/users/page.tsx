@@ -12,8 +12,13 @@ import { ListPageHeader } from "@/components/erp/page-header";
 import { AccessWall } from "@/components/erp/access-wall";
 import { PageGuide } from "@/components/erp/page-guide";
 import { importEmployeesExcel } from "@/app/(dashboard)/settings/users/actions";
+import { RowNoCell, RowNoHead } from "@/components/grid/row-no-cell";
+import { ListSummaryBar } from "@/components/grid/list-summary-bar";
+import { getTenantTheme } from "@/lib/tenant-theme";
+import { getThemeFeatures } from "@/lib/erp-theme-config";
 
-export default async function UsersSettingsPage() {
+export default async function UsersSettingsPage({ searchParams }: { searchParams: Promise<{ role?: string }> }) {
+  const { role: roleParam } = await searchParams;
   const supabase = await createClient();
   const { userId, isAdmin } = await getCurrentActor(supabase);
 
@@ -25,6 +30,15 @@ export default async function UsersSettingsPage() {
     .from("profiles")
     .select("id, full_name, username, email, role, created_at")
     .order("created_at", { ascending: true });
+
+  // 테마 기능(denseLists) — 역할 필터 칩과 인원 요약 줄. 꺼진 회사는 기존 화면 그대로(필터 파라미터도 무시).
+  const features = getThemeFeatures(await getTenantTheme(supabase));
+  const dense = features.denseLists;
+  const allProfiles = profiles ?? [];
+  const roleFilter = dense && roleParam && roleParam in ROLE_LABELS ? roleParam : null;
+  const shown = roleFilter ? allProfiles.filter((p) => p.role === roleFilter) : allProfiles;
+  const roleCount = (role: string) => allProfiles.filter((p) => p.role === role).length;
+  const roleHref = (role: string | null) => (role ? `/settings/users?role=${role}` : "/settings/users");
 
   return (
     <div>
@@ -61,10 +75,33 @@ export default async function UsersSettingsPage() {
         </div>
       </div>
 
+      {dense && (
+        <>
+          <div className="erp-date-presets erp-u-mb-8">
+            <Link href={roleHref(null)} className={`erp-date-preset-btn${roleFilter ? "" : " active"}`}>
+              전체<b className="erp-date-preset-count">{allProfiles.length}</b>
+            </Link>
+            {Object.entries(ROLE_LABELS).map(([role, label]) => (
+                <Link key={role} href={roleHref(role)} className={`erp-date-preset-btn${roleFilter === role ? " active" : ""}`}>
+                  {label}
+                  <b className="erp-date-preset-count">{roleCount(role)}</b>
+                </Link>
+              ))}
+          </div>
+          <ListSummaryBar
+            items={[
+              { label: "계정", value: `${allProfiles.length}개` },
+              ...Object.entries(ROLE_LABELS).map(([role, label]) => ({ label, value: `${roleCount(role)}` })),
+            ]}
+          />
+        </>
+      )}
+
       <div className="erp-grid-wrap has-card-view">
         <table className="erp-grid">
           <thead>
             <tr>
+              <RowNoHead />
               <th>아이디</th>
               <th>이름</th>
               <th>이메일</th>
@@ -73,8 +110,9 @@ export default async function UsersSettingsPage() {
             </tr>
           </thead>
           <tbody>
-            {(profiles ?? []).map((row) => (
+            {shown.map((row, i) => (
               <ClickableRow key={row.id} href={`/settings/users/${row.id}`}>
+                <RowNoCell n={i + 1} />
                 <td>{row.username ?? "-"}</td>
                 <td>{row.full_name ?? "-"}</td>
                 <td className="erp-u-muted">
@@ -90,10 +128,10 @@ export default async function UsersSettingsPage() {
                 <td>{formatKstDate(row.created_at)}</td>
               </ClickableRow>
             ))}
-            {!profiles?.length && (
+            {!shown.length && (
               <tr>
-                <td colSpan={5} className="erp-grid-empty">
-                  등록된 계정이 없습니다.
+                <td colSpan={5 + (features.rowNumbers ? 1 : 0)} className="erp-grid-empty">
+                  {roleFilter ? "이 역할의 계정이 없습니다." : "등록된 계정이 없습니다."}
                 </td>
               </tr>
             )}
@@ -102,7 +140,7 @@ export default async function UsersSettingsPage() {
       </div>
 
       <div className="erp-row-card-list">
-        {(profiles ?? []).map((row) => (
+        {shown.map((row) => (
           <Link key={row.id} href={`/settings/users/${row.id}`} className="erp-row-card">
             <div className="erp-row-card-head">
               <span className="erp-row-card-partner">{row.full_name ?? "-"}</span>
@@ -123,7 +161,7 @@ export default async function UsersSettingsPage() {
             </div>
           </Link>
         ))}
-        {!profiles?.length && <p className="erp-grid-empty">등록된 계정이 없습니다.</p>}
+        {!shown.length && <p className="erp-grid-empty">{roleFilter ? "이 역할의 계정이 없습니다." : "등록된 계정이 없습니다."}</p>}
       </div>
       <PageGuide className="mt-2">
         {Object.entries(ROLE_LABELS)

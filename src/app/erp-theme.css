@@ -341,6 +341,7 @@
   --erp-grid-head-weight: 800;
   --erp-grid-head-fg: #182338;
   --erp-grid-zebra-bg: #fafbfc;
+  --erp-grid-body-bg: transparent;
   --erp-row-bar-w: 3px;
   --erp-badge-radius: 999px;
   --erp-badge-px: 9px;
@@ -565,6 +566,7 @@
   --erp-grid-row-h: 28px;
   --erp-grid-cell-px: 8px;
   --erp-grid-zebra-bg: #f8f9fc;
+  --erp-grid-body-bg: var(--erp-panel);
   --erp-control-h-cell: 28px;
   --erp-control-h-md: 30px;
   --erp-control-h-sm: 26px;
@@ -1827,6 +1829,13 @@ html:has(.erp) body {
    34px)를 직접 컨트롤하고 있어서 감싸는 순간 그 값이 무시되기 때문이다.
 */
 @media print {
+  /* Tailwind의 print:hidden 은 레이어 안(utilities)이라, 이 파일처럼 레이어 없는 .erp-optbar·.erp-print-toolbar·.erp-btn·.erp-toolbar 의
+     display 규칙에 항상 진다 — 그래서 인쇄 옵션 줄·도구줄이 종이에 같이 찍혀 명세표가 잘렸다. 인쇄에서는 print:hidden 이 무조건 이기게 한 곳에서 못박는다
+     (클래스마다 따로 고치지 않으므로 앞으로 print:hidden 을 붙인 요소는 전부 자동으로 숨는다). */
+  .print\:hidden {
+    display: none !important;
+  }
+
   .erp-titlebar,
   .erp-ribbon,
   .erp-tree,
@@ -2570,6 +2579,9 @@ form.erp-field-grid {
 
 /* ── 6. Data grid ──────────────────────────────────────────── */
 .erp-grid-wrap {
+  /* 표 본문 바탕 — 칸이 투명하면 표 뒤의 페이지 색이 비치는데 고정(sticky) 칸은 불투명이라 둘이 달라 보인다.
+     테마가 --erp-grid-body-bg를 불투명 색으로 주면 표 전체가 같은 바탕 위에 놓인다(모던 그리드). 클래식은 transparent(기존 모양). */
+  background: var(--erp-grid-body-bg, transparent);
   border: 1px solid var(--erp-border-strong);
   border-radius: var(--erp-radius-2xl, 0);
   overflow: auto;
@@ -2697,16 +2709,21 @@ form.erp-field-grid {
    자꾸 놓친다 — 한 줄씩 걸러 옅게 배경을 넣어 가로 방향 가독성을 더한다.
    특이도가 hover/selected 규칙과 같아서(:nth-child도 가상클래스),
    아래쪽에 나오는 hover/selected가 소스 순서상 항상 우선한다. */
+/* --erp-row-bg: 행의 현재 배경색을 고정(sticky) 칸에도 알려 주는 변수 — grid-sticky.ts의 stickyCellStyle이 읽는다.
+   행 배경을 바꾸는 규칙(줄무늬·hover·selected·master-active)은 반드시 이 변수도 같이 바꿔야 고정 칸이 혼자 흰색으로 남지 않는다. */
 .erp-grid tbody tr:nth-child(even) {
   background: var(--erp-grid-zebra-bg);
+  --erp-row-bg: var(--erp-grid-zebra-bg);
 }
 
 .erp-grid tbody tr:hover {
   background: var(--erp-hover);
+  --erp-row-bg: var(--erp-hover);
 }
 
 .erp-grid tbody tr.selected {
   background: var(--erp-selected);
+  --erp-row-bg: var(--erp-selected);
   font-weight: 600;
   /* border 대신 inset box-shadow를 쓴다 — border-collapse: collapse인
      표에서 tr에 직접 border를 주면 인접 행과 폭을 다투며 레이아웃이
@@ -2735,6 +2752,7 @@ form.erp-field-grid {
    과는 별개 상태라 다른 톤을 쓴다. */
 .erp-grid tbody tr.master-active {
   background: var(--erp-info-bg);
+  --erp-row-bg: var(--erp-info-bg);
   box-shadow: inset 3px 0 0 var(--erp-primary);
 }
 
@@ -3522,7 +3540,8 @@ form.erp-field-grid {
   background: currentColor;
 }
 
-/* 선택 전표 상세 — 목록 오른쪽 고정 패널(OrderSidePanel). 표시 여부는 테마 토큰. */
+/* 선택 전표 상세 — 목록 오른쪽 고정 패널(OrderSidePanel · DetailSideShell). 표시 여부는 테마 토큰.
+   모양: 윗줄 강조색(상태에 따라 파랑/초록/노랑/빨강, data-tone) → 제목+색 칩 → 키값 → 구역(왼쪽 색 막대 제목) → 합계 상자 → 버튼. */
 .erp-master-detail {
   display: flex;
   align-items: flex-start;
@@ -3533,62 +3552,117 @@ form.erp-field-grid {
   min-width: 0;
 }
 .erp-detail-side {
+  --erp-side-accent: var(--erp-primary);
   display: var(--erp-detail-side-display);
   flex-direction: column;
-  flex: 0 0 320px;
-  width: 320px;
+  flex: 0 0 340px;
+  width: 340px;
   position: sticky;
   top: 0;
   max-height: 80vh;
   overflow: auto;
   background: var(--erp-panel);
   border: 1px solid var(--erp-border-strong);
+  border-top: 3px solid var(--erp-side-accent);
   border-radius: var(--erp-radius-2xl, 0);
   font-size: var(--erp-font-base);
+}
+.erp-detail-side[data-tone="danger"] {
+  --erp-side-accent: var(--erp-danger);
+}
+.erp-detail-side[data-tone="warn"] {
+  --erp-side-accent: var(--erp-warning);
+}
+.erp-detail-side[data-tone="success"] {
+  --erp-side-accent: var(--erp-success);
 }
 .erp-detail-side-empty {
   margin: 0;
   padding: var(--erp-space-5);
   color: var(--erp-text-muted);
 }
-.erp-detail-side-head {
+.erp-detail-side-hero {
   display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: var(--erp-space-3);
-  padding: var(--erp-space-4) var(--erp-space-4) var(--erp-space-2);
+  flex-direction: column;
+  gap: var(--erp-space-1);
+  padding: var(--erp-space-4);
+  background: var(--erp-bg-subtle);
+  border-bottom: 1px solid var(--erp-divider);
 }
-.erp-detail-side-head span {
+.erp-detail-side-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--erp-space-1);
+}
+.erp-detail-side-title {
+  font-size: var(--erp-font-lg);
+  font-weight: 800;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.erp-detail-side-date {
   color: var(--erp-text-muted);
   font-variant-numeric: tabular-nums;
 }
 .erp-detail-side-kv {
   margin: 0;
-  padding: 0 var(--erp-space-4) var(--erp-space-3);
+  padding: var(--erp-space-2) var(--erp-space-4);
   border-bottom: 1px solid var(--erp-divider);
 }
 .erp-detail-side-kv > div {
   display: grid;
-  grid-template-columns: 64px minmax(0, 1fr);
-  padding: 3px 0;
+  grid-template-columns: 72px minmax(0, 1fr);
+  padding: var(--erp-space-1) 0;
+}
+.erp-detail-side-kv > div + div {
+  border-top: 1px dashed var(--erp-divider);
 }
 .erp-detail-side-kv dt {
   color: var(--erp-text-muted);
+  font-size: var(--erp-font-sm);
 }
 .erp-detail-side-kv dd {
   margin: 0;
   font-weight: 600;
   overflow-wrap: anywhere;
 }
-.erp-detail-side-items {
-  padding: var(--erp-space-2) var(--erp-space-4);
+/* 구역(품목내역·미결제 전표·창고별 재고 등) — 제목 앞에 강조색 막대 */
+.erp-detail-side-sec {
+  padding: var(--erp-space-3) var(--erp-space-4) var(--erp-space-2);
 }
+.erp-detail-side-sec h4 {
+  display: flex;
+  align-items: baseline;
+  gap: var(--erp-space-2);
+  margin: 0 0 var(--erp-space-2);
+  padding-left: var(--erp-space-2);
+  border-left: 3px solid var(--erp-side-accent);
+  font-size: var(--erp-font-md);
+  font-weight: 800;
+}
+.erp-detail-side-sec h4 em {
+  color: var(--erp-text-muted);
+  font-size: var(--erp-font-sm);
+  font-style: normal;
+  font-weight: 500;
+}
+/* 품목 한 줄 — 옅은 카드로 줄마다 구분 */
 .erp-detail-side-item {
-  padding: var(--erp-space-2) 0;
-  border-bottom: 1px solid var(--erp-divider);
+  margin-bottom: var(--erp-space-1);
+  padding: var(--erp-space-2) var(--erp-space-3);
+  background: var(--erp-bg-subtle);
+  border-left: 2px solid var(--erp-border-strong);
+  border-radius: var(--erp-radius-lg, 0);
+}
+.erp-detail-side-item-name {
+  font-weight: 700;
 }
 .erp-detail-side-item-name span {
   color: var(--erp-text-muted);
+  font-weight: 500;
+}
+.erp-detail-side-lot {
+  margin-left: var(--erp-space-1);
 }
 .erp-detail-side-item-num {
   display: flex;
@@ -3601,10 +3675,17 @@ form.erp-field-grid {
 .erp-detail-side-item-num b {
   color: var(--erp-text);
 }
+.erp-detail-side-item-note {
+  margin-top: 2px;
+  color: var(--erp-text-muted);
+  font-size: var(--erp-font-sm);
+}
+/* 합계 상자 — 색을 넣어 숫자 묶음이 한눈에 보이게, 합계는 강조색 */
 .erp-detail-side-total {
   margin: var(--erp-space-2) var(--erp-space-4);
   padding: var(--erp-space-3);
-  background: var(--erp-bg-subtle);
+  background: var(--erp-info-bg);
+  border: 1px solid var(--erp-divider);
   border-radius: var(--erp-radius-lg, 0);
   font-variant-numeric: tabular-nums;
 }
@@ -3617,6 +3698,7 @@ form.erp-field-grid {
   margin-top: var(--erp-space-1);
   padding-top: var(--erp-space-1);
   border-top: 1px solid var(--erp-divider);
+  color: var(--erp-side-accent);
   font-weight: 800;
   font-size: var(--erp-font-lg);
 }
@@ -3624,6 +3706,63 @@ form.erp-field-grid {
   display: flex;
   gap: var(--erp-space-2);
   padding: var(--erp-space-2) var(--erp-space-4) var(--erp-space-4);
+}
+.erp-detail-side-actions .erp-btn {
+  flex: 1 1 0;
+  justify-content: center;
+}
+/* 목록형 구역의 줄(미결제 전표·창고별 재고·최근 입출고)과 바로가기 — DetailSideShell */
+.erp-detail-side-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: var(--erp-space-3);
+  padding: var(--erp-space-1) 0;
+  border-bottom: 1px solid var(--erp-divider);
+  font-variant-numeric: tabular-nums;
+}
+.erp-detail-side-row:last-of-type {
+  border-bottom: 0;
+}
+.erp-detail-side-mid {
+  color: var(--erp-text-muted);
+}
+.erp-detail-side-row.is-danger .erp-detail-side-mid {
+  color: var(--erp-danger);
+  font-weight: 700;
+}
+.erp-detail-side-row.is-warn .erp-detail-side-mid {
+  color: var(--erp-warning);
+  font-weight: 700;
+}
+.erp-detail-side-note {
+  margin: 0;
+  padding: var(--erp-space-1) 0;
+  color: var(--erp-text-muted);
+  font-size: var(--erp-font-sm);
+}
+.erp-detail-side-danger {
+  color: var(--erp-danger);
+}
+.erp-detail-side-success {
+  color: var(--erp-success);
+}
+.erp-detail-side-link {
+  display: flex;
+  align-items: baseline;
+  gap: var(--erp-space-2);
+  padding: var(--erp-space-1) 0;
+  color: var(--erp-text);
+  text-decoration: none;
+}
+.erp-detail-side-link em {
+  color: var(--erp-text-muted);
+  font-style: normal;
+  font-size: var(--erp-font-sm);
+}
+.erp-detail-side-link i {
+  margin-left: auto;
+  color: var(--erp-primary);
+  font-style: normal;
 }
 /* 좁은 화면(≤1100px)에서는 오른쪽 패널 대신 항상 기존 행 아래 아코디언을 쓴다. */
 @media (max-width: 1100px) {
@@ -4924,6 +5063,90 @@ a.erp-detail-tab:hover:not(.active) {
   height: 8px;
   border-radius: 50%;
   display: inline-block;
+}
+
+/* 요약 틀(KpiStripFrame) — 기본은 위아래로 쌓고, 테마 기능 kpiStrip이 켜지면 얇은 한 줄 띠(타일 4칸 + 분포 막대) */
+.erp-kpi-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.erp-kpi-stack > .erp-kpi-row {
+  margin-bottom: 0;
+}
+.erp-kpi-band {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  margin-bottom: var(--erp-space-3);
+  background: var(--erp-panel);
+  border: 1px solid var(--erp-border);
+  border-radius: var(--erp-radius-md);
+  overflow: hidden;
+}
+.erp-kpi-band .erp-kpi-row {
+  gap: 0;
+  margin-bottom: 0;
+}
+.erp-kpi-band .erp-kpi-row .erp-home-panel {
+  border: 0;
+  border-right: 1px solid var(--erp-divider);
+  border-radius: 0;
+  box-shadow: none;
+}
+.erp-kpi-band .erp-kpi-row .erp-home-panel:last-child {
+  border-right: 0;
+}
+.erp-kpi-band .erp-kpi-card {
+  padding: var(--erp-space-2) var(--erp-space-4);
+}
+.erp-kpi-band .erp-kpi-label {
+  margin-bottom: 2px;
+  font-size: var(--erp-font-sm);
+  font-weight: 500;
+}
+.erp-kpi-band .erp-aging-dist {
+  margin-bottom: 0;
+  padding: var(--erp-space-2) var(--erp-space-4) var(--erp-space-3);
+  border-top: 1px solid var(--erp-divider);
+}
+.erp-kpi-band .erp-aging-dist-bar {
+  height: 8px;
+}
+
+@media (max-width: 640px) {
+  /* 모바일은 타일이 2칸씩 두 줄 — 오른쪽 칸 구분선은 없애고 첫 줄 아래에 가로선을 둔다 */
+  .erp-kpi-band .erp-kpi-row .erp-home-panel:nth-child(2n) {
+    border-right: 0;
+  }
+  .erp-kpi-band .erp-kpi-row .erp-home-panel:nth-child(-n + 2) {
+    border-bottom: 1px solid var(--erp-divider);
+  }
+}
+
+/* 번호(No)만 있는 좁은 칸 — 표가 자동으로 넓혀 주지 않게 폭을 고정한다 */
+.erp-grid th.erp-col-no,
+.erp-grid td.erp-col-no {
+  width: 44px;
+}
+
+/* 재고현황 — 부족 줄은 왼쪽 띠, 재고수량 칸 아래 안전재고 대비 막대(테마 기능 stockInsights) */
+.erp-grid tbody tr.erp-row-low > td:first-child {
+  box-shadow: inset 3px 0 0 var(--erp-danger);
+}
+.erp-stock-bar {
+  height: 4px;
+  margin-top: 3px;
+  background: var(--erp-border);
+  border-radius: var(--erp-radius-xs, 0);
+  overflow: hidden;
+}
+.erp-stock-bar > i {
+  display: block;
+  height: 100%;
+  background: var(--erp-primary);
+}
+.erp-stock-bar.is-low > i {
+  background: var(--erp-danger);
 }
 
 /* 재고 실사: 평소엔 이력만 보이다가, "+ 새 실사 시작"을 누르기 전까지는
@@ -7953,45 +8176,14 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   border-color: var(--erp-info-border);
   background: var(--erp-info-bg);
 }
-.erp-remark-pop-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 1099;
-}
-.erp-remark-pop {
-  position: fixed;
-  z-index: 1100;
-  width: 260px;
-  box-shadow: var(--erp-shadow-md);
-}
 .erp-form-options:empty { display: none; }
 
 /* ───────── 전표 표 세부 다듬기(voucherLayout) ─────────
-   줄은 시안처럼 한 줄 높이로 — 칸 안의 보조 체크("직접입력" 등)는 줄 높이를 늘리지 않고, 줄에 마우스를 올리거나 줄 안에 커서가 있을 때만 칸 오른쪽에 떠오른다. */
+   줄은 시안처럼 한 줄 높이로 — 칸 안에 보조 체크를 띄우지 않는다(줄 끝 [⚙ 행 옵션]으로 이동, row-options.tsx). */
 .erp-voucher .erp-grid tbody td {
   position: relative;
   padding-block: 0;
   vertical-align: middle;
-}
-.erp-voucher .erp-grid tbody td > .erp-cell-aux {
-  position: absolute;
-  right: 4px;
-  top: 50%;
-  transform: translateY(-50%);
-  margin: 0;
-  padding: 1px 6px;
-  border: 1px solid var(--erp-border);
-  border-radius: var(--erp-radius-sm);
-  background: var(--erp-panel);
-  box-shadow: var(--erp-shadow-sm);
-  opacity: 0;
-  pointer-events: none;
-  z-index: 2;
-}
-.erp-voucher .erp-grid tbody tr:hover .erp-cell-aux,
-.erp-voucher .erp-grid tbody tr:focus-within .erp-cell-aux {
-  opacity: 1;
-  pointer-events: auto;
 }
 /* 커서가 있는 줄 — 줄 전체는 은은하게, 번호는 파랗고 굵게(시안의 선택 줄) */
 .erp-voucher .erp-grid tbody tr:focus-within > td {
@@ -8079,4 +8271,102 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   padding-inline: 0;
   background: transparent;
   border: none;
+}
+
+/* 표 칸 작은 입력창 공용(CellPopover) — 비고 ✎ · 행 옵션 ⚙ · 계산식 fx */
+.erp-cell-pop-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1099;
+}
+.erp-cell-pop {
+  position: fixed;
+  z-index: 1100;
+  padding: 8px;
+  background: var(--erp-panel);
+  border: 1px solid var(--erp-border);
+  border-radius: var(--erp-radius-md);
+  box-shadow: var(--erp-shadow-md);
+}
+.erp-rowopt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 4px;
+  font-size: var(--erp-font-sm);
+  cursor: pointer;
+}
+/* fx — 칸에 올리면 왼쪽에 작게 뜨고(숫자는 오른쪽 정렬이라 가리지 않는다), 식이 있는 칸은 항상 보인다 */
+.erp-fx-btn {
+  all: unset;
+  position: absolute;
+  left: 3px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 1px 4px;
+  border-radius: var(--erp-radius-xs, 0);
+  color: var(--erp-icon-muted);
+  font-size: var(--erp-font-2xs);
+  font-style: italic;
+  font-weight: 700;
+  line-height: 1.2;
+  cursor: pointer;
+  opacity: 0;
+  z-index: 2;
+}
+.erp-fx-cell:hover .erp-fx-btn,
+.erp-fx-cell:focus-within .erp-fx-btn,
+.erp-fx-btn.on {
+  opacity: 1;
+}
+.erp-fx-btn:hover {
+  background: var(--erp-hover);
+  color: var(--erp-primary);
+}
+.erp-fx-btn.on {
+  background: var(--erp-primary);
+  color: var(--erp-on-primary);
+}
+.erp-fx-btn:focus-visible {
+  outline: 2px solid var(--erp-primary);
+  outline-offset: 1px;
+}
+/* 식이 있는 칸에 올리면 계산 내용 말풍선 */
+.erp-fx-btn.on[data-fx]:hover::after {
+  content: attr(data-fx);
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 6px);
+  padding: 4px 10px;
+  border-radius: var(--erp-radius-md);
+  background: var(--erp-text);
+  color: var(--erp-on-primary);
+  font-size: var(--erp-font-xs);
+  font-style: normal;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: var(--erp-shadow-md);
+}
+.erp-fx-pop-label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: var(--erp-font-xs);
+  font-weight: 700;
+  color: var(--erp-text-muted);
+}
+.erp-fx-pop-result {
+  min-height: 18px;
+  margin: 6px 0;
+  font-size: var(--erp-font-sm);
+  font-weight: 700;
+  color: var(--erp-primary);
+  font-variant-numeric: tabular-nums;
+}
+.erp-fx-pop-result.bad {
+  color: var(--erp-danger);
+}
+.erp-fx-pop-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
 }

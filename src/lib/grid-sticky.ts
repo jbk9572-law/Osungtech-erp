@@ -18,12 +18,18 @@ export const GRID_ACTION_COL_WIDTH = 74;
 
 const stickyBase: CSSProperties = { position: "sticky", zIndex: 1 };
 
+// minWidth: 표가 container보다 넓을 때 브라우저(table-layout: auto)가 칸을 선언한 폭보다 좁게 줄이면, 뒤따르는 고정 칸의 left(앞 칸 폭의 합)와
+// 실제 칸 위치가 어긋나 두 고정 칸 사이에 행 색이 가는 띠로 비치고 칸이 서로 겹친다(매입/매출 목록의 "날짜 칸 앞 미세한 색 구분").
+// 선언한 폭 아래로는 줄지 않게 못박는다.
 export function stickyHeaderStyle(left: number, width: number, extra?: CSSProperties): CSSProperties {
-  return { ...stickyBase, left, width, background: "var(--erp-bg)", zIndex: 2, ...extra };
+  return { ...stickyBase, left, width, minWidth: width, background: "var(--erp-bg)", zIndex: 2, ...extra };
 }
 
+// 배경: 고정 칸은 옆으로 스크롤되는 칸을 가려야 해서 불투명해야 한다 — 그래서 투명 대신 "행의 현재 배경색"(--erp-row-bg)을 쓴다.
+// 줄무늬·마우스 올림·선택·펼침(erp-theme.css)이 행 상태마다 --erp-row-bg를 같이 바꿔 주므로, 고정 칸도 나머지 칸과 같은 색이 된다
+// (예전엔 항상 패널 흰색이라 행을 눌러도 날짜 칸만 흰색으로 남았다). 이월·오늘·예약 행은 기존대로 !important 규칙이 따로 덮는다.
 export function stickyCellStyle(left: number, width: number, extra?: CSSProperties): CSSProperties {
-  return { ...stickyBase, left, width, background: "var(--erp-panel)", ...extra };
+  return { ...stickyBase, left, width, minWidth: width, background: "var(--erp-row-bg, var(--erp-panel))", ...extra };
 }
 
 // 매출/매입 그리드의 합계(tfoot) 행에서 스크롤해도 붙어있어야 하는 칸들 —

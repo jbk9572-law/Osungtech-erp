@@ -1,5 +1,5 @@
 import { Fragment } from "react";
-import { GridBadge } from "@/components/grid/badge";
+import { GridBadge, type BadgeTone } from "@/components/grid/badge";
 import { formatNumOrDash } from "@/lib/format-num-or-dash";
 import { formatNumber } from "@/lib/format-number";
 
@@ -27,6 +27,10 @@ export type OrderDetailSelection = {
   isReturn?: boolean;
   // 오른쪽 고정 상세 패널(OrderSidePanel)용 부가 정보 — 아코디언은 쓰지 않는다.
   meta?: { label: string; value: string }[];
+  /** 제목 아래 색 칩(구분·과세·수금 상태 등) — 한눈에 전표 성격이 구분되게. */
+  chips?: { tone: BadgeTone; label: string }[];
+  /** 패널 윗줄 강조색 — 반품·미수처럼 주의가 필요한 전표는 danger/warn. 기본은 primary. */
+  accent?: "primary" | "danger" | "warn" | "success";
   detailHref?: string;
   printHref?: string;
 };

@@ -42,10 +42,12 @@ const FILES = [
 ];
 
 const EXEMPT_SELECTORS = new Set([
+  ".erp-voucher .erp-grid tfoot tr.erp-voucher-totals td", // 전표 표 합계 줄 칸 — 표 셀(위쪽 선만 있는 칸막이)
   ".erp-voucher-warning", // 전표 모달 재고 부족 경고 띠 — 모달 가장자리까지 닿는 띠(위쪽 선만 있는 칸막이)
   ".erp-voucher-context", // 전표 모달 거래처 정보 줄 — 모달 가장자리까지 닿는 띠(아래쪽 선만 있는 칸막이)
   ".erp-voucher-footer", // 전표 모달 하단 고정 바 — 모달 아래 가장자리에 변까지 붙는 바(위쪽 선만 있는 칸막이)
   ".erp-grid thead tr.erp-grid-group-row th", // 표 머리글 위 묶음 줄의 칸 — 표 셀이라 박스가 아님(아래쪽 선만 있는 칸막이)
+  ".erp-detail-side-hero", // 오른쪽 상세 패널 윗부분 머리 띠 — 둥근 패널(overflow 있는 부모) 안에 변까지 붙는 띠(아래쪽 선만 있는 칸막이)
   ".erp-demo-banner", // 화면 맨 위 가장자리에 변까지 붙는 전체 폭 배너
   ".erp-quota-banner-warn", // 위와 같은 자리(데모 배너와 동일 위치)의 쿼터 경고 배너
   ".erp-quota-banner-danger", // 위와 같은 자리의 쿼터 위험 배너
