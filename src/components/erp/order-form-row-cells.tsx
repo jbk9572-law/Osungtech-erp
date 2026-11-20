@@ -1,7 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import { CellPopover } from "@/components/erp/cell-popover";
+import { RowOptionsButton, type RowOption } from "@/components/erp/row-options";
 import { normalizeLotNumber } from "@/lib/lot-number";
 import { useThemeFeatures } from "@/lib/erp-theme-features";
 
@@ -10,6 +11,17 @@ import { useThemeFeatures } from "@/lib/erp-theme-features";
 // 각 폼에 그대로 둔다. 값 변경은 폼의 updateRow(key, patch)에 그대로 넘기도록 patch 한 개로 받는다.
 
 export type SpecLotPatch = { spec?: string; manualSpec?: boolean; lotNumber?: string };
+
+/** 품목 칸 아래 "품목없이 직접입력" 체크 — 두 폼이 같은 마크업을 갖고 있던 것을 한 곳으로. voucherLayout 테마는 칸을 가리지 않도록 줄 끝 [⚙ 행 옵션]으로 옮겨 가서 아무것도 그리지 않는다. */
+export function CustomEntryToggle({ checked, onChange }: { checked: boolean; onChange: (checked: boolean) => void }) {
+  if (useThemeFeatures().voucherLayout) return null;
+  return (
+    <label className="mt-1 flex items-center gap-1 text-[10.5px] erp-u-muted">
+      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+      품목없이 직접입력
+    </label>
+  );
+}
 
 export function SpecLotUnitCells({
   spec,
@@ -41,8 +53,8 @@ export function SpecLotUnitCells({
           disabled={!manualSpec}
           className="erp-input w-full disabled:bg-[var(--erp-bg-disabled)] disabled:text-[var(--erp-text-muted)]"
         />
-        {hasProduct && (
-          <label className="mt-1 flex items-center gap-1 text-[10.5px] erp-u-muted erp-cell-aux">
+        {hasProduct && !voucherLayout && (
+          <label className="mt-1 flex items-center gap-1 text-[10.5px] erp-u-muted">
             <input
               type="checkbox"
               checked={manualSpec}
@@ -74,11 +86,14 @@ export function SpecLotUnitCells({
 }
 
 // voucherLayout 테마의 비고 — 표 칸 대신 줄 끝 [✎] 버튼이 작은 입력창을 띄운다(시안처럼 표를 좁게 유지). 값이 있으면 버튼이 강조되고 마우스를 올리면 내용이 보인다.
-// 입력창은 표의 스크롤 영역에 잘리지 않게 body에 띄운다. Enter·Esc·바깥 클릭으로 닫는다(Esc는 전표 저장으로 번지지 않게 막는다).
+// Enter·Esc·바깥 클릭으로 닫는다(공용 틀: cell-popover.tsx).
 function RemarkPopoverButton({ remark, onRemarkChange }: { remark: string; onRemarkChange: (value: string) => void }) {
   const [rect, setRect] = useState<DOMRect | null>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
-  const close = () => setRect(null);
+  const close = () => {
+    setRect(null);
+    btnRef.current?.focus();
+  };
   return (
     <>
       <button
@@ -91,31 +106,26 @@ function RemarkPopoverButton({ remark, onRemarkChange }: { remark: string; onRem
       >
         ✎
       </button>
-      {rect &&
-        createPortal(
-          <>
-            <div className="erp-remark-pop-backdrop" onMouseDown={close} />
-            <input
-              autoFocus
-              className="erp-input erp-remark-pop"
-              style={{ top: rect.bottom + 4, left: Math.max(8, rect.right - 260) }}
-              placeholder="비고"
-              aria-label="비고"
-              value={remark}
-              onChange={(e) => onRemarkChange(e.target.value)}
-              onFocus={(e) => e.currentTarget.select()}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === "Escape") {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  close();
-                  btnRef.current?.focus();
-                }
-              }}
-            />
-          </>,
-          document.body,
-        )}
+      {rect && (
+        <CellPopover rect={rect} onClose={close} label="비고 입력">
+          <input
+            autoFocus
+            className="erp-input erp-u-w-full"
+            placeholder="비고"
+            aria-label="비고"
+            value={remark}
+            onChange={(e) => onRemarkChange(e.target.value)}
+            onFocus={(e) => e.currentTarget.select()}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                e.stopPropagation();
+                close();
+              }
+            }}
+          />
+        </CellPopover>
+      )}
     </>
   );
 }
@@ -127,12 +137,15 @@ export function RemarkActionCells({
   onInsert,
   onRemove,
   canRemove,
+  rowOptions = [],
 }: {
   remark: string;
   onRemarkChange: (value: string) => void;
   onInsert: () => void;
   onRemove: () => void;
   canRemove: boolean;
+  /** 줄 단위 켜고 끄기(품목없이 직접입력·규격/단가 직접입력) — voucherLayout 테마에서 [⚙]로 보인다 */
+  rowOptions?: RowOption[];
 }) {
   const { voucherLayout } = useThemeFeatures();
   return (
@@ -150,6 +163,7 @@ export function RemarkActionCells({
         </td>
       )}
       <td className="num erp-u-nowrap">
+        {voucherLayout && <RowOptionsButton options={rowOptions} />}
         {voucherLayout && <RemarkPopoverButton remark={remark} onRemarkChange={onRemarkChange} />}
         <button type="button" className={`erp-btn erp-btn-sm erp-u-minw-0 erp-u-mr-4${voucherLayout ? " erp-row-action" : ""}`} onClick={onInsert} title="이 줄 아래에 빈 줄 삽입" aria-label="이 줄 아래에 빈 줄 삽입">
           {voucherLayout ? "+" : "+ 삽입"}

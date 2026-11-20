@@ -9,7 +9,8 @@ import { QuickAddProductSearch } from "@/components/quick-add-product-search";
 import { FormMessage } from "@/components/form-message";
 import type { FormState } from "@/components/form-message";
 import { NumberInput } from "@/components/number-input";
-import { RemarkActionCells, SpecLotUnitCells } from "@/components/erp/order-form-row-cells";
+import { CustomEntryToggle, RemarkActionCells, SpecLotUnitCells } from "@/components/erp/order-form-row-cells";
+import type { RowOption } from "@/components/erp/row-options";
 import { QuantityWithBoxInput } from "@/components/quantity-with-box-input";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { KeyboardHintBar, ORDER_GRID_KEY_HINTS } from "@/components/erp/keyboard-hint-bar";
@@ -574,6 +575,25 @@ export function NewPurchaseForm({
     products,
     unitPriceOf: (tg0) => Number(tg0.cost),
   });
+
+  // "품목없이 직접입력" 켜고 끄기 — 켜면 품목 대신 이름을 직접 적고(규격·단가 직접입력도 함께 켜짐), 끄면 직접 입력한 값을 비운다.
+  function toggleCustomEntry(key: number, isCustomEntry: boolean) {
+    updateRow(
+      key,
+      isCustomEntry
+        ? { isCustomEntry, productId: "", manualSpec: true, manualPrice: true }
+        : { isCustomEntry, customName: "", spec: "", manualSpec: false, manualPrice: false, unitCost: 0 },
+    );
+  }
+  // 줄 단위 켜고 끄기 목록 — voucherLayout 테마의 줄 끝 [⚙ 행 옵션]에 나온다(클래식은 같은 체크가 칸 아래에 있다).
+  function rowOptionsOf(row: Row, recentCost: number): RowOption[] {
+    const productSpec = products.find((p) => p.id === row.productId)?.spec ?? "";
+    return [
+      ...(alsoCreateSale ? [] : [{ key: "custom", label: "품목없이 직접입력", checked: row.isCustomEntry, onChange: (v: boolean) => toggleCustomEntry(row.key, v) }]),
+      ...(row.productId ? [{ key: "spec", label: "규격 직접입력", checked: row.manualSpec, onChange: (v: boolean) => updateRow(row.key, { manualSpec: v, ...(v ? {} : { spec: productSpec }) }) }] : []),
+      ...(row.productId ? [{ key: "price", label: "단가 직접입력", checked: row.manualPrice, onChange: (v: boolean) => updateRow(row.key, { manualPrice: v, ...(v ? {} : { unitCost: recentCost }) }) }] : []),
+    ];
+  }
 
   function updateRow(key: number, patch: Partial<Row>) {
     setRows((prev) =>
@@ -1377,35 +1397,7 @@ export function NewPurchaseForm({
                             )}
                         </>
                       )}
-                      {!alsoCreateSale && (
-                        <label
-                          className="mt-1 flex items-center gap-1 text-[10.5px] erp-u-muted erp-cell-aux"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={row.isCustomEntry}
-                            onChange={(e) => {
-                              const isCustomEntry = e.target.checked;
-                              updateRow(row.key, isCustomEntry
-                                ? {
-                                    isCustomEntry,
-                                    productId: "",
-                                    manualSpec: true,
-                                    manualPrice: true,
-                                  }
-                                : {
-                                    isCustomEntry,
-                                    customName: "",
-                                    spec: "",
-                                    manualSpec: false,
-                                    manualPrice: false,
-                                    unitCost: 0,
-                                  });
-                            }}
-                          />
-                          품목없이 직접입력
-                        </label>
-                      )}
+                      {!alsoCreateSale && <CustomEntryToggle checked={row.isCustomEntry} onChange={(v) => toggleCustomEntry(row.key, v)} />}
                     </td>
                     <SpecLotUnitCells
                       spec={row.spec}
@@ -1512,6 +1504,7 @@ export function NewPurchaseForm({
                       onInsert={() => insertRowAfter(row.key)}
                       onRemove={() => removeRow(row.key)}
                       canRemove={rows.length > 1}
+                      rowOptions={rowOptionsOf(row, recentCost)}
                     />
                   </tr>
                 );

@@ -10,7 +10,7 @@ function cellText(td: HTMLTableCellElement): string {
   const input = td.querySelector('input:not([type="checkbox"]):not([type="hidden"])') as HTMLInputElement | null;
   if (input) return input.value;
   const clone = td.cloneNode(true) as HTMLElement;
-  clone.querySelectorAll(".erp-cell-aux, button").forEach((el) => el.remove());
+  clone.querySelectorAll("button").forEach((el) => el.remove());
   return (clone.textContent ?? "").replace(/\s+/g, " ").trim();
 }
 
