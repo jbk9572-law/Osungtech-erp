@@ -29,11 +29,15 @@ for (const s of SCREENS) {
     if (!new URL(page.url()).pathname.startsWith(s.path)) test.skip(true, "이 회사는 이 기능을 꺼 두어 다른 화면으로 이동했다");
     // 제목줄이 보이고, 앱 오류 화면("일시적인 오류로…")이 아니다.
     const title = page.locator("h1.erp-h1").first();
-    if (!(await title.isVisible({ timeout: 30_000 }).catch(() => false))) {
+    const started = Date.now();
+    // (isVisible은 기다리지 않으므로 waitFor로 최대 70초 기다린다 — 느린 것과 멈춘 것을 가르려고 오래 기다린다.)
+    const shown = await title.waitFor({ state: "visible", timeout: 70_000 }).then(() => true, () => false);
+    test.info().annotations.push({ type: "열리는 데 걸린 시간(ms)", description: String(Date.now() - started) });
+    if (!shown) {
       // 실패 원인을 로그에서 바로 볼 수 있게 화면에 보이는 글자 일부를 남긴다.
       const all = (await page.locator("body").innerText().catch(() => "")).replace(/\s+/g, " ");
       const seen = `(전체 ${all.length}자, 끝 400자) ${all.slice(-400)}`; // 앞부분은 메뉴라 끝쪽에 본문(로딩/오류 문구)이 있다
-      throw new Error(`제목줄(h1.erp-h1)이 없다. url=${page.url()} 화면 글자: ${seen}`);
+      throw new Error(`제목줄(h1.erp-h1)이 70초 안에 안 떴다. url=${page.url()} 화면 글자: ${seen}`);
     }
     await expect(page.getByText("일시적인 오류로 화면을 불러오지 못했습니다")).toHaveCount(0);
     if (s.table) await expect(page.locator("table.erp-grid, .erp-grid-empty, .erp-row-card-list").first()).toBeVisible();
