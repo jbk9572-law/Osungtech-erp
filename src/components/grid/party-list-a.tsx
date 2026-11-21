@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ClickableRow } from "@/components/clickable-row";
@@ -11,10 +11,13 @@ import { BalanceSidePanel } from "@/components/grid/balance-side-panel";
 import { ListSummaryBar } from "@/components/grid/list-summary-bar";
 import { SheetColumnMenu, SortableTh } from "@/components/grid/sheet-parts";
 import { useBulkDelete } from "@/components/erp/use-bulk-delete";
+import { GuardedLink } from "@/components/erp/guarded-link";
+import { ListToolbar, ToolbarKey } from "@/components/erp/list-toolbar";
 import type { FormState } from "@/components/form-message";
 import { useSideSplit } from "@/lib/erp-theme-features";
 import { formatNumber } from "@/lib/format-number";
 import { startRouteProgress } from "@/lib/route-progress";
+import { formatKstTime } from "@/lib/kst-date";
 import { useRowKeyboard, useSheetTable } from "@/lib/use-sheet-table";
 import type { BalanceRow } from "@/components/balance-grid-table";
 
@@ -61,6 +64,9 @@ export function PartyListA({
   partyLabel,
   balanceLabel,
   searchSlot,
+  searchFormId,
+  newHref,
+  excelHref,
   bulkDeleteAction,
   warningText,
   emptyMessage,
@@ -76,6 +82,12 @@ export function PartyListA({
   partyLabel: string;
   balanceLabel: string;
   searchSlot: ReactNode;
+  /** 검색 폼의 id — 도구 줄의 [조회]가 이 폼을 제출한다. */
+  searchFormId: string;
+  /** [신규] 주소(C형 모달 경로). */
+  newHref: string;
+  /** 있으면 도구 줄에 [엑셀]이 생긴다(전체 목록 내려받기). 내려받기 경로가 없는 화면은 비운다. */
+  excelHref?: string;
   bulkDeleteAction: (state: FormState, formData: FormData) => Promise<FormState>;
   warningText: string;
   emptyMessage: string;
@@ -106,6 +118,25 @@ export function PartyListA({
 
   const { selected, toggle, bar } = useBulkDelete(bulkDeleteAction, visible.map((r) => ({ id: r.id, label: r.name })), warningText);
   const active = ordered.find((r) => r.id === activeId) ?? null;
+  const editHref = active ? `${hrefBase}/${active.id}` : null;
+  // 마지막으로 목록을 받은 시각(KST) — 도구 줄 오른쪽 상태에 보인다. 서버·브라우저 시각이 다를 수 있어 마운트 뒤에만 채운다.
+  const [loadedAt, setLoadedAt] = useState("");
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 목록(rows)이 새로 올 때마다 조회 시각을 갱신
+    setLoadedAt(formatKstTime(new Date(), { hour: "2-digit", minute: "2-digit", hour12: false }));
+  }, [rows]);
+  // F4 = 고른 행 수정(모달). 입력칸에서 누른 F4도 같은 뜻이라 따로 막지 않는다(브라우저 기본 동작이 없는 키).
+  useEffect(() => {
+    if (!editHref) return;
+    function onF4(e: KeyboardEvent) {
+      if (e.key !== "F4") return;
+      e.preventDefault();
+      startRouteProgress();
+      router.push(editHref!);
+    }
+    window.addEventListener("keydown", onF4);
+    return () => window.removeEventListener("keydown", onF4);
+  }, [editHref, router]);
   const onKeyDown = useRowKeyboard(
     ordered.map((r) => r.id),
     activeId,
@@ -134,6 +165,52 @@ export function PartyListA({
 
   return (
     <>
+      <ListToolbar
+        actions={
+          <>
+            <button type="button" className="erp-btn erp-btn-primary" onClick={() => (document.getElementById(searchFormId) as HTMLFormElement | null)?.requestSubmit()}>
+              조회<ToolbarKey>F5</ToolbarKey>
+            </button>
+            <GuardedLink href={newHref} className="erp-btn">
+              신규<ToolbarKey>F2</ToolbarKey>
+            </GuardedLink>
+            {editHref ? (
+              <Link href={editHref} className="erp-btn erp-listtoolbar-wide">
+                수정<ToolbarKey>F4</ToolbarKey>
+              </Link>
+            ) : (
+              <button type="button" className="erp-btn erp-listtoolbar-wide" disabled title="목록에서 행을 눌러 고른 뒤 수정할 수 있습니다">
+                수정<ToolbarKey>F4</ToolbarKey>
+              </button>
+            )}
+            <button
+              type="button"
+              className="erp-btn erp-listtoolbar-wide"
+              disabled={selected.size === 0}
+              title={selected.size === 0 ? "행 앞의 체크박스로 삭제할 항목을 고르세요" : "아래 확인 코드를 입력하면 삭제됩니다"}
+              onClick={() => document.getElementById("party-bulk-delete")?.querySelector<HTMLInputElement>("input[type=text]")?.focus()}
+            >
+              삭제
+            </button>
+          </>
+        }
+        tools={
+          <>
+            {excelHref && (
+              <a href={excelHref} className="erp-btn" title="전체 목록을 엑셀로 내려받기(현재 검색·필터와 무관)">
+                엑셀
+              </a>
+            )}
+            <SheetColumnMenu labels={PARTY_COLS.map((_, i) => labelOf(i))} hidden={hidden} onToggle={toggleHidden} />
+          </>
+        }
+        status={
+          <>
+            {loadedAt && <span>{loadedAt} 조회 · </span>}
+            {partyLabel} <b>{formatNumber(rows.length)}곳</b> | 선택 <b>{formatNumber(selected.size)}곳</b>
+          </>
+        }
+      />
       <div className="erp-party-toolbar">
         <div className="erp-date-presets">
           {filters.map((f) => (
@@ -152,10 +229,7 @@ export function PartyListA({
           { label: `연체 ${partyLabel}`, value: `${formatNumber(counts.overdue)}곳` },
         ]}
       />
-      {bar}
-      <div className="erp-sheet-tools">
-        <SheetColumnMenu labels={PARTY_COLS.map((_, i) => labelOf(i))} hidden={hidden} onToggle={toggleHidden} />
-      </div>
+      {bar && <div id="party-bulk-delete">{bar}</div>}
       <div className={sideSplit ? "erp-master-detail" : undefined}>
         <div className={sideSplit ? "erp-master-detail-main" : undefined}>
           <div className="erp-grid-wrap has-card-view erp-sheet" tabIndex={0} onKeyDown={onKeyDown} aria-label="목록 — 위아래 방향키로 행 이동, Enter로 열기, Ctrl+C로 행 복사">

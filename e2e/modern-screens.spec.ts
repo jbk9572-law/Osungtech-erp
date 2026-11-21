@@ -71,6 +71,22 @@ test.describe("스프레드시트 동작(거래처 표)", () => {
   });
 });
 
+test.describe("거래처 도구 줄(시범)", () => {
+  test("조회·신규·수정·삭제 버튼이 있고, 행을 고르면 수정이 켜진다", async ({ page }) => {
+    await page.goto("/customers");
+    const bar = page.getByRole("toolbar", { name: "목록 작업" });
+    test.skip(!(await bar.isVisible({ timeout: 20_000 }).catch(() => false)), "도구 줄이 없음(클래식 또는 좁은 화면)");
+    await expect(bar.getByRole("button", { name: /^조회/ })).toBeVisible();
+    await expect(bar.getByRole("link", { name: /^신규/ })).toBeVisible();
+    await expect(bar.getByRole("button", { name: /^수정/ })).toBeDisabled();
+    await expect(bar.getByRole("button", { name: /^삭제/ })).toBeDisabled();
+    const firstRow = page.locator("table.erp-grid tbody tr").first();
+    test.skip(!(await firstRow.isVisible().catch(() => false)), "거래처가 없어 행 선택은 건너뜀");
+    await firstRow.click();
+    await expect(bar.getByRole("link", { name: /^수정/ })).toBeVisible();
+  });
+});
+
 test.describe("모던 틀(상단바·하단 상태줄)", () => {
   test("메뉴 검색 버튼이 빠른 검색을 열고, 상태줄에 연결 상태가 보인다", async ({ page }) => {
     await page.goto("/customers");

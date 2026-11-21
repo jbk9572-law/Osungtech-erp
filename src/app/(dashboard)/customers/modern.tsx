@@ -81,6 +81,7 @@ async function CustomersPage({
   return (
     <PartyPageA
       kind="customer"
+      excelHref="/api/customers/export"
       title="거래처관리 &gt; 출고처관리"
       basePath="/customers"
       rows={customers.map((c) => {

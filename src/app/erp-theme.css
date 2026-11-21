@@ -8702,3 +8702,64 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
     display: none;
   }
 }
+
+/* ── 목록 도구 줄(ListToolbar) — 시안의 조회·신규·수정·삭제 | 엑셀·열 설정 + 오른쪽 상태 ───────────── */
+.erp-listtoolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--erp-space-2) var(--erp-space-3);
+  margin-bottom: var(--erp-space-3);
+  padding-bottom: var(--erp-space-3);
+  border-bottom: 1px solid var(--erp-border-strong);
+}
+
+.erp-listtoolbar-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--erp-space-2);
+}
+
+.erp-listtoolbar-sep {
+  width: 1px;
+  height: 18px;
+  background: var(--erp-border-strong);
+}
+
+.erp-listtoolbar-key {
+  margin-left: 4px;
+  font-family: inherit;
+  font-size: var(--erp-font-xs);
+  font-weight: 400;
+  opacity: 0.7;
+}
+
+.erp-listtoolbar-status {
+  margin-left: auto;
+  font-size: var(--erp-font-sm);
+  color: var(--erp-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.erp-listtoolbar-status b {
+  color: var(--erp-text);
+}
+
+@media (max-width: 768px) {
+  /* 좁은 화면: 상태 문구는 다음 줄 전체 폭으로 내리고, 열 설정은 카드 목록이라 숨긴다(.erp-sheet-tools와 같은 기준). */
+  .erp-listtoolbar-status {
+    flex: 1 0 100%;
+    margin-left: 0;
+  }
+
+  .erp-listtoolbar .erp-colmenu {
+    display: none;
+  }
+
+  /* 수정·삭제는 표의 행 선택이 있어야 쓸 수 있는데, 좁은 화면은 카드 목록이라 행 선택이 없다 — 구분선과 함께 숨긴다. */
+  .erp-listtoolbar-wide,
+  .erp-listtoolbar-sep {
+    display: none;
+  }
+}

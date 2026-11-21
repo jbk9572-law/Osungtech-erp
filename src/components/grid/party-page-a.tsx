@@ -1,13 +1,12 @@
 import { ListTitleBar } from "@/components/erp/page-header";
 import Link from "next/link";
-import { GuardedLink } from "@/components/erp/guarded-link";
 import { ListSearchForm } from "@/components/erp/list-search-form";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { PartyListA, type PartyListRow } from "@/components/grid/party-list-a";
 import type { FormState } from "@/components/form-message";
 import { formatNumber } from "@/lib/format-number";
 
-// 거래처·공급처관리 A형(업무 목록) 화면의 서버 틀 — 제목줄(신규·새로고침) + 검색 + 표/패널(PartyListA) + 더보기.
+// 거래처·공급처관리 A형(업무 목록) 화면의 서버 틀 — 제목줄 + 도구 줄(조회·신규·수정·삭제·엑셀·열 설정, PartyListA 안) + 검색 + 표/패널(PartyListA) + 더보기.
 // 두 화면이 같은 틀을 쓰도록 한 곳에서 그린다. 신규·수정은 C형 모달(`${basePath}/new`, `${basePath}/[id]` 가로채기 경로).
 export function PartyPageA({
   kind,
@@ -26,6 +25,7 @@ export function PartyPageA({
   bulkDeleteAction,
   warningText,
   emptyMessage,
+  excelHref,
 }: {
   kind: "customer" | "supplier";
   title: string;
@@ -43,6 +43,8 @@ export function PartyPageA({
   bulkDeleteAction: (state: FormState, formData: FormData) => Promise<FormState>;
   warningText: string;
   emptyMessage: string;
+  /** 전체 목록 엑셀 내려받기 경로 — 없으면 [엑셀] 버튼을 그리지 않는다. */
+  excelHref?: string;
 }) {
   const formId = `${kind}s-search-form`;
   return (
@@ -54,19 +56,7 @@ export function PartyPageA({
           Escape: { href: "/dashboard" },
         }}
       />
-      <ListTitleBar
-        title={<>{title}</>}
-        actions={
-          <>
-          <GuardedLink href={`${basePath}/new`} className="erp-btn erp-btn-primary">
-            F2 신규
-          </GuardedLink>
-          <Link href={q ? `${basePath}?q=${encodeURIComponent(q)}` : basePath} className="erp-btn">
-            새로고침
-          </Link>
-          </>
-        }
-      />
+      <ListTitleBar title={<>{title}</>} />
       <PartyListA
         kind={kind}
         rows={rows}
@@ -76,8 +66,11 @@ export function PartyPageA({
         partyLabel={partyLabel}
         balanceLabel={balanceLabel}
         searchSlot={
-          <ListSearchForm formId={formId} q={q} placeholder={searchPlaceholder} ariaLabel={`${partyLabel} 검색`} resetHref={basePath} />
+          <ListSearchForm formId={formId} q={q} placeholder={searchPlaceholder} ariaLabel={`${partyLabel} 검색`} resetHref={basePath} hideSubmit />
         }
+        searchFormId={formId}
+        newHref={`${basePath}/new`}
+        excelHref={excelHref}
         bulkDeleteAction={bulkDeleteAction}
         warningText={warningText}
         emptyMessage={emptyMessage}
