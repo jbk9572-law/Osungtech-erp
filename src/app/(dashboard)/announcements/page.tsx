@@ -4,7 +4,7 @@ import { AnnouncementListBody, type AnnouncementRow } from "@/components/announc
 import { isThisWeek } from "@/lib/is-this-week";
 import { AnnouncementDetailPanel } from "@/components/announcement-detail-panel";
 import { AnnouncementForm } from "@/components/announcement-form";
-import { FormSection, SplitDetailEmpty } from "@/components/erp/page-header";
+import { FormSection, SplitDetailEmpty, ListTitleBar } from "@/components/erp/page-header";
 import { MegaphoneIcon } from "@/components/erp/groupware-icons";
 import { createAnnouncement } from "@/app/(dashboard)/announcements/actions";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
@@ -97,9 +97,10 @@ export default async function AnnouncementsPage({
           Escape: { href: selectedId ? newHref : "/dashboard" },
         }}
       />
-      <div className="erp-page-toolbar erp-detail-header-row">
-        <h1 className="erp-h1">공지사항</h1>
-        <div className="erp-toolbar erp-u-mb-0">
+      <ListTitleBar
+        title={<>공지사항</>}
+        actions={
+          <>
           {isManagerOrAdmin && (
             <Link href={newHref} className="erp-btn erp-btn-primary">
               F2 글쓰기
@@ -110,8 +111,9 @@ export default async function AnnouncementsPage({
               목록
             </Link>
           )}
-        </div>
-      </div>
+          </>
+        }
+      />
 
       <div className="erp-kpi-row erp-u-mb-s4">
         <div className="erp-home-panel erp-kpi-card">

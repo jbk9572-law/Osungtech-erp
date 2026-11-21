@@ -1,5 +1,8 @@
+"use client";
+
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { useThemeFeatures } from "@/lib/erp-theme-features";
 
 // 목록+상세 분할뷰(.erp-split-detail)에서 아무것도 선택 안 했을 때 —
 // 메일함/문서양식관리/결재선처럼 "고른 걸 보여주는" 화면(할일관리·
@@ -59,6 +62,16 @@ export function SplitListFiller({
 // 손으로 반복해서 짰는데, 여백 값이나 클래스가 한 곳만 바뀌고 다른 곳은
 // 그대로 남는 식으로 "같은 화면 종류인데 미묘하게 다른" 상태가 되기
 // 쉬웠다. 이 레이아웃을 쓰는 화면은 전부 이 컴포넌트만 쓴다.
+// 제목(왼쪽) + 툴바(오른쪽) 한 줄 헤더 — 모던 테마의 A/B형 화면 공통 제목줄. 화면마다 `erp-page-toolbar erp-detail-header-row` 마크업을 다시 짜지 않는다.
+export function ListTitleBar({ title, actions }: { title: ReactNode; actions?: ReactNode }) {
+  return (
+    <div className="erp-page-toolbar erp-detail-header-row">
+      <h1 className="erp-h1">{title}</h1>
+      {actions && <div className="erp-toolbar erp-u-mb-0">{actions}</div>}
+    </div>
+  );
+}
+
 export function ListPageHeader({
   title,
   actions,
@@ -72,6 +85,17 @@ export function ListPageHeader({
   eyebrow?: ReactNode;
   description?: ReactNode;
 }) {
+  // 모던 테마는 제목 줄 오른쪽에 툴바를 둔다(A/B형 공통 제목줄과 같은 모양) — 클래식은 기존 그대로(제목 아래 툴바).
+  const { listSidePanel } = useThemeFeatures();
+  if (listSidePanel) {
+    return (
+      <>
+        {eyebrow && <span className="erp-eyebrow">{eyebrow}</span>}
+        <ListTitleBar title={title} actions={actions} />
+        {description && <p className="erp-page-desc erp-u-mb-12">{description}</p>}
+      </>
+    );
+  }
   return (
     <>
       {eyebrow && <span className="erp-eyebrow">{eyebrow}</span>}

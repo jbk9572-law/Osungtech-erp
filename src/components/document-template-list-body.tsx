@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { GridBadge } from "@/components/grid/badge";
+import { SplitFilterColumn } from "@/components/erp/split-filter-column";
 import { SplitListFiller } from "@/components/erp/page-header";
 import { DocumentIcon } from "@/components/erp/groupware-icons";
 
@@ -55,27 +56,17 @@ export function DocumentTemplateListBody({
 
   return (
     <>
-      <nav className="erp-cat-sidebar">
-        <button
-          type="button"
-          onClick={() => setCategory("all")}
-          className={`erp-cat-item${category === "all" ? " active" : ""}`}
-        >
-          <span>전체</span>
-          <span className="cnt">{rows.length}</span>
-        </button>
-        {CATEGORIES.map((c) => (
-          <button
-            key={c}
-            type="button"
-            onClick={() => setCategory(c)}
-            className={`erp-cat-item${category === c ? " active" : ""}`}
-          >
-            <span>{CATEGORY_LABELS[c]}</span>
-            <span className="cnt">{countByCategory[c] ?? 0}</span>
-          </button>
-        ))}
-      </nav>
+      <SplitFilterColumn
+        ariaLabel="양식 분류"
+        groups={[
+          {
+            items: [
+              { key: "all", label: "전체", count: rows.length, active: category === "all", onSelect: () => setCategory("all") },
+              ...CATEGORIES.map((c) => ({ key: c, label: CATEGORY_LABELS[c], count: countByCategory[c] ?? 0, active: category === c, onSelect: () => setCategory(c) })),
+            ],
+          },
+        ]}
+      />
 
       <section className="erp-split-list">
         <div className="erp-split-list-head">

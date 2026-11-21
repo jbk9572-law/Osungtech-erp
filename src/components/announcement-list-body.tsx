@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { AnnouncementCheckbox } from "@/components/announcement-checkbox";
 import { GridBadge } from "@/components/grid/badge";
+import { SplitFilterColumn } from "@/components/erp/split-filter-column";
 import { SplitListFiller } from "@/components/erp/page-header";
 import { MegaphoneIcon } from "@/components/erp/groupware-icons";
 import { formatNumber } from "@/lib/format-number";
@@ -90,21 +91,20 @@ export function AnnouncementListBody({
 
   return (
     <>
-      <div className="erp-cat-sidebar">
-        {FILTERS.map((f) => (
-          <button
-            key={f.key}
-            type="button"
-            onClick={() => setFilter(f.key)}
-            className={`erp-cat-item${filter === f.key ? " active" : ""}`}
-          >
-            <span>{f.label}</span>
-            <span className="cnt">
-              {f.key === "all" ? rows.length : f.key === "pinned" ? pinnedCount : generalCount}
-            </span>
-          </button>
-        ))}
-      </div>
+      <SplitFilterColumn
+        ariaLabel="공지 분류"
+        groups={[
+          {
+            items: FILTERS.map((f) => ({
+              key: f.key,
+              label: f.label,
+              count: f.key === "all" ? rows.length : f.key === "pinned" ? pinnedCount : generalCount,
+              active: filter === f.key,
+              onSelect: () => setFilter(f.key),
+            })),
+          },
+        ]}
+      />
 
       <section className="erp-split-list">
         <div className="erp-split-list-head">

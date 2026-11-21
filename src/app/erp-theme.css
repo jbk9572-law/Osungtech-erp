@@ -36,6 +36,7 @@
 .erp-u-overflow-y-auto { overflow-y: auto !important; }
 .erp-u-self-start { align-self: flex-start !important; }
 .erp-u-nowrap { white-space: nowrap !important; }
+.erp-u-strike { text-decoration: line-through; }
 .erp-u-pre-wrap { white-space: pre-wrap !important; }
 .erp-u-h-full { height: 100% !important; }
 .erp-u-h-34 { height: 34px !important; }
@@ -60,6 +61,7 @@
 .erp-u-normal { font-weight: 400 !important; }
 .erp-u-flex { display: flex !important; }
 .erp-u-items-center { align-items: center !important; }
+.erp-u-items-start { align-items: flex-start !important; }
 .erp-u-justify-between { justify-content: space-between !important; }
 .erp-u-relative { position: relative !important; }
 .erp-u-text-center { text-align: center !important; }
@@ -377,6 +379,7 @@
   --erp-detail-side-display: none;
   /* 전표(등록 모달) 틀 — 클래식은 "종이 카드", grid-modern은 틀 없이 밀집 시트 */
   --erp-modal-top-w: 3px;
+  --erp-modal-close-band: 0px;
   --erp-modal-close-top: -14px;
   --erp-modal-close-right: -14px;
   --erp-modal-close-bg: var(--erp-text);
@@ -439,6 +442,9 @@
      않게 했다(디자인 캔버스로 반복 다듬은 결과 — 큰 패널/작은
      행(카드)/버튼/말풍선 네 가지 역할마다 모서리 반경을 다르게 둬서
      전부 똑같은 반경 하나를 쓰던 것보다 위계가 또렷하다). */
+  /* B형 3분할 칸 사이 간격/겹침 — 모던 테마는 간격 0 + 테두리 1px 겹침(한 덩어리 띠), 클래식은 떨어진 카드 */
+  --erp-split3-gap: 10px;
+  --erp-split3-overlap: 0px;
   --erp-comm-radius: 16px;
   --erp-comm-radius-row: 11px;
   --erp-comm-radius-pill: 9px;
@@ -598,6 +604,7 @@
   --erp-fx-badge-display: block;
   --erp-detail-side-display: flex;
   --erp-modal-top-w: 0px;
+  --erp-modal-close-band: 40px;
   --erp-modal-close-top: 10px;
   --erp-modal-close-right: 12px;
   --erp-modal-close-bg: transparent;
@@ -650,6 +657,14 @@
   --erp-radius-4xl: 8px;
   --erp-radius-circle: 50%;
   --erp-radius-pill: 999px;
+  /* 그룹웨어(할일·메일·공지·게시판) B형 — 시안은 평평한 띠/행(둥근 떠 있는 카드 아님). 말풍선(메신저)은 그대로. */
+  --erp-split3-gap: 0px;
+  --erp-split3-overlap: 1px;
+  --erp-comm-radius: 0;
+  --erp-comm-radius-row: 0;
+  --erp-comm-radius-pill: var(--erp-radius-md);
+  --erp-comm-shadow: none;
+  --erp-comm-shadow-row: none;
 }
 
 /* 셸(.erp)이 화면 높이를 꽉 채우고 안쪽(.erp-page 등)만 스크롤하는 구조라, 문서(html/body) 자체는 절대 스크롤되면 안 된다 —
@@ -1367,6 +1382,14 @@ html:has(.erp) body {
 .erp-modal-body {
   padding: 16px;
   overflow-y: auto;
+  /* 모달 모서리를 따라 바닥 두 모서리를 둥글게 자른다 — 본문(스크롤 영역)이 모서리를 안 자르면 바닥에 붙는 하단 바·안내 줄의 배경이
+     각진 채 모달 모서리 밖으로 비어져 나온다(전표 모달 왼쪽 아래 모서리 R 없음). */
+  border-radius: 0 0 var(--erp-radius-3xl, 0) var(--erp-radius-3xl, 0);
+}
+/* 닫기(✕)가 모달 안쪽 오른쪽 위에 떠 있는 테마(--erp-modal-close-band > 0)는 본문 위에 ✕ 자리(띠)를 남긴다 — 첫 줄 오른쪽 끝의 버튼·탭이 ✕와 겹치지 않게.
+   제목줄을 가진 모달(전표 제목줄 .erp-voucher-titlebar · 단순 모달 .erp-modal-title)은 자기 제목줄이 ✕ 자리를 비우므로 제외. */
+.erp-modal:not(:has(.erp-voucher-titlebar)):not(:has(.erp-modal-title)) > .erp-modal-body {
+  padding-top: max(16px, var(--erp-modal-close-band));
 }
 
 /* 모달(.erp-modal-body) 안에서 .erp-detail을 쓰면 모달 자신의 상단
@@ -4055,10 +4078,35 @@ a.erp-detail-tab:hover:not(.active) {
 .erp-split3-shell {
   display: grid;
   grid-template-columns: minmax(140px, 0.2fr) minmax(200px, 0.2fr) minmax(0, 0.6fr);
-  gap: 10px;
+  gap: var(--erp-split3-gap);
   align-items: stretch;
   min-height: 0;
   flex: 1;
+}
+
+/* 행이 버튼인 목록(클라이언트에서 선택만 바꾸는 3분할 — 이동 없음) */
+.erp-split-list-row-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+/* 메신저 좁은 화면 채팅방 탭의 대화 필터 칩 — 넓은 화면은 왼쪽 필터 열을 쓰므로 숨김 */
+.erp-messenger-mobile-filter {
+  display: none;
+}
+/* 필터 열 오른쪽 칸 전체를 차지하는 목록(상세 칸이 없는 탭 — 예: 임시저장) */
+.erp-split3-shell > .erp-split3-rest {
+  grid-column: 2 / -1;
+}
+@media (min-width: 769px) {
+  .erp-split3-shell > * + * {
+    margin-left: calc(-1 * var(--erp-split3-overlap));
+  }
 }
 
 .erp-cat-sidebar {
@@ -4110,6 +4158,51 @@ a.erp-detail-tab:hover:not(.active) {
 
 .erp-cat-item.active .cnt {
   color: var(--erp-text);
+}
+
+/* 할일 목록 행 — 왼쪽 제목+보조줄, 오른쪽 마감/완료 칩 */
+.erp-todo-row-link {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--erp-space-2, 8px);
+  color: inherit;
+  text-decoration: none;
+}
+.erp-todo-row-link .erp-badge,
+.erp-todo-row-link > :last-child:not(.erp-todo-row-main) {
+  flex: none;
+  white-space: nowrap;
+}
+.erp-todo-row-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* B형 필터 열 — 시안: 평평한 띠 + 선택 항목은 왼쪽 강조선 */
+.erp-split3-filter .erp-cat-item {
+  border-radius: 0;
+}
+.erp-split3-filter .erp-cat-item.active,
+.erp-comm-shell .erp-split3-filter .erp-cat-item.active {
+  background: var(--erp-selected);
+  box-shadow: inset 3px 0 0 var(--erp-primary);
+}
+
+/* B형 필터 열의 묶음 머리글(상태·유형·담당) */
+.erp-split3-filter-heading {
+  padding: 8px 10px 4px;
+  font-size: var(--erp-font-xs);
+  font-weight: 700;
+  color: var(--erp-text-muted);
+}
+.erp-split3-filter-group + .erp-split3-filter-group {
+  margin-top: 6px;
+  padding-top: 4px;
+  border-top: 1px solid var(--erp-divider);
 }
 
 /* F2/F5/F8 같은 실제 키보드 단축키를 화면 하단에 작게 보여주는 힌트
@@ -4791,6 +4884,36 @@ a.erp-detail-tab:hover:not(.active) {
     max-height: none;
     margin-bottom: 10px;
   }
+  /* B형 필터 열 — 좁은 화면에서는 세로로 길게 쌓지 않고, 묶음마다 가로 한 줄(좌우로 밀어 넘김)로 눕힌다 */
+  .erp-cat-sidebar.erp-split3-filter {
+    gap: 6px;
+    padding: 6px;
+    overflow-y: visible;
+  }
+  .erp-split3-filter .erp-split3-filter-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .erp-split3-filter .erp-split3-filter-group + .erp-split3-filter-group {
+    margin-top: 0;
+    padding-top: 6px;
+  }
+  .erp-split3-filter .erp-split3-filter-heading {
+    flex: none;
+    padding: 0 6px 0 4px;
+  }
+  .erp-split3-filter .erp-cat-item {
+    border-radius: var(--erp-radius-md, 0);
+    box-shadow: none !important;
+    flex: none;
+    width: auto;
+    gap: 6px;
+    min-height: 32px;
+    white-space: nowrap;
+  }
 
   /* split3-shell을 쓰는 화면(메일함/공지사항)의 상세(메일 본문/글
      읽기)는, 다른 분할뷰 화면(거래처 상세 등)과 달리 "목록에서 글 하나
@@ -5127,6 +5250,111 @@ a.erp-detail-tab:hover:not(.active) {
 .erp-grid th.erp-col-no,
 .erp-grid td.erp-col-no {
   width: 44px;
+}
+/* 거래처·공급처 A형 — 빠른 필터 칩(왼쪽) + 검색(오른쪽) 한 줄 */
+.erp-party-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--erp-space-2, 8px);
+  margin-bottom: var(--erp-space-2, 8px);
+}
+.erp-party-toolbar .erp-date-presets {
+  margin: 0;
+}
+.erp-party-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  max-width: 360px;
+  min-width: 0;
+}
+.erp-party-search .erp-input {
+  flex: 1;
+  min-width: 0;
+}
+/* 표 위 도구 줄(열 설정) — 좁은 화면은 카드 목록이라 숨긴다 */
+.erp-sheet-tools {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--erp-space-2);
+}
+@media (max-width: 768px) {
+  .erp-sheet-tools {
+    display: none;
+  }
+}
+/* 열 설정 메뉴(스프레드시트형 목록) */
+.erp-colmenu {
+  position: relative;
+  display: inline-block;
+}
+.erp-colmenu > summary {
+  list-style: none;
+  cursor: pointer;
+}
+.erp-colmenu > summary::-webkit-details-marker {
+  display: none;
+}
+.erp-colmenu-list {
+  position: absolute;
+  right: 0;
+  z-index: 20;
+  min-width: 160px;
+  margin-top: 4px;
+  padding: var(--erp-space-2);
+  background: var(--erp-panel);
+  border: 1px solid var(--erp-border-strong);
+  border-radius: var(--erp-radius-md, 0);
+  box-shadow: var(--erp-shadow-md);
+}
+.erp-colmenu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--erp-space-2);
+  padding: var(--erp-space-1) var(--erp-space-2);
+  white-space: nowrap;
+  cursor: pointer;
+}
+/* 열 너비 조절(스프레드시트형 목록) — 머리글 오른쪽 끝 손잡이, 끈 너비는 --col-w */
+.erp-th-sized {
+  width: var(--col-w);
+  min-width: var(--col-w);
+  max-width: var(--col-w);
+}
+.erp-col-resizer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  touch-action: none;
+  user-select: none;
+}
+.erp-col-resizer:hover,
+.erp-col-resizer:active {
+  background: var(--erp-primary);
+  opacity: 0.35;
+}
+/* 방향키로 행을 옮기는 표 — 포커스가 표 영역에 있음을 윤곽선으로 */
+.erp-sheet:focus-visible {
+  outline: 2px solid var(--erp-primary);
+  outline-offset: -2px;
+}
+/* 번호 + 체크박스가 한 칸에 같이 있는 칸 — 번호만 있는 칸보다 조금 넓게 */
+.erp-grid th.erp-col-no:has(> input),
+.erp-grid td.erp-col-no:has(> input),
+.erp-grid th.erp-col-no:has(> span[aria-hidden]),
+.erp-grid td.erp-col-no:has(> span[aria-hidden]) {
+  width: 64px;
+}
+/* 체크박스만 있는 좁은 칸(일괄 선택) */
+.erp-grid th.erp-col-check,
+.erp-grid td.erp-col-check {
+  width: 32px;
 }
 
 /* 재고현황 — 부족 줄은 왼쪽 띠, 재고수량 칸 아래 안전재고 대비 막대(테마 기능 stockInsights) */
@@ -5732,6 +5960,11 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
     color: var(--erp-on-primary);
     background: var(--erp-primary);
     border-color: var(--erp-primary);
+  }
+
+  .erp-messenger-mobile-filter {
+    display: flex;
+    padding: 6px 8px 0;
   }
 
   .erp-messenger-split3[data-mobile-view="rooms"] .erp-cat-sidebar {

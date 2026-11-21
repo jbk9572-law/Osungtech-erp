@@ -3,6 +3,8 @@ import { loadInputFormulas } from "@/lib/input-formulas-server";
 import { attachFormulaRows } from "@/lib/item-formulas";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import Link from "next/link";
+import { TodoCompleteButton } from "@/components/todo-complete-button";
 import { DeleteButton } from "@/components/delete-button";
 import { TodoForm, type TodoInitialItem } from "@/components/todo-form";
 import { PaperCalcNavLink } from "@/modules/paper-calc/ui";
@@ -19,7 +21,9 @@ import { formatNumber } from "@/lib/format-number";
 // todos/page.tsx의 목록+상세 분할 화면에서, 목록 옆 패널에 이 컴포넌트를
 // 그대로 렌더링한다. 모달/직접 URL 접근(todos/[id]/page.tsx)도 같은
 // 컴포넌트를 쓴다.
-export async function TodoDetailPanel({ id }: { id: string }) {
+//   mode="view"(기본 아님): 목록 옆 패널 — 읽기 전용 + [수정] 버튼(C형 모달로 열림). 수정 폼을 패널 안에 직접 넣지 않는다(개발헌법 12번 B형).
+//   mode="edit": 모달/직접 URL(todos/[id]) — 작성자·관리자는 수정 폼.
+export async function TodoDetailPanel({ id, mode = "edit" }: { id: string; mode?: "view" | "edit" }) {
   const supabase = await createClient();
   const [{ data: row, error }, products, { data: calcs }, suppliers, customers, actor] = await Promise.all([
     supabase
@@ -88,6 +92,7 @@ export async function TodoDetailPanel({ id }: { id: string }) {
   const paperCalcSizeLines = formatPaperCalcSizeLines(paperCalcSizes);
   const latestCalcId = calcs?.[0]?.id;
   const allowManage = canManage(row.created_by, actor.userId, actor.isAdmin);
+  const editing = mode === "edit" && allowManage;
   const overdue = !row.done && !!row.due_date && row.due_date < todayKstStr();
   const statusLabel = row.done
     ? "완료"
@@ -97,14 +102,16 @@ export async function TodoDetailPanel({ id }: { id: string }) {
 
   return (
     <>
-      <div className="mb-1 erp-detail-header-row">
-        <h1 className="erp-h1">{allowManage ? "수정" : "상세"}</h1>
-        {allowManage && (
-          <div className="erp-toolbar erp-u-mb-0">
-            <DeleteButton action={deleteTodo} id={row.id} confirmMessage="이 할 일을 삭제하시겠습니까?" />
-          </div>
-        )}
-      </div>
+      {mode === "edit" && (
+        <div className="mb-1 erp-detail-header-row">
+          <h1 className="erp-h1">{allowManage ? "수정" : "상세"}</h1>
+          {allowManage && (
+            <div className="erp-toolbar erp-u-mb-0">
+              <DeleteButton action={deleteTodo} id={row.id} confirmMessage="이 할 일을 삭제하시겠습니까?" />
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="erp-post-header">
         <div className="erp-u-flex erp-u-gap-s2 erp-u-mb-s3">
@@ -223,7 +230,7 @@ export async function TodoDetailPanel({ id }: { id: string }) {
           </>
         )}
 
-        {allowManage ? (
+        {editing ? (
           <TodoForm
             action={updateTodo}
             submitLabel="수정"
@@ -323,9 +330,21 @@ export async function TodoDetailPanel({ id }: { id: string }) {
                 </div>
               </>
             )}
-            <p className="mt-4 text-xs erp-u-muted">
-              본인이 등록한 할 일만 수정할 수 있습니다. (완료 체크는 누구나 할 수 있습니다.)
-            </p>
+            {mode === "view" && allowManage ? (
+              <div className="erp-toolbar erp-u-mt-12">
+                <TodoCompleteButton id={row.id} done={row.done} />
+                <Link href={`/todos/${row.id}`} className="erp-btn">
+                  수정
+                </Link>
+                <DeleteButton action={deleteTodo} id={row.id} confirmMessage="이 할 일을 삭제하시겠습니까?" />
+              </div>
+            ) : (
+              !allowManage && (
+                <p className="mt-4 text-xs erp-u-muted">
+                  본인이 등록한 할 일만 수정할 수 있습니다. (완료 체크는 누구나 할 수 있습니다.)
+                </p>
+              )
+            )}
           </div>
         )}
       </div>

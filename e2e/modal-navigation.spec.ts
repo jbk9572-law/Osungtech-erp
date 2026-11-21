@@ -31,6 +31,11 @@ test("상세 모달 → 닫기 → 목록으로 돌아가고 다른 모달이 �
   const row = page.locator("tbody tr.cursor-pointer").first();
   test.skip((await row.count()) === 0, "샌드박스에 매출 데이터가 없어 건너뜀");
   await row.click();
+  // 모던 테마(넓은 화면): 행 클릭은 오른쪽 상세 패널 선택 — 상세 모달은 패널의 [상세 보기]로 연다. 클래식/좁은 화면: 행 클릭이 바로 상세 모달.
+  const panel = page.locator("aside.erp-detail-side");
+  if (await panel.isVisible({ timeout: 3000 }).catch(() => false)) {
+    await panel.getByRole("link", { name: "상세 보기" }).click();
+  }
   await expect(page.locator(".erp-modal[role='dialog']")).toBeVisible({ timeout: 15000 });
   await closeModal(page);
   await noModal(page);
@@ -43,7 +48,8 @@ test("모달이 열린 채로 상단 탭을 눌러 이동하면 모달이 남지
   await page.goto("/sales");
   await page.locator('a[href="/sales/new"]').first().click();
   await expect(page.locator(".erp-modal[role='dialog']")).toBeVisible({ timeout: 15000 });
-  await page.locator(".erp-titlebar-home").click();
+  // 모던의 모달은 화면 전체를 덮어 마우스로는 탭을 못 누른다 — 링크 이동(키보드·뒤로가기와 같은 경로)만 시험한다.
+  await page.locator(".erp-titlebar-home").evaluate((el) => (el as HTMLElement).click());
   await expect(page).toHaveURL(/\/dashboard/, { timeout: 20000 });
   await noModal(page);
 });

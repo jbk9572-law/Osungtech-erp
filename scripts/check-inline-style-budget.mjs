@@ -64,7 +64,8 @@ function walk(dir, out = []) {
   for (const e of readdirSync(dir, { withFileTypes: true })) {
     const full = path.join(dir, e.name);
     if (e.isDirectory()) walk(full, out);
-    else if (full.endsWith(".tsx") && !full.includes(".test.")) out.push(full);
+    // classic.tsx = 클래식 테마 동결본 — 모던과 코드를 공유하지 않고 그대로 두는 파일이라 예산(줄여 나가는 대상)에서 뺀다.
+    else if (full.endsWith(".tsx") && !full.includes(".test.") && e.name !== "classic.tsx") out.push(full);
   }
   return out;
 }

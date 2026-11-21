@@ -3,6 +3,9 @@
 import { formatKstDateTime } from "@/lib/kst-date";
 import { useMemo, useState } from "react";
 import { GridBadge } from "@/components/grid/badge";
+import { SplitFilterColumn } from "@/components/erp/split-filter-column";
+import { SplitDetailEmpty } from "@/components/erp/page-header";
+import { DocumentIcon } from "@/components/erp/groupware-icons";
 
 export type FailureLogRow = {
   id: string;
@@ -16,11 +19,10 @@ export type FailureLogRow = {
   created_at: string;
 };
 
-// activity-log-list-body.tsx와 같은 구조(왼쪽 회사 필터 사이드바 +
-// .erp-split-shell 2분할)를 그대로 재사용한다 — 같은 종류의 플랫폼관리자
-// 로그 화면이 화면마다 다른 레이아웃을 쓰면 안 된다는 기준(개발헌법 3번).
+// activity-log-list-body.tsx와 같은 B형(소통형 3분할) 구조 — 필터 열 | 목록 | 상세(개발헌법 12번).
 export function FailureLogListBody({ rows }: { rows: FailureLogRow[] }) {
   const [tenant, setTenant] = useState<string>("all");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const tenantCounts = useMemo(() => {
     const counts = new Map<string, number>();
@@ -33,55 +35,67 @@ export function FailureLogListBody({ rows }: { rows: FailureLogRow[] }) {
 
   const visibleRows = tenant === "all" ? rows : rows.filter((r) => (r.tenant_name ?? "미지정") === tenant);
 
-  return (
-    <div className="erp-split-shell">
-      <div className="erp-cat-sidebar">
-        <button type="button" onClick={() => setTenant("all")} className={`erp-cat-item${tenant === "all" ? " active" : ""}`}>
-          <span>전체</span>
-          <span className="cnt">{rows.length}</span>
-        </button>
-        {tenantCounts.map(([name, count]) => (
-          <button
-            key={name}
-            type="button"
-            onClick={() => setTenant(name)}
-            className={`erp-cat-item${tenant === name ? " active" : ""}`}
-          >
-            <span className="erp-u-overflow-hidden erp-u-ellipsis erp-u-nowrap">{name}</span>
-            <span className="cnt">{count}</span>
-          </button>
-        ))}
-      </div>
+  const selected = rows.find((r) => r.id === selectedId) ?? null;
+  const pick = (name: string) => {
+    setTenant(name);
+    setSelectedId(null);
+  };
 
-      <div className="erp-card-feed erp-u-minw-0">
-        {visibleRows.map((r) => (
-          <div className="erp-u-flex erp-u-col erp-u-gap-4 erp-u-bg-panel erp-u-flex-none erp-u-border-comm-border erp-u-radius-comm-row erp-u-shadow-comm-row"
-            key={r.id}
-            style={{ padding: "11px 16px" }}
-          >
-            <div className="erp-u-flex erp-u-items-center erp-u-justify-between erp-u-gap-s5">
-              <div className="erp-u-flex erp-u-items-center erp-u-minw-0 erp-u-gap-s2">
-                <GridBadge tone="danger" style={{ fontFamily: "monospace" }}>
-                  {r.code}
-                </GridBadge>
-                <span className="erp-u-semibold erp-u-text erp-u-text-base">
-                  {r.message_ko}
-                </span>
+  return (
+    <div className="erp-split3-shell" data-mobile-view={selected ? "detail" : "list"}>
+      <SplitFilterColumn
+        ariaLabel="회사 필터"
+        groups={[
+          {
+            heading: "회사",
+            items: [
+              { key: "all", label: "전체", count: rows.length, active: tenant === "all", onSelect: () => pick("all") },
+              ...tenantCounts.map(([name, count]) => ({ key: name, label: name, count, active: tenant === name, onSelect: () => pick(name) })),
+            ],
+          },
+        ]}
+      />
+
+      <section className="erp-split-list">
+        <div className="erp-split-list-head">
+          <span>실패 로그</span>
+          <span className="erp-u-muted erp-u-normal">{visibleRows.length}건</span>
+        </div>
+        <div className="erp-split-list-body">
+          {visibleRows.map((r) => (
+            <button key={r.id} type="button" onClick={() => setSelectedId(r.id)} className={`erp-split-list-row erp-split-list-row-btn${r.id === selectedId ? " active" : ""}`}>
+              <GridBadge tone="danger">{r.code}</GridBadge>
+              <span className="erp-u-ml-s2">{r.message_ko}</span>
+              <div className="erp-split-list-row-sub">
+                {r.tenant_name ?? "-"} · {formatKstDateTime(r.created_at)}
               </div>
-              <div className="erp-u-muted erp-u-text-caption erp-u-flex-none">
-                {formatKstDateTime(r.created_at)}
+            </button>
+          ))}
+          {!visibleRows.length && <p className="erp-grid-empty">표시할 실패 로그가 없습니다.</p>}
+        </div>
+      </section>
+
+      <div className="erp-split-detail">
+        {selected ? (
+          <div className="erp-info-grid">
+            {[
+              ["코드", selected.code],
+              ["내용", selected.message_ko],
+              ["회사", selected.tenant_name ?? "-"],
+              ["동작", `${selected.action}${selected.entity_type ? ` (${selected.entity_type})` : ""}`],
+              ["수행자", selected.actor_name ?? "-"],
+              ["시각", formatKstDateTime(selected.created_at)],
+              ...(selected.detail && selected.detail !== selected.message_ko ? [["상세", selected.detail]] : []),
+            ].map(([label, value]) => (
+              <div key={label} className="erp-info-cell">
+                <div className="erp-info-label">{label}</div>
+                <div className="erp-info-value">{value}</div>
               </div>
-            </div>
-            <div className="erp-u-muted erp-u-text-caption">
-              {r.tenant_name ?? "-"} · {r.action}
-              {r.entity_type ? ` (${r.entity_type})` : ""} · {r.actor_name ?? "-"}
-            </div>
-            {r.detail && r.detail !== r.message_ko && (
-              <div className="erp-u-muted erp-u-text-caption" style={{ fontFamily: "monospace" }}>{r.detail}</div>
-            )}
+            ))}
           </div>
-        ))}
-        {!visibleRows.length && <p className="erp-grid-empty">표시할 실패 로그가 없습니다.</p>}
+        ) : (
+          <SplitDetailEmpty icon={<DocumentIcon />} title="로그를 선택해주세요" hint="왼쪽 목록에서 로그를 누르면 여기에 자세한 내용이 표시됩니다." />
+        )}
       </div>
     </div>
   );

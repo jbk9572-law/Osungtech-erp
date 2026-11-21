@@ -3,8 +3,8 @@ import { OfficialDocumentsList } from "@/app/(dashboard)/official-documents/offi
 export default async function OfficialDocumentsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ id?: string }>;
+  searchParams: Promise<{ id?: string; status?: string }>;
 }) {
-  const { id } = await searchParams;
-  return <OfficialDocumentsList box="mine" id={id} />;
+  const { id, status } = await searchParams;
+  return <OfficialDocumentsList box="mine" id={id} status={status} />;
 }

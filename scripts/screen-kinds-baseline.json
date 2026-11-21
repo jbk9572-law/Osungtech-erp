@@ -1,0 +1,35 @@
+{
+  "split2": [],
+  "accordion": [],
+  "trailingLink": [],
+  "split3NoFilter": [],
+  "classicFrozen": [
+    "app/(dashboard)/approvals/classic.tsx",
+    "app/(dashboard)/approvals/lines/classic.tsx",
+    "app/(dashboard)/customers/classic.tsx",
+    "app/(dashboard)/hr/documents/classic.tsx",
+    "app/(dashboard)/mail/classic.tsx",
+    "app/(dashboard)/official-documents/classic.tsx",
+    "app/(dashboard)/products/classic.tsx",
+    "app/(dashboard)/purchase-quote-requests/classic.tsx",
+    "app/(dashboard)/purchase-requests/classic.tsx",
+    "app/(dashboard)/quotes/classic.tsx",
+    "app/(dashboard)/reports/payment-requests/classic.tsx",
+    "app/(dashboard)/sales-activities/classic.tsx",
+    "app/(dashboard)/subcontractors/classic.tsx",
+    "app/(dashboard)/suppliers/classic.tsx",
+    "app/(dashboard)/todos/classic.tsx",
+    "components/erp/messenger/classic.tsx",
+    "components/purchase-grid/classic.tsx",
+    "components/sales-grid/classic.tsx"
+  ],
+  "rawTitle": [
+    "app/(dashboard)/purchases/[id]/edit/page.tsx",
+    "app/(dashboard)/sales/[id]/edit/page.tsx",
+    "app/(dashboard)/sales/[id]/tax-invoice/correct/page.tsx",
+    "app/(dashboard)/sales/[id]/tax-invoice/page.tsx",
+    "app/(dashboard)/subcontractor-payables/page.tsx",
+    "app/platform-admin/page.tsx",
+    "components/todo-detail-panel.tsx"
+  ]
+}

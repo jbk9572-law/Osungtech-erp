@@ -1,5 +1,6 @@
 "use client";
 
+import { SplitFilterColumn } from "@/components/erp/split-filter-column";
 import { formatKstDate, formatKstDateTime } from "@/lib/kst-date";
 import { useMemo, useState } from "react";
 import { RichTextView } from "@/components/erp/rich-text-view";
@@ -50,33 +51,17 @@ export function SupportTicketListBody({ tickets }: { tickets: SupportTicketRow[]
 
   return (
     <div className="erp-split3-shell" data-mobile-view={selectedId ? "detail" : "list"}>
-      <div className="erp-cat-sidebar">
-        <button
-          type="button"
-          onClick={() => {
-            setTenant("all");
-            setSelectedId(null);
-          }}
-          className={`erp-cat-item${tenant === "all" ? " active" : ""}`}
-        >
-          <span>전체</span>
-          <span className="cnt">{tickets.length}</span>
-        </button>
-        {tenantCounts.map(([name, count]) => (
-          <button
-            key={name}
-            type="button"
-            onClick={() => {
-              setTenant(name);
-              setSelectedId(null);
-            }}
-            className={`erp-cat-item${tenant === name ? " active" : ""}`}
-          >
-            <span className="erp-u-overflow-hidden erp-u-ellipsis erp-u-nowrap">{name}</span>
-            <span className="cnt">{count}</span>
-          </button>
-        ))}
-      </div>
+      <SplitFilterColumn
+        ariaLabel="고객사 필터"
+        groups={[
+          {
+            items: [
+              { key: "all", label: "전체", count: tickets.length, active: tenant === "all", onSelect: () => { setTenant("all"); setSelectedId(null); } },
+              ...tenantCounts.map(([name, count]) => ({ key: name, label: name, count, active: tenant === name, onSelect: () => { setTenant(name); setSelectedId(null); } })),
+            ],
+          },
+        ]}
+      />
 
       <section className="erp-split-list">
         <div className="erp-split-list-head">
@@ -91,8 +76,7 @@ export function SupportTicketListBody({ tickets }: { tickets: SupportTicketRow[]
                 key={t.id}
                 type="button"
                 onClick={() => setSelectedId(t.id)}
-                className={`erp-split-list-row${t.id === selectedId ? " active" : ""}`}
-                style={{ width: "100%", textAlign: "left", border: "none", background: "none", cursor: "pointer" }}
+                className={`erp-split-list-row erp-split-list-row-btn${t.id === selectedId ? " active" : ""}`}
               >
                 <span className="erp-u-bold">
                   #{t.doc_no} {t.subject}

@@ -1,9 +1,11 @@
 {
   "app/(dashboard)/hr/actions.ts": 906,
   "components/dashboard-calendar.tsx": 1254,
-  "components/erp/messenger-page.tsx": 938,
+  "components/erp/messenger/classic.tsx": 939,
+  "components/erp/messenger/modern.tsx": 967,
   "components/new-purchase-form.tsx": 1582,
   "components/new-sale-form.tsx": 1510,
+  "components/sales-grid/classic.tsx": 801,
   "modules/paper-calc/components/manual-layout-client.tsx": 959,
   "modules/paper-calc/components/paper-calc-client.tsx": 1245,
   "modules/paper-calc/lib/paper-nest-engine.ts": 1280

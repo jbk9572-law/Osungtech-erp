@@ -27,6 +27,11 @@ export function todayKstStr(now: Date = new Date()): string {
   return `${kst.getUTCFullYear()}-${pad(kst.getUTCMonth() + 1)}-${pad(kst.getUTCDate())}`;
 }
 
+// 오늘(한국 기준)에서 n일 뒤(음수면 전) 날짜 YYYY-MM-DD — "최근 30일" 같은 기준일 계산용.
+export function kstDateStrOffset(days: number, now: Date = new Date()): string {
+  return todayKstStr(new Date(now.getTime() + days * 86_400_000));
+}
+
 // 임의의 Date(주로 now에서 며칠 더한 값)를 한국 기준 YYYY-MM-DD 문자열로
 // 바꾼다. 예: 마감 3일 이내 할일을 구할 때 "3일 뒤"를 한국 기준으로 정확히
 // 표기해야 한다.

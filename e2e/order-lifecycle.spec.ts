@@ -34,7 +34,16 @@ test.describe("매입/매출 생애주기 (실DB)", () => {
   });
 
   test("드롭십: 며칠 먼저 끊은 매출은 새 매입과 자동 연결된다", async () => {
-    const sale = await createSale(api, { date: kstDate(-2), memo: `${tag} 드롭십`, quantity: 5 });
+    // 재고가 없을 때 출고를 막는 것이 기본(마이그레이션 266, 회사별 allow_negative_stock=false). 이 시나리오(입고 전에 먼저 끊은 매출)는
+    // 음수 재고를 허용하는 회사에서만 성립하므로, 막히는 회사에서는 건너뛴다 — 막힘 자체는 "재고가 부족합니다"로 확인한다.
+    let sale: string;
+    try {
+      sale = await createSale(api, { date: kstDate(-2), memo: `${tag} 드롭십`, quantity: 5 });
+    } catch (e) {
+      const msg = String(e);
+      test.skip(msg.includes("재고가 부족합니다"), "이 샌드박스 회사는 음수 재고 금지(266) — 드롭십은 allow_negative_stock 회사에서만 성립");
+      throw e;
+    }
     const purchase = await createPurchase(api, { date: kstDate(0), memo: `${tag} 드롭십`, quantity: 20 });
     const lot = await remainingOf(api, purchase);
     expect(lot.remaining).toBe(15); // 20 - 5

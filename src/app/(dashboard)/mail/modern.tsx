@@ -1,0 +1,282 @@
+// 모던 테마(grid-modern) 전용 B형 화면 — 클래식은 classic.tsx(동결본).
+import Link from "next/link";
+import { formatKstDate, formatKstTime } from "@/lib/kst-date";
+import { createClient, getUser } from "@/lib/supabase/server";
+import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { ListPageHeader, SplitDetailEmpty, SplitListFiller, FormSection } from "@/components/erp/page-header";
+import { PageGuide } from "@/components/erp/page-guide";
+import { SyncMailButton } from "@/components/mail/sync-mail-button";
+import { ComposeMailForm } from "@/components/mail/compose-mail";
+import { MarkAsRead } from "@/components/mail/mark-as-read";
+import { MailAttachmentChip } from "@/components/mail/mail-attachment-chip";
+import { PaperclipIcon, MailIcon } from "@/components/erp/groupware-icons";
+import { requireFeatureEnabled } from "@/lib/require-feature-enabled";
+import { formatNumber } from "@/lib/format-number";
+import { SplitFilterColumn } from "@/components/erp/split-filter-column";
+import { getAttachmentDownloadUrl } from "@/lib/storage/upload-attachment";
+
+type Folder = "INBOX" | "SENT";
+
+function formatDate(iso: string | null): string {
+  if (!iso) return "";
+  const sameDay = formatKstDate(iso) === formatKstDate(new Date());
+  return sameDay
+    ? formatKstTime(iso, { hour: "2-digit", minute: "2-digit" })
+    : formatKstDate(iso, { month: "2-digit", day: "2-digit" });
+}
+
+function initial(name: string | null, address: string | null): string {
+  const source = (name || address || "").trim();
+  return source ? source[0].toUpperCase() : "?";
+}
+
+export default async function MailPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ folder?: string; id?: string; compose?: string; status?: string }>;
+}) {
+  const { folder: folderParam, id, compose: composeParam, status: statusParam } = await searchParams;
+  const status: "all" | "unread" | "attach" = statusParam === "unread" || statusParam === "attach" ? statusParam : "all";
+  const folder: Folder = folderParam === "SENT" ? "SENT" : "INBOX";
+  // id가 있으면(메일을 보고 있으면) 작성 모드는 무시한다 — 둘이 동시에
+  // 켜질 일은 없지만(작성 버튼은 /mail?folder=...&compose=1만 가리킴),
+  // 혹시 둘 다 쿼리에 남아있어도 "보던 메일"이 우선하게 한다.
+  const compose = composeParam === "1" && !id;
+
+  const user = await getUser();
+  const supabase = await createClient();
+  await requireFeatureEnabled(supabase, "mail");
+
+  const { data: account } = user
+    ? await supabase.from("mail_accounts").select("id, email_address").eq("user_id", user.id).maybeSingle()
+    : { data: null };
+
+  if (!account) {
+    return (
+      <div className="erp-comm-shell">
+        <KeyboardShortcuts shortcuts={{ Escape: { href: "/dashboard" } }} />
+        <ListPageHeader title="메일함" />
+        <PageGuide>
+          아직 연동된 메일 계정이 없습니다. 환경설정 &gt; 메일 계정 연동에서 다음
+          스마트워크 계정을 먼저 등록해주세요.
+        </PageGuide>
+        <Link href="/settings/mail" className="erp-btn erp-btn-primary">
+          메일 계정 연동하러 가기
+        </Link>
+      </div>
+    );
+  }
+
+  const { data: messages } = await supabase
+    .from("mail_messages")
+    .select("id, subject, from_address, from_name, to_addresses, sent_at, snippet, is_read, has_attachments")
+    .eq("mail_account_id", account.id)
+    .eq("folder", folder)
+    .order("sent_at", { ascending: false, nullsFirst: false })
+    .limit(100);
+
+  const selected = id
+    ? (
+        await supabase
+          .from("mail_messages")
+          .select(
+            "id, subject, from_address, from_name, to_addresses, cc_addresses, sent_at, body_text, body_html, has_attachments, is_read"
+          )
+          .eq("id", id)
+          .eq("mail_account_id", account.id)
+          .maybeSingle()
+      ).data
+    : null;
+
+  const attachments = selected
+    ? (
+        await supabase
+          .from("mail_attachments")
+          .select("id, filename, content_type, size_bytes, storage_path")
+          .eq("mail_message_id", selected.id)
+      ).data ?? []
+    : [];
+
+  const attachmentLinks = await Promise.all(
+    attachments.map(async (att) => {
+      const url = await getAttachmentDownloadUrl({
+        supabase,
+        bucket: "mail-attachments",
+        path: att.storage_path,
+        expiresInSeconds: 600,
+      });
+      return { ...att, url };
+    })
+  );
+
+  // 필터 열의 건수·거르기는 불러온 최근 100건 기준(목록과 같은 범위).
+  const loaded = messages ?? [];
+  const unreadCount = loaded.filter((m) => !m.is_read).length;
+  const attachCount = loaded.filter((m) => m.has_attachments).length;
+  const visible = status === "unread" ? loaded.filter((m) => !m.is_read) : status === "attach" ? loaded.filter((m) => m.has_attachments) : loaded;
+  const statusQuery = status === "all" ? "" : `&status=${status}`;
+
+  const newHref = `/mail?folder=${folder}${statusQuery}`;
+  const composeHref = `/mail?folder=${folder}&compose=1${statusQuery}`;
+
+  return (
+    <div className="erp-comm-shell">
+      <KeyboardShortcuts shortcuts={{ F2: { href: composeHref }, Escape: { href: id || compose ? newHref : "/dashboard" } }} />
+      <ListPageHeader
+        title="메일함"
+        actions={
+          <>
+            <Link href={composeHref} className="erp-btn erp-btn-primary">
+              F2 메일쓰기
+            </Link>
+            <SyncMailButton />
+            {(id || compose) && (
+              <Link href={newHref} className="erp-btn">
+                목록
+              </Link>
+            )}
+          </>
+        }
+      />
+
+      <div className="erp-split3-shell" data-mobile-view={id || compose ? "detail" : "list"}>
+        <SplitFilterColumn
+          ariaLabel="메일 필터"
+          groups={[
+            {
+              heading: "폴더",
+              items: [
+                { key: "INBOX", label: "받은편지함", active: folder === "INBOX", href: "/mail?folder=INBOX" },
+                { key: "SENT", label: "보낸편지함", active: folder === "SENT", href: "/mail?folder=SENT" },
+              ],
+            },
+            {
+              heading: "상태",
+              items: [
+                { key: "all", label: "전체", count: loaded.length, active: status === "all", href: `/mail?folder=${folder}` },
+                { key: "unread", label: "안읽음", count: unreadCount, active: status === "unread", href: `/mail?folder=${folder}&status=unread` },
+                { key: "attach", label: "첨부 있음", count: attachCount, active: status === "attach", href: `/mail?folder=${folder}&status=attach` },
+              ],
+            },
+          ]}
+        />
+
+        <section className="erp-split-list">
+          <div className="erp-split-list-head">
+            <span>{folder === "INBOX" ? "받은편지함" : "보낸편지함"}</span>
+            <span className="erp-u-muted erp-u-normal">
+              총 {formatNumber(visible.length)}건
+            </span>
+          </div>
+          <div className="erp-split-list-body">
+            {visible.map((m) => (
+              <Link
+                key={m.id}
+                href={`/mail?folder=${folder}&id=${m.id}${statusQuery}`}
+                className={`erp-mail-row${m.id === id ? " active" : ""}`}
+              >
+                <span className={`erp-avatar erp-mail-row-avatar${m.is_read ? " muted" : ""}`} aria-hidden>
+                  {folder === "INBOX" ? initial(m.from_name, m.from_address) : "나"}
+                </span>
+                <span className="erp-mail-row-body">
+                  <span className="erp-mail-row-subject-line">
+                    <span className="erp-mail-row-subject" data-unread={m.is_read ? undefined : "1"}>
+                      {m.subject || "(제목 없음)"}
+                    </span>
+                    {m.has_attachments && (
+                      <span className="erp-icon erp-u-muted" style={{ width: 12, height: 12 }} aria-hidden>
+                        <PaperclipIcon />
+                      </span>
+                    )}
+                  </span>
+                  <div className="erp-mail-row-preview">
+                    {folder === "INBOX" ? m.from_name || m.from_address || "(발신자 없음)" : "나"}
+                    {m.snippet ? ` · ${m.snippet}` : ""}
+                  </div>
+                </span>
+                <span className="erp-mail-row-time">{formatDate(m.sent_at)}</span>
+              </Link>
+            ))}
+            <SplitListFiller
+              icon={<MailIcon />}
+              title={visible.length === 0 ? "메일이 없습니다" : folder === "INBOX" ? "받은 메일이 이게 전부예요" : "보낸 메일이 이게 전부예요"}
+              actionHref={composeHref}
+              actionLabel="F2 메일쓰기"
+            />
+          </div>
+        </section>
+
+        <div className="erp-split-detail">
+          {compose ? (
+            <FormSection tabLabel="메일쓰기">
+              <ComposeMailForm closeHref={newHref} />
+            </FormSection>
+          ) : !selected ? (
+            <SplitDetailEmpty
+              icon={<MailIcon />}
+              title="메일을 선택해주세요"
+              hint="왼쪽 목록에서 메일을 누르면 여기에 내용이 표시됩니다."
+            />
+          ) : (
+            <>
+              <MarkAsRead messageId={selected.id} isRead={selected.is_read} />
+              <h2 className="erp-u-mb-8 text-base erp-u-bold text-[var(--erp-text)]">
+                {selected.subject || "(제목 없음)"}
+              </h2>
+              <div className="erp-u-mb-12 erp-u-flex erp-u-items-center erp-u-gap-10">
+                <span className="erp-avatar" style={{ width: 32, height: 32 }} aria-hidden>
+                  {initial(selected.from_name, selected.from_address)}
+                </span>
+                <div className="erp-u-text-compact erp-u-muted">
+                  <p>
+                    보낸사람: {selected.from_name || selected.from_address || "-"}
+                    {selected.from_name && selected.from_address ? ` <${selected.from_address}>` : ""}
+                  </p>
+                  <p>
+                    받는사람:{" "}
+                    {((selected.to_addresses as { name: string | null; email: string | null }[]) ?? [])
+                      .map((a) => a.email)
+                      .filter(Boolean)
+                      .join(", ") || "-"}
+                  </p>
+                  <p>{formatDate(selected.sent_at)}</p>
+                </div>
+              </div>
+
+              {attachmentLinks.length > 0 && (
+                <div className="erp-u-mb-12 erp-u-flex erp-u-wrap erp-u-gap-8">
+                  {attachmentLinks.map((att) => (
+                    <MailAttachmentChip
+                      key={att.id}
+                      filename={att.filename}
+                      contentType={att.content_type}
+                      url={att.url}
+                    />
+                  ))}
+                </div>
+              )}
+
+              <div className="erp-u-bt-divider" style={{ paddingTop: "var(--erp-space-4)" }}>
+                {selected.body_html ? (
+                  // 외부에서 온 메일 원문 HTML은 절대 신뢰할 수 없다(악성 스크립트가
+                  // 섞여 들어올 수 있음) — dangerouslySetInnerHTML로 이 앱 페이지에
+                  // 직접 꽂으면 우리 세션 쿠키/스토리지에 접근 가능한 XSS가 된다.
+                  // 스크립트 실행이 막힌 sandbox iframe(다른 오리진처럼 격리됨) 안에
+                  // 그려서, 내용은 그대로 보여주되 실행 권한은 주지 않는다.
+                  <iframe className="erp-u-w-full erp-u-border-none"
+                    title="메일 본문"
+                    srcDoc={selected.body_html}
+                    sandbox="allow-popups allow-popups-to-escape-sandbox"
+                    style={{ minHeight: 420 }}
+                  />
+                ) : (
+                  <p style={{ whiteSpace: "pre-wrap" }}>{selected.body_text || "(내용 없음)"}</p>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
