@@ -8,6 +8,8 @@ import { signOut } from "@/app/login/actions";
 import { LogoutButton } from "@/components/erp/logout-button";
 import { MENU_ITEMS } from "@/lib/erp-menu";
 import { findByLongestPrefix } from "@/lib/route-match";
+import { useThemeFeatures } from "@/lib/erp-theme-features";
+import { QUICK_SEARCH_EVENT } from "@/lib/quick-search-event";
 
 // erp-menu.ts의 MENU_ITEMS에서 그대로 파생한다 — 예전엔 여기 따로 목록을
 // 들고 있어서 미수금현황/미지급금현황처럼 실제 있는 라우트가 빠져 있었다
@@ -42,6 +44,7 @@ export function TitleBar({
   isPlatformAdmin?: boolean;
 }) {
   const pathname = usePathname();
+  const { appChrome } = useThemeFeatures();
   const menuLabel = findByLongestPrefix(SECTION_LABEL, pathname, (s) => s.prefix)?.label ?? "";
   const today = formatKstDate(new Date(), {
     year: "numeric",
@@ -71,8 +74,25 @@ export function TitleBar({
         <span className="erp-titlebar-menu">{menuLabel}</span>
       </div>
       <div className="erp-titlebar-right">
+        {appChrome && (
+          // 메뉴 빠른 검색(Ctrl+K)을 여는 입구 — 검색 범위는 메뉴 이름뿐이라 문구도 그대로 적는다.
+          <button
+            type="button"
+            className="erp-titlebar-search"
+            aria-label="메뉴 빠른 검색 열기 (Ctrl+K)"
+            onClick={() => window.dispatchEvent(new Event(QUICK_SEARCH_EVENT))}
+          >
+            <span className="erp-titlebar-search-text">메뉴 이름으로 검색</span>
+            <kbd>Ctrl K</kbd>
+          </button>
+        )}
         <span>{today}</span>
         {notificationBell}
+        {appChrome && email && (
+          <span className="erp-titlebar-avatar" aria-hidden>
+            {email.trim().charAt(0).toUpperCase()}
+          </span>
+        )}
         <span>{email}</span>
         {isPlatformAdmin && (
           <Link href="/platform-admin" className="erp-titlebar-link erp-titlebar-link-persistent">

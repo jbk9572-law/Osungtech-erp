@@ -70,3 +70,14 @@ test.describe("스프레드시트 동작(거래처 표)", () => {
     await expect(page.locator(".erp-modal[role='dialog']")).toBeVisible({ timeout: 15_000 });
   });
 });
+
+test.describe("모던 틀(상단바·하단 상태줄)", () => {
+  test("메뉴 검색 버튼이 빠른 검색을 열고, 상태줄에 연결 상태가 보인다", async ({ page }) => {
+    await page.goto("/customers");
+    const searchBtn = page.locator(".erp-titlebar-search");
+    test.skip(!(await searchBtn.isVisible({ timeout: 20_000 }).catch(() => false)), "모던 틀이 아님(클래식 또는 좁은 화면)");
+    await expect(page.locator(".erp-statusbar-conn")).toHaveText("연결됨");
+    await searchBtn.click();
+    await expect(page.getByRole("textbox", { name: /메뉴 이름으로 검색/ }).or(page.getByPlaceholder("메뉴 이름으로 검색..."))).toBeVisible({ timeout: 10_000 });
+  });
+});

@@ -16,6 +16,7 @@ import { clampDropdownLeft } from "@/lib/dropdown-position";
 import { enterTenant } from "@/app/platform-admin/actions";
 import { EnterTenantSubmit } from "@/components/erp/enter-tenant-submit";
 import { PageGuide } from "@/components/erp/page-guide";
+import { QUICK_SEARCH_EVENT } from "@/lib/quick-search-event";
 
 const SHORTCUTS: { key: string; label: string }[] = [
   { key: "F2", label: "신규" },
@@ -92,8 +93,16 @@ export function Ribbon({
         setModal("search");
       }
     }
+    function openFromTitleBar() {
+      setQuery("");
+      setModal("search");
+    }
     window.addEventListener("keydown", handleShortcut);
-    return () => window.removeEventListener("keydown", handleShortcut);
+    window.addEventListener(QUICK_SEARCH_EVENT, openFromTitleBar);
+    return () => {
+      window.removeEventListener("keydown", handleShortcut);
+      window.removeEventListener(QUICK_SEARCH_EVENT, openFromTitleBar);
+    };
   }, []);
 
   // 리본이 좁은 화면에서 가로 스크롤돼 버튼이 화면 중간쯤에 있을 수

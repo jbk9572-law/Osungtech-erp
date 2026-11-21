@@ -7,6 +7,7 @@ import { Ribbon } from "@/components/erp/ribbon";
 import { TreeMenu } from "@/components/erp/tree-menu";
 import { TabBar } from "@/components/erp/tab-bar";
 import { ThemeFeaturesProvider } from "@/lib/erp-theme-features";
+import { getThemeFeatures } from "@/lib/erp-theme-config";
 import { StatusBar } from "@/components/erp/status-bar";
 import { RouteProgressBar } from "@/components/erp/route-progress-bar";
 import { NavTimingReporter } from "@/components/erp/nav-timing-reporter";
@@ -128,7 +129,7 @@ export function ErpShell({
 
   return (
     <ThemeFeaturesProvider theme={theme}>
-    <div className="erp" data-theme={theme && theme !== "classic-light" ? theme : undefined}>
+    <div className={getThemeFeatures(theme).appChrome ? "erp erp-chrome-modern" : "erp"} data-theme={theme && theme !== "classic-light" ? theme : undefined}>
       <a href="#erp-main-content" className="erp-skip-link">
         본문으로 바로가기
       </a>

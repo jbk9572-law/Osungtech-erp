@@ -7,6 +7,7 @@ import { startRouteProgress } from "@/lib/route-progress";
 import { shouldAllowNavigation } from "@/lib/nav-guard";
 import { useModalClose, useSetModalCloseHref } from "@/lib/modal-context";
 import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
+import { useThemeFeatures } from "@/lib/erp-theme-features";
 
 type ShortcutAction =
   | { href: string; newTab?: boolean }
@@ -50,6 +51,7 @@ export function KeyboardShortcuts({
   hideHintBar?: boolean;
 }) {
   const router = useRouter();
+  const { appChrome } = useThemeFeatures();
   // 모달 안에서 물리 Escape 키가 눌리면 registration-modal-shell.tsx가
   // 이 컴포넌트와 별개로(둘 다 window에 keydown 리스너를 건다) 자기
   // 자신의 close()를 이미 호출한다. 예전엔 여기서도 closeModal()을 또
@@ -118,6 +120,7 @@ export function KeyboardShortcuts({
     key: key === "Escape" ? "Esc" : key,
     label: HINT_LABELS[key],
   }));
-  if (hideHintBar || items.length === 0) return null;
+  // 모던 틀은 버튼에 단축키가 적혀 있고 하단 상태줄에 힌트가 있어, 화면 맨 위의 따로 뜬 단축키 줄은 그리지 않는다.
+  if (hideHintBar || appChrome || items.length === 0) return null;
   return <KeyboardHintBar items={items} />;
 }

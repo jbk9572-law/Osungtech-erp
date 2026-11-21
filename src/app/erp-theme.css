@@ -8603,3 +8603,102 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   justify-content: flex-end;
   gap: 6px;
 }
+
+/* ── 모던 틀(.erp-chrome-modern = 테마 기능 appChrome) ─────────────────
+   상단바(메뉴 검색 버튼·아바타·조용한 링크)·하단 상태줄·사이드바 그룹 이름을 시안 모양으로 그린다.
+   클래식에는 이 클래스가 붙지 않으므로 영향이 없다. 값은 전부 --erp-* 토큰. */
+.erp-titlebar-right .erp-titlebar-search {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  min-width: 240px;
+  height: var(--erp-control-h-sm);
+  padding: 0 8px 0 10px;
+  border: 1px solid var(--erp-border-strong);
+  border-radius: var(--erp-radius-md, 0);
+  background: var(--erp-bg-subtle);
+  color: var(--erp-text-muted);
+  font-size: var(--erp-font-sm);
+}
+
+.erp-titlebar-right .erp-titlebar-search:hover {
+  background: var(--erp-panel);
+  border-color: var(--erp-border);
+}
+
+.erp-titlebar-search kbd {
+  padding: 1px 6px;
+  border: 1px solid var(--erp-border-strong);
+  border-radius: var(--erp-radius-md, 0);
+  background: var(--erp-panel);
+  color: var(--erp-text-muted);
+  font-family: inherit;
+  font-size: var(--erp-font-xs);
+}
+
+.erp-titlebar-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-right: -6px;
+  border-radius: 50%;
+  background: var(--erp-primary);
+  color: var(--erp-on-primary, #fff);
+  font-size: var(--erp-font-sm);
+  font-weight: 700;
+}
+
+.erp-chrome-modern .erp-titlebar-link {
+  text-decoration: none;
+  color: var(--erp-titlebar-fg-sub);
+}
+
+.erp-chrome-modern .erp-titlebar-link:hover {
+  color: var(--erp-primary);
+}
+
+.erp-chrome-modern .erp-tree-group-label {
+  background: transparent;
+  height: 32px;
+  font-size: var(--erp-font-base);
+  font-weight: 600;
+  color: var(--erp-text-muted);
+}
+
+.erp-statusbar-modern {
+  gap: 14px;
+}
+
+.erp-statusbar-conn::before {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: var(--erp-success);
+}
+
+.erp-statusbar-conn.off::before {
+  background: var(--erp-danger);
+}
+
+.erp-statusbar-rowpos b {
+  color: var(--erp-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.erp-statusbar-hint {
+  margin-left: auto;
+}
+
+@media (max-width: 768px) {
+  /* 좁은 화면: 검색 버튼은 리본의 "빠른 검색"과 중복이라 숨기고, 아바타도 공간을 아낀다. */
+  .erp-titlebar-right .erp-titlebar-search,
+  .erp-titlebar-avatar {
+    display: none;
+  }
+}
