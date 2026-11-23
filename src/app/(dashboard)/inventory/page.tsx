@@ -1,5 +1,6 @@
 import { withPageTiming } from "@/lib/page-timing";
 import Link from "next/link";
+import { GuardedLink } from "@/components/erp/guarded-link";
 import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { InventoryAdjustForm } from "@/components/inventory-adjust-form";
@@ -7,6 +8,9 @@ import { ProductGridTable, type ProductGridRow } from "@/components/product-grid
 import { DetailPageHeader } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { getThemeFeatures } from "@/lib/erp-theme-config";
+import { getTenantTheme } from "@/lib/tenant-theme";
+import { loadInventoryAdjustData } from "@/lib/inventory-adjust-data";
 import { matchesSearch } from "@/lib/search-match";
 import { sumInventoryQuantity } from "@/lib/inventory-quantity";
 
@@ -21,28 +25,11 @@ async function InventoryPage({
   // 카테고리/공급처까지 조인하는 아래 그리드용 무거운 쿼리를 기다리지
   // 않고 먼저 렌더링할 수 있게 따로 가져온다. 그리드 자체는 그 무거운
   // 쿼리가 끝나는 대로 Suspense로 뒤이어 스트리밍된다.
-  const [pickerProducts, stockLevels, warehouses] = await Promise.all([
-    fetchAllRows<{
-      id: string;
-      sku: string;
-      name: string;
-      spec: string | null;
-      unit: string;
-      base_package_qty: number | null;
-    }>((from, to) =>
-      supabase
-        .from("products")
-        .select("id, sku, name, spec, unit, base_package_qty")
-        .order("name")
-        .range(from, to),
-    ),
-    fetchAllRows<{ product_id: string; warehouse_id: string; quantity: number }>((from, to) =>
-      supabase.from("inventory").select("product_id, warehouse_id, quantity").range(from, to),
-    ),
-    fetchAllRows<{ id: string; name: string }>((from, to) =>
-      supabase.from("warehouses").select("id, name").order("created_at", { ascending: true }).range(from, to),
-    ),
-  ]);
+  const listFrameV2 = getThemeFeatures(await getTenantTheme(supabase)).listFrameV2;
+  // 새 틀(모던 2)에서는 입력칸을 목록 위에 두지 않고 [재고 조정] 버튼으로 모달을 연다 — 그때는 폼 데이터가 필요 없다.
+  const { pickerProducts, stockLevels, warehouses } = listFrameV2
+    ? { pickerProducts: [], stockLevels: [], warehouses: [] }
+    : await loadInventoryAdjustData(supabase);
 
   return (
     <div>
@@ -50,6 +37,11 @@ async function InventoryPage({
         title="재고관리 > 재고현황"
         actions={
           <>
+            {listFrameV2 && (
+              <GuardedLink href="/inventory/adjust" className="erp-btn erp-btn-primary">
+                재고 조정
+              </GuardedLink>
+            )}
             <Link href="/inventory/lot-lookup" className="erp-btn">
               품목·관리번호 통합조회
             </Link>
@@ -68,6 +60,7 @@ async function InventoryPage({
         때는 우측 상단 &quot;재고 실사&quot;를 사용하세요.
       </PageGuide>
 
+      {!listFrameV2 && (
       <div className="erp-detail erp-u-mt-0 erp-u-mb-12">
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">재고 조정 (기초재고 등록 등)</span>
@@ -81,6 +74,7 @@ async function InventoryPage({
           />
         </div>
       </div>
+      )}
 
       <form method="get" className="erp-search-row">
         <div className="erp-field">

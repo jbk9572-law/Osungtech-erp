@@ -12,6 +12,8 @@ import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { formatNumber } from "@/lib/format-number";
 import { getQuickDatePresets, getYearMonthButtons, defaultListRange } from "@/lib/date-presets";
 import { DateRangeQuickFilters } from "@/components/erp/date-range-quick-filters";
+import { getThemeFeatures } from "@/lib/erp-theme-config";
+import { getTenantTheme } from "@/lib/tenant-theme";
 import { buildBackHref } from "@/lib/list-return";
 
 // 창고 관리(마스터: 창고 목록)와 창고 이동(거래 이력)을 탭으로 나눠뒀었는데,
@@ -33,6 +35,7 @@ export default async function WarehousesPage({
   // 한다(사용자 지적).
   const selfBack = buildBackHref(`/inventory/warehouses?from=${effectiveFrom}&to=${effectiveTo}`);
   const supabase = await createClient();
+  const listFrameV2 = getThemeFeatures(await getTenantTheme(supabase)).listFrameV2;
   const [warehouses, transfers] = await Promise.all([
     fetchAllRows<{ id: string; name: string; location: string | null; created_at: string }>((f, t) =>
       supabase.from("warehouses").select("id, name, location, created_at").order("created_at").range(f, t),
@@ -61,16 +64,27 @@ export default async function WarehousesPage({
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ F2: { href: "/inventory/transfers/new" }, Escape: { href: "/inventory" } }} />
-      <ListPageHeader title="재고관리 > 창고" />
+      <ListPageHeader
+        title="재고관리 > 창고"
+        actions={
+          listFrameV2 ? (
+            <GuardedLink href="/inventory/warehouses/new" className="erp-btn erp-btn-primary">
+              새 창고
+            </GuardedLink>
+          ) : undefined
+        }
+      />
 
       <PageGuide>
         창고를 2개 이상 등록해야 창고 간 이동을 등록할 수 있습니다. 창고를
         지우면 그 창고를 쓰는 재고/전표가 남아있는 한 삭제가 거부됩니다.
       </PageGuide>
 
-      <FormSection tabLabel="창고 등록">
-        <WarehouseForm action={createWarehouse} />
-      </FormSection>
+      {!listFrameV2 && (
+        <FormSection tabLabel="창고 등록">
+          <WarehouseForm action={createWarehouse} />
+        </FormSection>
+      )}
 
       <div className="erp-u-mt-14">
         <FormSection tabLabel={`창고 목록 (${warehouses.length})`}>
