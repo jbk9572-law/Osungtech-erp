@@ -190,7 +190,6 @@
 .erp-u-pad-6-10 { padding: 6px 10px !important; }
 .erp-u-pad-6-8 { padding: 6px 8px !important; }
 .erp-u-pad-8-10 { padding: 8px 10px !important; }
-.erp-u-pad-8-12 { padding: 8px 12px !important; }
 .erp-u-pad-8-8 { padding: 8px 8px !important; }
 .erp-u-pointer { cursor: pointer !important; }
 .erp-u-text-base { font-size: var(--erp-font-base) !important; }
@@ -9303,3 +9302,62 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
 .erp-col-xxl { width: var(--erp-col-xxl); }
 .erp-col-w { width: var(--erp-col-w); }
 .erp-col-xw { width: var(--erp-col-xw); }
+
+/* ── 상태 화면 카드(StateView): 오류·404·접근 제한·모달 오류 공용 ───────────────── */
+.erp-state {
+  max-width: 560px;
+  margin: var(--erp-space-6) auto;
+  padding: var(--erp-space-6) var(--erp-space-5);
+  background: var(--erp-panel);
+  border: 1px solid var(--erp-border-strong);
+  border-radius: var(--erp-radius-xl);
+  text-align: center;
+}
+
+.erp-state.is-flat {
+  margin: 0 auto;
+  background: transparent;
+  border: 0;
+}
+
+.erp-state-title {
+  margin: 0 0 var(--erp-space-2);
+  font-size: var(--erp-font-lg);
+  font-weight: 700;
+  color: var(--erp-text);
+}
+
+.erp-state.is-danger .erp-state-title {
+  color: var(--erp-danger);
+}
+
+.erp-state-body {
+  margin: 0 0 var(--erp-space-5);
+  font-size: var(--erp-font-sm);
+  color: var(--erp-text-muted);
+  line-height: 1.5;
+}
+
+.erp-state-detail {
+  margin: 0 0 var(--erp-space-5);
+  padding: var(--erp-space-2) var(--erp-space-4);
+  background: var(--erp-bg-subtle);
+  border: 1px solid var(--erp-border-strong);
+  border-radius: var(--erp-radius-md);
+  font-family: ui-monospace, monospace;
+  font-size: var(--erp-font-xs);
+  color: var(--erp-text-muted);
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.erp-state-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--erp-space-3);
+}
+
+.erp-state-body:last-child {
+  margin-bottom: 0;
+}

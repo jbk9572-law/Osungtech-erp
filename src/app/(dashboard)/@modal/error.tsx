@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { reportClientError } from "@/lib/report-client-error";
+import { StateView } from "@/components/erp/state-view";
 
 // @modal 병렬 라우트 슬롯 전용 에러 경계. (dashboard)/error.tsx는 children
 // 슬롯(본문 화면)에서 난 예외만 잡아주고, @modal 슬롯(목록 위에 뜨는 상세/
@@ -48,34 +49,37 @@ export default function ModalError({
         >
           ✕
         </button>
-        <div className="erp-modal-body erp-u-text-center" style={{ padding: "32px 20px" }}>
-          <p className="erp-u-bold erp-u-text erp-u-text-lg erp-u-mb-8">
-            이 항목을 불러오지 못했습니다.
-          </p>
-          <p className="erp-u-muted erp-u-text-compact erp-u-mb-20">
-            일시적인 오류일 수 있습니다. 목록 화면은 그대로 있으니, 닫고 다시 열어보세요.
-          </p>
-          {(error.message || error.digest) && (
-            <p className="erp-u-muted erp-u-text-caption erp-u-border erp-u-pad-8-12 erp-u-mb-20 erp-u-bg-bg-subtle erp-u-radius-0 erp-u-break-word erp-u-text-left"
-              style={{ fontFamily: "monospace" }}
-            >
-              {error.message || "(메시지 없음)"}
-              {error.digest && (
+        <div className="erp-modal-body">
+          <StateView
+            flat
+            tone="danger"
+            title="이 항목을 불러오지 못했습니다."
+            detail={
+              error.message || error.digest ? (
                 <>
-                  <br />
-                  digest: {error.digest}
+                  {error.message || "(메시지 없음)"}
+                  {error.digest && (
+                    <>
+                      <br />
+                      digest: {error.digest}
+                    </>
+                  )}
                 </>
-              )}
-            </p>
-          )}
-          <div className="erp-u-flex erp-u-gap-8 erp-u-justify-center">
-            <button type="button" onClick={() => reset()} className="erp-btn erp-btn-primary">
-              다시 시도
-            </button>
-            <button type="button" onClick={() => router.back()} className="erp-btn">
-              닫기
-            </button>
-          </div>
+              ) : undefined
+            }
+            actions={
+              <>
+                <button type="button" onClick={() => reset()} className="erp-btn erp-btn-primary">
+                  다시 시도
+                </button>
+                <button type="button" onClick={() => router.back()} className="erp-btn">
+                  닫기
+                </button>
+              </>
+            }
+          >
+            일시적인 오류일 수 있습니다. 목록 화면은 그대로 있으니, 닫고 다시 열어보세요.
+          </StateView>
         </div>
       </div>
     </div>

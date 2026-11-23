@@ -1,4 +1,5 @@
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { StateView } from "@/components/erp/state-view";
 
 // "이 화면은 관리자만 볼 수 있습니다" 식으로 화면 전체를 벽으로 막는
 // 패턴이 adminOnly 화면마다(settings/features, settings/billing 등)
@@ -17,9 +18,7 @@ export function AccessWall({ title, message, backHref }: { title: string; messag
     <div>
       {backHref && <KeyboardShortcuts shortcuts={{ Escape: { href: backHref } }} />}
       <h1 className="mb-1 erp-h1">{title}</h1>
-      <p className="erp-grid-empty erp-u-mt-24">
-        {message}
-      </p>
+      <StateView title="볼 수 없는 화면입니다.">{message}</StateView>
     </div>
   );
 }

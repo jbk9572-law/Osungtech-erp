@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { StateView } from "@/components/erp/state-view";
 
 // @modal 슬롯 전용 404. 목록 화면에서 상세보기를 모달로 여는 인터셉트
 // 라우트(@modal/(.)*/[id])에 UUID가 아닌 값이 들어오면 쿼리 없이 바로
@@ -29,16 +30,18 @@ export default function ModalNotFound() {
         >
           ✕
         </button>
-        <div className="erp-modal-body erp-u-text-center" style={{ padding: "32px 20px" }}>
-          <p className="erp-u-bold erp-u-text erp-u-text-lg erp-u-mb-8">
-            이 항목을 찾을 수 없습니다.
-          </p>
-          <p className="erp-u-muted erp-u-text-compact erp-u-mb-20">
+        <div className="erp-modal-body">
+          <StateView
+            flat
+            title="이 항목을 찾을 수 없습니다."
+            actions={
+              <button type="button" onClick={() => router.back()} className="erp-btn erp-btn-primary">
+                닫기
+              </button>
+            }
+          >
             주소가 바뀌었거나 삭제된 항목일 수 있습니다. 목록 화면은 그대로 있습니다.
-          </p>
-          <button type="button" onClick={() => router.back()} className="erp-btn erp-btn-primary">
-            닫기
-          </button>
+          </StateView>
         </div>
       </div>
     </div>
