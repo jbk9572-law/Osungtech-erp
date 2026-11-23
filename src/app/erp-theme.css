@@ -9599,3 +9599,30 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
 .erp-messenger-split3 .erp-messenger-sidebar .erp-messenger-channel-row {
   min-height: 44px;
 }
+
+/* 메신저(모던) 균형: 넓은 화면에서 말풍선이 양쪽 끝으로 멀리 벌어져 휑해 보이던 것을, 대화 영역 전체(제목·검색·말풍선·작성칸)를
+   가운데 680px 폭 안에 모아 정리한다. 말풍선 아래 삭제 줄이 안 보여도 자리를 차지해 간격이 벌어지던 것도 — 삭제는 말풍선 옆에 겹쳐 띄운다. */
+.erp-chrome-modern .erp-messenger-chat-header,
+.erp-chrome-modern .erp-messenger-search,
+.erp-chrome-modern .erp-messenger-body,
+.erp-chrome-modern .erp-messenger-command-bar,
+.erp-chrome-modern .erp-messenger-composer {
+  padding-inline: max(var(--erp-space-4), calc((100% - 680px) / 2));
+}
+.erp-chrome-modern .erp-messenger-bubble-group {
+  position: relative;
+  max-width: 78%;
+}
+.erp-chrome-modern .erp-messenger-bubble-actions {
+  position: absolute;
+  bottom: 2px;
+  left: calc(100% + var(--erp-space-2));
+  white-space: nowrap;
+}
+.erp-chrome-modern .erp-messenger-bubble-group[data-mine="1"] .erp-messenger-bubble-actions {
+  left: auto;
+  right: calc(100% + var(--erp-space-2));
+}
+.erp-chrome-modern .erp-messenger-body {
+  gap: var(--erp-space-3);
+}
