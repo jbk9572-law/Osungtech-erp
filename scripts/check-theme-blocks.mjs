@@ -19,8 +19,8 @@ while ((m = ruleRe.exec(css))) {
   const selector = m[1].trim();
   const body = m[2];
   const line = css.slice(0, m.index + m[1].length - m[1].trimStart().length).split("\n").length;
-  if (!/^\[data-theme="[\w-]+"\]$/.test(selector)) {
-    errors.push(`${file}:${line} 테마 셀렉터는 [data-theme="이름"] 하나만 쓸 수 있습니다 (발견: ${selector.slice(0, 60)})`);
+  if (!/^\[data-theme="[\w-]+"\](\s*,\s*\[data-theme="[\w-]+"\])*$/.test(selector)) {
+    errors.push(`${file}:${line} 테마 셀렉터는 [data-theme="이름"] (여러 테마가 같은 값을 공유할 때만 쉼표로 나열)만 쓸 수 있습니다 (발견: ${selector.slice(0, 60)})`);
     continue;
   }
   for (const decl of body.split(";").map((d) => d.trim()).filter(Boolean)) {

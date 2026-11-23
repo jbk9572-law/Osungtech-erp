@@ -40,6 +40,9 @@ export const THEME_FEATURES: Record<string, ThemeFeatures> = {
   "grid-modern": { defaultInvoiceForm: "N", rowNumbers: true, groupedHeader: true, stockNear: true, partnerPaymentTerms: true, gridSelectionStats: true, paymentStatusColumn: true, voucherLayout: true, kpiStrip: true, stockInsights: true, listSidePanel: true, denseLists: true, appChrome: true },
 };
 
+// 모던 2(미리보기): 구조 플래그는 모던과 같고, 값(토큰)만 규칙표(design/SPEC.md)로 다르다.
+THEME_FEATURES["grid-modern2"] = THEME_FEATURES["grid-modern"];
+
 export function getThemeFeatures(theme: string | null | undefined): ThemeFeatures {
   return (theme && THEME_FEATURES[theme]) || CLASSIC_FEATURES;
 }

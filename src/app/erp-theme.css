@@ -517,6 +517,12 @@
   /* 인라인으로 쓰이던 11px/12px 글자 크기의 공용 토큰(값 그대로) — 11.5/12.5 토큰으로 합칠지는 화면을 보며 결정. */
   --erp-font-caption: 11px;
   --erp-font-compact: 12px;
+  /* 앱 틀·패널 폭과 좌측 메뉴 크기 — 테마가 바꾼다(design/SPEC.md §3). */
+  --erp-sidebar-w: 240px;
+  --erp-side-panel-w: 340px;
+  --erp-tree-item-h: 28px;
+  --erp-tree-item-size: var(--erp-font-base);
+  --erp-tree-group-size: var(--erp-font-xs);
 }
 
 /* ══ 테마: grid-modern (모던 + 한국형 밀집 그리드) ═════════════════════════
@@ -524,7 +530,10 @@
    check-theme-blocks.mjs가 강제). 그래서 새 화면/컴포넌트가 생겨도 토큰만 쓰면
    이 테마에 자동으로 맞는다. 클래식(위 :root)은 백업본으로 그대로 둔다.
    html과 .erp 둘 다에 data-theme가 붙는다(포털로 뜨는 드롭다운이 .erp 밖이라). */
-[data-theme="grid-modern"] {
+[data-theme="grid-modern"],
+[data-theme="grid-modern2"] {
+  --erp-sidebar-w: 172px;
+  --erp-tree-item-h: 28px;
   --erp-primary: #2f62d6;
   --erp-primary-dark: #2450b3;
   --erp-bg: #f4f5f7;
@@ -665,6 +674,37 @@
   --erp-comm-radius-pill: var(--erp-radius-md);
   --erp-comm-shadow: none;
   --erp-comm-shadow-row: none;
+}
+
+/* ══ 테마: grid-modern2 (모던 2 — 규칙표 값 미리보기) ════════════════════════
+   grid-modern과 같은 색·구조에 design/SPEC.md의 수치만 덮는다: 본문 13px, 컨트롤 28/24px, 좌측 메뉴 208px(글자 13), 상세 패널 320px, 모서리 4단계. */
+[data-theme="grid-modern2"] {
+  --erp-font-2xs: 10px;
+  --erp-font-xs: 10.5px;
+  --erp-font-sm: 12px;
+  --erp-font-base: 13px;
+  --erp-font-md: 13px;
+  --erp-font-lg: 15px;
+  --erp-font-xl: 19px;
+  --erp-control-h-cell: 28px;
+  --erp-control-h-md: 28px;
+  --erp-control-h-sm: 24px;
+  --erp-control-h-xs: 24px;
+  --erp-grid-head-h: 26px;
+  --erp-grid-row-h: 26px;
+  --erp-sidebar-w: 208px;
+  --erp-side-panel-w: 320px;
+  --erp-tree-item-h: 32px;
+  --erp-tree-item-size: 13px;
+  --erp-tree-group-size: 11.5px;
+  --erp-radius-xs: 3px;
+  --erp-radius-sm: 4px;
+  --erp-radius-md: 5px;
+  --erp-radius-lg: 6px;
+  --erp-radius-xl: 8px;
+  --erp-radius-2xl: 8px;
+  --erp-radius-3xl: 12px;
+  --erp-radius-4xl: 12px;
 }
 
 /* 셸(.erp)이 화면 높이를 꽉 채우고 안쪽(.erp-page 등)만 스크롤하는 구조라, 문서(html/body) 자체는 절대 스크롤되면 안 된다 —
@@ -3578,8 +3618,8 @@ form.erp-field-grid {
   --erp-side-accent: var(--erp-primary);
   display: var(--erp-detail-side-display);
   flex-direction: column;
-  flex: 0 0 340px;
-  width: 340px;
+  flex: 0 0 var(--erp-side-panel-w);
+  width: var(--erp-side-panel-w);
   position: sticky;
   top: 0;
   max-height: 80vh;
@@ -8944,8 +8984,8 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
 }
 
 .erp-chrome-modern .erp-tree:not(.collapsed) {
-  flex-basis: 172px;
-  width: 172px;
+  flex-basis: var(--erp-sidebar-w);
+  width: var(--erp-sidebar-w);
   background: var(--erp-panel);
 }
 
@@ -8962,19 +9002,19 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   padding: 9px 12px 3px;
   gap: 4px;
   background: transparent;
-  font-size: var(--erp-font-xs);
+  font-size: var(--erp-tree-group-size);
   font-weight: 700;
   letter-spacing: 0.04em;
   color: var(--erp-text-muted);
 }
 
 .erp-chrome-modern .erp-tree-item {
-  height: 28px;
+  height: var(--erp-tree-item-h);
   margin: 0;
   width: 100%;
   padding: 0 12px 0 14px;
   border-radius: 0;
-  font-size: var(--erp-font-base);
+  font-size: var(--erp-tree-item-size);
   font-weight: 400;
   color: var(--erp-text);
 }
