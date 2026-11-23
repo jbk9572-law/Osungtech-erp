@@ -80,11 +80,21 @@ export default async function MessengerPageRoute() {
     membersByChannel.set(m.channel_id, list);
   }
 
+  // 채팅방 목록의 마지막 메시지 미리보기 — 내가 볼 수 있는 최근 메시지 300건에서 방마다 가장 새 것 하나만 뽑는다(방마다 따로 조회하지 않는다).
+  const { data: recentRows } = await safeQuery<{ channel_id: string; content: string; file_name: string | null; created_at: string }[]>(
+    supabase.from("messenger_messages").select("channel_id, content, file_name, created_at").order("created_at", { ascending: false }).limit(300),
+  );
+  const lastByChannel = new Map<string, { text: string; at: string }>();
+  for (const r of recentRows ?? []) {
+    if (!lastByChannel.has(r.channel_id)) lastByChannel.set(r.channel_id, { text: r.content || (r.file_name ? `파일: ${r.file_name}` : ""), at: r.created_at });
+  }
+
   const channels: MessengerChannel[] = (channelRows ?? []).map((c) => ({
     id: c.id,
     type: c.type as MessengerChannel["type"],
     name: c.name,
     memberIds: membersByChannel.get(c.id) ?? [],
+    lastMessage: lastByChannel.get(c.id) ?? null,
   }));
 
   return (

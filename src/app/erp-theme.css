@@ -9562,3 +9562,40 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   font-size: var(--erp-font-base);
   line-height: 1.5;
 }
+
+/* 메신저 채팅방 행: 이름 + 시각 / 마지막 메시지 한 줄 */
+.erp-messenger-row-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  text-align: left;
+}
+.erp-messenger-row-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--erp-space-2);
+}
+.erp-messenger-row-name {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.erp-messenger-row-time {
+  flex: 0 0 auto;
+  font-size: var(--erp-font-xs);
+  color: var(--erp-text-muted);
+}
+.erp-messenger-row-preview {
+  font-size: var(--erp-font-sm);
+  color: var(--erp-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.erp-messenger-split3 .erp-messenger-sidebar .erp-messenger-channel-row {
+  min-height: 44px;
+}

@@ -36,4 +36,6 @@ export type MessengerChannel = {
   type: MessengerChannelType;
   name: string | null;
   memberIds: string[];
+  // 목록 행에 보여줄 마지막 메시지(최근 메시지 범위 안에서만 채워진다 — 없으면 미리보기를 그리지 않는다)
+  lastMessage?: { text: string; at: string } | null;
 };

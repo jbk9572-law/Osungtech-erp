@@ -10,19 +10,19 @@ import {
   startDirectMessage,
   createGroup,
   leaveGroup,
-  resolveMessengerAttachmentUrl,
   markMessengerChannelRead,
   setMessengerChannelMuted,
 } from "@/app/(dashboard)/messenger/actions";
-import type { MessengerMessage, MessengerChannel, MessengerErpRef } from "@/lib/messenger-types";
+import type { MessengerMessage, MessengerChannel } from "@/lib/messenger-types";
 import { SplitFilterColumn } from "@/components/erp/split-filter-column";
-import { fileKind, formatFileSize, isImageFile } from "@/lib/file-display";
+import { isImageFile } from "@/lib/file-display";
 import { FilePickerInput } from "@/components/file-picker-input";
 import { useDebouncedCallback } from "@/lib/use-debounced-callback";
 import { useConfirmTwice } from "@/lib/use-confirm-twice";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import { ListPageHeader } from "@/components/erp/page-header";
-import { PaperclipIcon, DownloadIcon, FileKindIcon, SendIcon } from "@/components/erp/groupware-icons";
+import { PaperclipIcon, SendIcon } from "@/components/erp/groupware-icons";
+import { ErpRefCard, MessengerAttachmentBlock, highlightText } from "@/components/erp/messenger/parts";
 import { StateView } from "@/components/erp/state-view";
 import { ChannelAvatar, channelLabel } from "@/components/erp/messenger-channel";
 
@@ -40,6 +40,14 @@ const ERP_COMMANDS = [
   { prefix: "/게시판공지", label: "게시판공지" },
   { prefix: "/일정마감", label: "일정마감" },
 ] as const;
+
+// 채팅방 행의 시각 — 오늘이면 시각, 아니면 월/일
+function formatRowTime(iso: string): string {
+  const todayKey = new Date().toLocaleDateString("sv-SE");
+  if (dateKey(iso) === todayKey) return formatKstTime(iso, { hour: "numeric", minute: "2-digit" });
+  const d = new Date(iso);
+  return `${d.getMonth() + 1}/${d.getDate()}`;
+}
 
 function dateKey(iso: string): string {
   return new Date(iso).toLocaleDateString("sv-SE");
@@ -60,28 +68,6 @@ function formatDateLabel(key: string): string {
   });
 }
 
-// 검색어와 일치하는 부분을 <mark>로 감싸 강조 표시한다.
-function highlightText(text: string, query: string): React.ReactNode {
-  if (!query) return text;
-  const lower = text.toLowerCase();
-  const q = query.toLowerCase();
-  const parts: React.ReactNode[] = [];
-  let idx = 0;
-  let pos = lower.indexOf(q);
-  let key = 0;
-  while (pos !== -1) {
-    if (pos > idx) parts.push(text.slice(idx, pos));
-    parts.push(
-      <mark key={key++} className="erp-messenger-search-hit">
-        {text.slice(pos, pos + q.length)}
-      </mark>
-    );
-    idx = pos + q.length;
-    pos = lower.indexOf(q, idx);
-  }
-  if (idx < text.length) parts.push(text.slice(idx));
-  return parts;
-}
 
 // 사원목록(roster)/채팅방목록(rooms)/대화창(chat)/그룹만들기(newGroup) —
 // 넓은 화면에서는 roster+rooms+본문이 항상 셋 다 보이는 3단 레이아웃이라
@@ -93,134 +79,6 @@ function highlightText(text: string, query: string): React.ReactNode {
 // DM이 열린다.
 type View = "chat" | "rooms" | "roster" | "newGroup";
 
-// R2로 전환된 첨부(messenger/actions.ts의 preferR2)는 file_url이 비어
-// 있고 file_path만 있다 — Supabase Storage 영구 URL과 달리 R2는 서버에서
-// 그때그때 짧게 서명해야 하므로, 렌더링 시점에 resolveMessengerAttachmentUrl
-// 서버 액션으로 한 번 받아와서 쓴다. 기존처럼 file_url이 이미 있으면
-// (예전 Supabase 첨부) 그대로 쓰고 추가 요청을 하지 않는다.
-function useAttachmentUrl(fileUrl: string | null, filePath: string | null): string | null {
-  const [fetched, setFetched] = useState<string | null>(null);
-  useEffect(() => {
-    if (fileUrl || !filePath) return;
-    let cancelled = false;
-    resolveMessengerAttachmentUrl(filePath).then((url) => {
-      if (!cancelled) setFetched(url);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [fileUrl, filePath]);
-  // 메시지 하나당 이 훅이 한 번만 쓰이고(컴포넌트가 message.id로 keyed됨)
-  // fileUrl/filePath가 생성 이후 바뀌지 않으므로, fetched가 다른 메시지의
-  // 값과 섞일 일은 없다.
-  return fileUrl ?? fetched;
-}
-
-function MessengerAttachmentBlock({
-  fileUrl,
-  filePath,
-  fileName,
-  fileSize,
-  isImg,
-  query,
-}: {
-  fileUrl: string | null;
-  filePath: string | null;
-  fileName: string;
-  fileSize: number | null;
-  isImg: boolean;
-  query: string;
-}) {
-  const url = useAttachmentUrl(fileUrl, filePath);
-
-  if (!url) {
-    return (
-      <div className="erp-messenger-bubble-attachment">
-        <div className="erp-attachment-row" style={{ opacity: 0.6 }}>
-          <span className="erp-attachment-info">
-            <span className="erp-attachment-name">{fileName}</span>
-            <span className="erp-attachment-meta">불러오는 중...</span>
-          </span>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="erp-messenger-bubble-attachment">
-      {isImg ? (
-        <a href={url} target="_blank" rel="noopener noreferrer" className="erp-attachment-image-link">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={url} alt={fileName} className="erp-attachment-image" />
-        </a>
-      ) : (
-        <a href={url} target="_blank" rel="noopener noreferrer" className="erp-attachment-row">
-          <span className="erp-attachment-icon" aria-hidden>
-            <span className="erp-icon erp-u-text" style={{ width: 16, height: 16 }}>
-              <FileKindIcon kind={fileKind(fileName)} />
-            </span>
-          </span>
-          <span className="erp-attachment-info">
-            <span className="erp-attachment-name">{highlightText(fileName, query)}</span>
-            <span className="erp-attachment-meta">{fileSize ? formatFileSize(fileSize) : ""}</span>
-          </span>
-          <span className="erp-attachment-download" aria-hidden>
-            <span className="erp-icon" style={{ width: 13, height: 13 }}>
-              <DownloadIcon />
-            </span>
-          </span>
-        </a>
-      )}
-    </div>
-  );
-}
-
-const ERP_REF_ICON: Record<MessengerErpRef["kind"], string> = {
-  sale: "📊",
-  inventory: "📦",
-  announcement: "📌",
-  followup: "⏰",
-};
-
-// /매출전표 등 명령어로 보낸 메시지가 품은 "ERP 연동 카드" — 종류별로
-// 아이콘만 바뀌고 나머지(제목/뱃지/라벨-값 줄/링크)는 전부 공통 렌더링
-// 이다. 새 명령어가 actions.ts에 추가돼도 kind를 ERP_REF_ICON에 한 줄만
-// 추가하면 이 컴포넌트는 그대로 재사용된다.
-function ErpRefCard({ erpRef }: { erpRef: MessengerErpRef }) {
-  return (
-    <a href={erpRef.href} className="erp-messenger-erp-card">
-      <div className="erp-messenger-erp-card-head">
-        <span aria-hidden>{ERP_REF_ICON[erpRef.kind]}</span>
-        <span className="erp-messenger-erp-card-title">{erpRef.title}</span>
-        {erpRef.badge && <span className="erp-messenger-erp-card-badge">{erpRef.badge}</span>}
-      </div>
-      <div className="erp-messenger-erp-card-lines">
-        {erpRef.lines.map((line) => (
-          <div key={line.label} className="erp-messenger-erp-card-line">
-            <span className="erp-messenger-erp-card-label">{line.label}</span>
-            <span>{line.value}</span>
-          </div>
-        ))}
-      </div>
-    </a>
-  );
-}
-
-// 우측하단에 항상 떠 있던 팝업 위젯을 없애고, 다른 화면들처럼 좌측 메뉴
-// (그룹웨어 > 메신저)로 들어오는 일반 페이지로 바꿨다 — 팝업이 화면을
-// 가리고, 숨기기/위치이동까지 신경 써야 했던 것에 비해 메뉴 하나로
-// 찾아 들어오는 편이 낫다는 판단(사용자 피드백). 이 컴포넌트는 /messenger
-// 페이지를 열었을 때만 마운트되고, 그래서 실시간 새 메시지 구독도 이
-// 페이지를 보고 있는 동안만 돈다(다른 화면에 있는 동안의 새 메시지는
-// 웹푸시로 대신 알려준다).
-//
-// 예전엔 대화/메일/알림 3탭이었는데, 메일함은 아예 별도 화면(/mail,
-// 독립된 feature 토글)이라 그 영역만 떼어내는 게 더 안전해서 탭에서
-// 뺐고(여기서 미리보기도 안 보여준다 — "메일함 전체보기" 성격의 화면이
-// 메신저 안에 반쪽만 있는 게 오히려 헷갈린다는 지적), 알림 탭이 보여주던
-// 것들(거래처 발주/안전재고/할일마감 등)은 전부 "전체" 대화방에
-// 시스템봇(sender_id=null) 메시지로 흡수했다 — 알림함을 따로 열어볼
-// 필요 없이 다들 늘 보는 대화 목록 안에서 바로 확인된다.
 // 모던 테마(grid-modern) 전용 B형 메신저 — 필터 열(대화 구분·건수 + 사원목록) | 채팅방목록 | 대화창. 클래식은 classic.tsx(동결본).
 export function MessengerPage({
   channels: initialChannels,
@@ -710,7 +568,13 @@ export function MessengerPage({
                 <span className="erp-u-mr-8 erp-u-inline-flex">
                   <ChannelAvatar channel={c} profileNames={profileNames} currentUserId={currentUserId} />
                 </span>
-                <span className="erp-u-flex-1 erp-u-text-left">{channelLabel(c, profileNames, currentUserId)}</span>
+                <span className="erp-messenger-row-text">
+                  <span className="erp-messenger-row-top">
+                    <span className="erp-messenger-row-name">{channelLabel(c, profileNames, currentUserId)}</span>
+                    {c.lastMessage && <span className="erp-messenger-row-time">{formatRowTime(c.lastMessage.at)}</span>}
+                  </span>
+                  {c.lastMessage?.text && <span className="erp-messenger-row-preview">{c.lastMessage.text}</span>}
+                </span>
                 {mutedIds.has(c.id) && <span className="erp-u-muted erp-u-text-caption" title="이 방의 알림이 꺼져 있습니다">🔕</span>}
                 {unseenChannelIds.has(c.id) && !mutedIds.has(c.id) && <span className="erp-messenger-unread-dot" style={{ position: "static" }} aria-hidden />}
               </button>
