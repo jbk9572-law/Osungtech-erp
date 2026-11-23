@@ -61,19 +61,9 @@ async function InventoryPage({
       </PageGuide>
 
       {!listFrameV2 && (
-      <div className="erp-detail erp-u-mt-0 erp-u-mb-12">
-        <div className="erp-detail-tabs">
-          <span className="erp-detail-tab active">재고 조정 (기초재고 등록 등)</span>
+        <div className="erp-u-mb-12">
+          <InventoryAdjustForm products={pickerProducts} warehouseId={warehouses[0]?.id ?? ""} warehouses={warehouses} stockLevels={stockLevels} />
         </div>
-        <div className="erp-detail-body">
-          <InventoryAdjustForm
-            products={pickerProducts}
-            warehouseId={warehouses[0]?.id ?? ""}
-            warehouses={warehouses}
-            stockLevels={stockLevels}
-          />
-        </div>
-      </div>
       )}
 
       <form method="get" className="erp-search-row">

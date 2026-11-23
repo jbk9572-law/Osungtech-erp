@@ -1,7 +1,8 @@
 "use client";
 
 import { useActionState, useRef } from "react";
-import { FormMessage, type FormState } from "@/components/form-message";
+import type { FormState } from "@/components/form-message";
+import { ModalFormSheet } from "@/components/erp/modal-form-sheet";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 
 export function WarehouseForm({
@@ -14,24 +15,15 @@ export function WarehouseForm({
   useKeyShortcut("F7", submitRef);
 
   return (
-    <form action={formAction} className="grid grid-cols-1 gap-3 md:grid-cols-3">
-      <div className="erp-field">
+    <ModalFormSheet title="새 창고" tabLabel="창고 등록" formAction={formAction} state={state} pending={pending} submitRef={submitRef} submitLabel="F7 저장">
+      <div className="erp-field erp-span-6">
         <label htmlFor="wh-name">창고명</label>
-        <input id="wh-name" type="text" name="name" autoComplete="off" className="erp-input w-full" required />
+        <input id="wh-name" type="text" name="name" autoComplete="off" className="erp-input erp-u-w-full" required />
       </div>
-      <div className="erp-field">
+      <div className="erp-field erp-span-6">
         <label htmlFor="wh-location">위치 (선택)</label>
-        <input id="wh-location" type="text" name="location" autoComplete="off" className="erp-input w-full" />
+        <input id="wh-location" type="text" name="location" autoComplete="off" className="erp-input erp-u-w-full" />
       </div>
-      <div className="erp-field">
-        <label aria-hidden="true">&nbsp;</label>
-        <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary erp-form-submit">
-          {pending ? "저장 중..." : "F7 창고 추가"}
-        </button>
-      </div>
-      <div className="md:col-span-3">
-        <FormMessage state={state} />
-      </div>
-    </form>
+    </ModalFormSheet>
   );
 }

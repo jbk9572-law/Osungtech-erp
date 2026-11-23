@@ -81,9 +81,7 @@ export default async function WarehousesPage({
       </PageGuide>
 
       {!listFrameV2 && (
-        <FormSection tabLabel="창고 등록">
-          <WarehouseForm action={createWarehouse} />
-        </FormSection>
+        <WarehouseForm action={createWarehouse} />
       )}
 
       <div className="erp-u-mt-14">

@@ -37,6 +37,7 @@ export function NumberInput({
   disabled = false,
   className = "",
   id,
+  title,
 }: {
   value: number;
   onChange: (n: number) => void;
@@ -50,6 +51,8 @@ export function NumberInput({
   disabled?: boolean;
   className?: string;
   id?: string;
+  // 칸 안 안내 글자 대신 마우스를 올렸을 때 보이는 설명.
+  title?: string;
 }) {
   // 소수점 입력 중(예: "9." -> "9.5") 매 입력마다 천단위 포맷으로 되돌리면
   // 마침표가 즉시 지워져 소수를 아예 입력할 수 없었다. 포커스 중에는 사용자가
@@ -81,6 +84,7 @@ export function NumberInput({
       type="text"
       inputMode="decimal"
       id={id}
+      title={title}
       placeholder={placeholder}
       aria-label={placeholder}
       disabled={disabled}

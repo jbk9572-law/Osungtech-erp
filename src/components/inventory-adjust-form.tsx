@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { adjustInventory } from "@/app/(dashboard)/inventory/actions";
 import { ProductSearchSelect } from "@/components/product-search-select";
-import { FormMessage } from "@/components/form-message";
+import { ModalFormSheet } from "@/components/erp/modal-form-sheet";
 import { QuantityWithBoxInput } from "@/components/quantity-with-box-input";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { formatNumber } from "@/lib/format-number";
@@ -83,111 +83,106 @@ export function InventoryAdjustForm({
   const selectedProduct = products.find((p) => p.id === productId);
 
   return (
-    <form ref={formRef} action={formAction} className="grid grid-cols-1 gap-3 md:grid-cols-4 items-start">
+    <ModalFormSheet
+      title="재고 조정"
+      tabLabel="재고 조정 (기초재고 등록 등)"
+      formRef={formRef}
+      formAction={formAction}
+      state={state}
+      pending={pending}
+      submitRef={submitRef}
+      submitLabel="F7 저장"
+    >
       <input type="hidden" name="product_id" value={productId} />
       <input type="hidden" name="quantity" value={signedQuantity} />
       <input type="hidden" name="is_natural_loss" value={reason === "natural_loss" ? "1" : ""} />
+      <input type="hidden" name="note" value={finalNote} />
       {warehouses.length <= 1 ? (
         <input type="hidden" name="warehouse_id" value={warehouseId} />
       ) : (
-        <ErpSelect
-          ariaLabel="창고"
-          name="warehouse_id"
-          value={warehouseId}
-          onChange={setWarehouseId}
-          required
-          options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
-        />
+        <div className="erp-field erp-span-4">
+          <label htmlFor="adj-warehouse">창고</label>
+          <ErpSelect
+            id="adj-warehouse"
+            name="warehouse_id"
+            value={warehouseId}
+            onChange={setWarehouseId}
+            required
+            options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
+          />
+        </div>
       )}
-      <div className="md:col-span-2">
-        <ProductSearchSelect products={products} value={productId} onChange={setProductId} />
+      <div className={`erp-field ${warehouses.length <= 1 ? "erp-span-12" : "erp-span-8"}`}>
+        <label htmlFor="adj-product">품목</label>
+        <ProductSearchSelect id="adj-product" products={products} value={productId} onChange={setProductId} />
       </div>
-      <div className="flex overflow-hidden rounded-sm border border-[var(--erp-border)]">
-        <button
-          type="button"
-          onClick={() => setDirection("increase")}
-          disabled={reason === "sample" || reason === "natural_loss"}
-          className="flex-1 text-xs font-semibold disabled:opacity-50 erp-u-pad-0-10 erp-u-h-30 erp-touch-btn"
-          style={{ background: direction === "increase" ? "var(--erp-primary)" : "var(--erp-panel)", color: direction === "increase" ? "var(--erp-panel)" : "var(--erp-text-muted)" }}
-        >
-          증가
-        </button>
-        <button
-          type="button"
-          onClick={() => setDirection("decrease")}
-          disabled={reason === "sample" || reason === "natural_loss"}
-          className="flex-1 text-xs font-semibold disabled:opacity-50 erp-u-pad-0-10 erp-u-h-30 erp-touch-btn"
-          style={{ background: direction === "decrease" ? "var(--erp-primary)" : "var(--erp-panel)", color: direction === "decrease" ? "var(--erp-panel)" : "var(--erp-text-muted)" }}
-        >
-          차감
-        </button>
+      <div className="erp-field erp-span-4">
+        <label>방향</label>
+        <div className="erp-seg">
+          <button type="button" className={direction === "increase" ? "active" : ""} onClick={() => setDirection("increase")} disabled={reason === "sample" || reason === "natural_loss"}>
+            증가
+          </button>
+          <button type="button" className={direction === "decrease" ? "active" : ""} onClick={() => setDirection("decrease")} disabled={reason === "sample" || reason === "natural_loss"}>
+            차감
+          </button>
+        </div>
       </div>
-      <QuantityWithBoxInput
-        quantity={amount}
-        onQuantityChange={setAmount}
-        basePackageQty={selectedProduct?.base_package_qty}
-        unit={selectedProduct?.unit}
-        allowFormula
-        className="erp-input"
-      />
+      <div className="erp-field erp-span-4">
+        <label htmlFor="adj-qty">수량</label>
+        <QuantityWithBoxInput
+          id="adj-qty"
+          quantity={amount}
+          onQuantityChange={setAmount}
+          basePackageQty={selectedProduct?.base_package_qty}
+          unit={selectedProduct?.unit}
+          allowFormula
+          className="erp-input"
+        />
+      </div>
+      <div className="erp-field erp-span-4">
+        <label htmlFor="adj-reason">용도</label>
+        <ErpSelect
+          id="adj-reason"
+          value={reason}
+          onChange={(v) => {
+            const next = v as "" | "sample" | "natural_loss";
+            setReason(next);
+            if (next === "sample" || next === "natural_loss") setDirection("decrease");
+          }}
+          options={[
+            { value: "", label: "직접 입력" },
+            { value: "sample", label: "샘플 증정(무상)" },
+            { value: "natural_loss", label: "자연로스(공정손실/환산단위 오차)" },
+          ]}
+        />
+      </div>
+      <div className="erp-field erp-span-12">
+        <label htmlFor="adj-note">사유</label>
+        <input
+          id="adj-note"
+          value={noteText}
+          onChange={(e) => setNoteText(e.target.value)}
+          autoComplete="off"
+          placeholder={
+            reason === "sample"
+              ? "샘플 제공 사유 (예: OO업체 영업용 샘플 3박스)"
+              : reason === "natural_loss"
+                ? "손실 사유 (예: 재단 중 파손 3개, 환산단위 오차 2개)"
+                : "사유 (예: 기초재고, 실사 조정)"
+          }
+          className="erp-input erp-u-w-full"
+        />
+      </div>
       {currentStock !== null && (
-        <>
-          <p
-            className="text-xs md:col-span-4"
-            style={{ color: projectedStock < 0 ? "var(--erp-danger)" : "var(--erp-text-muted)" }}
-          >
+        <div className="erp-field erp-span-12">
+          <p className="erp-u-text-xs" style={{ color: projectedStock < 0 ? "var(--erp-danger)" : "var(--erp-text-muted)" }}>
             현재 재고: {formatNumber(currentStock)}개 → 조정 후: {formatNumber(projectedStock)}개
             {projectedStock < 0 && " (재고 부족)"}
           </p>
           {/* 재고가 0 밑으로 내려가는 차감은 DB가 거절한다(migration 266, 회사 설정으로만 예외) — 미리 알려 준다. */}
-          {projectedStock < 0 && (
-            <PageGuide tone="warning" className="md:col-span-4">
-              ⚠ 조정 후 재고가 음수가 되어 등록할 수 없습니다. 차감 수량을 줄여주세요.
-            </PageGuide>
-          )}
-        </>
+          {projectedStock < 0 && <PageGuide tone="warning">⚠ 조정 후 재고가 음수가 되어 등록할 수 없습니다. 차감 수량을 줄여주세요.</PageGuide>}
+        </div>
       )}
-      <input type="hidden" name="note" value={finalNote} />
-      <ErpSelect
-        value={reason}
-        onChange={(v) => {
-          const next = v as "" | "sample" | "natural_loss";
-          setReason(next);
-          if (next === "sample" || next === "natural_loss") setDirection("decrease");
-        }}
-        ariaLabel="용도"
-        options={[
-          { value: "", label: "직접 입력" },
-          { value: "sample", label: "샘플 증정(무상)" },
-          { value: "natural_loss", label: "자연로스(공정손실/환산단위 오차)" },
-        ]}
-      />
-      <input
-        value={noteText}
-        onChange={(e) => setNoteText(e.target.value)}
-        autoComplete="off"
-        placeholder={
-          reason === "sample"
-            ? "샘플 제공 사유 (예: OO업체 영업용 샘플 3박스)"
-            : reason === "natural_loss"
-              ? "손실 사유 (예: 재단 중 파손 3개, 환산단위 오차 2개)"
-              : "사유 (예: 기초재고, 실사 조정)"
-        }
-        aria-label="사유"
-        className="erp-input md:col-span-3"
-      />
-      <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary erp-form-submit">
-        {pending ? (
-          <>
-            <span className="erp-spinner" aria-hidden /> 저장 중...
-          </>
-        ) : (
-          "F7 재고 조정 등록"
-        )}
-      </button>
-      <div className="md:col-span-4">
-        <FormMessage state={state} />
-      </div>
-    </form>
+    </ModalFormSheet>
   );
 }

@@ -28,6 +28,7 @@ export function QuantityWithBoxInput({
   unit,
   label = "수량",
   className = "erp-input w-full",
+  id,
 }: {
   quantity: number;
   onQuantityChange: (n: number) => void;
@@ -41,18 +42,18 @@ export function QuantityWithBoxInput({
   // 출고수량처럼 "수량"이 아닌 다른 이름이 필요한 자리에서 바꿔 쓴다.
   label?: string;
   className?: string;
+  id?: string;
 }) {
   const base = basePackageQty != null ? Number(basePackageQty) : null;
-  const placeholder =
-    base && base > 0
-      ? `${label} (예: ${formatNumber(base)}×1=${formatNumber(base)})`
-      : allowFormula
-        ? `${label} (엑셀식 계산 가능)`
-        : label;
+  // 칸 안 안내 글자는 두지 않는다(좁은 칸에서 잘림) — 수식 안내는 title로만 알린다.
+  const placeholder = label;
+  const hint = allowFormula ? "12*3처럼 계산식을 입력할 수 있습니다" : undefined;
 
   return (
     <div>
       <NumberInput
+        id={id}
+        title={hint}
         placeholder={placeholder}
         value={quantity}
         onChange={onQuantityChange}

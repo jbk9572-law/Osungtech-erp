@@ -1,5 +1,5 @@
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
-import { ListPageHeader, FormSection } from "@/components/erp/page-header";
+import { ListPageHeader } from "@/components/erp/page-header";
 import { WarehouseForm } from "@/components/warehouse-form";
 import { createWarehouse } from "@/app/(dashboard)/inventory/warehouses/actions";
 
@@ -9,9 +9,7 @@ export default function NewWarehousePage() {
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/inventory/warehouses" } }} />
       <ListPageHeader title="재고관리 > 창고 > 새 창고" />
-      <FormSection tabLabel="창고 등록">
-        <WarehouseForm action={createWarehouse} />
-      </FormSection>
+      <WarehouseForm action={createWarehouse} />
     </div>
   );
 }
