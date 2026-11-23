@@ -23,6 +23,7 @@ import { useConfirmTwice } from "@/lib/use-confirm-twice";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import { ListPageHeader } from "@/components/erp/page-header";
 import { PaperclipIcon, DownloadIcon, FileKindIcon, SendIcon } from "@/components/erp/groupware-icons";
+import { StateView } from "@/components/erp/state-view";
 import { ChannelAvatar, channelLabel } from "@/components/erp/messenger-channel";
 
 export type { MessengerMessage };
@@ -613,7 +614,7 @@ export function MessengerPage({
   const visibleChannels = channels.filter((c) =>
     chatFilter === "unread" ? unseenChannelIds.has(c.id) && !mutedIds.has(c.id) : chatFilter === "muted" ? mutedIds.has(c.id) : chatFilter === "all" ? true : c.type === chatFilter,
   );
-  const mobileView = isDrilledIn ? "detail" : view === "roster" ? "roster" : "rooms";
+  const mobileView = isDrilledIn ? "detail" : "rooms";
 
   return (
     <div className="erp-comm-shell">
@@ -627,25 +628,6 @@ export function MessengerPage({
           ) : undefined
         }
       />
-
-      {!isDrilledIn && (
-        <div className="erp-messenger-mobile-tabs">
-          <button
-            type="button"
-            className={`erp-messenger-mobile-tab${view === "roster" ? " active" : ""}`}
-            onClick={() => setView("roster")}
-          >
-            사원
-          </button>
-          <button
-            type="button"
-            className={`erp-messenger-mobile-tab${view !== "roster" ? " active" : ""}`}
-            onClick={() => setView("rooms")}
-          >
-            채팅방
-          </button>
-        </div>
-      )}
 
       {/* 메일함/게시판과 같은 .erp-split3-shell 3분할 — 왼쪽부터 사원목록
           (카테고리 사이드바 역할) → 채팅방목록 → 대화창. 넓은 화면에서는
@@ -662,47 +644,51 @@ export function MessengerPage({
             },
           ]}
         >
-          <div className="erp-messenger-roster-head">사원목록</div>
-          <div className="erp-u-pad-8-8">
-            <input
-              type="text"
-              autoComplete="off"
-              value={rosterQuery}
-              onChange={(e) => setRosterQuery(e.target.value)}
-              placeholder="🔍 이름 검색"
-              className="erp-input erp-u-w-full erp-u-text-compact"
-            />
-          </div>
-          <div className="erp-u-flex-1 erp-u-overflow-y-auto">
-            {filteredRoster.map(([id, name]) => (
-              <button
-                key={id}
-                type="button"
-                disabled={creatingChannel}
-                onClick={() => handleStartDm(id)}
-                className="erp-messenger-channel-row erp-u-flex erp-u-items-center erp-u-gap-8"
-              >
-                <span className="erp-avatar erp-u-h-22" style={{ width: 22, fontSize: 10 }} aria-hidden>
-                  {name[0] ?? "?"}
-                </span>
-                {name}
-              </button>
-            ))}
-            {filteredRoster.length === 0 && (
-              <p className="erp-grid-empty erp-u-text-sm erp-u-pad-8-10">
-                {rosterQueryTrimmed ? "검색 결과가 없습니다." : "대화할 수 있는 다른 구성원이 없습니다."}
-              </p>
-            )}
-          </div>
         </SplitFilterColumn>
 
         <section className="erp-split-list erp-messenger-sidebar">
           <div className="erp-split-list-head">
-            <span>채팅방목록</span>
-            <button type="button" className="erp-btn erp-u-minw-0 erp-u-text-sm" onClick={() => setView("newGroup")}>
-              + 그룹
+            <div className="erp-seg" role="tablist" aria-label="목록 종류">
+              <button type="button" role="tab" aria-selected={view !== "roster"} className={view !== "roster" ? "active" : ""} onClick={() => setView("rooms")}>
+                채팅방
+              </button>
+              <button type="button" role="tab" aria-selected={view === "roster"} className={view === "roster" ? "active" : ""} onClick={() => setView("roster")}>
+                사원
+              </button>
+            </div>
+            <button type="button" className="erp-btn" onClick={() => setView("newGroup")}>
+              그룹 만들기
             </button>
           </div>
+          {view === "roster" ? (
+            <>
+              <div className="erp-messenger-list-search">
+                <input
+                  type="text"
+                  autoComplete="off"
+                  value={rosterQuery}
+                  onChange={(e) => setRosterQuery(e.target.value)}
+                  placeholder="이름 검색"
+                  aria-label="사원 이름 검색"
+                  className="erp-input erp-u-w-full"
+                />
+              </div>
+              <div className="erp-split-list-body">
+                {filteredRoster.map(([id, name]) => (
+                  <button key={id} type="button" disabled={creatingChannel} onClick={() => handleStartDm(id)} className="erp-messenger-channel-row">
+                    <span className="erp-avatar erp-messenger-row-avatar" aria-hidden>
+                      {name[0] ?? "?"}
+                    </span>
+                    <span className="erp-u-flex-1 erp-u-text-left">{name}</span>
+                  </button>
+                ))}
+                {filteredRoster.length === 0 && (
+                  <p className="erp-grid-empty">{rosterQueryTrimmed ? "검색 결과가 없습니다." : "대화할 수 있는 다른 구성원이 없습니다."}</p>
+                )}
+              </div>
+            </>
+          ) : (
+          <>
           <div className="erp-messenger-mobile-filter erp-date-presets">
             {chatFilters.map(([key, label]) => (
               <button key={key} type="button" onClick={() => setChatFilter(key)} className={`erp-date-preset-btn${chatFilter === key ? " active" : ""}`}>
@@ -729,12 +715,15 @@ export function MessengerPage({
                 {unseenChannelIds.has(c.id) && !mutedIds.has(c.id) && <span className="erp-messenger-unread-dot" style={{ position: "static" }} aria-hidden />}
               </button>
             ))}
+            {visibleChannels.length === 0 && <p className="erp-grid-empty">대화가 없습니다. 사원 탭에서 대화를 시작하세요.</p>}
           </div>
+          </>
+          )}
         </section>
 
         <div className="erp-split-detail erp-messenger-main">
               {!isDrilledIn && (
-                <div className="erp-messenger-empty-state">왼쪽에서 사원을 골라 DM을 시작하거나, 채팅방을 선택해보세요.</div>
+                <StateView title="대화를 선택하세요" flat>채팅방을 고르거나, 사원 탭에서 사원을 눌러 새 대화를 시작합니다.</StateView>
               )}
 
               {view === "newGroup" && (

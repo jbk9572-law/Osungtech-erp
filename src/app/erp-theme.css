@@ -9516,3 +9516,27 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   font-size: var(--erp-font-base);
   line-height: 1.5;
 }
+
+/* 메신저(모던): 가운데 목록 위 [채팅방 | 사원] 전환 + 사원 검색, 행 높이·아바타는 규칙표 값(항목 32px, 아바타 28px) */
+.erp-messenger-list-search {
+  flex: 0 0 auto;
+  padding: var(--erp-space-2);
+}
+.erp-messenger-split3 .erp-messenger-channel-row {
+  min-height: var(--erp-tree-item-h);
+  padding-block: var(--erp-space-1);
+  display: flex;
+  align-items: center;
+  gap: var(--erp-space-2);
+  font-size: var(--erp-font-base);
+}
+.erp-messenger-row-avatar {
+  width: 28px;
+  height: 28px;
+  font-size: var(--erp-font-xs);
+  flex: 0 0 auto;
+}
+.erp-messenger-split3 .erp-cat-sidebar {
+  flex-basis: 180px;
+  max-width: 180px;
+}
