@@ -519,6 +519,7 @@
   /* 앱 틀·패널 폭과 좌측 메뉴 크기 — 테마가 바꾼다(design/SPEC.md §3). */
   --erp-sidebar-w: 240px;
   --erp-side-panel-w: 340px;
+  --erp-side-panel-max-h: 80vh;
   --erp-tree-item-h: 28px;
   --erp-tree-item-size: var(--erp-font-base);
   --erp-tree-group-size: var(--erp-font-xs);
@@ -532,6 +533,7 @@
 [data-theme="grid-modern"],
 [data-theme="grid-modern2"] {
   --erp-sidebar-w: 172px;
+  --erp-side-panel-max-h: calc(100vh - 170px);
   --erp-tree-item-h: 28px;
   --erp-primary: #2f62d6;
   --erp-primary-dark: #2450b3;
@@ -3621,7 +3623,7 @@ form.erp-field-grid {
   width: var(--erp-side-panel-w);
   position: sticky;
   top: 0;
-  max-height: 80vh;
+  max-height: var(--erp-side-panel-max-h);
   overflow: auto;
   background: var(--erp-panel);
   border: 1px solid var(--erp-border-strong);
@@ -9389,4 +9391,38 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
 .erp-chrome-modern .erp-grid-toolbar .erp-grid-stat + .erp-grid-stat {
   padding-left: var(--erp-space-5);
   border-left: 1px solid var(--erp-divider);
+}
+
+/* ── 상세 패널 블록 규칙(design/SPEC.md §7-5) — 모던: 제목 + 상태 칩은 한 줄, 머리 배경 없음, 하단 버튼 고정 ───────── */
+.erp-chrome-modern .erp-detail-side-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--erp-space-1) var(--erp-space-3);
+  background: transparent;
+}
+
+.erp-chrome-modern .erp-detail-side-hero .erp-detail-side-title {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.erp-chrome-modern .erp-detail-side-hero .erp-detail-side-chips {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+}
+
+.erp-chrome-modern .erp-detail-side-hero .erp-detail-side-date {
+  grid-column: 1 / -1;
+  grid-row: 2;
+}
+
+.erp-chrome-modern .erp-detail-side-actions {
+  position: sticky;
+  bottom: 0;
+  margin-top: auto;
+  background: var(--erp-panel);
+  border-top: 1px solid var(--erp-divider);
+  padding-top: var(--erp-space-3);
 }
