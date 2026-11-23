@@ -6739,6 +6739,12 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
     padding: 8px 10px;
   }
 
+  /* 모달 닫기(✕) — 28px는 손가락으로 누르기에 작다(배치 점검이 모든 모달에서 잡았다). */
+  .erp-modal-window-close {
+    min-width: 40px;
+    min-height: 40px;
+  }
+
   .erp-titlebar-menu-toggle {
     width: 36px;
     height: 36px;
