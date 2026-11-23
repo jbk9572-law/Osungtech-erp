@@ -6,6 +6,9 @@ import { PageGuide } from "@/components/erp/page-guide";
 import { canViewPage } from "@/lib/department-page-access";
 import { AccessWall } from "@/components/erp/access-wall";
 import { ExcelDownloadLink } from "@/components/erp/excel-download-link";
+import { ListTitleBar } from "@/components/erp/page-header";
+import { getTenantTheme } from "@/lib/tenant-theme";
+import { getThemeFeatures } from "@/lib/erp-theme-config";
 
 // 매입채무(/payables)와 완전히 같은 계산 방식(가공비 누계 - 지급 누계,
 // 그때그때 계산). 하청업체 상세는 /suppliers/[id] 같은 별도 라우트가
@@ -25,10 +28,33 @@ export default async function SubcontractorPayablesPage() {
     );
   }
 
+  const { listFrameV2 } = getThemeFeatures(await getTenantTheme(supabase));
   const balances = await getAllSubcontractorBalances(supabase);
 
   const withBalance = balances.filter((b) => b.balance !== 0).sort((a, b) => b.balance - a.balance);
   const totalBalance = sumOutstandingBalance(withBalance);
+
+  if (listFrameV2) {
+    return (
+      <div>
+        <ListTitleBar title={<>생산관리 &gt; 외주비정산</>} />
+        <BalanceGridTable
+          rows={withBalance}
+          hrefBase="/subcontractors"
+          hrefQueryParam="id"
+          partyLabel="업체명"
+          totalLabel="가공비 누계"
+          paidLabel="지급 누계"
+          emptyLabel="미정산 잔액이 있는 업체가 없습니다."
+          summaryItems={[
+            { label: "업체", value: `${formatNumber(withBalance.length)}곳` },
+            { label: "전체 미정산 합계", value: `${formatNumber(totalBalance)}원` },
+          ]}
+          toolsSlot={<ExcelDownloadLink href="/api/subcontractor-payables/export" label="엑셀" title="목록을 엑셀 파일로 내려받기" />}
+        />
+      </div>
+    );
+  }
 
   return (
     <div>

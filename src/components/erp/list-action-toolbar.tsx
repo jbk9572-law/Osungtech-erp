@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { GuardedLink } from "@/components/erp/guarded-link";
 import { ListToolbar, ToolbarKey } from "@/components/erp/list-toolbar";
+import { useThemeFeatures } from "@/lib/erp-theme-features";
 import { formatKstTime } from "@/lib/kst-date";
 import { formatNumber } from "@/lib/format-number";
 import { startRouteProgress } from "@/lib/route-progress";
@@ -50,6 +51,7 @@ export function ListActionToolbar({
   dataKey: unknown;
 }) {
   const router = useRouter();
+  const { listFrameV2 } = useThemeFeatures();
   // 마지막으로 목록을 받은 시각(KST). 서버·브라우저 시각이 다를 수 있어 마운트 뒤에만 채운다.
   const [loadedAt, setLoadedAt] = useState("");
   useEffect(() => {
@@ -73,7 +75,7 @@ export function ListActionToolbar({
     <ListToolbar
       actions={
         <>
-          {searchFormId && (
+          {searchFormId && !listFrameV2 && (
             <button type="button" className="erp-btn erp-btn-primary" onClick={() => (document.getElementById(searchFormId) as HTMLFormElement | null)?.requestSubmit()}>
               조회<ToolbarKey>F5</ToolbarKey>
             </button>

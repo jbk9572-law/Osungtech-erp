@@ -31,17 +31,19 @@ export type ThemeFeatures = {
   denseLists: boolean;
   /** 앱 틀(상단바·하단 상태줄·사이드바 그룹 이름)을 모던 시안 모양으로 그린다 — 상단바에 메뉴 검색 버튼·아바타, 상태줄에 연결 상태·경로·행 위치·사용 힌트. */
   appChrome: boolean;
+  /** 목록 화면 새 틀(검색 박스 → 요약 → 도구 줄 → 표) — 도구 줄을 앱 틀 맨 위가 아니라 표 바로 위(내용 안)에 그린다. 모던 2에서만 켜서 미리 본다(design/REVISIONS.md R-008·R-003). */
+  listFrameV2: boolean;
 };
 
-export const CLASSIC_FEATURES: ThemeFeatures = { defaultInvoiceForm: "B", rowNumbers: false, groupedHeader: false, stockNear: false, partnerPaymentTerms: false, gridSelectionStats: false, paymentStatusColumn: false, voucherLayout: false, kpiStrip: false, stockInsights: false, listSidePanel: false, denseLists: false, appChrome: false };
+export const CLASSIC_FEATURES: ThemeFeatures = { defaultInvoiceForm: "B", rowNumbers: false, groupedHeader: false, stockNear: false, partnerPaymentTerms: false, gridSelectionStats: false, paymentStatusColumn: false, voucherLayout: false, kpiStrip: false, stockInsights: false, listSidePanel: false, denseLists: false, appChrome: false, listFrameV2: false };
 
 export const THEME_FEATURES: Record<string, ThemeFeatures> = {
   "classic-light": CLASSIC_FEATURES,
-  "grid-modern": { defaultInvoiceForm: "N", rowNumbers: true, groupedHeader: true, stockNear: true, partnerPaymentTerms: true, gridSelectionStats: true, paymentStatusColumn: true, voucherLayout: true, kpiStrip: true, stockInsights: true, listSidePanel: true, denseLists: true, appChrome: true },
+  "grid-modern": { defaultInvoiceForm: "N", rowNumbers: true, groupedHeader: true, stockNear: true, partnerPaymentTerms: true, gridSelectionStats: true, paymentStatusColumn: true, voucherLayout: true, kpiStrip: true, stockInsights: true, listSidePanel: true, denseLists: true, appChrome: true, listFrameV2: false },
 };
 
-// 모던 2(미리보기): 구조 플래그는 모던과 같고, 값(토큰)만 규칙표(design/SPEC.md)로 다르다.
-THEME_FEATURES["grid-modern2"] = THEME_FEATURES["grid-modern"];
+// 모던 2(미리보기): 구조 플래그는 모던과 같고 새 목록 틀(listFrameV2)만 더 켠다. 값(토큰)은 모던과 같은 규칙표(design/SPEC.md).
+THEME_FEATURES["grid-modern2"] = { ...THEME_FEATURES["grid-modern"], listFrameV2: true };
 
 export function getThemeFeatures(theme: string | null | undefined): ThemeFeatures {
   return (theme && THEME_FEATURES[theme]) || CLASSIC_FEATURES;

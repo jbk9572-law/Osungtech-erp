@@ -141,7 +141,7 @@ export function ErpShell({
 
   return (
     <ThemeFeaturesProvider theme={theme}>
-    <div className={getThemeFeatures(theme).appChrome ? "erp erp-chrome-modern" : "erp"} data-theme={theme && theme !== "classic-light" ? theme : undefined}>
+    <div className={`erp${getThemeFeatures(theme).appChrome ? " erp-chrome-modern" : ""}${getThemeFeatures(theme).listFrameV2 ? " erp-frame-v2" : ""}`} data-theme={theme && theme !== "classic-light" ? theme : undefined}>
       <a href="#erp-main-content" className="erp-skip-link">
         본문으로 바로가기
       </a>

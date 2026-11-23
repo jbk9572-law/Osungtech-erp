@@ -7,7 +7,10 @@ import { formatNumber } from "@/lib/format-number";
 import { GridBadge } from "@/components/grid/badge";
 import { GridGroupHeaderRow } from "@/components/grid/group-header-row";
 import { RowNoCell, RowNoHead } from "@/components/grid/row-no-cell";
+import type { ReactNode } from "react";
 import { useSideSplit, useThemeFeatures } from "@/lib/erp-theme-features";
+import { ListToolbar } from "@/components/erp/list-toolbar";
+import { ListSummaryBar, type ListSummaryItem } from "@/components/grid/list-summary-bar";
 import { BalanceSidePanel } from "@/components/grid/balance-side-panel";
 
 export type BalanceRow = {
@@ -56,6 +59,8 @@ export function BalanceGridTable({
   paidLabel,
   emptyLabel,
   detailKind,
+  summaryItems,
+  toolsSlot,
 }: {
   rows: BalanceRow[];
   hrefBase: string;
@@ -73,11 +78,15 @@ export function BalanceGridTable({
   // 거래처(customer)/공급처(supplier) 현황이면 지정 — 테마 기능이 켜진 넓은 화면에서 행을 누르면 이동하지 않고 오른쪽 패널에 보여준다.
   // 외주비정산처럼 패널 데이터가 없는 화면은 생략(기존처럼 이동).
   detailKind?: "customer" | "supplier";
+  /** 새 목록 틀(listFrameV2)에서 검색 박스 아래에 그릴 요약 박스 항목 — 없으면 요약을 그리지 않는다. */
+  summaryItems?: ListSummaryItem[];
+  /** 새 틀의 도구 줄 오른쪽에 둘 버튼(예: 엑셀 링크). */
+  toolsSlot?: ReactNode;
 }) {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 } | null>({ key: "balance", dir: -1 });
   const [agingFilter, setAgingFilter] = useState<Filter>("all");
-  const { rowNumbers } = useThemeFeatures();
+  const { rowNumbers, listFrameV2 } = useThemeFeatures();
   const sideSplit = useSideSplit() && !!detailKind;
   const [activeId, setActiveId] = useState<string | null>(null);
 
@@ -137,7 +146,7 @@ export function BalanceGridTable({
 
   return (
     <>
-      <div className="erp-field-grid erp-u-mb-s4">
+      <div className={`erp-field-grid erp-u-mb-s4${listFrameV2 ? " erp-filter-box" : ""}`}>
         <div className="erp-field erp-span-6">
           <label htmlFor="balance-search-q">{partyLabel} 검색</label>
           <input
@@ -150,15 +159,17 @@ export function BalanceGridTable({
             className="erp-input erp-u-w-full"
           />
         </div>
-        <div
-          className="erp-field erp-span-6 erp-u-items-end erp-u-justify-end"
-          style={{ flexDirection: "row" }}
-        >
-          <span className="erp-u-muted erp-u-flex erp-u-items-center erp-u-text-compact erp-u-h-30">
-            총 {sortedRows.length}건
-            {query.trim() && rows.length !== sortedRows.length ? ` (전체 ${rows.length}건 중 검색됨)` : ""}
-          </span>
-        </div>
+        {!listFrameV2 && (
+          <div
+            className="erp-field erp-span-6 erp-u-items-end erp-u-justify-end"
+            style={{ flexDirection: "row" }}
+          >
+            <span className="erp-u-muted erp-u-flex erp-u-items-center erp-u-text-compact erp-u-h-30">
+              총 {sortedRows.length}건
+              {query.trim() && rows.length !== sortedRows.length ? ` (전체 ${rows.length}건 중 검색됨)` : ""}
+            </span>
+          </div>
+        )}
       </div>
 
       {showAging && (
@@ -174,6 +185,21 @@ export function BalanceGridTable({
             </button>
           ))}
         </div>
+      )}
+
+      {listFrameV2 && (
+        <>
+          {summaryItems && summaryItems.length > 0 && <ListSummaryBar items={summaryItems} />}
+          <ListToolbar
+            tools={toolsSlot}
+            status={
+              <>
+                총 <b>{sortedRows.length}건</b>
+                {query.trim() && rows.length !== sortedRows.length ? ` (전체 ${rows.length}건 중 검색됨)` : ""}
+              </>
+            }
+          />
+        </>
       )}
 
       <div className={sideSplit ? "erp-master-detail" : undefined}>

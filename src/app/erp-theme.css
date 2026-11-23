@@ -9431,3 +9431,38 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   border-top: 1px solid var(--erp-divider);
   padding-top: var(--erp-space-3);
 }
+
+/* ── 목록 새 틀(listFrameV2 = .erp-frame-v2): 검색 박스(조회 포함) → 요약 → 도구 줄(표 바로 위, 스크롤해도 고정) → 표 ───────────
+   design/REVISIONS.md R-003·R-008. 앱 틀 맨 위의 "있다/없다" 도구 줄 자리가 없어져 화면이 밀리지 않는다. */
+.erp-party-search-submit {
+  display: none;
+}
+
+.erp-frame-v2 .erp-party-search-submit {
+  display: inline-flex;
+}
+
+.erp-frame-v2 .erp-party-search {
+  padding: var(--erp-space-2) var(--erp-space-3);
+  background: var(--erp-panel);
+  border: 1px solid var(--erp-border-strong);
+  border-radius: var(--erp-radius-xl);
+}
+
+.erp-frame-v2 .erp-listtoolbar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  margin: 0 0 var(--erp-space-2);
+  padding: var(--erp-space-2) 0;
+  background: var(--erp-bg);
+  border-bottom: 0;
+}
+
+/* 새 목록 틀: 표 부품이 직접 그리는 검색 줄(.erp-filter-box)도 검색 박스 한 모양으로 */
+.erp-frame-v2 .erp-filter-box {
+  padding: var(--erp-space-2) var(--erp-space-3);
+  background: var(--erp-panel);
+  border: 1px solid var(--erp-border-strong);
+  border-radius: var(--erp-radius-xl);
+}

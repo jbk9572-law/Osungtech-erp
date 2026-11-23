@@ -13,7 +13,7 @@ import { SheetColumnMenu, SortableTh } from "@/components/grid/sheet-parts";
 import { useBulkDelete } from "@/components/erp/use-bulk-delete";
 import { BULK_DELETE_ANCHOR_ID, ListActionToolbar } from "@/components/erp/list-action-toolbar";
 import type { FormState } from "@/components/form-message";
-import { useSideSplit } from "@/lib/erp-theme-features";
+import { useSideSplit, useThemeFeatures } from "@/lib/erp-theme-features";
 import { formatNumber } from "@/lib/format-number";
 import { startRouteProgress } from "@/lib/route-progress";
 import { useRowKeyboard, useSheetTable } from "@/lib/use-sheet-table";
@@ -94,6 +94,7 @@ export function PartyListA({
   emptyMessage: string;
 }) {
   const sideSplit = useSideSplit();
+  const { listFrameV2 } = useThemeFeatures();
   const [filter, setFilter] = useState<Filter>("all");
   const [activeId, setActiveId] = useState<string | null>(null);
 
@@ -146,8 +147,7 @@ export function PartyListA({
     { key: "recent", label: "최근 30일 거래" },
   ];
 
-  return (
-    <>
+  const toolbarEl = (
       <ListActionToolbar
         searchFormId={searchFormId}
         newHref={newHref}
@@ -162,6 +162,8 @@ export function PartyListA({
         selectedCount={selected.size}
         dataKey={rows}
       />
+  );
+  const filterEl = (
       <div className="erp-party-toolbar">
         <div className="erp-date-presets">
           {filters.map((f) => (
@@ -173,14 +175,31 @@ export function PartyListA({
         </div>
         {searchSlot}
       </div>
-      {!hideSummary && (
-        <ListSummaryBar
-        items={[
-          { label: partyLabel, value: `${formatNumber(rows.length)}곳` },
-          { label: `${balanceLabel} 합계`, value: formatNumber(balanceSum) },
-          { label: `연체 ${partyLabel}`, value: `${formatNumber(counts.overdue)}곳` },
-        ]}
-      />
+  );
+  const summaryEl = hideSummary ? null : (
+    <ListSummaryBar
+      items={[
+        { label: partyLabel, value: `${formatNumber(rows.length)}곳` },
+        { label: `${balanceLabel} 합계`, value: formatNumber(balanceSum) },
+        { label: `연체 ${partyLabel}`, value: `${formatNumber(counts.overdue)}곳` },
+      ]}
+    />
+  );
+
+  return (
+    <>
+      {listFrameV2 ? (
+        <>
+          {filterEl}
+          {summaryEl}
+          {toolbarEl}
+        </>
+      ) : (
+        <>
+          {toolbarEl}
+          {filterEl}
+          {summaryEl}
+        </>
       )}
       {bar && <div id={BULK_DELETE_ANCHOR_ID}>{bar}</div>}
       <div className={sideSplit ? "erp-master-detail" : undefined}>

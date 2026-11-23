@@ -32,11 +32,9 @@ export function ListSearchForm({
       ))}
       {leading}
       <input type="text" name="q" autoComplete="off" defaultValue={q ?? ""} placeholder={placeholder} className="erp-input" aria-label={ariaLabel} />
-      {!hideSubmit && (
-        <button type="submit" className="erp-btn erp-btn-primary">
-          F5 조회
-        </button>
-      )}
+      <button type="submit" className={`erp-btn erp-btn-primary${hideSubmit ? " erp-party-search-submit" : ""}`}>
+        F5 조회
+      </button>
       {q && resetHref && (
         <Link href={resetHref} className="erp-btn">
           초기화
