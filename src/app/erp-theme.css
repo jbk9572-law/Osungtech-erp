@@ -520,6 +520,8 @@
   --erp-sidebar-w: 240px;
   --erp-side-panel-w: 340px;
   --erp-side-panel-max-h: 80vh;
+  --erp-grid-cell-py: 4px;
+  --erp-grid-cell-valign: top;
   --erp-tree-item-h: 28px;
   --erp-tree-item-size: var(--erp-font-base);
   --erp-tree-group-size: var(--erp-font-xs);
@@ -693,6 +695,8 @@
   --erp-control-h-xs: 24px;
   --erp-grid-head-h: 26px;
   --erp-grid-row-h: 26px;
+  --erp-grid-cell-py: 0px;
+  --erp-grid-cell-valign: middle;
   --erp-sidebar-w: 208px;
   --erp-side-panel-w: 320px;
   --erp-tree-item-h: 32px;
@@ -2747,12 +2751,12 @@ form.erp-field-grid {
 
 .erp-grid tbody td {
   height: var(--erp-grid-row-h);
-  padding: 4px var(--erp-grid-cell-px);
+  padding: var(--erp-grid-cell-py) var(--erp-grid-cell-px);
   border-bottom: 1px solid var(--erp-grid-line);
   border-right: 1px solid var(--erp-grid-line);
   white-space: nowrap;
   color: var(--erp-text);
-  vertical-align: top;
+  vertical-align: var(--erp-grid-cell-valign);
 }
 
 .erp-grid tfoot td {
@@ -9126,7 +9130,7 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
 /* ── 모던 A형 목록 균형(.erp-chrome-modern) ───────────────────────────────
    도구 줄 버튼은 작게(28px), 칩·검색·요약은 표 왼쪽 선에 맞추고, 오른쪽 패널은 갈색 윗줄·막대 없이 옅은 구분선으로. */
 .erp-toolbar-slot .erp-btn {
-  height: var(--erp-control-h-sm);
+  height: var(--erp-control-h-md);
   padding: 0 var(--erp-space-3);
   font-size: var(--erp-font-sm);
 }
@@ -9228,7 +9232,7 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   padding: var(--erp-space-4);
   background: var(--erp-panel);
   border: 1px solid var(--erp-border-strong);
-  border-radius: var(--erp-radius-lg);
+  border-radius: var(--erp-radius-xl);
 }
 
 .erp-chrome-modern .erp-settings-card-head {
@@ -9251,7 +9255,7 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   padding: var(--erp-space-3) var(--erp-space-4);
   background: var(--erp-panel);
   border: 1px solid var(--erp-border-strong);
-  border-radius: var(--erp-radius-lg);
+  border-radius: var(--erp-radius-xl);
 }
 
 @media (max-width: 768px) {
