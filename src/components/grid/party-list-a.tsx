@@ -65,6 +65,7 @@ export function PartyListA({
   searchFormId,
   newHref,
   excelHref,
+  hideSummary,
   bulkDeleteAction,
   warningText,
   emptyMessage,
@@ -86,6 +87,8 @@ export function PartyListA({
   newHref: string;
   /** 있으면 도구 줄에 [엑셀]이 생긴다(전체 목록 내려받기). 내려받기 경로가 없는 화면은 비운다. */
   excelHref?: string;
+  /** 위에 더 자세한 요약(연체 분포 등)이 있을 때 이 얇은 요약 줄은 숨긴다(같은 숫자 중복 방지). */
+  hideSummary?: boolean;
   bulkDeleteAction: (state: FormState, formData: FormData) => Promise<FormState>;
   warningText: string;
   emptyMessage: string;
@@ -170,13 +173,15 @@ export function PartyListA({
         </div>
         {searchSlot}
       </div>
-      <ListSummaryBar
+      {!hideSummary && (
+        <ListSummaryBar
         items={[
           { label: partyLabel, value: `${formatNumber(rows.length)}곳` },
           { label: `${balanceLabel} 합계`, value: formatNumber(balanceSum) },
           { label: `연체 ${partyLabel}`, value: `${formatNumber(counts.overdue)}곳` },
         ]}
       />
+      )}
       {bar && <div id={BULK_DELETE_ANCHOR_ID}>{bar}</div>}
       <div className={sideSplit ? "erp-master-detail" : undefined}>
         <div className={sideSplit ? "erp-master-detail-main" : undefined}>

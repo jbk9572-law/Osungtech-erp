@@ -5,6 +5,8 @@ import { expect, test } from "@playwright/test";
 const SCREENS = [
   { name: "거래처관리", path: "/customers", table: true },
   { name: "공급처관리", path: "/suppliers", table: true },
+  { name: "미수금현황", path: "/receivables", table: true },
+  { name: "미지급금현황", path: "/payables", table: true },
   { name: "품목관리", path: "/products", table: true },
   { name: "견적서관리", path: "/quotes", table: true },
   { name: "구매요청", path: "/purchase-requests", table: true },
