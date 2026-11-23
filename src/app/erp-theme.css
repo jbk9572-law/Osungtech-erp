@@ -9139,3 +9139,104 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
     margin-left: 0;
   }
 }
+
+/* ── D형(설정 폼) 공용: SettingsPage·SettingsSection·SettingsSaveBar ───────────────
+   클래식은 구역 제목 + 격자만(테두리 없음), 모던(.erp-chrome-modern)은 시안의 카드·하단 저장 바. */
+.erp-settings-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--erp-space-4);
+  max-width: 1100px;
+}
+
+.erp-settings-card-head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--erp-space-2);
+  margin-bottom: var(--erp-space-3);
+}
+
+.erp-settings-card-head h3 {
+  margin: 0;
+  font-size: var(--erp-font-md);
+  font-weight: 700;
+}
+
+.erp-settings-card-head small {
+  color: var(--erp-text-muted);
+  font-size: var(--erp-font-sm);
+}
+
+.erp-settings-grid {
+  align-items: start;
+}
+
+.erp-field-label {
+  font-size: var(--erp-font-sm);
+  color: var(--erp-text-muted);
+}
+
+.erp-settings-savebar {
+  display: flex;
+  align-items: center;
+  gap: var(--erp-space-3);
+}
+
+.erp-chrome-modern .erp-settings-card {
+  padding: var(--erp-space-4);
+  background: var(--erp-panel);
+  border: 1px solid var(--erp-border-strong);
+  border-radius: var(--erp-radius-lg);
+}
+
+.erp-chrome-modern .erp-settings-card-head {
+  margin: calc(-1 * var(--erp-space-4)) calc(-1 * var(--erp-space-4)) var(--erp-space-4);
+  padding: var(--erp-space-2) var(--erp-space-4);
+  border-bottom: 1px solid var(--erp-divider);
+}
+
+.erp-settings-card.is-danger {
+  border-color: var(--erp-danger-border);
+}
+
+.erp-settings-card.is-danger .erp-settings-card-head h3 {
+  color: var(--erp-danger);
+}
+
+.erp-chrome-modern .erp-settings-savebar {
+  position: sticky;
+  bottom: 0;
+  padding: var(--erp-space-3) var(--erp-space-4);
+  background: var(--erp-panel);
+  border: 1px solid var(--erp-border-strong);
+  border-radius: var(--erp-radius-lg);
+}
+
+@media (max-width: 768px) {
+  .erp-settings-grid > .erp-field {
+    grid-column: span 12;
+  }
+}
+
+/* 모던: 탭 하나짜리 카드 머리(FormSection·.erp-detail 등 60여 곳)를 시안의 섹션 카드 머리 모양으로 — 탭 상자 없이 굵은 제목 + 구분선. */
+.erp-chrome-modern .erp-detail {
+  border-color: var(--erp-border-strong);
+  border-radius: var(--erp-radius-lg);
+  overflow: hidden;
+}
+
+.erp-chrome-modern .erp-detail-tabs:has(> .erp-detail-tab:only-child) {
+  background: transparent;
+  border-bottom: 1px solid var(--erp-divider);
+}
+
+.erp-chrome-modern .erp-detail-tabs > .erp-detail-tab:only-child {
+  height: 36px;
+  padding: 0 var(--erp-space-4);
+  background: transparent;
+  border-right: 0;
+  font-size: var(--erp-font-md);
+  font-weight: 700;
+  color: var(--erp-text);
+}

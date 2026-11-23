@@ -226,6 +226,21 @@ A형 목록(표)의 열 정렬·열 보이기/숨기기·↑↓ 행 이동·Ente
 (`src/lib/use-sheet-table.ts`)와 `SheetColumnMenu`/`SortableTh`(`components/grid/sheet-parts.tsx`)만 쓴다.
 기간+검색 폼은 `DateRangeSearchForm`, 한 줄 검색은 `ListSearchForm`, 제목줄은 `ListTitleBar`/`ListPageHeader`를 쓴다 — 화면마다 다시 짜지 않는다.
 
+## 15. 화면 종류 D~H — 설정 폼·대시보드·보고서·캘린더·"새 ○○" 입력
+
+A·B·C(원칙 12) 외에 사용자가 승인한 종류(시안 `type-D/E/F/G/H1/H2`)다. 새 화면은 이 중 하나로 만든다.
+
+| 종류 | 성격 | 규칙 | 공용 부품 |
+|---|---|---|---|
+| **D. 설정 폼** | 환경설정·프로필 | 섹션 카드 + 12칸 격자(`erp-field-grid`, 라벨은 칸 위), 위험 영역은 맨 아래 빨간 구분, 하단 고정 저장 바 | `SettingsPage`/`SettingsSection`/`SettingsSaveBar` (`components/erp/settings-section.tsx`) |
+| **E. 대시보드** | 요약 | 숫자 카드 4개 → 할 일·최근 전표 → 추이, 카드 클릭 = 해당 목록 이동 | (시안 승인, 화면 이전은 단계적) |
+| **F. 조회 보고서** | 읽기 전용 | 기간 조건 → 요약 4칸 → 표 + 합계 줄, 엑셀·인쇄는 도구 줄 | `DateRangeSearchForm` + `ListSummaryBar` |
+| **G. 캘린더·시각화** | 날짜 중심 | 월/주/일 전환, 오늘 표시, 오른쪽에 선택한 날 목록 | (시안 승인) |
+| **H. "새 ○○" 입력** | 새 글·새 할일·새 일정 | C형 모달 하나. 목록 [신규 F2] → 모달 → [등록 F7] → 목록 복귀. 짧은 입력 640px, 긴 글 720px + 편집기 | C형 모달 |
+
+- 탭 하나짜리 카드 머리(`FormSection`, `.erp-detail-tabs > .erp-detail-tab:only-child`)는 모던에서 섹션 카드 머리 모양으로 공용 CSS가 한 번에 바꾼다 — 화면마다 따로 꾸미지 않는다.
+- 설정 화면은 `.erp-detail`을 직접 조립하지 말고 `SettingsSection`을 쓴다.
+
 ## 적용 방법
 
 - 새 작업을 시작하기 전에 이 문서를 먼저 확인한다.
