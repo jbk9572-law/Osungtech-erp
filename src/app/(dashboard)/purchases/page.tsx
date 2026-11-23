@@ -8,7 +8,6 @@ import { monthRangeOf } from "@/lib/carryover";
 import { DateRangeQuickFilters } from "@/components/erp/date-range-quick-filters";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ListPageHeader } from "@/components/erp/page-header";
-import { PageToolbar } from "@/components/erp/page-toolbar";
 import { buildListReturnParam } from "@/lib/list-return";
 import {
   PurchaseGridTable,
@@ -518,24 +517,18 @@ async function PurchasesPage({
         최근 {formatNumber(limit)}줄까지 표시 중{hasMore ? " — 더 있을 수 있습니다." : "."}
       </PageGuide>
 
-      <PageToolbar
-        actions={
-          <GuardedLink href="/purchases/new" className="erp-btn erp-btn-primary">
-            F2 신규
-          </GuardedLink>
-        }
-        tools={
-          <>
-            <ExcelDownloadLink
-              href={exportHref}
-              title={q ? `이번달 "${q}" 검색 결과를 엑셀로 다운로드` : "이번달(1일~말일) 전체 내역을 엑셀로 다운로드"}
-            />
-            <Link href="/purchases/tax-invoices/import" className="erp-btn" title="홈택스 매입내역 엑셀을 업로드해 세금계산서 수취 여부를 매칭">
-              📤 매입세금계산서 수취 관리
-            </Link>
-          </>
-        }
-      />
+      <div className="erp-toolbar">
+        <GuardedLink href="/purchases/new" className="erp-btn erp-btn-primary">
+          F2 신규
+        </GuardedLink>
+        <ExcelDownloadLink
+          href={exportHref}
+          title={q ? `이번달 "${q}" 검색 결과를 엑셀로 다운로드` : "이번달(1일~말일) 전체 내역을 엑셀로 다운로드"}
+        />
+        <Link href="/purchases/tax-invoices/import" className="erp-btn" title="홈택스 매입내역 엑셀을 업로드해 세금계산서 수취 여부를 매칭">
+          📤 매입세금계산서 수취 관리
+        </Link>
+      </div>
 
       {carryoverRows.length > 0 && (
         <PageGuide tone="info" className="mb-2">

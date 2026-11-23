@@ -8,7 +8,6 @@ import { RowNoCell, RowNoHead } from "@/components/grid/row-no-cell";
 import { DetailSideShell, type SideContent } from "@/components/grid/detail-side-shell";
 import { SheetColumnMenu, SortableTh } from "@/components/grid/sheet-parts";
 import { useBulkDelete } from "@/components/erp/use-bulk-delete";
-import { BULK_DELETE_ANCHOR_ID, ListActionToolbar } from "@/components/erp/list-action-toolbar";
 import type { FormState } from "@/components/form-message";
 import { useSideSplit } from "@/lib/erp-theme-features";
 import { startRouteProgress } from "@/lib/route-progress";
@@ -38,10 +37,6 @@ export function RecordListA({
   panelEmptyText,
   emptyMessage,
   bulkDelete,
-  searchFormId,
-  newHref,
-  newLabel,
-  excelHref,
 }: {
   columns: RecordColumn[];
   rows: RecordRow[];
@@ -49,13 +44,6 @@ export function RecordListA({
   panelEmptyText: string;
   emptyMessage: string;
   /** 주면 맨 앞에 체크박스 칸이 생기고 선택 일괄삭제(확인 코드)가 켜진다. 서버 화면에서 넘기므로 함수는 담지 않는다(행 이름은 panel.title). */
-  /** 검색 폼의 id — 도구 줄의 [조회]가 이 폼을 제출한다(없으면 [조회] 버튼 없음). */
-  searchFormId?: string;
-  /** [신규] 주소·이름(C형 모달 경로). */
-  newHref: string;
-  newLabel: string;
-  /** 있으면 도구 줄에 [엑셀](전체 목록 내려받기)이 생긴다. */
-  excelHref?: string;
   bulkDelete?: { action: (state: FormState, formData: FormData) => Promise<FormState>; warningText: string };
 }) {
   const sideSplit = useSideSplit();
@@ -86,22 +74,10 @@ export function RecordListA({
 
   return (
     <>
-      <ListActionToolbar
-        searchFormId={searchFormId}
-        newHref={newHref}
-        newLabel={newLabel}
-        editHref={active?.href ?? null}
-        showDelete={!!bulkDelete}
-        deleteEnabled={selected.size > 0}
-        excelHref={excelHref}
-        columnMenu={<SheetColumnMenu labels={columns.map((c) => c.label)} hidden={hidden} onToggle={toggleHidden} />}
-        countLabel="전체"
-        unit="건"
-        total={rows.length}
-        selectedCount={selected.size}
-        dataKey={rows}
-      />
-      {bulkDelete && bar && <div id={BULK_DELETE_ANCHOR_ID}>{bar}</div>}
+      {bulkDelete && bar}
+      <div className="erp-sheet-tools">
+        <SheetColumnMenu labels={columns.map((c) => c.label)} hidden={hidden} onToggle={toggleHidden} />
+      </div>
       <div className={sideSplit ? "erp-master-detail" : undefined}>
         <div className={sideSplit ? "erp-master-detail-main" : undefined}>
           <div className="erp-grid-wrap has-card-view erp-sheet" tabIndex={0} onKeyDown={onKeyDown} aria-label="목록 — 위아래 방향키로 행 이동, Enter로 열기, Ctrl+C로 행 복사">

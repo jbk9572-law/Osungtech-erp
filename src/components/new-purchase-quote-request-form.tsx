@@ -6,7 +6,6 @@ import { FormMessage } from "@/components/form-message";
 import { useKeyedRows } from "@/lib/use-keyed-rows";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
-import { CheckListPicker } from "@/components/erp/check-list-picker";
 import { ItemEntryBlock } from "@/components/erp/item-entry-block";
 import { blankItemRow, buildItemRow, isBlankItemRow, validItemRows, type ItemEntryRow } from "@/lib/item-entry-rows";
 import { DocSubmitBar, VoucherTitle, useDocSheetClass } from "@/components/erp/voucher-chrome";
@@ -28,6 +27,10 @@ export function NewPurchaseQuoteRequestForm({
 
   function updateRow(key: number, patch: Partial<ItemEntryRow>) {
     setRows((prev) => prev.map((r) => (r.key === key ? { ...r, ...patch } : r)));
+  }
+
+  function toggleSupplier(id: string) {
+    setSupplierIds((prev) => (prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]));
   }
 
   function addMobileItem(productId: string, quantity: number) {
@@ -60,15 +63,31 @@ export function NewPurchaseQuoteRequestForm({
       <div className="erp-doc-header">
         <div className="erp-doc-header-row erp-doc-header-row-full">
           <span className="erp-doc-header-label">공급처</span>
-          <span className="erp-doc-header-value erp-u-p-0">
-            <CheckListPicker
-              items={suppliers}
-              selected={supplierIds}
-              onChange={setSupplierIds}
-              ariaLabel="견적을 받을 공급처"
-              searchPlaceholder="공급처 이름 검색"
-              emptyText="등록된 공급처가 없습니다. 공급처관리에서 먼저 등록하세요."
-            />
+          <span className="erp-doc-header-value erp-u-p-0" style={{ display: "block" }}>
+            <div className="erp-grid-wrap erp-u-border-none erp-u-overflow-y-auto" style={{ maxHeight: 160 }}>
+              <table className="erp-grid">
+                <tbody>
+                  {suppliers.map((s) => (
+                    <tr key={s.id}>
+                      <td style={{ width: 32 }}>
+                        <input
+                          type="checkbox"
+                          checked={supplierIds.includes(s.id)}
+                          onChange={() => toggleSupplier(s.id)}
+                          aria-label={`${s.name} 선택`}
+                        />
+                      </td>
+                      <td>{s.name}</td>
+                    </tr>
+                  ))}
+                  {suppliers.length === 0 && (
+                    <tr>
+                      <td className="erp-grid-empty">등록된 공급처가 없습니다.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </span>
         </div>
         <div className="erp-doc-header-row erp-doc-header-row-full">
@@ -105,11 +124,6 @@ export function NewPurchaseQuoteRequestForm({
         >
           {pending ? "등록 중..." : "F7 견적요청 등록"}
         </button>
-        {!pending && (supplierIds.length === 0 || validRows.length === 0) && (
-          <span className="erp-u-muted erp-u-text-compact">
-            {supplierIds.length === 0 ? "공급처를 1곳 이상 고르세요." : "품목을 1개 이상 입력하세요(수량 1 이상)."}
-          </span>
-        )}
         <FormMessage state={state} />
       </div>
       </DocSubmitBar>

@@ -5,8 +5,6 @@ import { expect, test } from "@playwright/test";
 const SCREENS = [
   { name: "거래처관리", path: "/customers", table: true },
   { name: "공급처관리", path: "/suppliers", table: true },
-  { name: "미수금현황", path: "/receivables", table: true },
-  { name: "미지급금현황", path: "/payables", table: true },
   { name: "품목관리", path: "/products", table: true },
   { name: "견적서관리", path: "/quotes", table: true },
   { name: "구매요청", path: "/purchase-requests", table: true },
@@ -70,72 +68,5 @@ test.describe("스프레드시트 동작(거래처 표)", () => {
     test.skip((await link.count()) === 0, "신규 링크 없음");
     await link.click();
     await expect(page.locator(".erp-modal[role='dialog']")).toBeVisible({ timeout: 15_000 });
-  });
-});
-
-test.describe("거래처 도구 줄(시범)", () => {
-  test("조회·신규·수정·삭제 버튼이 있고, 행을 고르면 수정이 켜진다", async ({ page }) => {
-    await page.goto("/customers");
-    const bar = page.getByRole("toolbar", { name: "목록 작업" });
-    test.skip(!(await bar.isVisible({ timeout: 20_000 }).catch(() => false)), "도구 줄이 없음(클래식 또는 좁은 화면)");
-    await expect(bar.getByRole("button", { name: /^조회/ })).toBeVisible();
-    await expect(bar.getByRole("link", { name: /^신규/ })).toBeVisible();
-    await expect(bar.getByRole("button", { name: /^수정/ })).toBeDisabled();
-    await expect(bar.getByRole("button", { name: /^삭제/ })).toBeDisabled();
-    const firstRow = page.locator("table.erp-grid tbody tr").first();
-    test.skip(!(await firstRow.isVisible().catch(() => false)), "거래처가 없어 행 선택은 건너뜀");
-    await firstRow.click();
-    await expect(bar.getByRole("link", { name: /^수정/ })).toBeVisible();
-  });
-});
-
-// 같은 도구 줄(공용 ListActionToolbar)을 쓰는 A형 목록 — 거래처 시범과 같은 모양이 나머지 목록에도 나오는지 본다.
-for (const s of [
-  { name: "공급처관리", path: "/suppliers" },
-  { name: "품목관리", path: "/products" },
-  { name: "견적서관리", path: "/quotes" },
-  { name: "구매요청", path: "/purchase-requests" },
-  { name: "구매 견적요청", path: "/purchase-quote-requests" },
-  { name: "영업활동관리", path: "/sales-activities" },
-  { name: "하청업체관리", path: "/subcontractors" },
-  { name: "지급결의", path: "/reports/payment-requests" },
-]) {
-  test(`${s.name}에도 도구 줄(신규·수정·열 설정)이 있다`, async ({ page }) => {
-    await page.goto(s.path);
-    const bar = page.getByRole("toolbar", { name: "목록 작업" });
-    test.skip(!(await bar.isVisible({ timeout: 30_000 }).catch(() => false)), "도구 줄이 없음(기능 꺼짐·클래식·좁은 화면)");
-    await expect(bar.getByRole("link", { name: /F2|^신규|작성|등록/ }).first()).toBeVisible();
-    await expect(bar.getByRole("button", { name: /^수정/ })).toBeDisabled();
-    await expect(bar.getByText("열 설정")).toBeVisible();
-  });
-}
-
-test.describe("모던 틀(상단바·하단 상태줄)", () => {
-  test("메뉴 검색 버튼이 빠른 검색을 열고, 상태줄에 연결 상태가 보인다", async ({ page }) => {
-    await page.goto("/customers");
-    const searchBtn = page.locator(".erp-titlebar-search");
-    test.skip(!(await searchBtn.isVisible({ timeout: 20_000 }).catch(() => false)), "모던 틀이 아님(클래식 또는 좁은 화면)");
-    await expect(page.locator(".erp-statusbar-conn")).toHaveText("연결됨");
-    await searchBtn.click();
-    await expect(page.getByRole("textbox", { name: /메뉴 이름으로 검색/ }).or(page.getByPlaceholder("메뉴 이름으로 검색..."))).toBeVisible({ timeout: 10_000 });
-  });
-});
-
-test.describe("구매 견적요청 작성 폼", () => {
-  test("공급처를 검색해 고를 수 있고, 조건이 안 채워지면 등록이 막히며 이유가 보인다", async ({ page }) => {
-    await page.goto("/purchase-quote-requests/new");
-    const picker = page.getByRole("group", { name: "견적을 받을 공급처" });
-    test.skip(!(await picker.isVisible({ timeout: 30_000 }).catch(() => false)), "작성 화면이 열리지 않음(기능 꺼짐 등)");
-    const submit = page.getByRole("button", { name: /견적요청 등록/ });
-    await expect(submit).toBeDisabled();
-    await expect(page.getByText("공급처를 1곳 이상 고르세요.")).toBeVisible();
-    await expect(picker.getByText(/곳 선택됨/)).toContainText("0");
-    const first = picker.getByRole("checkbox").first();
-    test.skip(!(await first.isVisible().catch(() => false)), "공급처가 없어 선택은 건너뜀");
-    await first.check();
-    await expect(picker.getByText(/곳 선택됨/)).toContainText("1");
-    // 공급처만 골라서는 아직 등록할 수 없다(품목 필요) — 데이터는 만들지 않는다.
-    await expect(submit).toBeDisabled();
-    await expect(page.getByText("품목을 1개 이상 입력하세요(수량 1 이상).")).toBeVisible();
   });
 });

@@ -85,9 +85,8 @@ async function ProductsPage({ searchParams }: { searchParams: Promise<{ q?: stri
       basePath="/products"
       newLabel="신규"
       searchFormId="products-search-form"
-      excelHref={q ? `/api/products/export?q=${encodeURIComponent(q)}` : "/api/products/export"}
       filters={
-        <ListSearchForm formId="products-search-form" q={q} placeholder="상품명, SKU, 규격 검색" ariaLabel="품목 검색" resetHref="/products" hideSubmit />
+        <ListSearchForm formId="products-search-form" q={q} placeholder="상품명, SKU, 규격 검색" ariaLabel="품목 검색" resetHref="/products" />
       }
       columns={[{ label: "SKU" }, { label: "품목명" }, { label: "규격" }, { label: "단위" }, { label: "판매가", num: true }, { label: "구분" }]}
       rows={rows}

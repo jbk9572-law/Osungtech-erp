@@ -4,7 +4,7 @@ import { BrandingImageForm } from "@/components/branding-image-form";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ListPageHeader } from "@/components/erp/page-header";
 import { AccessWall } from "@/components/erp/access-wall";
-import { SettingsPage, SettingsSection } from "@/components/erp/settings-section";
+import { PageGuide } from "@/components/erp/page-guide";
 import { getCurrentActor } from "@/lib/current-actor";
 
 export default async function CompanySettingsPage() {
@@ -25,20 +25,22 @@ export default async function CompanySettingsPage() {
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/dashboard" } }} />
       <ListPageHeader title="환경설정 > 회사정보" />
+      <PageGuide>거래명세표의 공급자 정보로 사용됩니다.</PageGuide>
 
       <CompanyProfileForm company={company} />
 
-      <SettingsPage>
-        <SettingsSection title="이미지 관리" hint="로고와 직인 이미지">
-          <div className="erp-field erp-span-12">
-            <BrandingImageForm
-              logoWordmarkUrl={company?.logo_wordmark_url}
-              logoMarkUrl={company?.logo_mark_url}
-              sealImageUrl={company?.seal_image_url}
-            />
-          </div>
-        </SettingsSection>
-      </SettingsPage>
+      <div className="erp-detail">
+        <div className="erp-detail-tabs">
+          <span className="erp-detail-tab active">이미지 관리</span>
+        </div>
+        <div className="erp-detail-body">
+          <BrandingImageForm
+            logoWordmarkUrl={company?.logo_wordmark_url}
+            logoMarkUrl={company?.logo_mark_url}
+            sealImageUrl={company?.seal_image_url}
+          />
+        </div>
+      </div>
     </div>
   );
 }
