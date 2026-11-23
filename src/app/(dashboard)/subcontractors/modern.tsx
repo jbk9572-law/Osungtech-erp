@@ -76,7 +76,7 @@ export default async function SubcontractorsPage({ searchParams }: { searchParam
             <PageGuide>
               본청으로부터 받은 작업 중 일부 공정(예: PCB)을 다시 맡기는 외부 업체입니다. 포털 계정을 발급하면 업체가 직접 로그인해 배정된 공정의 LOT을 시작/완료/배송 처리할 수 있습니다.
             </PageGuide>
-            <ListSearchForm formId="subcontractors-search-form" q={q} placeholder="업체명, 담당자, 연락처 검색" ariaLabel="하청업체 검색" resetHref="/subcontractors" />
+            <ListSearchForm formId="subcontractors-search-form" q={q} placeholder="업체명, 담당자, 연락처 검색" ariaLabel="하청업체 검색" resetHref="/subcontractors" hideSubmit />
           </>
         }
         columns={[{ label: "업체명" }, { label: "담당자" }, { label: "연락처" }]}

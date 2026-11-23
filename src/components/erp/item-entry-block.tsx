@@ -14,8 +14,10 @@ type Product = { id: string; sku: string; name: string; spec: string | null };
 // "희망 폭"이라 입력칸이 찌그러지고 상품 검색 드롭다운도 그 폭을 물려받아
 // 겹쳐 보인다 — 표를 모든 칸 폭의 합만큼 고정폭으로 못박아 erp-grid-wrap의
 // overflow:auto가 가로 스크롤을 대신하게 한다(new-sale-form.tsx와 같은 기법).
-const PRICED_TOTAL_WIDTH = 320 + 140 + 90 + 110 + 110 + 200 + 50;
-const PLAIN_TOTAL_WIDTH = 320 + 140 + 100 + 200 + 50;
+// 맨 끝 [삭제] 버튼 칸 — 버튼(약 64px)보다 좁으면 오른쪽이 잘려 보인다.
+const REMOVE_COL_WIDTH = 72;
+const PRICED_TOTAL_WIDTH = 320 + 140 + 90 + 110 + 110 + 200 + REMOVE_COL_WIDTH;
+const PLAIN_TOTAL_WIDTH = 320 + 140 + 100 + 200 + REMOVE_COL_WIDTH;
 
 // 견적서/구매요청서/구매견적요청서의 "품목 입력표(데스크톱) + 모바일 카드
 // 패널 + 품목 추가 버튼"을 한 덩어리로 그린다. 단가 열이 있는 폼은
@@ -66,7 +68,7 @@ export function ItemEntryBlock<P extends Product>({
                 {withPrice && <th className="num" style={{ width: 110 }}>{priceLabel}</th>}
                 {withPrice && <th className="num" style={{ width: 110 }}>{amountLabel}</th>}
                 <th style={{ width: 200 }}>비고</th>
-                <th style={{ width: 50 }} />
+                <th style={{ width: REMOVE_COL_WIDTH }} />
               </tr>
             </thead>
             <tbody>

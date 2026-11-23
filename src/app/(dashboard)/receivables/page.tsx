@@ -1,4 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
+import { getTenantTheme } from "@/lib/tenant-theme";
+import { getThemeFeatures } from "@/lib/erp-theme-config";
+import { PartyListScreen } from "@/components/grid/party-list-screen";
 import { BalanceGridTable, type BalanceRow } from "@/components/balance-grid-table";
 import { getAllCustomerBalances, daysSince } from "@/lib/ar-ap";
 import { canViewPage } from "@/lib/department-page-access";
@@ -7,7 +10,7 @@ import { ExcelDownloadLink } from "@/components/erp/excel-download-link";
 import { DetailPageHeader } from "@/components/erp/page-header";
 import { BalanceAgingSummary } from "@/components/erp/balance-aging-summary";
 
-export default async function ReceivablesPage() {
+export default async function ReceivablesPage({ searchParams }: { searchParams: Promise<{ q?: string; limit?: string }> }) {
   const supabase = await createClient();
 
   if (!(await canViewPage(supabase, "/receivables"))) {
@@ -18,6 +21,11 @@ export default async function ReceivablesPage() {
         backHref="/dashboard"
       />
     );
+  }
+
+  // 모던(grid-modern): 거래처·공급처 목록과 같은 표·패널을 "잔액이 있는 곳만" 보여 준다(중복 화면 통합). 클래식은 아래 기존 화면 그대로.
+  if (getThemeFeatures(await getTenantTheme(supabase)).listSidePanel) {
+    return <PartyListScreen kind="customer" mode="balance" searchParams={searchParams} />;
   }
 
   const balances = await getAllCustomerBalances(supabase);

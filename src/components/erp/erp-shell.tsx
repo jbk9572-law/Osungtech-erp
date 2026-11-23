@@ -7,6 +7,8 @@ import { Ribbon } from "@/components/erp/ribbon";
 import { TreeMenu } from "@/components/erp/tree-menu";
 import { TabBar } from "@/components/erp/tab-bar";
 import { ThemeFeaturesProvider } from "@/lib/erp-theme-features";
+import { getThemeFeatures } from "@/lib/erp-theme-config";
+import { TOOLBAR_SLOT_ID } from "@/components/erp/list-toolbar";
 import { StatusBar } from "@/components/erp/status-bar";
 import { RouteProgressBar } from "@/components/erp/route-progress-bar";
 import { NavTimingReporter } from "@/components/erp/nav-timing-reporter";
@@ -126,9 +128,20 @@ export function ErpShell({
     return <>{children}</>;
   }
 
+  const foldRibbon = getThemeFeatures(theme).appChrome && !isMobile;
+  const ribbon = (
+    <Ribbon
+      disabledFeatures={disabledFeatures}
+      isAdmin={isAdmin}
+      isManagerOrAdmin={isManagerOrAdmin}
+      isPlatformAdmin={isPlatformAdmin}
+      platformAdminTenants={platformAdminTenants}
+    />
+  );
+
   return (
     <ThemeFeaturesProvider theme={theme}>
-    <div className="erp" data-theme={theme && theme !== "classic-light" ? theme : undefined}>
+    <div className={getThemeFeatures(theme).appChrome ? "erp erp-chrome-modern" : "erp"} data-theme={theme && theme !== "classic-light" ? theme : undefined}>
       <a href="#erp-main-content" className="erp-skip-link">
         본문으로 바로가기
       </a>
@@ -157,6 +170,7 @@ export function ErpShell({
       <NotificationToaster />
       <RecentMenuTracker />
       <MidnightRefresh />
+      {/* 모던 틀(넓은 화면): 리본 버튼은 상단바 오른쪽 아이콘으로, 화면 도구 줄은 상단바 바로 아래 전체 폭 한 줄로 둔다(시안은 두 줄). */}
       <TitleBar
         logoUrl={logoUrl}
         companyName={companyName}
@@ -165,14 +179,10 @@ export function ErpShell({
         isMobile={isMobile}
         onToggleMenu={() => setCollapsed((c) => !c)}
         isPlatformAdmin={isPlatformAdmin}
+        tools={foldRibbon ? ribbon : undefined}
       />
-      <Ribbon
-        disabledFeatures={disabledFeatures}
-        isAdmin={isAdmin}
-        isManagerOrAdmin={isManagerOrAdmin}
-        isPlatformAdmin={isPlatformAdmin}
-        platformAdminTenants={platformAdminTenants}
-      />
+      {!foldRibbon && ribbon}
+      {foldRibbon && <div id={TOOLBAR_SLOT_ID} className="erp-toolbar-slot" />}
       <div className="erp-body">
         <TreeMenu
           usageWidget={usageWidget}

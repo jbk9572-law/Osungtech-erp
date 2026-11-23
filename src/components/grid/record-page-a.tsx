@@ -1,12 +1,11 @@
 import { ListTitleBar } from "@/components/erp/page-header";
 import type { ComponentProps, ReactNode } from "react";
 import Link from "next/link";
-import { GuardedLink } from "@/components/erp/guarded-link";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { RecordListA, type RecordColumn, type RecordRow } from "@/components/grid/record-list-a";
 import { formatNumber } from "@/lib/format-number";
 
-// A형(업무 목록) 일반형 화면의 서버 틀 — 제목줄(신규) + 조회 조건(filters 슬롯) + 표/패널 + 더보기.
+// A형(업무 목록) 일반형 화면의 서버 틀 — 제목줄 + 조회 조건(filters 슬롯) + 표/패널 + 더보기.
 // 조회 조건(기간 빠른선택·검색 폼)은 화면마다 다르므로 슬롯으로 받는다. 신규는 C형 모달(`${basePath}/new`).
 export function RecordPageA({
   title,
@@ -23,6 +22,7 @@ export function RecordPageA({
   emptyMessage,
   bulkDelete,
   newHref,
+  excelHref,
 }: {
   title: string;
   basePath: string;
@@ -40,6 +40,8 @@ export function RecordPageA({
   bulkDelete?: ComponentProps<typeof RecordListA>["bulkDelete"];
   /** 신규 버튼 주소 — 기본은 `${basePath}/new`. */
   newHref?: string;
+  /** 전체 목록 엑셀 내려받기 경로 — 없으면 [엑셀] 버튼을 그리지 않는다. */
+  excelHref?: string;
 }) {
   return (
     <div>
@@ -50,18 +52,8 @@ export function RecordPageA({
           Escape: { href: "/dashboard" },
         }}
       />
-      <ListTitleBar
-        title={<>{title}</>}
-        actions={
-          <>
-          <GuardedLink href={newHref ?? `${basePath}/new`} className="erp-btn erp-btn-primary">
-            F2 {newLabel}
-          </GuardedLink>
-          </>
-        }
-      />
+      <ListTitleBar title={<>{title}</>} />
       {filters}
-      <div className="erp-u-text-compact erp-u-muted erp-u-mb-8">총 {formatNumber(rows.length)}건</div>
       <RecordListA
         columns={columns}
         rows={rows}
@@ -69,6 +61,10 @@ export function RecordPageA({
         panelEmptyText="행을 선택하면 상세가 여기에 보입니다."
         emptyMessage={emptyMessage}
         bulkDelete={bulkDelete}
+        searchFormId={searchFormId}
+        newHref={newHref ?? `${basePath}/new`}
+        newLabel={newLabel}
+        excelHref={excelHref}
       />
       {hasMore && (
         <div className="erp-u-p-8">
