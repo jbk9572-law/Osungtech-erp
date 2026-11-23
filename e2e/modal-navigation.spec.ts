@@ -34,7 +34,12 @@ test("상세 모달 → 닫기 → 목록으로 돌아가고 다른 모달이 �
   // 모던 테마(넓은 화면): 행 클릭은 오른쪽 상세 패널 선택 — 상세 모달은 패널의 [상세 보기]로 연다. 클래식/좁은 화면: 행 클릭이 바로 상세 모달.
   const panel = page.locator("aside.erp-detail-side");
   if (await panel.isVisible({ timeout: 3000 }).catch(() => false)) {
-    await panel.getByRole("link", { name: "상세 보기" }).click();
+    // 진단: "상세 보기" 링크를 못 찾는 실패가 나면 패널 안에 무엇이 떠 있었는지 로그로 남긴다.
+    const link = panel.getByRole("link", { name: "상세 보기" });
+    if (!(await link.isVisible({ timeout: 15_000 }).catch(() => false))) {
+      console.log(`PANEL-DIAG ${(await panel.innerText().catch(() => "")).replace(/\s+/g, " ").slice(0, 400)}`);
+    }
+    await link.click();
   }
   await expect(page.locator(".erp-modal[role='dialog']")).toBeVisible({ timeout: 15000 });
   await closeModal(page);
