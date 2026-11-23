@@ -130,10 +130,10 @@ export default async function SalesActivitiesPage({
               <table className="erp-grid">
                 <thead>
                   <tr>
-                    <th style={{ width: 100 }}>예정일</th>
-                    <th style={{ width: 140 }}>거래처</th>
+                    <th className="erp-col-m">예정일</th>
+                    <th className="erp-col-xl">거래처</th>
                     <th>메모</th>
-                    <th style={{ width: 70 }}>완료</th>
+                    <th className="erp-col-s">완료</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -162,7 +162,7 @@ export default async function SalesActivitiesPage({
 
       <DateRangeQuickFilters basePath="/sales-activities" presets={presets} monthButtons={monthButtons} from={from} to={to} />
 
-      <DateRangeSearchForm formId="sales-activities-search-form" idPrefix="sa" from={from} to={to} q={q} qLabel="거래처 / 제목 / 내용 검색" qPlaceholder="거래처명, 제목, 내용" resetHref="/sales-activities" showReset={!!(from || to || q || limitParam)} />
+      <DateRangeSearchForm formId="sales-activities-search-form" idPrefix="sa" from={from} to={to} q={q} qLabel="거래처 / 제목 / 내용 검색" qPlaceholder="거래처명, 제목, 내용" resetHref="/sales-activities" showReset={!!(from || to || q || limitParam)} hideSubmit />
     </>
   );
 

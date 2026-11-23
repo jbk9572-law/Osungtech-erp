@@ -10,6 +10,7 @@ type TenantOption = { id: string; name: string; theme: string };
 const THEME_LABELS: Record<string, string> = {
   "classic-light": "Classic Light (기본)",
   "grid-modern": "Grid Modern (모던 밀집 그리드)",
+  "grid-modern2": "Grid Modern 2 (규칙표 적용 · 미리보기)",
 };
 
 // 회사(테넌트)별로 다른 테마를 줄 수 있어야 해서("관리자페이지에서

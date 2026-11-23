@@ -56,7 +56,7 @@ export function NewQuoteForm({
 
       <VoucherTitle title="견적서" savedAt={null} />
 
-      <div className="erp-doc-header">
+      <div className="erp-doc-header erp-doc-header-3col">
         <div className="erp-doc-header-row">
           <label htmlFor="q-customer" className="erp-doc-header-label">거래처</label>
           <span className="erp-doc-header-value">

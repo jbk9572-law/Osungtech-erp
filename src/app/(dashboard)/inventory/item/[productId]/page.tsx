@@ -211,7 +211,7 @@ export default async function InventoryProductHistoryPage({
                 <thead>
                   <tr>
                     <th>실사일</th>
-                    <th className="num" style={{ width: 90 }}>
+                    <th className="num erp-col-m">
                       차이
                     </th>
                     <th>사유</th>

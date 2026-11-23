@@ -281,10 +281,10 @@ export default async function AttendancePage() {
                   <tr>
                     <RowNoHead />
                     <th>구성원</th>
-                    <th className="num" style={{ width: 120 }}>
+                    <th className="num erp-col-l">
                       이번주 근무시간
                     </th>
-                    <th style={{ width: 100 }}>상태</th>
+                    <th className="erp-col-m">상태</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -340,14 +340,14 @@ export default async function AttendancePage() {
                 <thead>
                   <tr>
                     <RowNoHead />
-                    <th style={{ width: 100 }}>신청자</th>
-                    <th style={{ width: 200 }}>기간</th>
-                    <th style={{ width: 90 }}>구분</th>
-                    <th className="num" style={{ width: 80 }}>
+                    <th className="erp-col-m">신청자</th>
+                    <th className="erp-col-w">기간</th>
+                    <th className="erp-col-m">구분</th>
+                    <th className="num erp-col-s">
                       일수
                     </th>
                     <th>사유</th>
-                    <th style={{ width: 130 }} />
+                    <th className="erp-col-xl"  />
                   </tr>
                 </thead>
                 <tbody>
@@ -424,14 +424,14 @@ export default async function AttendancePage() {
                 <thead>
                   <tr>
                     <RowNoHead />
-                    <th style={{ width: 200 }}>기간</th>
-                    <th style={{ width: 90 }}>구분</th>
-                    <th className="num" style={{ width: 80 }}>
+                    <th className="erp-col-w">기간</th>
+                    <th className="erp-col-m">구분</th>
+                    <th className="num erp-col-s">
                       일수
                     </th>
                     <th>사유</th>
-                    <th style={{ width: 90 }}>상태</th>
-                    <th style={{ width: 140 }} />
+                    <th className="erp-col-m">상태</th>
+                    <th className="erp-col-xl"  />
                   </tr>
                 </thead>
                 <tbody>
@@ -553,12 +553,12 @@ export default async function AttendancePage() {
                 <thead>
                   <tr>
                     <RowNoHead />
-                    <th style={{ width: 100 }}>날짜</th>
-                    <th style={{ width: 110 }}>정정 출근</th>
-                    <th style={{ width: 110 }}>정정 퇴근</th>
+                    <th className="erp-col-m">날짜</th>
+                    <th className="erp-col-l">정정 출근</th>
+                    <th className="erp-col-l">정정 퇴근</th>
                     <th>사유</th>
-                    <th style={{ width: 90 }}>상태</th>
-                    <th style={{ width: 140 }} />
+                    <th className="erp-col-m">상태</th>
+                    <th className="erp-col-xl"  />
                   </tr>
                 </thead>
                 <tbody>

@@ -139,9 +139,9 @@ export default async function ApprovalsPage({
               <table className="erp-grid">
                 <thead>
                   <tr>
-                    <th style={{ width: 130 }}>마지막 저장</th>
+                    <th className="erp-col-xl">마지막 저장</th>
                     <th>제목</th>
-                    <th style={{ width: 190 }} />
+                    <th className="erp-col-w"  />
                   </tr>
                 </thead>
                 <tbody>

@@ -29,14 +29,19 @@ export type ThemeFeatures = {
   listSidePanel: boolean;
   /** 목록 화면에 탭별 건수·요약 줄·행 부가정보(결재 단계 등)를 더 보여준다. */
   denseLists: boolean;
+  /** 앱 틀(상단바·하단 상태줄·사이드바 그룹 이름)을 모던 시안 모양으로 그린다 — 상단바에 메뉴 검색 버튼·아바타, 상태줄에 연결 상태·경로·행 위치·사용 힌트. */
+  appChrome: boolean;
 };
 
-export const CLASSIC_FEATURES: ThemeFeatures = { defaultInvoiceForm: "B", rowNumbers: false, groupedHeader: false, stockNear: false, partnerPaymentTerms: false, gridSelectionStats: false, paymentStatusColumn: false, voucherLayout: false, kpiStrip: false, stockInsights: false, listSidePanel: false, denseLists: false };
+export const CLASSIC_FEATURES: ThemeFeatures = { defaultInvoiceForm: "B", rowNumbers: false, groupedHeader: false, stockNear: false, partnerPaymentTerms: false, gridSelectionStats: false, paymentStatusColumn: false, voucherLayout: false, kpiStrip: false, stockInsights: false, listSidePanel: false, denseLists: false, appChrome: false };
 
 export const THEME_FEATURES: Record<string, ThemeFeatures> = {
   "classic-light": CLASSIC_FEATURES,
-  "grid-modern": { defaultInvoiceForm: "N", rowNumbers: true, groupedHeader: true, stockNear: true, partnerPaymentTerms: true, gridSelectionStats: true, paymentStatusColumn: true, voucherLayout: true, kpiStrip: true, stockInsights: true, listSidePanel: true, denseLists: true },
+  "grid-modern": { defaultInvoiceForm: "N", rowNumbers: true, groupedHeader: true, stockNear: true, partnerPaymentTerms: true, gridSelectionStats: true, paymentStatusColumn: true, voucherLayout: true, kpiStrip: true, stockInsights: true, listSidePanel: true, denseLists: true, appChrome: true },
 };
+
+// 모던 2(미리보기): 구조 플래그는 모던과 같고, 값(토큰)만 규칙표(design/SPEC.md)로 다르다.
+THEME_FEATURES["grid-modern2"] = THEME_FEATURES["grid-modern"];
 
 export function getThemeFeatures(theme: string | null | undefined): ThemeFeatures {
   return (theme && THEME_FEATURES[theme]) || CLASSIC_FEATURES;

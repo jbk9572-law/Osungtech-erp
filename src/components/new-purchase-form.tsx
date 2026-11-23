@@ -1338,7 +1338,7 @@ export function NewPurchaseForm({
           >
             <thead>
               <tr>
-                {voucherLayout && <th style={{ width: 40 }}>No</th>}
+                {voucherLayout && <th className="erp-col-xxs">No</th>}
                 {resizableTh("product", "품목")}
                 {resizableTh("spec", "규격")}
                 {resizableTh("lotNumber", "관리번호")}

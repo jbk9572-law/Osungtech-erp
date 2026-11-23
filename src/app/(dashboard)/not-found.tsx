@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { StateView } from "@/components/erp/state-view";
 
 // (dashboard) 세그먼트 전용 404 — 지금까지 이 앱에 not-found.tsx가 하나도
 // 없어서, notFound()가 호출되면(예: 상세보기 라우트에 UUID가 아닌 값이
@@ -7,20 +8,15 @@ import Link from "next/link";
 // 만 덩그러니 떴다. error.tsx와 같은 카드 스타일로 통일한다.
 export default function DashboardNotFound() {
   return (
-    <div className="erp-u-text-center" style={{ maxWidth: 560, margin: "32px auto" }}>
-      <div className="erp-u-border erp-u-bg-panel erp-u-radius-0"
-        style={{ padding: "28px 20px" }}
-      >
-        <p className="erp-u-bold erp-u-text erp-u-mb-8" style={{ fontSize: 15 }}>
-          페이지를 찾을 수 없습니다.
-        </p>
-        <p className="erp-u-muted erp-u-text-compact erp-u-mb-20">
-          주소가 바뀌었거나 삭제된 항목일 수 있습니다.
-        </p>
+    <StateView
+      title="페이지를 찾을 수 없습니다."
+      actions={
         <Link href="/dashboard" className="erp-btn erp-btn-primary">
           메인 화면으로
         </Link>
-      </div>
-    </div>
+      }
+    >
+      주소가 바뀌었거나 삭제된 항목일 수 있습니다.
+    </StateView>
   );
 }

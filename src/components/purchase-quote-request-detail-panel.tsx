@@ -93,11 +93,11 @@ export async function PurchaseQuoteRequestDetailPanel({ id, closeHref }: { id: s
           <thead>
             <tr>
               <th>품목</th>
-              <th style={{ width: 140 }}>규격</th>
-              <th className="num" style={{ width: 90 }}>수량</th>
+              <th className="erp-col-xl">규격</th>
+              <th className="num erp-col-m">수량</th>
               <th>비고</th>
               {targetSuppliers.map((s) => (
-                <th key={s.id} className="num" style={{ width: 110 }}>
+                <th key={s.id} className="num erp-col-l">
                   {s.name}
                 </th>
               ))}

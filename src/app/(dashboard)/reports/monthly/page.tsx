@@ -192,13 +192,13 @@ export default async function MonthlyReportPage({
             <thead>
               <tr>
                 <th>반품 사유</th>
-                <th className="num" style={{ width: 90 }}>
+                <th className="num erp-col-m">
                   전표수
                 </th>
-                <th className="num" style={{ width: 110 }}>
+                <th className="num erp-col-l">
                   수량
                 </th>
-                <th className="num" style={{ width: 130 }}>
+                <th className="num erp-col-xl">
                   금액
                 </th>
               </tr>
@@ -237,20 +237,20 @@ export default async function MonthlyReportPage({
             <thead>
               <tr>
                 <th>품목 / 거래처</th>
-                <th style={{ width: 70 }}>구분</th>
-                <th className="num" style={{ width: 110 }}>
+                <th className="erp-col-s">구분</th>
+                <th className="num erp-col-l">
                   입고수량
                 </th>
-                <th className="num" style={{ width: 120 }}>
+                <th className="num erp-col-l">
                   입고금액
                 </th>
-                <th className="num" style={{ width: 110 }}>
+                <th className="num erp-col-l">
                   출고수량
                 </th>
-                <th className="num" style={{ width: 120 }}>
+                <th className="num erp-col-l">
                   출고금액
                 </th>
-                <th className="num" style={{ width: 110 }}>
+                <th className="num erp-col-l">
                   재고 순증감
                 </th>
               </tr>
@@ -392,27 +392,27 @@ export default async function MonthlyReportPage({
             <thead>
               <tr>
                 <th>{view === "supplier" ? "매입처" : "매출처"} / 품목</th>
-                <th style={{ width: 150 }}>규격</th>
-                <th className="num" style={{ width: 90 }}>
+                <th className="erp-col-xxl">규격</th>
+                <th className="num erp-col-m">
                   수량
                 </th>
                 <th
-                  className="num"
-                  style={{ width: 70 }}
+                  className="num erp-col-s"
+                  
                   title="품목 종류 수가 아니라, 이 거래처와 거래한 전표(주문) 건수입니다."
                 >
                   전표수
                 </th>
-                <th className="num" style={{ width: 100 }}>
+                <th className="num erp-col-m">
                   평균단가
                 </th>
-                <th className="num" style={{ width: 110 }}>
+                <th className="num erp-col-l">
                   금액
                 </th>
-                <th className="num" style={{ width: 100 }}>
+                <th className="num erp-col-m">
                   세액
                 </th>
-                <th className="num" style={{ width: 80 }}>
+                <th className="num erp-col-s">
                   비중
                 </th>
               </tr>

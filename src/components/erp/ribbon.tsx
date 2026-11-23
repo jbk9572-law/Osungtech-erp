@@ -16,6 +16,7 @@ import { clampDropdownLeft } from "@/lib/dropdown-position";
 import { enterTenant } from "@/app/platform-admin/actions";
 import { EnterTenantSubmit } from "@/components/erp/enter-tenant-submit";
 import { PageGuide } from "@/components/erp/page-guide";
+import { QUICK_SEARCH_EVENT } from "@/lib/quick-search-event";
 
 const SHORTCUTS: { key: string; label: string }[] = [
   { key: "F2", label: "신규" },
@@ -92,8 +93,16 @@ export function Ribbon({
         setModal("search");
       }
     }
+    function openFromTitleBar() {
+      setQuery("");
+      setModal("search");
+    }
     window.addEventListener("keydown", handleShortcut);
-    return () => window.removeEventListener("keydown", handleShortcut);
+    window.addEventListener(QUICK_SEARCH_EVENT, openFromTitleBar);
+    return () => {
+      window.removeEventListener("keydown", handleShortcut);
+      window.removeEventListener(QUICK_SEARCH_EVENT, openFromTitleBar);
+    };
   }, []);
 
   // 리본이 좁은 화면에서 가로 스크롤돼 버튼이 화면 중간쯤에 있을 수
@@ -147,13 +156,17 @@ export function Ribbon({
       <button
         type="button"
         className="erp-ribbon-btn"
+        title="새로고침"
+        aria-label="새로고침"
         onClick={() => window.location.reload()}
       >
-        ↻ 새로고침
+        <span aria-hidden>↻</span>
+        <span className="erp-ribbon-label"> 새로고침</span>
       </button>
 
-      <button type="button" className="erp-ribbon-btn" onClick={openFavorites}>
-        ★ 즐겨찾기
+      <button type="button" className="erp-ribbon-btn" title="즐겨찾기" aria-label="즐겨찾기" onClick={openFavorites}>
+        <span aria-hidden>★</span>
+        <span className="erp-ribbon-label"> 즐겨찾기</span>
       </button>
       {openPanel === "favorites" &&
         renderDropdown(
@@ -186,8 +199,9 @@ export function Ribbon({
           ),
         )}
 
-      <button type="button" className="erp-ribbon-btn" onClick={openRecents}>
-        🕘 최근 메뉴
+      <button type="button" className="erp-ribbon-btn" title="최근 메뉴" aria-label="최근 메뉴" onClick={openRecents}>
+        <span aria-hidden>🕘</span>
+        <span className="erp-ribbon-label"> 최근 메뉴</span>
       </button>
       {openPanel === "recent" &&
         renderDropdown(
@@ -226,7 +240,7 @@ export function Ribbon({
 
       <button
         type="button"
-        className="erp-ribbon-btn"
+        className="erp-ribbon-btn erp-ribbon-btn-search"
         title="Ctrl+K"
         onClick={() => {
           setQuery("");
@@ -241,21 +255,27 @@ export function Ribbon({
         <button
           type="button"
           className="erp-ribbon-btn"
+          title="회사 전환"
+          aria-label="회사 전환"
           onClick={() => {
             setTenantQuery("");
             setModal("tenants");
           }}
         >
-          🏢 회사 전환
+          <span aria-hidden>🏢</span>
+          <span className="erp-ribbon-label"> 회사 전환</span>
         </button>
       )}
 
       <button
         type="button"
         className="erp-ribbon-btn"
+        title="도움말"
+        aria-label="도움말"
         onClick={() => setModal("help")}
       >
-        ? 도움말
+        <span aria-hidden>?</span>
+        <span className="erp-ribbon-label"> 도움말</span>
       </button>
 
       {modal === "search" && (

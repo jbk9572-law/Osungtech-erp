@@ -11,6 +11,7 @@ import { BalanceSidePanel } from "@/components/grid/balance-side-panel";
 import { ListSummaryBar } from "@/components/grid/list-summary-bar";
 import { SheetColumnMenu, SortableTh } from "@/components/grid/sheet-parts";
 import { useBulkDelete } from "@/components/erp/use-bulk-delete";
+import { BULK_DELETE_ANCHOR_ID, ListActionToolbar } from "@/components/erp/list-action-toolbar";
 import type { FormState } from "@/components/form-message";
 import { useSideSplit } from "@/lib/erp-theme-features";
 import { formatNumber } from "@/lib/format-number";
@@ -61,6 +62,10 @@ export function PartyListA({
   partyLabel,
   balanceLabel,
   searchSlot,
+  searchFormId,
+  newHref,
+  excelHref,
+  hideSummary,
   bulkDeleteAction,
   warningText,
   emptyMessage,
@@ -76,6 +81,14 @@ export function PartyListA({
   partyLabel: string;
   balanceLabel: string;
   searchSlot: ReactNode;
+  /** 검색 폼의 id — 도구 줄의 [조회]가 이 폼을 제출한다. */
+  searchFormId: string;
+  /** [신규] 주소(C형 모달 경로). */
+  newHref: string;
+  /** 있으면 도구 줄에 [엑셀]이 생긴다(전체 목록 내려받기). 내려받기 경로가 없는 화면은 비운다. */
+  excelHref?: string;
+  /** 위에 더 자세한 요약(연체 분포 등)이 있을 때 이 얇은 요약 줄은 숨긴다(같은 숫자 중복 방지). */
+  hideSummary?: boolean;
   bulkDeleteAction: (state: FormState, formData: FormData) => Promise<FormState>;
   warningText: string;
   emptyMessage: string;
@@ -106,6 +119,7 @@ export function PartyListA({
 
   const { selected, toggle, bar } = useBulkDelete(bulkDeleteAction, visible.map((r) => ({ id: r.id, label: r.name })), warningText);
   const active = ordered.find((r) => r.id === activeId) ?? null;
+  const editHref = active ? `${hrefBase}/${active.id}` : null;
   const onKeyDown = useRowKeyboard(
     ordered.map((r) => r.id),
     activeId,
@@ -134,6 +148,20 @@ export function PartyListA({
 
   return (
     <>
+      <ListActionToolbar
+        searchFormId={searchFormId}
+        newHref={newHref}
+        editHref={editHref}
+        showDelete
+        deleteEnabled={selected.size > 0}
+        excelHref={excelHref}
+        columnMenu={<SheetColumnMenu labels={PARTY_COLS.map((_, i) => labelOf(i))} hidden={hidden} onToggle={toggleHidden} />}
+        countLabel={partyLabel}
+        unit="곳"
+        total={rows.length}
+        selectedCount={selected.size}
+        dataKey={rows}
+      />
       <div className="erp-party-toolbar">
         <div className="erp-date-presets">
           {filters.map((f) => (
@@ -145,17 +173,16 @@ export function PartyListA({
         </div>
         {searchSlot}
       </div>
-      <ListSummaryBar
+      {!hideSummary && (
+        <ListSummaryBar
         items={[
           { label: partyLabel, value: `${formatNumber(rows.length)}곳` },
           { label: `${balanceLabel} 합계`, value: formatNumber(balanceSum) },
           { label: `연체 ${partyLabel}`, value: `${formatNumber(counts.overdue)}곳` },
         ]}
       />
-      {bar}
-      <div className="erp-sheet-tools">
-        <SheetColumnMenu labels={PARTY_COLS.map((_, i) => labelOf(i))} hidden={hidden} onToggle={toggleHidden} />
-      </div>
+      )}
+      {bar && <div id={BULK_DELETE_ANCHOR_ID}>{bar}</div>}
       <div className={sideSplit ? "erp-master-detail" : undefined}>
         <div className={sideSplit ? "erp-master-detail-main" : undefined}>
           <div className="erp-grid-wrap has-card-view erp-sheet" tabIndex={0} onKeyDown={onKeyDown} aria-label="목록 — 위아래 방향키로 행 이동, Enter로 열기, Ctrl+C로 행 복사">

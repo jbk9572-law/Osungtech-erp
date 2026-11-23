@@ -54,11 +54,11 @@ export function PortalNewOrderForm({ catalog }: { catalog: CatalogRow[] }) {
         >
           <thead>
             <tr>
-              <th style={{ width: 240 }}>품목</th>
-              <th style={{ width: 90 }}>규격</th>
-              <th className="num" style={{ width: 100 }}>단가</th>
-              <th className="num" style={{ width: 110 }}>수량</th>
-              <th className="num" style={{ width: 120 }}>금액</th>
+              <th className="erp-col-xw">품목</th>
+              <th className="erp-col-m">규격</th>
+              <th className="num erp-col-m">단가</th>
+              <th className="num erp-col-l">수량</th>
+              <th className="num erp-col-l">금액</th>
             </tr>
           </thead>
           <tbody>

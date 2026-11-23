@@ -42,11 +42,11 @@ export function PurchaseQuotePriceForm({
         >
           <thead>
             <tr>
-              <th style={{ width: 240 }}>품목</th>
-              <th style={{ width: 120 }}>규격</th>
-              <th className="num" style={{ width: 90 }}>수량</th>
-              <th className="num" style={{ width: 120 }}>견적단가</th>
-              <th className="num" style={{ width: 120 }}>견적금액</th>
+              <th className="erp-col-xw">품목</th>
+              <th className="erp-col-l">규격</th>
+              <th className="num erp-col-m">수량</th>
+              <th className="num erp-col-l">견적단가</th>
+              <th className="num erp-col-l">견적금액</th>
             </tr>
           </thead>
           <tbody>

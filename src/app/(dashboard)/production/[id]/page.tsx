@@ -121,12 +121,12 @@ export default async function WorkOrderDetailPage({
             <table className="erp-grid">
               <tbody>
                 <tr>
-                  <th style={{ width: 110 }}>완제품</th>
+                  <th className="erp-col-l">완제품</th>
                   <td>
                     {workOrder.products?.sku} · {workOrder.products?.name}
                     {workOrder.products?.spec && ` (${workOrder.products.spec})`}
                   </td>
-                  <th style={{ width: 90 }}>수량</th>
+                  <th className="erp-col-m">수량</th>
                   <td className="num">
                     {formatNumber(Number(workOrder.quantity))} {workOrder.products?.unit}
                   </td>
@@ -198,13 +198,13 @@ export default async function WorkOrderDetailPage({
               <table className="erp-grid">
                 <thead>
                   <tr>
-                    <th style={{ width: 40 }}>순서</th>
+                    <th className="erp-col-xxs">순서</th>
                     <th>공정</th>
-                    <th style={{ width: 110 }}>이전 담당</th>
-                    <th style={{ width: 160 }}>담당</th>
-                    <th style={{ width: 110 }}>단가</th>
-                    <th style={{ width: 90 }}>불량/반품</th>
-                    <th style={{ width: 220 }}>상태</th>
+                    <th className="erp-col-l">이전 담당</th>
+                    <th className="erp-col-xxl">담당</th>
+                    <th className="erp-col-l">단가</th>
+                    <th className="erp-col-m">불량/반품</th>
+                    <th className="erp-col-xw">상태</th>
                   </tr>
                 </thead>
                 <tbody>

@@ -106,10 +106,10 @@ export async function QuoteDetailPanel({ id, closeHref }: { id: string; closeHre
           <thead>
             <tr>
               <th>품목</th>
-              <th style={{ width: 140 }}>규격</th>
-              <th className="num" style={{ width: 90 }}>수량</th>
-              <th className="num" style={{ width: 110 }}>단가</th>
-              <th className="num" style={{ width: 110 }}>금액</th>
+              <th className="erp-col-xl">규격</th>
+              <th className="num erp-col-m">수량</th>
+              <th className="num erp-col-l">단가</th>
+              <th className="num erp-col-l">금액</th>
               <th>비고</th>
             </tr>
           </thead>

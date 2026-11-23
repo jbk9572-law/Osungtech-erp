@@ -186,10 +186,10 @@ export default async function PortalOrderDetailPage({ params }: { params: Promis
               <thead>
                 <tr>
                   <th>품목</th>
-                  <th style={{ width: 90 }}>규격</th>
-                  <th className="num" style={{ width: 100 }}>수량</th>
-                  <th className="num" style={{ width: 100 }}>단가</th>
-                  <th className="num" style={{ width: 120 }}>금액</th>
+                  <th className="erp-col-m">규격</th>
+                  <th className="num erp-col-m">수량</th>
+                  <th className="num erp-col-m">단가</th>
+                  <th className="num erp-col-l">금액</th>
                 </tr>
               </thead>
               <tbody>

@@ -80,7 +80,7 @@ export default async function WarehousesPage({
                 <tr>
                   <th>창고명</th>
                   <th>위치</th>
-                  <th style={{ width: 90 }}>관리</th>
+                  <th className="erp-col-m">관리</th>
                 </tr>
               </thead>
               <tbody>
@@ -164,12 +164,12 @@ export default async function WarehousesPage({
             <table className="erp-grid">
               <thead>
                 <tr>
-                  <th style={{ width: 90 }}>이동일</th>
-                  <th style={{ width: 160 }}>출발 창고</th>
-                  <th style={{ width: 160 }}>도착 창고</th>
-                  <th className="num" style={{ width: 80 }}>품목 수</th>
-                  <th className="num" style={{ width: 90 }}>총 이동수량</th>
-                  <th style={{ width: 90 }}>처리자</th>
+                  <th className="erp-col-m">이동일</th>
+                  <th className="erp-col-xxl">출발 창고</th>
+                  <th className="erp-col-xxl">도착 창고</th>
+                  <th className="num erp-col-s">품목 수</th>
+                  <th className="num erp-col-m">총 이동수량</th>
+                  <th className="erp-col-m">처리자</th>
                   <th>메모</th>
                 </tr>
               </thead>

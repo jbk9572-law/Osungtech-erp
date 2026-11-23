@@ -88,6 +88,12 @@ function looksLikePercent(initExpr) {
 // 값인지(삼항식의 양쪽 분기 포함) } 맵을 만든다. 프로퍼티 자체가 있는지는
 // map.has(key)로 확인한다 — 값이 삼항식이라 literal이 null이어도
 // "폭을 준 칸"으로는 쳐야 오탐이 안 난다.
+
+// <th>에 열 폭 단계 클래스(erp-col-*)가 있으면 style의 width와 같은 "폭이 있는 칸"으로 본다(design/COMPONENTS.md §1).
+function hasColClass(attributes) {
+  const cn = attributes.properties.find((a) => ts.isJsxAttribute(a) && a.name.text === "className");
+  return !!(cn && cn.initializer && ts.isStringLiteral(cn.initializer) && /\berp-col-/.test(cn.initializer.text));
+}
 function readStyleObject(attributes) {
   const styleAttr = attributes.properties.find(
     (p) => ts.isJsxAttribute(p) && p.name && p.name.text === "style",
@@ -174,7 +180,7 @@ function checkFile(filePath) {
           if (isTableJsxElement) {
             const ths = findFirstHeaderRowThs(node);
             if (ths.length > 1) {
-              const thWidths = ths.map((th) => readStyleObject(th.attributes)?.get("width"));
+              const thWidths = ths.map((th) => readStyleObject(th.attributes)?.get("width") ?? (hasColClass(th.attributes) ? { literal: null, raw: "erp-col", percent: false } : undefined));
               const withCount = thWidths.filter((w) => w !== undefined).length;
               if (withCount > 0 && withCount < thWidths.length) {
                 violations.push({

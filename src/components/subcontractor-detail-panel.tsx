@@ -87,9 +87,9 @@ export async function SubcontractorDetailPanel({
                 <thead>
                   <tr>
                     <th>아이디</th>
-                    <th style={{ width: 90 }}>상태</th>
-                    <th style={{ width: 110 }}>발급일</th>
-                    <th style={{ width: 90 }} />
+                    <th className="erp-col-m">상태</th>
+                    <th className="erp-col-l">발급일</th>
+                    <th className="erp-col-m"  />
                   </tr>
                 </thead>
                 <tbody>
@@ -122,12 +122,12 @@ export async function SubcontractorDetailPanel({
               <table className="erp-grid">
                 <thead>
                   <tr>
-                    <th style={{ width: 90 }}>지시번호</th>
+                    <th className="erp-col-m">지시번호</th>
                     <th>완제품</th>
                     <th>공정</th>
-                    <th style={{ width: 90 }} className="num">단가</th>
-                    <th style={{ width: 90 }} className="num">반품수량</th>
-                    <th style={{ width: 100 }}>상태</th>
+                    <th  className="num erp-col-m">단가</th>
+                    <th  className="num erp-col-m">반품수량</th>
+                    <th className="erp-col-m">상태</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -181,7 +181,7 @@ export async function SubcontractorDetailPanel({
                 <thead>
                   <tr>
                     <th>품목</th>
-                    <th style={{ width: 110 }} className="num">보유수량</th>
+                    <th  className="num erp-col-l">보유수량</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -229,7 +229,7 @@ export async function SubcontractorDetailPanel({
                 <table className="erp-grid">
                   <thead>
                     <tr>
-                      <th style={{ width: 90 }}>일자</th>
+                      <th className="erp-col-m">일자</th>
                       <th>공정</th>
                       <th className="num">미정산액</th>
                     </tr>
@@ -264,11 +264,11 @@ export async function SubcontractorDetailPanel({
               <table className="erp-grid">
                 <thead>
                   <tr>
-                    <th style={{ width: 90 }}>일자</th>
+                    <th className="erp-col-m">일자</th>
                     <th className="num">금액</th>
-                    <th style={{ width: 90 }}>방법</th>
+                    <th className="erp-col-m">방법</th>
                     <th>적요</th>
-                    <th style={{ width: 70 }} />
+                    <th className="erp-col-s"  />
                   </tr>
                 </thead>
                 <tbody>

@@ -508,11 +508,11 @@ export default async function AuditLogPage({
         <table className="erp-grid">
           <thead>
             <tr>
-              <th style={{ width: 140 }}>일시</th>
-              <th style={{ width: 70 }}>구분</th>
-              <th style={{ width: 80 }}>동작</th>
-              <th style={{ width: 160 }}>대상</th>
-              <th style={{ width: 100 }}>작성자</th>
+              <th className="erp-col-xl">일시</th>
+              <th className="erp-col-s">구분</th>
+              <th className="erp-col-s">동작</th>
+              <th className="erp-col-xxl">대상</th>
+              <th className="erp-col-m">작성자</th>
               <th>변경 내용</th>
             </tr>
           </thead>

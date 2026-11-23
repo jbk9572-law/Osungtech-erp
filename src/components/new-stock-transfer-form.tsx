@@ -119,9 +119,9 @@ export function NewStockTransferForm({
             <thead>
               <tr>
                 <th style={{ width: 320 }}>품목</th>
-                <th className="num" style={{ width: 110 }}>수량</th>
-                <th style={{ width: 200 }}>비고</th>
-                <th style={{ width: 50 }} />
+                <th className="num erp-col-l">수량</th>
+                <th className="erp-col-w">비고</th>
+                <th className="erp-col-xs"  />
               </tr>
             </thead>
             <tbody>

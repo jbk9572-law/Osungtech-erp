@@ -128,13 +128,13 @@ export function PartyTransactionHistory({
           <table className="erp-grid">
             <thead>
               <tr>
-                <th style={{ width: 60 }}>유형</th>
-                <th style={{ width: 90 }}>일자</th>
+                <th className="erp-col-xs">유형</th>
+                <th className="erp-col-m">일자</th>
                 <th>품목/적요</th>
-                <th className="num" style={{ width: 110 }}>
+                <th className="num erp-col-l">
                   합계
                 </th>
-                <th className="num" style={{ width: 110 }}>
+                <th className="num erp-col-l">
                   잔액
                 </th>
               </tr>

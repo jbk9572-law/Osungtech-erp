@@ -136,11 +136,11 @@ export async function CustomerDetailPanel({ id }: { id: string }) {
               <table className="erp-grid">
                 <thead>
                   <tr>
-                    <th style={{ width: 90 }}>일자</th>
-                    <th style={{ width: 60 }}>유형</th>
+                    <th className="erp-col-m">일자</th>
+                    <th className="erp-col-xs">유형</th>
                     <th>제목</th>
-                    <th style={{ width: 130 }}>다음 팔로우업</th>
-                    <th style={{ width: 60 }} />
+                    <th className="erp-col-xl">다음 팔로우업</th>
+                    <th className="erp-col-xs"  />
                   </tr>
                 </thead>
                 <tbody>
@@ -201,15 +201,15 @@ export async function CustomerDetailPanel({ id }: { id: string }) {
               <table className="erp-grid">
                 <thead>
                   <tr>
-                    <th style={{ width: 90 }}>일자</th>
-                    <th style={{ width: 90 }}>전표번호</th>
-                    <th className="num" style={{ width: 130 }}>
+                    <th className="erp-col-m">일자</th>
+                    <th className="erp-col-m">전표번호</th>
+                    <th className="num erp-col-xl">
                       전표 금액
                     </th>
-                    <th className="num" style={{ width: 130 }}>
+                    <th className="num erp-col-xl">
                       미수 잔액
                     </th>
-                    <th style={{ width: 110 }}>경과</th>
+                    <th className="erp-col-l">경과</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -245,13 +245,13 @@ export async function CustomerDetailPanel({ id }: { id: string }) {
               <table className="erp-grid">
                 <thead>
                   <tr>
-                    <th style={{ width: 100 }}>일자</th>
-                    <th className="num" style={{ width: 130 }}>
+                    <th className="erp-col-m">일자</th>
+                    <th className="num erp-col-xl">
                       금액
                     </th>
-                    <th style={{ width: 90 }}>방법</th>
+                    <th className="erp-col-m">방법</th>
                     <th>메모</th>
-                    <th style={{ width: 60 }} />
+                    <th className="erp-col-xs"  />
                   </tr>
                 </thead>
                 <tbody>
@@ -398,9 +398,9 @@ export async function CustomerDetailPanel({ id }: { id: string }) {
                 <thead>
                   <tr>
                     <th>아이디</th>
-                    <th style={{ width: 90 }}>상태</th>
-                    <th style={{ width: 110 }}>발급일</th>
-                    <th style={{ width: 90 }} />
+                    <th className="erp-col-m">상태</th>
+                    <th className="erp-col-l">발급일</th>
+                    <th className="erp-col-m"  />
                   </tr>
                 </thead>
                 <tbody>

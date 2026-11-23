@@ -142,13 +142,13 @@ export function WorkOrderForm({
               <thead>
                 <tr>
                   <th>구성품</th>
-                  <th className="num" style={{ width: 120 }}>
+                  <th className="num erp-col-l">
                     필요수량
                   </th>
-                  <th className="num" style={{ width: 120 }}>
+                  <th className="num erp-col-l">
                     현재재고
                   </th>
-                  <th style={{ width: 90 }} />
+                  <th className="erp-col-m"  />
                 </tr>
               </thead>
               <tbody>

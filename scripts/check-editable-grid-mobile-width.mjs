@@ -202,7 +202,7 @@ function checkFile(filePath) {
         if (!hasFixedTableLayout(style)) {
           const ths = findFirstHeaderRowThs(node);
           if (ths.length > 1) {
-            const widthCount = ths.filter((th) => readStyleObject(th.attributes)?.has("width")).length;
+            const widthCount = ths.filter((th) => readStyleObject(th.attributes)?.has("width") || /\berp-col-/.test(th.attributes.properties.find((a) => ts.isJsxAttribute(a) && a.name.text === "className")?.initializer?.text ?? "")).length;
             const partialWidth = widthCount > 0 && widthCount < ths.length;
             if (partialWidth && hasEditableCell(node)) {
               const { line } = sourceFile.getLineAndCharacterOfPosition(node.getStart());

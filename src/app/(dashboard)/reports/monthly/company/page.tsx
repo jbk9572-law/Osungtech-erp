@@ -171,14 +171,14 @@ export default async function MonthlyReportCompanyPage({
         <table className="erp-grid">
           <thead>
             <tr>
-              <th style={{ width: 90 }}>날짜</th>
-              <th style={{ width: 70 }}>구분</th>
+              <th className="erp-col-m">날짜</th>
+              <th className="erp-col-s">구분</th>
               <th>품목</th>
-              <th style={{ width: 160 }}>규격</th>
-              <th className="num" style={{ width: 110 }}>
+              <th className="erp-col-xxl">규격</th>
+              <th className="num erp-col-l">
                 수량
               </th>
-              <th className="num" style={{ width: 120 }}>
+              <th className="num erp-col-l">
                 금액
               </th>
             </tr>

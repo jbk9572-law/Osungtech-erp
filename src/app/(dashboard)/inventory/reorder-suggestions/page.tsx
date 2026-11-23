@@ -150,17 +150,17 @@ export default async function ReorderSuggestionsPage() {
                   <tr>
                     <th>SKU</th>
                     <th>품목명</th>
-                    <th style={{ width: 130 }}>규격</th>
-                    <th className="num" style={{ width: 100 }}>
+                    <th className="erp-col-xl">규격</th>
+                    <th className="num erp-col-m">
                       현재재고
                     </th>
-                    <th className="num" style={{ width: 100 }}>
+                    <th className="num erp-col-m">
                       안전재고
                     </th>
-                    <th className="num" style={{ width: 110 }}>
+                    <th className="num erp-col-l">
                       제안수량
                     </th>
-                    <th className="num" style={{ width: 120 }}>
+                    <th className="num erp-col-l">
                       예상 매입금액
                     </th>
                   </tr>

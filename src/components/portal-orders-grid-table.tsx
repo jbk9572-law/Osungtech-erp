@@ -38,13 +38,13 @@ export function PortalOrdersGridTable({ rows, ordersHref }: { rows: PortalOrderR
         <table className="erp-grid">
           <thead>
             <tr>
-              <th style={{ width: 90 }}>주문번호</th>
-              <th style={{ width: 110 }}>주문일</th>
-              <th style={{ width: 70 }}>품목수</th>
-              <th className="num" style={{ width: 120 }}>합계</th>
-              <th style={{ width: 160 }}>진행상태</th>
+              <th className="erp-col-m">주문번호</th>
+              <th className="erp-col-l">주문일</th>
+              <th className="erp-col-s">품목수</th>
+              <th className="num erp-col-l">합계</th>
+              <th className="erp-col-xxl">진행상태</th>
               <th>요청사항</th>
-              <th style={{ width: 90 }} />
+              <th className="erp-col-m"  />
             </tr>
           </thead>
           <tbody>

@@ -85,8 +85,8 @@ export function TenantPointsPanel({
         <table className="erp-grid">
           <thead>
             <tr>
-              <th style={{ width: 140 }}>일시</th>
-              <th style={{ width: 80 }}>변동</th>
+              <th className="erp-col-xl">일시</th>
+              <th className="erp-col-s">변동</th>
               <th>사유</th>
             </tr>
           </thead>

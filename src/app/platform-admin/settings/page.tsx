@@ -113,7 +113,7 @@ export default async function PlatformSettingsPage() {
                 <thead>
                   <tr>
                     <th>세부 메뉴</th>
-                    <th style={{ width: 140 }}>신규 테넌트 기본값</th>
+                    <th className="erp-col-xl">신규 테넌트 기본값</th>
                   </tr>
                 </thead>
                 <tbody>

@@ -292,13 +292,13 @@ export function InventoryCountForm({
                 <tr>
                   <th>SKU</th>
                   <th>품목명</th>
-                  <th className="num" style={{ width: 110 }}>
+                  <th className="num erp-col-l">
                     이전 수량
                   </th>
-                  <th className="num" style={{ width: 110 }}>
+                  <th className="num erp-col-l">
                     조정 후
                   </th>
-                  <th className="num" style={{ width: 90 }}>
+                  <th className="num erp-col-m">
                     차이
                   </th>
                 </tr>
@@ -334,20 +334,20 @@ export function InventoryCountForm({
         >
           <thead>
             <tr>
-              <th style={{ width: 100 }}>SKU</th>
-              <th style={{ width: 220 }}>품목명</th>
-              <th style={{ width: 140 }}>규격</th>
-              <th style={{ width: 130 }}>포장수량</th>
-              <th className="num" style={{ width: 130 }}>
+              <th className="erp-col-m">SKU</th>
+              <th className="erp-col-xw">품목명</th>
+              <th className="erp-col-xl">규격</th>
+              <th className="erp-col-xl">포장수량</th>
+              <th className="num erp-col-xl">
                 전산 재고
               </th>
-              <th className="num" style={{ width: 140 }}>
+              <th className="num erp-col-xl">
                 실사 수량
               </th>
-              <th className="num" style={{ width: 100 }}>
+              <th className="num erp-col-m">
                 차이
               </th>
-              <th style={{ width: 90 }}></th>
+              <th className="erp-col-m"></th>
             </tr>
           </thead>
           <tbody>

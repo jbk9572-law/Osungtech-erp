@@ -143,12 +143,12 @@ export default async function InventoryLedgerPage({
               <table className="erp-grid">
                 <thead>
                   <tr>
-                    <th style={{ width: 140 }}>거래일자</th>
-                    <th style={{ width: 70 }}>구분</th>
-                    <th className="num" style={{ width: 110 }}>
+                    <th className="erp-col-xl">거래일자</th>
+                    <th className="erp-col-s">구분</th>
+                    <th className="num erp-col-l">
                       수량
                     </th>
-                    <th className="num" style={{ width: 110 }}>
+                    <th className="num erp-col-l">
                       잔량
                     </th>
                     <th>참조</th>

@@ -1,0 +1,181 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--bg:#f4f5f7;--panel:#fff;--line:#e4e7ec;--line2:#eef0f3;--hd:#f5f6f8;--tx:#1f2530;--mu:#6b7380;--mu2:#9aa1ad;--ac:#2f62d6;--acbg:#eaf0fd;--acl:#c5d6f7;--red:#d63d3d;--grn:#1f9d63;--amb:#b7791f;--sel:#e6eefc}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:12px/1.35 "Malgun Gothic","Noto Sans KR",system-ui,sans-serif;overflow:hidden}
+.app{position:relative;display:grid;grid-template-rows:38px 42px minmax(0,1fr) 24px;height:100vh}
+.top{background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;padding:0 12px}
+.brand{font-weight:800;font-size:13px;display:flex;align-items:center;gap:7px;width:150px}.brand i{width:20px;height:20px;border-radius:5px;background:var(--ac);color:#fff;display:grid;place-items:center;font-style:normal;font-size:11px}
+.crumb{color:var(--mu)}.crumb b{color:var(--tx);font-weight:700}
+.search{flex:0 0 300px;height:26px;border:1px solid var(--line);border-radius:6px;background:var(--hd);display:flex;align-items:center;justify-content:space-between;padding:0 9px;color:var(--mu2);margin-left:auto}.search kbd{font:inherit;font-size:10.5px;border:1px solid var(--line);border-radius:3px;padding:0 4px;background:#fff;color:var(--mu)}
+.me{display:flex;align-items:center;gap:10px;color:var(--mu)}.bell{position:relative}.bell:after{content:"3";position:absolute;top:-5px;right:-8px;background:var(--red);color:#fff;border-radius:7px;font-size:9px;padding:0 4px;line-height:13px}.av{width:22px;height:22px;border-radius:50%;background:var(--ac);color:#fff;display:grid;place-items:center;font-size:10.5px;font-weight:700}
+.rib{background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 10px;gap:2px}
+.rb{height:30px;padding:0 9px;border-radius:6px;display:flex;align-items:center;gap:6px;font-weight:600;white-space:nowrap}.rb svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.rb em{font-style:normal;color:var(--mu2);font-weight:500;font-size:10.5px}
+.rb.pr{background:var(--ac);color:#fff;padding-right:4px}.rb.pr em{color:#c9dbff}.rb.pr .dd{margin-left:2px;border-left:1px solid #5b86e6;padding:0 6px;height:30px;display:flex;align-items:center}
+.rb.off{color:#b3b9c4}.rb.off em{color:#cfd3da}.rb:not(.pr):not(.off):hover{background:var(--hd)}.vs{width:1px;height:18px;background:var(--line);margin:0 6px}
+.hint{margin-left:auto;color:var(--mu2)}
+.body{display:grid;grid-template-columns:172px minmax(0,1fr) 300px;min-height:0}
+.tree{background:#fff;border-right:1px solid var(--line);padding:6px 0;overflow:hidden}
+.tree .g{padding:9px 12px 3px;color:var(--mu2);font-size:10.5px;font-weight:700;letter-spacing:.04em;display:flex;justify-content:space-between}
+.tree a{display:flex;align-items:center;gap:8px;padding:5px 12px 5px 14px;color:#323a48}.tree a svg{width:14px;height:14px;stroke:var(--mu2);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.tree a.on{background:var(--acbg);color:var(--ac);font-weight:700;box-shadow:inset 3px 0 0 var(--ac)}.tree a.on svg{stroke:var(--ac)}
+.tree a .bd{margin-left:auto;background:#fdeaea;color:#b42323;border-radius:8px;font-size:10px;font-weight:700;padding:0 6px}
+.center{display:flex;flex-direction:column;min-width:0;min-height:0;border-right:1px solid var(--line)}
+.tabs{display:flex;background:var(--bg);border-bottom:1px solid var(--line);padding:5px 8px 0;gap:2px;height:31px}.tabs span{display:flex;align-items:center;gap:7px;padding:0 11px;border:1px solid transparent;border-bottom:0;border-radius:6px 6px 0 0;color:var(--mu)}.tabs .on{background:#fff;border-color:var(--line);color:var(--tx);font-weight:700;margin-bottom:-1px}.tabs b{color:#b3b9c4;font-weight:400}.tabs .dirty{width:6px;height:6px;border-radius:50%;background:var(--amb)}
+.filt{background:#fff;display:flex;align-items:center;gap:6px;padding:7px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+.fl{color:var(--mu);margin-left:6px}.fi{height:24px;border:1px solid var(--line);border-radius:5px;padding:0 8px;display:inline-flex;align-items:center;background:#fff;min-width:92px}.fi.m{color:var(--mu2)}
+.chips{display:inline-flex;border:1px solid var(--line);border-radius:5px;overflow:hidden}.chips span{padding:0 9px;height:22px;display:flex;align-items:center;border-left:1px solid var(--line)}.chips span:first-child{border-left:0}.chips .on{background:var(--acbg);color:var(--ac);font-weight:700}
+.sumbar{display:flex;gap:18px;padding:5px 12px;background:#fff;border-bottom:1px solid var(--line);color:var(--mu)}.sumbar b{color:var(--tx);font-variant-numeric:tabular-nums;margin-left:4px}.sumbar .rd{color:var(--red)}
+.gridwrap{flex:1;min-height:0;overflow:hidden;background:#fff;position:relative}
+.scroll{position:absolute;inset:0;overflow:hidden}
+table.g{width:960px;border-collapse:separate;border-spacing:0;table-layout:fixed;font-variant-numeric:tabular-nums}
+.g th{position:sticky;top:0;z-index:2;height:24px;background:var(--hd);color:#3a4250;font-weight:700;text-align:center;border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:0 6px;white-space:nowrap;overflow:hidden}
+.g tr.h2 th{top:24px;height:24px;border-bottom:1px solid #cdd2da}
+.g th.grp{color:var(--mu);font-weight:600;background:#eef0f4;border-bottom:1px solid var(--line)}
+.g th .so{color:var(--ac);margin-left:3px;font-size:9px}.g th .fa{color:var(--ac);margin-left:3px;font-size:9px}
+.g th.rs:after{content:"";position:absolute;right:0;top:5px;bottom:5px;width:2px;background:transparent}.g th:hover.rs:after{background:var(--acl)}
+.g td{height:24px;padding:0 6px;border-right:1px solid var(--line2);border-bottom:1px solid var(--line2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:#fff}
+.g tr:hover td{background:#f8faff}.g tr.sel td{background:var(--sel)}
+.fz{position:sticky;z-index:1}.g th.fz{z-index:3}
+.fz.last{box-shadow:6px 0 6px -4px rgba(30,45,80,.18)}
+.n{text-align:right}.c{text-align:center}.mu{color:var(--mu)}.mu2{color:var(--mu2)}.neg{color:var(--red)}.b{font-weight:700}
+.cb{width:12px;height:12px;border:1px solid #b9bfca;border-radius:3px;display:inline-block;vertical-align:middle;background:#fff}.cb.on{background:var(--ac);border-color:var(--ac);position:relative}.cb.on:after{content:"";position:absolute;left:3px;top:0;width:3px;height:7px;border:solid #fff;border-width:0 1.5px 1.5px 0;transform:rotate(45deg)}
+td.rn{background:var(--hd);color:var(--mu2);text-align:center}
+.cl{color:#1f2530}.cl:hover{color:var(--ac);text-decoration:underline}
+.st{display:inline-flex;align-items:center;gap:5px;font-weight:600}.st:before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}.st.ok{color:var(--grn)}.st.no{color:var(--red)}.st.pt{color:var(--amb)}
+td.rg{background:#e3ecfc!important;box-shadow:inset 0 0 0 0 transparent}
+td.rg.t{box-shadow:inset 0 2px 0 var(--ac),inset 2px 0 0 var(--ac),inset -2px 0 0 var(--ac)}
+td.rg.m{box-shadow:inset 2px 0 0 var(--ac),inset -2px 0 0 var(--ac)}
+td.rg.bt{box-shadow:inset 0 -2px 0 var(--ac),inset 2px 0 0 var(--ac),inset -2px 0 0 var(--ac)}
+td.act{background:#fff!important}
+.foot td{position:sticky;bottom:0;background:#f8f9fb;font-weight:800;border-top:1.5px solid #9aa3b2;height:26px;z-index:1}
+.tip{position:absolute;z-index:9;background:#1f2530;color:#fff;border-radius:6px;padding:6px 9px;font-size:11px;line-height:1.5;box-shadow:0 6px 16px rgba(20,28,45,.25)}.tip:before{content:"";position:absolute;top:-4px;left:18px;border:4px solid transparent;border-top:0;border-bottom-color:#1f2530}.tip b{color:#9bbcff}
+.vbar{position:absolute;right:0;top:48px;bottom:26px;width:8px;background:transparent}.vbar i{position:absolute;right:1px;top:2px;width:5px;height:60%;background:#cfd3da;border-radius:3px}
+.detail{background:#fff;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.dh{padding:10px 12px 0;display:flex;justify-content:space-between;align-items:center}.dh b{font-size:13px}.st2{background:#e6f5ec;color:#17724a;border-radius:9px;padding:1px 8px;font-weight:700}
+.dt{display:flex;gap:14px;padding:6px 12px 0;border-bottom:1px solid var(--line)}.dt span{padding:5px 0;color:var(--mu);border-bottom:2px solid transparent}.dt .on{color:var(--tx);font-weight:700;border-bottom-color:var(--ac)}
+.kv{display:grid;grid-template-columns:62px 1fr;padding:6px 12px 0}.kv span{padding:3px 0;color:var(--mu)}.kv b{padding:3px 0;font-weight:600}
+.dl{margin:8px 12px 0;border:1px solid var(--line);border-radius:6px;overflow:hidden}.dl table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}.dl th{background:var(--hd);height:22px;font-weight:700;padding:0 6px;border-bottom:1px solid var(--line);text-align:center}.dl td{height:24px;padding:0 6px}
+.tot{margin:8px 12px;padding:7px 10px;background:var(--hd);border-radius:6px}.tot div{display:flex;justify-content:space-between;padding:1px 0}.tot .t{font-size:14px;font-weight:800;border-top:1px solid var(--line);margin-top:4px;padding-top:5px}
+.rel{margin:2px 12px 0;border-top:1px solid var(--line);padding-top:8px}.rel h4{margin:0 0 4px;font-size:11px;color:var(--mu);font-weight:700;letter-spacing:.04em}.rel a{display:flex;justify-content:space-between;padding:4px 0;color:var(--tx)}.rel a span{color:var(--ac)}.rel a em{font-style:normal;color:var(--mu2);margin-left:6px}
+.bt{height:26px;padding:0 11px;border:1px solid var(--line);background:#fff;border-radius:5px;font:inherit;font-weight:600;display:inline-flex;align-items:center}.bt.p{background:var(--ac);border-color:var(--ac);color:#fff}
+.status{background:#fff;border-top:1px solid var(--line);display:flex;align-items:center;gap:18px;padding:0 12px;color:var(--mu)}.status b{color:var(--tx);font-variant-numeric:tabular-nums}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--grn);margin-right:5px}
+
+/* ── 구분 강화 + 앱 규칙(이월·오늘·예약·발행) ── */
+:root{--gl:#d3d8e0;--gl2:#e1e5eb;--hd2:#e9edf3;--zb:#f8f9fc;--carry-bg:#fff3dc;--carry-bar:#e39b17;--next-bg:#efeaff;--next-bar:#7c5cd6;--today-bg:#e6f6ec;--today-bar:#1f9d63;--fut-bg:#eef0f3;--fut-bar:#9aa1ad}
+.g th{background:var(--hd2);border-right:1px solid #c7ced9;border-bottom:1px solid #b5bdca;color:#252d3b}
+.g tr.h2 th{border-bottom:2px solid #8e99ab}
+.g th.grp{background:#dfe5ee;color:#3a4558;border-bottom:1px solid #c7ced9}
+.g td{border-right:1px solid var(--gl);border-bottom:1px solid var(--gl)}
+.g tr.z td{background:var(--zb)}
+.g tr:hover td{background:#f1f6ff!important}
+.g tr.sel td{background:#d6e4fb!important}.g tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--ac)}
+td.rn{background:#eceff4!important;color:#7d8696;border-right:1px solid #c7ced9}
+.g tr.carry td{background:var(--carry-bg)!important}
+.g tr.carryn td{background:var(--next-bg)!important}.g tr.carryn td:first-child{box-shadow:inset 3px 0 0 var(--next-bar)}
+.g tr.today td{background:var(--today-bg)!important}.g tr.today td:first-child{box-shadow:inset 3px 0 0 var(--today-bar)}
+.g tr.fut td{background:var(--fut-bg)!important;color:#4b5565}.g tr.fut td:first-child{box-shadow:inset 3px 0 0 var(--fut-bar)}
+.g tr.sec td{background:#ffe8b8!important;color:#7a4b00;font-weight:800;border-top:1.5px solid var(--carry-bar);border-bottom:1px solid var(--carry-bar);height:26px}
+.bg{display:inline-flex;align-items:center;height:17px;padding:0 7px;border-radius:9px;font-size:10.5px;font-weight:700;margin-left:5px;vertical-align:middle}
+.bg.cn{background:#fff;color:var(--next-bar);box-shadow:inset 0 0 0 1px var(--next-bar)}
+.bg.cp{background:#fff;color:#b87500;box-shadow:inset 0 0 0 1px var(--carry-bar)}
+.bg.rs{background:#dde1e7;color:#4b5565}
+.bg.tx{background:#e5eefc;color:#1d3f8f;margin:0}.bg.tz{background:#fff3dc;color:#8a5a0c;margin:0}.bg.tf{background:#e7e9ee;color:#4b5565;margin:0}
+.bg.wn{background:#ffe3a8;color:#7a4b00;margin:0}
+.lk{color:var(--ac);font-weight:700;text-decoration:underline;margin-left:5px}
+.leg{margin-left:auto;display:flex;gap:10px;align-items:center;color:var(--mu)}.leg i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+.scroll{overflow:hidden}
+
+/* ── 힘 빼기: 색은 띠와 글자색으로만, 바탕은 거의 흰색 ── */
+:root{--gl:#e4e7ec;--zb:#fbfbfd;--carry-bg:#fffbf2;--next-bg:#fbfaff;--today-bg:#f7fbf9;--fut-bg:#f8f9fb;--carry-bar:#e2b869;--next-bar:#a99be0;--today-bar:#7cc7a1;--fut-bar:#c0c5cf;--sel:#eaf1fd}
+.g th{background:#f4f5f8;border-right:1px solid #e4e7ec;border-bottom:1px solid #d6dae1;color:#3a4250;font-weight:600}
+.g tr.h2 th{border-bottom:1px solid #c9ced8}
+.g th.grp{background:#eef0f4;color:#6b7380;font-weight:600;border-bottom:1px solid #e0e3e9}
+.g td{border-right:1px solid #eceef2;border-bottom:1px solid var(--gl)}
+.g tr:hover td{background:#f5f8fe!important}
+.g tr.sel td{background:#eaf1fd!important}
+td.rn{background:#f6f7f9!important;color:#a3a9b4;border-right:1px solid #e4e7ec}
+.g tr.sec td{background:#fffbf2!important;color:#8a6a2a;font-weight:600;border-top:1px solid #ecd9ae;border-bottom:1px solid #ecd9ae}
+.g tr.fut td{color:#7a8392!important}
+.b{font-weight:600}
+.bg{height:16px;padding:0 6px;font-size:10.5px;font-weight:600}
+.bg.cn{color:#8a78d0;box-shadow:inset 0 0 0 1px #cfc6f0}
+.bg.cp{color:#b9822a;box-shadow:inset 0 0 0 1px #ecd39b}
+.bg.rs{background:transparent;color:#7d8696;box-shadow:inset 0 0 0 1px #d3d7de}
+.bg.tx{background:transparent;color:#5a6578;font-weight:500}
+.bg.tz{background:transparent;color:#a0701a;font-weight:600}
+.bg.tf{background:transparent;color:#8b93a1;font-weight:500}
+.bg.wn{background:transparent;color:#a56a00;font-weight:600;padding:0}
+.lk{color:#4a74d9;font-weight:600;text-decoration:none;margin-left:6px}
+.st{font-weight:500}.st.ok{color:#4f8f72}.st.no{color:#c4504b}.st.pt{color:#b07a1e}
+td b[style*="1f9d63"]{color:#4f8f72!important;font-weight:500}
+.sumbar .rd{font-weight:600}
+.leg{opacity:.85}.leg i{width:8px;height:8px;border-radius:50%}
+.rb.pr{background:#3b6fd6}
+
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) 1.7fr;gap:0;background:#fff;border-bottom:1px solid var(--line)}
+.kpi{padding:8px 14px;border-right:1px solid var(--line2)}
+.kpi span{display:block;color:var(--mu);font-size:11px}.kpi b{display:block;font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:1px}.kpi em{font-style:normal;color:var(--mu2);font-size:10.5px}
+.kpi.rd b{color:var(--red)}.kpi.am b{color:var(--amb)}
+.dist{padding:8px 14px}.dist>span{display:block;color:var(--mu);font-size:11px;margin-bottom:6px}
+.bar{display:flex;height:12px;border-radius:3px;overflow:hidden;background:#eef0f3}.bar i{display:block;height:100%}
+.lg{display:flex;gap:12px;margin-top:5px;color:var(--mu);font-size:10.5px}.lg i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px;vertical-align:-0.5px}
+.g tr.low td{color:#9b3b36}.g tr.low td:first-child{box-shadow:inset 3px 0 0 #e0867f}
+.g tr.zero td{color:#9aa1ad}
+.pill{display:inline-flex;align-items:center;height:17px;padding:0 7px;border-radius:9px;font-size:10.5px;font-weight:600}
+.pill.low{background:#fdeceb;color:#b4423b}.pill.ok{background:transparent;color:#5b8f77}.pill.zero{background:#eceef2;color:#7d8696}.pill.warn{background:#fff3dc;color:#9a6a12}.pill.dg{background:#fdeceb;color:#b4423b}
+.mini{height:4px;background:#eef0f3;border-radius:2px;overflow:hidden;margin-top:4px}.mini i{display:block;height:100%;background:#7ea6ec}.mini.low i{background:#e0867f}
+.lot{display:grid;grid-template-columns:1fr auto auto;gap:8px;padding:5px 0;border-bottom:1px solid var(--line2);font-variant-numeric:tabular-nums}.lot:last-child{border:0}
+.sec{margin:10px 12px 0}.sec h4{margin:0 0 4px;font-size:11px;color:var(--mu);font-weight:700;letter-spacing:.04em}
+.bt.r{border-color:#e0867f;color:#b4423b}
+
+.ann{position:absolute;z-index:20;background:#1f2530;color:#fff;border-radius:6px;padding:5px 9px;font-size:11px;line-height:1.45;box-shadow:0 6px 16px rgba(20,28,45,.25);max-width:230px}
+.ann b{color:#9bbcff}
+.tri{display:grid;grid-template-columns:168px minmax(0,1fr);height:100%}
+.fcol{background:#fbfbfd;border-right:1px solid var(--line);padding:10px 0}
+.fcol .gh{padding:6px 12px 3px;color:var(--mu2);font-size:10.5px;font-weight:700;letter-spacing:.04em}
+.fcol a{display:flex;justify-content:space-between;padding:5px 12px;color:#323a48}.fcol a b{color:var(--mu2);font-weight:600;font-variant-numeric:tabular-nums}
+.fcol a.on{background:var(--acbg);color:var(--ac);font-weight:700;box-shadow:inset 3px 0 0 var(--ac)}.fcol a.on b{color:var(--ac)}
+.todo{display:grid;grid-template-columns:22px 1fr auto;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line2);align-items:start}
+.todo.sel{background:#eaf1fd;box-shadow:inset 3px 0 0 var(--ac)}.todo .t{font-weight:600}.todo .s{color:var(--mu);font-size:11px;margin-top:2px}
+.todo.done .t{color:var(--mu2);text-decoration:line-through;font-weight:500}
+.due{font-size:10.5px;font-weight:600;padding:1px 7px;border-radius:9px}.due.od{background:#fdeceb;color:#b4423b}.due.td{background:#fff3dc;color:#9a6a12}.due.ok{background:#eceef2;color:#5a6578}
+.det3{padding:14px 18px;background:#fff;overflow:hidden}.det3 h2{margin:0 0 6px;font-size:16px}.det3 .chs{display:flex;gap:6px;margin-bottom:10px}
+.dim{position:absolute;inset:0;background:rgba(20,28,45,.38);z-index:10}
+.modal{position:absolute;z-index:11;left:50%;top:52%;transform:translate(-50%,-50%);width:640px;background:#fff;border-radius:12px;box-shadow:0 20px 50px rgba(20,28,45,.35);overflow:hidden}
+.mh{display:flex;align-items:center;gap:10px;padding:12px 14px 12px 18px;border-bottom:1px solid var(--line)}.mh b{font-size:15px}
+.mx{margin-left:auto;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;color:var(--mu);font-size:15px;border:1px solid var(--line)}
+.mb{padding:14px 18px;display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}.mb label{display:block;color:var(--mu);font-size:11px;margin-bottom:3px}
+.mb .in{height:28px;border:1px solid var(--line);border-radius:6px;padding:0 9px;display:flex;align-items:center;background:#fff}.mb .full{grid-column:1/3}
+.mf{display:flex;align-items:center;gap:8px;padding:10px 18px;background:#f7f8fa;border-top:1px solid var(--line)}
+.mf .l{color:var(--mu)}.mf .sp{margin-left:auto}
+</style><style>.rt{display:flex;gap:2px;padding:5px 8px;border:1px solid var(--line);border-bottom:0;border-radius:5px 5px 0 0;background:#f7f8fa}.rt span{min-width:26px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:4px;color:var(--mu);font-weight:700}.rt i{width:1px;background:var(--line);margin:3px 4px}.ed{border:1px solid var(--line);border-radius:0 0 5px 5px;min-height:150px;padding:10px 12px;line-height:1.7;color:var(--tx)}.chk{display:flex;align-items:center;gap:6px}.chk b{width:15px;height:15px;border:1px solid var(--line);border-radius:3px;display:inline-block;background:#fff}.chk b.on{background:var(--ac);border-color:var(--ac)}.fil{display:flex;align-items:center;gap:8px;border:1px dashed var(--line);border-radius:5px;padding:8px 12px;color:var(--mu)}.seg2{display:flex;gap:6px}.seg2 span{padding:4px 12px;border:1px solid var(--line);border-radius:14px;color:var(--mu)}.seg2 .on{background:var(--acbg);border-color:var(--acl);color:var(--ac);font-weight:700}.modal.w{width:720px}</style><style id="side-B">.body{grid-template-columns:208px minmax(0,1fr) 300px!important}.body.g3{grid-template-columns:208px minmax(0,1fr) 290px!important}.tree a{font-size:13px!important;padding:7px 14px 7px 16px!important;gap:10px!important}.tree .g{font-size:11.5px!important;padding:12px 16px 4px!important}</style></head><body>
+<svg width="0" height="0" style="position:absolute"><defs>
+<symbol id="s" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></symbol><symbol id="p" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="v" viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4M8 20v-6h8v6"/></symbol><symbol id="t" viewBox="0 0 24 24"><path d="M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13"/></symbol>
+<symbol id="r" viewBox="0 0 24 24"><path d="M7 9V4h10v5M7 17H4v-7h16v7h-3M7 14h10v6H7z"/></symbol><symbol id="x" viewBox="0 0 24 24"><path d="M12 4v10m0 0-4-4m4 4 4-4M5 19h14"/></symbol>
+<symbol id="c" viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="11"/><path d="M5 15V5h10"/></symbol><symbol id="f" viewBox="0 0 24 24"><path d="M4 6h16l-6 7v6l-4-2v-4z"/></symbol>
+<symbol id="d" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></symbol><symbol id="b" viewBox="0 0 24 24"><path d="M21 8 12 3 3 8v8l9 5 9-5zM3 8l9 5 9-5M12 13v8"/></symbol>
+<symbol id="u" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 3-6 6.5-6s6.5 2.4 6.5 6M16 5a3.5 3.5 0 0 1 0 7"/></symbol><symbol id="a" viewBox="0 0 24 24"><path d="M5 20V10M12 20V4M19 20v-7"/></symbol></defs></svg>
+<div class="app">
+<div class="top"><div class="brand"><i>오</i>오성테크 ERP</div><div class="crumb">매출 &gt; <b>출고처관리</b></div><div class="search"><span>메뉴·거래처·전표번호 검색</span><kbd>Ctrl K</kbd></div><div class="me"><span class="bell">알림</span><div class="av">박</div><span>박성주 · 관리자</span></div></div>
+<div class="rib"><div class="rb pr"><svg><use href="#s"/></svg>조회<em>F5</em></div><div class="rb"><svg><use href="#p"/></svg>신규<em>F2</em></div><div class="rb"><svg><use href="#c"/></svg>수정<em>F4</em></div><div class="rb"><svg><use href="#t"/></svg>삭제<em>Del</em></div><span class="vs"></span><div class="rb"><svg><use href="#x"/></svg>엑셀</div><div class="rb"><svg><use href="#f"/></svg>컬럼 설정</div><div class="hint">14:32 조회 · 거래처 48곳 &nbsp;|&nbsp; 선택 1곳</div></div>
+<div class="body"><div class="tree"><div class="g">메인</div><a><svg><use href="#a"/></svg>대시보드</a><div class="g">매출 ▾</div><a><svg><use href="#d"/></svg>출고관리</a><a class="on"><svg><use href="#u"/></svg>출고처관리</a><a><svg><use href="#d"/></svg>미수금현황<span class="bd">3</span></a><a><svg><use href="#d"/></svg>견적서관리</a><div class="g">매입 ▸</div><div class="g">재고 ▸</div><div class="g">그룹웨어 ▾</div><a><svg><use href="#d"/></svg>전자결재<span class="bd">2</span></a><a><svg><use href="#d"/></svg>할일관리<span class="bd">5</span></a><a><svg><use href="#u"/></svg>메신저</a><a><svg><use href="#d"/></svg>공지사항</a><div class="g">회계 ▸</div></div><div class="center"><div class="tabs"><span class="on">출고처관리 <b>×</b></span><span class="">미수금현황 <b>×</b></span><span class="">할일관리 <b>×</b></span></div><div class="filt"><span class="chips"><span class="on">전체 <b>48</b></span><span>미수 있음 <b>12</b></span><span>연체 <b>6</b></span><span>최근 30일 거래 <b>31</b></span></span><span class="fi m" style="min-width:210px;margin-left:auto">거래처명·대표·연락처 검색</span></div>
+<div class="sumbar"><span>거래처 <b>48곳</b></span><span>미수 잔액 합계 <b class="rd">121,960,000</b></span><span>연체 거래처 <b class="rd">6곳</b></span></div><div class="gridwrap"><div class="scroll"><table class="g" style="width:772px"><colgroup><col style="width:34px"><col style="width:62px"><col style="width:140px"><col style="width:70px"><col style="width:104px"><col style="width:120px"><col style="width:100px"><col style="width:70px"><col style="width:72px"></colgroup><tr><th class="grp" colspan="1"></th><th class="grp" colspan="5">거래처</th><th class="grp" colspan="2">미수금</th><th class="grp" colspan="1">거래</th></tr><tr class="h2"><th>No</th><th>코드</th><th>거래처명</th><th>대표</th><th>연락처</th><th>결제조건</th><th>미수 잔액</th><th>연체</th><th>최근 거래</th></tr><tr><td class="rn">1</td><td class="mu">C0012</td><td class="b">(주)타이거일렉</td><td>허재정</td><td class="mu">032-555-0101</td><td class="mu">월말 · 익월10일</td><td class="n neg b">35,800,000</td><td class="c"><span class="pill warn">D+10</span></td><td class="c mu">11/18</td></tr><tr><td class="rn">2</td><td class="mu">C0007</td><td class="b">에스엔에스필텍</td><td>김하나</td><td class="mu">032-555-0188</td><td class="mu">현금</td><td class="n neg b">22,640,000</td><td class="c"><span class="pill ok">정상</span></td><td class="c mu">11/18</td></tr><tr class="sel"><td class="rn">3</td><td class="mu">C0031</td><td class="b">제니스테크</td><td>이정훈</td><td class="mu">032-555-0142</td><td class="mu">월말 · 익월10일</td><td class="n neg b">12,400,000</td><td class="c"><span class="pill warn">D+41</span></td><td class="c mu">11/17</td></tr><tr><td class="rn">4</td><td class="mu">C0044</td><td class="b">(주)케이티솔루션</td><td>오세진</td><td class="mu">031-210-7788</td><td class="mu">월말 · 익월25일</td><td class="n neg b">18,420,000</td><td class="c"><span class="pill dg">D+96</span></td><td class="c mu">11/12</td></tr><tr><td class="rn">5</td><td class="mu">C0003</td><td class="b">한솔필터</td><td>박지원</td><td class="mu">032-555-0120</td><td class="mu">현금</td><td class="n mu">0</td><td class="c"><span class="pill ok">정상</span></td><td class="c mu">11/09</td></tr><tr><td class="rn">6</td><td class="mu">C0058</td><td class="b">대성금속</td><td>최도윤</td><td class="mu">032-555-0133</td><td class="mu">월말 · 익월10일</td><td class="n neg b">12,500,000</td><td class="c"><span class="pill warn">D+63</span></td><td class="c mu">11/07</td></tr><tr><td class="rn">7</td><td class="mu">C0021</td><td class="b">세일패키지</td><td>윤서아</td><td class="mu">02-6677-0021</td><td class="mu">월말</td><td class="n neg b">2,700,000</td><td class="c"><span class="pill ok">정상</span></td><td class="c mu">11/05</td></tr><tr><td class="rn">8</td><td class="mu">C0066</td><td class="b">우진산업</td><td>강태호</td><td class="mu">032-555-0166</td><td class="mu">월말 · 익월10일</td><td class="n neg b">10,000,000</td><td class="c"><span class="pill dg">D+128</span></td><td class="c mu">11/03</td></tr></table></div></div></div>
+<div class="detail"><div class="dh" style="border-top:3px solid #e8b04a"><b style="font-size:15px">제니스테크</b><span class="pill warn">D+41 연체</span></div>
+<div style="padding:2px 12px 0;display:flex;gap:5px"><span class="bg tx">코드 C0031</span><span class="bg tx">월말 · 익월10일</span></div>
+<div class="kv" style="margin-top:6px"><span>대표</span><b>이정훈</b><span>연락처</span><b>032-555-0142</b><span>이메일</span><b>jh@zenith.co.kr</b><span>사업자</span><b>121-81-38874</b><span>주소</span><b>인천 남동구 논현고잔로 135</b></div>
+<div class="tot"><div><span class="mu">미수 잔액</span><span class="neg b">12,400,000</span></div><div><span class="mu">이번 달 매출</span><span>4,320,000</span></div><div class="t"><span>최근 거래</span><span>11/17</span></div></div>
+<div class="rel"><h4>최근 거래</h4><a>11/17 출고 7370<span>2,900,000</span></a><a>10/28 출고 7341<span>4,300,000</span></a><a>10/31 수금<span>8,000,000</span></a></div>
+<div class="rel" style="margin-top:6px"><h4>바로가기</h4><a>미수금현황<span>열기 ›</span></a><a>거래원장<span>열기 ›</span></a></div>
+<div style="display:flex;gap:6px;padding:10px 12px;margin-top:auto;border-top:1px solid var(--line)"><span class="bt p">수정</span><span class="bt">상세 보기</span><span class="bt" style="margin-left:auto">⋯</span></div>
+</div></div>
+<div class="dim"></div><div class="modal w"><div class="mh"><b>새 글 쓰기</b><span class="bg tx">게시판 · 자유게시판</span><span class="mx">✕</span></div>
+<div class="mb">
+<div><label>게시판 *</label><div class="in">자유게시판 ▾</div></div><div><label>말머리</label><div class="in ph">선택 안 함 ▾</div></div>
+<div class="full"><label>제목 *</label><div class="in">11월 정기 점검 일정 안내</div></div>
+<div class="full"><label>내용 *</label><div class="rt"><span>B</span><span>I</span><span>U</span><i></i><span>• 목록</span><span>1. 목록</span><i></i><span>링크</span><span>표</span><span>이미지</span></div><div class="ed">11월 27일(목) 오후 2시~4시 서버 정기 점검이 있습니다.<br>점검 중에는 전표 저장이 일시 중단되니 미리 마무리해 주세요.</div></div>
+<div class="full"><label>첨부파일</label><div class="fil">📎 파일을 끌어다 놓거나 클릭해 선택 · 점검안내.pdf (214 KB) <b style="margin-left:auto;color:var(--mu)">✕</b></div></div>
+<div class="chk"><b class="on"></b>상단 고정</div><div class="chk"><b></b>댓글 허용 안 함</div>
+</div>
+<div class="mf"><span class="l">임시 저장됨 14:31 · 자동 저장</span><span class="sp bt">취소</span><span class="bt p">등록 F7</span></div></div><div class="status"><span><i class="dot"></i>연결됨</span><span>매출 > 출고처관리</span><span>행 3 / 48</span><span style="margin-left:auto">행 클릭 = 패널 · Enter/더블클릭 = 수정 모달 · Ctrl+K 검색</span></div></div></body></html>
