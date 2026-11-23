@@ -2266,6 +2266,14 @@ form.erp-field-grid {
   grid-column: span 6;
 }
 
+.erp-field-grid > .erp-field.erp-span-8 {
+  grid-column: span 8;
+}
+
+.erp-field-grid > .erp-field.erp-span-9 {
+  grid-column: span 9;
+}
+
 .erp-field-grid > .erp-field.erp-span-12 {
   grid-column: span 12;
 }

@@ -1,9 +1,10 @@
 "use client";
 
 import { useActionState, useRef, useState } from "react";
-import { FormMessage, type FormState } from "@/components/form-message";
+import type { FormState } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { useFormRedirect } from "@/lib/use-form-redirect";
+import { ModalFormSheet } from "@/components/erp/modal-form-sheet";
 import { RichTextEditor } from "@/components/rich-text-editor-dynamic";
 
 export function AnnouncementForm({
@@ -22,36 +23,32 @@ export function AnnouncementForm({
   const [content, setContent] = useState(initial?.content ?? "");
 
   return (
-    <form action={formAction} className="grid grid-cols-1 gap-3 md:grid-cols-3">
+    <ModalFormSheet
+      title={initial ? "공지 수정" : "새 공지"}
+      tabLabel="공지 내용"
+      formAction={formAction}
+      state={state}
+      pending={pending}
+      submitRef={submitRef}
+      submitLabel={`F7 ${initial ? "저장" : submitLabel}`}
+    >
       {initial && <input type="hidden" name="id" value={initial.id} />}
-      <input
-        name="title"
-        autoComplete="off"
-        placeholder="제목"
-        required
-        defaultValue={initial?.title}
-        className="erp-input md:col-span-3"
-      />
-      <label className="md:col-span-3 flex items-center gap-2 text-sm erp-u-text">
-        <input type="checkbox" name="pinned" defaultChecked={initial?.pinned} />
-        상단 고정
-      </label>
-      <div className="md:col-span-3">
+      <div className="erp-field erp-span-9">
+        <label htmlFor="ann-title">제목</label>
+        <input id="ann-title" name="title" autoComplete="off" required defaultValue={initial?.title} className="erp-input erp-u-w-full" />
+      </div>
+      <div className="erp-field erp-span-3">
+        <label htmlFor="ann-pinned">고정</label>
+        <label className="erp-u-flex erp-u-items-center erp-u-gap-8">
+          <input id="ann-pinned" type="checkbox" name="pinned" defaultChecked={initial?.pinned} />
+          상단 고정
+        </label>
+      </div>
+      <div className="erp-field erp-span-12">
+        <label>내용</label>
         <input type="hidden" name="content" value={content} />
         <RichTextEditor value={content} onChange={setContent} placeholder="내용을 입력하세요..." minHeight={260} />
       </div>
-      <div className="md:col-span-3 flex items-center gap-2">
-        <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary erp-form-submit">
-          {pending ? (
-            <>
-              <span className="erp-spinner" aria-hidden /> 저장 중...
-            </>
-          ) : (
-            `F7 ${submitLabel}`
-          )}
-        </button>
-        <FormMessage state={state} />
-      </div>
-    </form>
+    </ModalFormSheet>
   );
 }

@@ -4,13 +4,15 @@ import { AnnouncementListBody, type AnnouncementRow } from "@/components/announc
 import { isThisWeek } from "@/lib/is-this-week";
 import { AnnouncementDetailPanel } from "@/components/announcement-detail-panel";
 import { AnnouncementForm } from "@/components/announcement-form";
-import { FormSection, SplitDetailEmpty, ListTitleBar } from "@/components/erp/page-header";
+import { SplitDetailEmpty, ListTitleBar } from "@/components/erp/page-header";
 import { MegaphoneIcon } from "@/components/erp/groupware-icons";
 import { createAnnouncement } from "@/app/(dashboard)/announcements/actions";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { fetchAllRows, fetchLimitedRows } from "@/lib/fetch-all-rows";
 import { isUuid } from "@/lib/is-uuid";
 import { formatNumber } from "@/lib/format-number";
+import { getThemeFeatures } from "@/lib/erp-theme-config";
+import { getTenantTheme } from "@/lib/tenant-theme";
 import { getCurrentActor } from "@/lib/current-actor";
 
 const DEFAULT_LIST_LIMIT = 300;
@@ -27,6 +29,7 @@ export default async function AnnouncementsPage({
   const limit =
     Number.isFinite(parsedLimit) && parsedLimit > 0 ? parsedLimit : DEFAULT_LIST_LIMIT;
   const supabase = await createClient();
+  const listFrameV2 = getThemeFeatures(await getTenantTheme(supabase)).listFrameV2;
   const user = await getUser();
 
   const [{ rows, hasMore }, summaryRows, readRows, { isManagerOrAdmin }] = await Promise.all([
@@ -93,7 +96,7 @@ export default async function AnnouncementsPage({
     <div className="erp-comm-shell">
       <KeyboardShortcuts
         shortcuts={{
-          ...(isManagerOrAdmin ? { F2: { href: newHref } } : {}),
+          ...(isManagerOrAdmin ? { F2: { href: listFrameV2 ? "/announcements/new" : newHref } } : {}),
           Escape: { href: selectedId ? newHref : "/dashboard" },
         }}
       />
@@ -102,7 +105,7 @@ export default async function AnnouncementsPage({
         actions={
           <>
           {isManagerOrAdmin && (
-            <Link href={newHref} className="erp-btn erp-btn-primary">
+            <Link href={listFrameV2 ? "/announcements/new" : newHref} className="erp-btn erp-btn-primary">
               글쓰기
             </Link>
           )}
@@ -152,15 +155,13 @@ export default async function AnnouncementsPage({
         <div className="erp-split-detail">
           {selectedId ? (
             <AnnouncementDetailPanel key={selectedId} id={selectedId} closeHref={newHref} />
-          ) : isManagerOrAdmin ? (
-            <FormSection tabLabel="공지사항 작성">
-              <AnnouncementForm action={createAnnouncement} submitLabel="등록" />
-            </FormSection>
+          ) : isManagerOrAdmin && !listFrameV2 ? (
+            <AnnouncementForm action={createAnnouncement} submitLabel="등록" />
           ) : (
             <SplitDetailEmpty
               icon={<MegaphoneIcon />}
               title="공지를 선택해주세요"
-              hint="공지사항 작성은 관리자/매니저만 할 수 있습니다. 왼쪽 목록에서 공지를 누르면 여기에 내용이 표시됩니다."
+              hint={isManagerOrAdmin ? "왼쪽 목록에서 공지를 누르면 여기에 내용이 표시됩니다. 새 공지는 [글쓰기]로 작성합니다." : "공지사항 작성은 관리자/매니저만 할 수 있습니다. 왼쪽 목록에서 공지를 누르면 여기에 내용이 표시됩니다."}
             />
           )}
         </div>

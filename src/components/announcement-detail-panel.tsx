@@ -13,6 +13,8 @@ import { markAnnouncementRead } from "@/lib/announcement-reads";
 import { PageGuide } from "@/components/erp/page-guide";
 import { RichTextView } from "@/components/erp/rich-text-view";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { getThemeFeatures } from "@/lib/erp-theme-config";
+import { getTenantTheme } from "@/lib/tenant-theme";
 
 // announcements/page.tsx의 목록+상세 분할 화면에서, 목록 옆 패널에 이
 // 컴포넌트를 그대로 렌더링한다. 모달/직접 URL 접근
@@ -41,6 +43,8 @@ export async function AnnouncementDetailPanel({ id, closeHref }: { id: string; c
   }
 
   const allowManage = canManage(row.created_by, actor.userId, actor.isAdmin);
+  // 새 틀(모던 2): 상세는 읽기 전용이고 수정은 [수정] → 수정 모달(C형)에서 한다. 이전 테마는 예전처럼 패널 안에서 바로 수정.
+  const readOnlyPanel = getThemeFeatures(await getTenantTheme(supabase)).listFrameV2;
 
   // 목록의 "안읽음" 체크박스를 따로 눌러야만 읽음 처리가 되고, 정작 이
   // 상세 화면에서 내용을 다 읽어도 읽음으로 남지 않던 문제 — 알림종/대시보드
@@ -76,6 +80,11 @@ export async function AnnouncementDetailPanel({ id, closeHref }: { id: string; c
         title={`공지사항 > ${allowManage ? "수정" : "상세"}`}
         actions={
           <>
+            {allowManage && readOnlyPanel && (
+              <Link href={`/announcements/${row.id}/edit`} className="erp-btn">
+                수정
+              </Link>
+            )}
             {allowManage && (
               <DeleteButton action={deleteAnnouncement} id={row.id} confirmMessage="이 공지사항을 삭제하시겠습니까?" />
             )}
@@ -95,7 +104,7 @@ export async function AnnouncementDetailPanel({ id, closeHref }: { id: string; c
         </div>
       </div>
       <div className="erp-post-body">
-        {allowManage ? (
+        {allowManage && !readOnlyPanel ? (
           <AnnouncementForm
             action={updateAnnouncement}
             submitLabel="수정"
