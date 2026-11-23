@@ -9361,3 +9361,32 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
 .erp-state-body:last-child {
   margin-bottom: 0;
 }
+
+/* ── 블록 규칙(design/SPEC.md §7) — 모던: 검색 조건은 박스 하나(조회 버튼은 박스 안), 요약은 요약 박스 ─────────── */
+.erp-chrome-modern .erp-search-row,
+.erp-chrome-modern form.erp-field-grid {
+  padding: var(--erp-space-3) var(--erp-space-4);
+  background: var(--erp-panel);
+  border: 1px solid var(--erp-border-strong);
+  border-radius: var(--erp-radius-xl);
+}
+
+.erp-chrome-modern .erp-search-row {
+  margin-bottom: var(--erp-space-3);
+}
+
+.erp-chrome-modern .erp-grid-toolbar {
+  padding: var(--erp-space-2) var(--erp-space-4);
+  background: var(--erp-panel);
+  border: 1px solid var(--erp-border-strong);
+  border-radius: var(--erp-radius-xl);
+}
+
+.erp-chrome-modern .erp-grid-toolbar .erp-grid-stats {
+  margin-left: 0;
+}
+
+.erp-chrome-modern .erp-grid-toolbar .erp-grid-stat + .erp-grid-stat {
+  padding-left: var(--erp-space-5);
+  border-left: 1px solid var(--erp-divider);
+}
