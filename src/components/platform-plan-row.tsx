@@ -59,41 +59,27 @@ export function PlatformPlanRow({
         <input type="hidden" name="id" value={id} />
       </form>
 
-      <div className="flex flex-wrap items-start gap-4">
-        <div className="erp-field" style={{ flex: "0 0 90px" }}>
+      <div className="erp-field-grid">
+        <div className="erp-field erp-span-2">
           <label>키</label>
-          <span className="erp-u-muted erp-u-text-base"
-            style={{ fontFamily: "ui-monospace, 'SF Mono', monospace", paddingTop: 6 }}
-          >
-            {planKey}
-          </span>
+          <span className="erp-u-muted erp-u-text-base erp-plan-key">{planKey}</span>
         </div>
-        <div className="erp-field" style={{ flex: "1 1 160px", minWidth: 140 }}>
+        <div className="erp-field erp-span-4">
           <label htmlFor={`${formId}-name`}>이름</label>
-          <input
-            id={`${formId}-name`}
-            name="name"
-            form={formId}
-            defaultValue={name}
-            required
-            autoComplete="off"
-            className="erp-input w-full"
-          />
+          <input id={`${formId}-name`} name="name" form={formId} defaultValue={name} required autoComplete="off" className="erp-input erp-u-w-full" />
         </div>
-        <div className="erp-field" style={{ flex: "0 0 130px" }}>
+        <div className="erp-field erp-span-3">
           <label htmlFor={`${formId}-price`}>월 가격(원)</label>
-          <input
-            id={`${formId}-price`}
-            type="number"
-            name="monthly_price"
-            form={formId}
-            defaultValue={monthlyPrice}
-            min={0}
-            step={1000}
-            className="erp-input w-full"
-          />
+          <input id={`${formId}-price`} type="number" name="monthly_price" form={formId} defaultValue={monthlyPrice} min={0} step={1000} className="erp-input erp-u-w-full" />
         </div>
-        <div className="erp-field" style={{ flex: "2 1 260px", minWidth: 220 }}>
+        <div className="erp-field erp-span-3">
+          <label htmlFor={`${formId}-active`}>노출</label>
+          <label className="erp-u-flex erp-u-items-center erp-u-gap-8">
+            <input id={`${formId}-active`} type="checkbox" name="is_active" value="1" form={formId} defaultChecked={isActive} />
+            고객에게 보이기
+          </label>
+        </div>
+        <div className="erp-field erp-span-12">
           <label htmlFor={`${formId}-description`}>설명(고객에게 보이는 안내 문구)</label>
           <input
             id={`${formId}-description`}
@@ -102,18 +88,7 @@ export function PlatformPlanRow({
             defaultValue={description ?? ""}
             autoComplete="off"
             placeholder="예: DB 50MB, 파일 1GB, 전자세금계산서 100건 포함"
-            className="erp-input w-full"
-          />
-        </div>
-        <div className="erp-field erp-u-flex-none">
-          <label htmlFor={`${formId}-active`}>노출</label>
-          <input className="erp-u-mt-6"
-            id={`${formId}-active`}
-            type="checkbox"
-            name="is_active"
-            value="1"
-            form={formId}
-            defaultChecked={isActive}
+            className="erp-input erp-u-w-full"
           />
         </div>
       </div>

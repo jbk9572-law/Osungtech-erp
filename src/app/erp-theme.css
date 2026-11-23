@@ -9698,3 +9698,29 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
 .erp-messenger-msg-avatar {
   margin-top: var(--erp-space-4);
 }
+
+/* 플랫폼 관리자(모던 2 고정): 왼쪽 메뉴는 고객 화면 메뉴와 같은 모양 — 선택 항목은 왼쪽 3px 파란 막대 + 연한 파랑 배경(남색 알약 대신). 바깥 여백도 규칙표에 맞춰 줄인다 */
+.erp-chrome-modern .erp-platform-admin-shell {
+  padding: var(--erp-space-5) var(--erp-space-5);
+}
+.erp-chrome-modern .erp-platform-admin-sidenav {
+  flex-basis: 208px;
+}
+.erp-chrome-modern .erp-platform-admin-sidenav .erp-cat-item {
+  min-height: var(--erp-tree-item-h);
+  font-size: var(--erp-tree-item-size);
+}
+.erp-chrome-modern .erp-platform-admin-sidenav .erp-cat-item.active {
+  background: var(--erp-selected);
+  color: var(--erp-primary);
+  font-weight: 700;
+  box-shadow: inset 3px 0 0 var(--erp-primary);
+}
+
+/* 요금제 키(읽기 전용 글자) — 입력칸과 같은 높이에 맞춰 세로 가운데 */
+.erp-plan-key {
+  display: inline-flex;
+  align-items: center;
+  height: var(--erp-control-h-md);
+  font-family: ui-monospace, "SF Mono", monospace;
+}
