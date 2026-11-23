@@ -162,7 +162,7 @@ export default async function SalesActivitiesPage({
 
       <DateRangeQuickFilters basePath="/sales-activities" presets={presets} monthButtons={monthButtons} from={from} to={to} />
 
-      <DateRangeSearchForm formId="sales-activities-search-form" idPrefix="sa" from={from} to={to} q={q} qLabel="거래처 / 제목 / 내용 검색" qPlaceholder="거래처명, 제목, 내용" resetHref="/sales-activities" showReset={!!(from || to || q || limitParam)} hideSubmit />
+      <DateRangeSearchForm formId="sales-activities-search-form" idPrefix="sa" from={from} to={to} q={q} qLabel="거래처 / 제목 / 내용 검색" qPlaceholder="거래처명, 제목, 내용" resetHref="/sales-activities" showReset={!!(from || to || q || limitParam)} />
     </>
   );
 

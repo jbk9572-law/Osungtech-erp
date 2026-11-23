@@ -1,17 +1,13 @@
 "use client";
 
 import { formatKstDate } from "@/lib/kst-date";
-import { useRef, useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "@/app/login/actions";
 import { LogoutButton } from "@/components/erp/logout-button";
 import { MENU_ITEMS } from "@/lib/erp-menu";
 import { findByLongestPrefix } from "@/lib/route-match";
-import { useThemeFeatures } from "@/lib/erp-theme-features";
-import { QUICK_SEARCH_EVENT } from "@/lib/quick-search-event";
-import { useClickOutside } from "@/lib/use-click-outside";
-import { useEscapeToClose } from "@/lib/use-escape-to-close";
 
 // erp-menu.ts의 MENU_ITEMS에서 그대로 파생한다 — 예전엔 여기 따로 목록을
 // 들고 있어서 미수금현황/미지급금현황처럼 실제 있는 라우트가 빠져 있었다
@@ -21,42 +17,6 @@ const SECTION_LABEL: { prefix: string; label: string }[] = MENU_ITEMS.map(({ hre
   label,
 }));
 
-// 모던 틀의 사용자 메뉴 — 시안처럼 상단바에는 아바타 하나만 두고, 비밀번호 변경·백업/복원·로그아웃 같은 개인 메뉴는 여기에 모은다.
-function UserMenu({ email, isPlatformAdmin }: { email: string | null; isPlatformAdmin?: boolean }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  useClickOutside(open, [ref], () => setOpen(false));
-  useEscapeToClose(open, () => setOpen(false));
-  return (
-    <div className="erp-usermenu" ref={ref}>
-      <button type="button" className="erp-usermenu-btn" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
-        <span className="erp-titlebar-avatar" aria-hidden>
-          {(email ?? "?").trim().charAt(0).toUpperCase()}
-        </span>
-        <span className="erp-usermenu-name">{email}</span>
-      </button>
-      {open && (
-        <div className="erp-usermenu-pop" role="menu">
-          {isPlatformAdmin && (
-            <Link href="/platform-admin" role="menuitem" onClick={() => setOpen(false)}>
-              플랫폼 관리자
-            </Link>
-          )}
-          <Link href="/settings/backup" role="menuitem" onClick={() => setOpen(false)}>
-            백업/복원
-          </Link>
-          <Link href="/settings/password" role="menuitem" onClick={() => setOpen(false)}>
-            비밀번호 변경
-          </Link>
-          <form action={signOut}>
-            <LogoutButton />
-          </form>
-        </div>
-      )}
-    </div>
-  );
-}
-
 export function TitleBar({
   logoUrl,
   companyName,
@@ -65,7 +25,6 @@ export function TitleBar({
   isMobile,
   onToggleMenu,
   isPlatformAdmin,
-  tools,
 }: {
   logoUrl?: string | null;
   companyName?: string | null;
@@ -81,11 +40,8 @@ export function TitleBar({
   // 테넌트 관리자에게는 여전히 안 보여야 하므로 isPlatformAdmin일 때만
   // 렌더링한다(layout.tsx가 is_platform_admin RPC로 이미 판별해서 내려줌).
   isPlatformAdmin?: boolean;
-  // 모던 틀에서 상단바 안에 함께 그릴 도구(리본의 새로고침·즐겨찾기·최근 메뉴·도움말 아이콘) — 없으면 그리지 않는다.
-  tools?: ReactNode;
 }) {
   const pathname = usePathname();
-  const { appChrome } = useThemeFeatures();
   const menuLabel = findByLongestPrefix(SECTION_LABEL, pathname, (s) => s.prefix)?.label ?? "";
   const today = formatKstDate(new Date(), {
     year: "numeric",
@@ -114,42 +70,25 @@ export function TitleBar({
         </Link>
         <span className="erp-titlebar-menu">{menuLabel}</span>
       </div>
-      {appChrome && !isMobile ? (
-        <div className="erp-titlebar-right">
-          {tools}
-          <button
-            type="button"
-            className="erp-titlebar-search"
-            aria-label="메뉴 빠른 검색 열기 (Ctrl+K)"
-            onClick={() => window.dispatchEvent(new Event(QUICK_SEARCH_EVENT))}
-          >
-            <span className="erp-titlebar-search-text">메뉴 이름으로 검색</span>
-            <kbd>Ctrl K</kbd>
-          </button>
-          {notificationBell}
-          <UserMenu email={email} isPlatformAdmin={isPlatformAdmin} />
-        </div>
-      ) : (
-        <div className="erp-titlebar-right">
-          <span>{today}</span>
-          {notificationBell}
-          <span>{email}</span>
-          {isPlatformAdmin && (
-            <Link href="/platform-admin" className="erp-titlebar-link erp-titlebar-link-persistent">
-              플랫폼 관리자
-            </Link>
-          )}
-          <Link href="/settings/backup" className="erp-titlebar-link">
-            백업/복원
+      <div className="erp-titlebar-right">
+        <span>{today}</span>
+        {notificationBell}
+        <span>{email}</span>
+        {isPlatformAdmin && (
+          <Link href="/platform-admin" className="erp-titlebar-link erp-titlebar-link-persistent">
+            플랫폼 관리자
           </Link>
-          <Link href="/settings/password" className="erp-titlebar-link">
-            비밀번호 변경
-          </Link>
-          <form action={signOut}>
-            <LogoutButton />
-          </form>
-        </div>
-      )}
+        )}
+        <Link href="/settings/backup" className="erp-titlebar-link">
+          백업/복원
+        </Link>
+        <Link href="/settings/password" className="erp-titlebar-link">
+          비밀번호 변경
+        </Link>
+        <form action={signOut}>
+          <LogoutButton />
+        </form>
+      </div>
     </header>
   );
 }

@@ -46,7 +46,7 @@ export function OrgChartApproverPicker({
         <button
           type="button"
           onClick={() => setExpanded((prev) => ({ ...prev, [node.id]: !isOpen }))}
-          className="org-picker-toggle flex items-center gap-1 text-xs font-semibold erp-u-text erp-u-border-none erp-u-pointer"
+          className="flex items-center gap-1 text-xs font-semibold erp-u-text erp-u-border-none erp-u-pointer"
           style={{ padding: "3px 0", background: "none" }}
         >
           {isOpen ? "▾" : "▸"} {node.name}

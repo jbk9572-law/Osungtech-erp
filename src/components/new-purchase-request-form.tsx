@@ -72,11 +72,11 @@ export function NewPurchaseRequestForm({
 
       <VoucherTitle title="구매요청서" savedAt={null} />
 
-      <div className="erp-doc-header erp-doc-header-wide-first">
+      <div className="erp-doc-header">
         <div className="erp-doc-header-row">
           <label htmlFor="pr-supplier" className="erp-doc-header-label">공급처</label>
           <span className="erp-doc-header-value">
-            <PartySearchSelect parties={suppliers} value={supplierId} onChange={setSupplierId} id="pr-supplier" placeholder="공급처명 검색" />
+            <PartySearchSelect parties={suppliers} value={supplierId} onChange={setSupplierId} id="pr-supplier" />
           </span>
         </div>
         <div className="erp-doc-header-row">

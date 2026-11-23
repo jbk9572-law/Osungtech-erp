@@ -27,8 +27,7 @@ function parseItems(raw: string): QuoteRequestItemInput[] {
 }
 
 export async function createPurchaseQuoteRequest(_prevState: FormState, formData: FormData): Promise<FormState> {
-  // 같은 공급처가 두 번 넘어와도 한 번만 처리한다(DB 중복 오류 방지)
-  const supplierIds = [...new Set(formData.getAll("supplier_id").map(String).filter(Boolean))];
+  const supplierIds = formData.getAll("supplier_id").map(String).filter(Boolean);
   const requestDate = String(formData.get("request_date") ?? "").trim();
   const memo = String(formData.get("memo") ?? "").trim();
   const items = parseItems(String(formData.get("items") ?? "[]"));
@@ -68,10 +67,6 @@ export async function savePurchaseQuotePrices(_prevState: FormState, formData: F
     itemId,
     unitPrice: Number(unitPrices[i] ?? 0),
   }));
-  // 숫자가 아니거나 음수인 단가는 저장하지 않는다(빈 칸은 0으로 본다).
-  if (items.some((i) => !Number.isFinite(i.unitPrice) || i.unitPrice < 0)) {
-    return { error: "단가는 0 이상의 숫자로 입력해주세요." };
-  }
 
   const supabase = await createClient();
   const { error } = await supabase.rpc("set_purchase_quote_prices", {

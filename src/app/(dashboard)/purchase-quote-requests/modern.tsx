@@ -71,7 +71,7 @@ export default async function PurchaseQuoteRequestsPage({
     <>
       <DateRangeQuickFilters basePath="/purchase-quote-requests" presets={presets} monthButtons={monthButtons} from={from} to={to} />
 
-      <DateRangeSearchForm formId="purchase-quote-requests-search-form" idPrefix="pqr" from={from} to={to} q={q} qLabel="매입처 / 메모 검색" qPlaceholder="매입처명, 메모" resetHref="/purchase-quote-requests" showReset={!!(from || to || q || limitParam)} hideSubmit />
+      <DateRangeSearchForm formId="purchase-quote-requests-search-form" idPrefix="pqr" from={from} to={to} q={q} qLabel="매입처 / 메모 검색" qPlaceholder="매입처명, 메모" resetHref="/purchase-quote-requests" showReset={!!(from || to || q || limitParam)} />
     </>
   );
 
