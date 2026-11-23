@@ -35,10 +35,10 @@ const MESSAGE_COLUMNS = "id, channel_id, sender_id, content, file_url, file_path
 // 품목명 등을 마저 타이핑해서 보내면 actions.ts의 sendMessage가
 // 실제 데이터를 조회해 카드로 바꿔준다.
 const ERP_COMMANDS = [
-  { prefix: "/매출전표", label: "매출전표", icon: "📊" },
-  { prefix: "/재고조회", label: "재고조회", icon: "📦" },
-  { prefix: "/게시판공지", label: "게시판공지", icon: "📌" },
-  { prefix: "/일정마감", label: "일정마감", icon: "⏰" },
+  { prefix: "/매출전표", label: "매출전표" },
+  { prefix: "/재고조회", label: "재고조회" },
+  { prefix: "/게시판공지", label: "게시판공지" },
+  { prefix: "/일정마감", label: "일정마감" },
 ] as const;
 
 function dateKey(iso: string): string {
@@ -804,7 +804,10 @@ export function MessengerPage({
                       </p>
                     ) : (
                       <>
-                        {displayEntries.map(({ dateLabel, message: m }) => {
+                        {displayEntries.map(({ dateLabel, message: m }, idx) => {
+                          // 같은 사람이 5분 안에 이어서 보낸 메시지는 이름·시각을 한 번만 보여준다(메신저 앱처럼)
+                          const prev = idx > 0 && !dateLabel ? displayEntries[idx - 1].message : null;
+                          const showMeta = !prev || prev.sender_id !== m.sender_id || new Date(m.created_at).getTime() - new Date(prev.created_at).getTime() > 5 * 60_000;
                           const mine = m.sender_id === currentUserId;
                           const isImg = m.file_name ? isImageFile(m.file_name) : false;
                           return (
@@ -815,9 +818,11 @@ export function MessengerPage({
                                 </div>
                               )}
                               <div className="erp-messenger-bubble-group" data-mine={mine ? "1" : undefined}>
-                                <div className="erp-messenger-bubble-meta">
-                                  {nameFor(m.sender_id)} · {formatKstTime(m.created_at)}
-                                </div>
+                                {showMeta && (
+                                  <div className="erp-messenger-bubble-meta">
+                                    {nameFor(m.sender_id)} · {formatKstTime(m.created_at, { hour: "numeric", minute: "2-digit" })}
+                                  </div>
+                                )}
 
                                 {m.erp_ref && <ErpRefCard erpRef={m.erp_ref} />}
 
@@ -879,7 +884,6 @@ export function MessengerPage({
                         className="erp-messenger-command-btn"
                         onClick={() => insertCommand(cmd.prefix)}
                       >
-                        <span aria-hidden>{cmd.icon}</span>
                         {cmd.prefix}
                       </button>
                     ))}
@@ -891,7 +895,7 @@ export function MessengerPage({
                       name="content"
                       placeholder="메시지 입력 또는 명령어(/) 입력 (Enter: 전송)"
                       rows={2}
-                      className="erp-input erp-u-flex-1 erp-u-text-base"
+                      className="erp-input erp-u-flex-1 erp-messenger-textarea"
                       style={{ resize: "none" }}
                       onKeyDown={handleComposerKeyDown}
                     />

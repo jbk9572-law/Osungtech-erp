@@ -6210,7 +6210,7 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   padding: 9px 13px;
   border-radius: var(--erp-comm-radius-bubble);
   border-bottom-left-radius: var(--erp-comm-radius-sm);
-  font-size: var(--erp-font-lg);
+  font-size: var(--erp-font-base);
   line-height: 1.5;
   white-space: pre-wrap;
   word-break: break-word;
@@ -9536,7 +9536,29 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   font-size: var(--erp-font-xs);
   flex: 0 0 auto;
 }
-.erp-messenger-split3 .erp-cat-sidebar {
-  flex-basis: 180px;
-  max-width: 180px;
+/* 열 폭: 필터 열은 좁게(180px), 목록 280px, 나머지는 대화창 — 열 사이가 벌어지지 않게 격자 열을 직접 정한다 */
+.erp-messenger-split3 {
+  grid-template-columns: 180px 280px minmax(0, 1fr);
+}
+
+/* 메신저(모던): 마우스를 올렸을 때만 삭제가 보이게 — 말풍선마다 "삭제" 글자가 늘어서 어수선하던 것을 정리. 터치 기기·확인 대기 중에는 항상 보인다 */
+.erp-chrome-modern .erp-messenger-bubble-actions {
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.erp-chrome-modern .erp-messenger-bubble-group:hover .erp-messenger-bubble-actions,
+.erp-chrome-modern .erp-messenger-bubble-group:focus-within .erp-messenger-bubble-actions,
+.erp-chrome-modern .erp-messenger-bubble-actions:has([data-armed="1"]) {
+  opacity: 1;
+}
+@media (hover: none) {
+  .erp-chrome-modern .erp-messenger-bubble-actions {
+    opacity: 1;
+  }
+}
+/* 작성칸은 본문과 같은 글꼴(고정폭 글꼴로 보이던 것을 바로잡음) */
+.erp-messenger-textarea {
+  font-family: inherit;
+  font-size: var(--erp-font-base);
+  line-height: 1.5;
 }
