@@ -525,6 +525,7 @@
   --erp-tree-item-h: 28px;
   --erp-tree-item-size: var(--erp-font-base);
   --erp-tree-indent: 14px;
+  --erp-toolbar-slot-h: 42px;
   --erp-tree-group-size: var(--erp-font-xs);
 }
 
@@ -9155,8 +9156,9 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   border-bottom: 1px solid var(--erp-border-strong);
 }
 
+/* 도구 줄이 없는 화면에서도 자리를 접지 않고 같은 높이로 둔다 — 메뉴를 옮길 때마다 본문이 위아래로 밀리지 않게(R-008) */
 .erp-toolbar-slot:empty {
-  display: none;
+  min-height: var(--erp-toolbar-slot-h);
 }
 
 .erp-toolbar-slot .erp-listtoolbar {

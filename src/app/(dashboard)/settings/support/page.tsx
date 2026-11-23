@@ -1,7 +1,11 @@
 import { createClient, getUser } from "@/lib/supabase/server";
 import { getCurrentActor } from "@/lib/current-actor";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
-import { ListPageHeader, FormSection } from "@/components/erp/page-header";
+import { GuardedLink } from "@/components/erp/guarded-link";
+import { ToolbarKey } from "@/components/erp/list-toolbar";
+import { getThemeFeatures } from "@/lib/erp-theme-config";
+import { getTenantTheme } from "@/lib/tenant-theme";
+import { ListPageHeader } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
 import { RichTextView } from "@/components/erp/rich-text-view";
 import { GridBadge } from "@/components/grid/badge";
@@ -25,6 +29,7 @@ export default async function SupportPage() {
   const supabase = await createClient();
   const user = await getUser();
   const { isManagerOrAdmin } = await getCurrentActor(supabase);
+  const listFrameV2 = getThemeFeatures(await getTenantTheme(supabase)).listFrameV2;
 
   if (!isManagerOrAdmin) {
     return (
@@ -44,17 +49,24 @@ export default async function SupportPage() {
 
   return (
     <div>
-      <KeyboardShortcuts shortcuts={{ Escape: { href: "/dashboard" } }} />
-      <ListPageHeader title="환경설정 > 운영자 문의" />
+      <KeyboardShortcuts shortcuts={{ ...(listFrameV2 ? { F2: { href: "/settings/support/new" } } : {}), Escape: { href: "/dashboard" } }} />
+      <ListPageHeader
+        title="환경설정 > 운영자 문의"
+        actions={
+          listFrameV2 ? (
+            <GuardedLink href="/settings/support/new" className="erp-btn erp-btn-primary">
+              신규<ToolbarKey>Ctrl+Enter</ToolbarKey>
+            </GuardedLink>
+          ) : undefined
+        }
+      />
       <PageGuide>
         서비스 이용 중 궁금한 점이나 문제가 있으면 아래에 남겨주세요. 플랫폼 운영자가 확인 후 답변을
         등록하면 이 화면에 그대로 표시됩니다. 회사를 대표해 운영자와 소통하는 채널이라 관리자/매니저만
         쓸 수 있습니다.
       </PageGuide>
 
-      <FormSection tabLabel="문의 등록">
-        <SupportTicketForm action={createSupportTicket} />
-      </FormSection>
+      {!listFrameV2 && <SupportTicketForm action={createSupportTicket} />}
 
       <div className="erp-detail">
         <div className="erp-detail-tabs">

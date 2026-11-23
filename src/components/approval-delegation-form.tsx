@@ -1,8 +1,9 @@
 "use client";
 
 import { useActionState, useRef, useState } from "react";
-import { FormMessage, type FormState } from "@/components/form-message";
+import type { FormState } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
+import { ModalFormSheet } from "@/components/erp/modal-form-sheet";
 import { ErpSelect } from "@/components/erp/erp-select";
 
 export function ApprovalDelegationForm({
@@ -21,9 +22,9 @@ export function ApprovalDelegationForm({
   useKeyShortcut("F7", submitRef);
 
   return (
-    <form action={formAction} className="grid grid-cols-1 gap-3 md:grid-cols-2" style={{ maxWidth: 640 }}>
+    <ModalFormSheet title="새 위임 등록" tabLabel="새 위임 등록" formAction={formAction} state={state} pending={pending} submitRef={submitRef} submitLabel="F7 저장">
       {isAdmin ? (
-        <div className="erp-field">
+        <div className="erp-field erp-span-6">
           <label htmlFor="dg-delegator">위임자 (자리를 비우는 사람)</label>
           <ErpSelect
             id="dg-delegator"
@@ -36,12 +37,12 @@ export function ApprovalDelegationForm({
           />
         </div>
       ) : (
-        <div className="erp-field">
-          <label>위임자</label>
-          <input aria-label="위임자(본인)" className="erp-input w-full" value="본인" disabled readOnly />
+        <div className="erp-field erp-span-6">
+          <label htmlFor="dg-delegator-self">위임자</label>
+          <input id="dg-delegator-self" aria-label="위임자(본인)" className="erp-input erp-u-w-full" value="본인" disabled readOnly />
         </div>
       )}
-      <div className="erp-field">
+      <div className="erp-field erp-span-6">
         <label htmlFor="dg-delegate">대리 결재자</label>
         <ErpSelect
           id="dg-delegate"
@@ -53,24 +54,18 @@ export function ApprovalDelegationForm({
           options={profiles.map((p) => ({ value: p.id, label: p.full_name || "구성원" }))}
         />
       </div>
-      <div className="erp-field">
+      <div className="erp-field erp-span-6">
         <label htmlFor="dg-start">시작일</label>
-        <input id="dg-start" type="date" name="start_date" className="erp-input w-full" required />
+        <input id="dg-start" type="date" name="start_date" className="erp-input erp-u-w-full" required />
       </div>
-      <div className="erp-field">
+      <div className="erp-field erp-span-6">
         <label htmlFor="dg-end">종료일</label>
-        <input id="dg-end" type="date" name="end_date" className="erp-input w-full" required />
+        <input id="dg-end" type="date" name="end_date" className="erp-input erp-u-w-full" required />
       </div>
-      <div className="erp-field md:col-span-2">
+      <div className="erp-field erp-span-12">
         <label htmlFor="dg-reason">사유 (선택)</label>
-        <input id="dg-reason" type="text" name="reason" autoComplete="off" className="erp-input w-full" placeholder="예: 출장, 휴가" />
+        <input id="dg-reason" type="text" name="reason" autoComplete="off" className="erp-input erp-u-w-full" placeholder="예: 출장, 휴가" />
       </div>
-      <div className="flex items-center gap-2 md:col-span-2">
-        <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary erp-form-submit">
-          {pending ? "저장 중..." : "F7 위임 등록"}
-        </button>
-        <FormMessage state={state} />
-      </div>
-    </form>
+    </ModalFormSheet>
   );
 }

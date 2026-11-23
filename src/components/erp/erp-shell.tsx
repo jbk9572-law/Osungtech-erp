@@ -182,7 +182,7 @@ export function ErpShell({
         tools={foldRibbon ? ribbon : undefined}
       />
       {!foldRibbon && ribbon}
-      {foldRibbon && <div id={TOOLBAR_SLOT_ID} className="erp-toolbar-slot" />}
+      {foldRibbon && !getThemeFeatures(theme).listFrameV2 && <div id={TOOLBAR_SLOT_ID} className="erp-toolbar-slot" />}
       <div className="erp-body">
         <TreeMenu
           usageWidget={usageWidget}

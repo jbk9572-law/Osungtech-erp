@@ -3,7 +3,11 @@ import { GridBadge } from "@/components/grid/badge";
 import { getCurrentActor } from "@/lib/current-actor";
 import { todayKstStr } from "@/lib/kst-date";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
-import { ListPageHeader, FormSection } from "@/components/erp/page-header";
+import { GuardedLink } from "@/components/erp/guarded-link";
+import { ToolbarKey } from "@/components/erp/list-toolbar";
+import { getThemeFeatures } from "@/lib/erp-theme-config";
+import { getTenantTheme } from "@/lib/tenant-theme";
+import { ListPageHeader } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
 import { InlineConfirmDelete } from "@/components/inline-confirm-delete";
 import { ApprovalDelegationForm } from "@/components/approval-delegation-form";
@@ -13,6 +17,7 @@ import { fetchAllRows } from "@/lib/fetch-all-rows";
 export default async function ApprovalDelegationsPage() {
   const supabase = await createClient();
   const { isAdmin } = await getCurrentActor(supabase);
+  const listFrameV2 = getThemeFeatures(await getTenantTheme(supabase)).listFrameV2;
 
   const [profiles, delegations] = await Promise.all([
     fetchAllRows<{ id: string; full_name: string | null }>((from, to) =>
@@ -38,8 +43,17 @@ export default async function ApprovalDelegationsPage() {
 
   return (
     <div className="erp-comm-shell">
-      <KeyboardShortcuts shortcuts={{ Escape: { href: "/dashboard" } }} />
-      <ListPageHeader title="환경설정 > 전결권 관리" />
+      <KeyboardShortcuts shortcuts={{ ...(listFrameV2 ? { F2: { href: "/settings/delegations/new" } } : {}), Escape: { href: "/dashboard" } }} />
+      <ListPageHeader
+        title="환경설정 > 전결권 관리"
+        actions={
+          listFrameV2 ? (
+            <GuardedLink href="/settings/delegations/new" className="erp-btn erp-btn-primary">
+              신규<ToolbarKey>Ctrl+Enter</ToolbarKey>
+            </GuardedLink>
+          ) : undefined
+        }
+      />
 
       <PageGuide>
         휴가·출장 등으로 자리를 비우는 기간 동안, 지정한 대리 결재자가 그
@@ -49,9 +63,7 @@ export default async function ApprovalDelegationsPage() {
         {isAdmin ? " 관리자는 다른 구성원의 위임도 대신 등록할 수 있습니다." : ""}
       </PageGuide>
 
-      <FormSection tabLabel="새 위임 등록">
-        <ApprovalDelegationForm action={createApprovalDelegation} isAdmin={isAdmin} profiles={profiles} />
-      </FormSection>
+      {!listFrameV2 && <ApprovalDelegationForm action={createApprovalDelegation} isAdmin={isAdmin} profiles={profiles} />}
 
       <div className="erp-u-mt-14">
         {delegations.length === 0 ? (

@@ -1,8 +1,9 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
-import { FormMessage, type FormState } from "@/components/form-message";
+import type { FormState } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
+import { ModalFormSheet } from "@/components/erp/modal-form-sheet";
 import { RichTextEditor } from "@/components/rich-text-editor-dynamic";
 
 export function SupportTicketForm({
@@ -32,27 +33,21 @@ export function SupportTicketForm({
   }, [state]);
 
   return (
-    <form ref={formRef} action={formAction} className="flex flex-col gap-3">
-      <input name="subject" autoComplete="off" placeholder="제목" required className="erp-input" />
-      <input type="hidden" name="message" value={message} />
-      <RichTextEditor
-        value={message}
-        onChange={setMessage}
-        placeholder="어떤 문제가 있었는지, 어떤 화면에서 발생했는지 자세히 적어주시면 빠르게 도와드릴 수 있습니다."
-        minHeight={160}
-      />
-      <div className="erp-form-actions">
-        <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary erp-form-submit">
-          {pending ? (
-            <>
-              <span className="erp-spinner" aria-hidden /> 등록 중...
-            </>
-          ) : (
-            "F7 문의 등록"
-          )}
-        </button>
-        <FormMessage state={state} />
+    <ModalFormSheet title="문의 등록" tabLabel="문의 등록" formRef={formRef} formAction={formAction} state={state} pending={pending} submitRef={submitRef} submitLabel="F7 등록">
+      <div className="erp-field erp-span-12">
+        <label htmlFor="support-subject">제목</label>
+        <input id="support-subject" name="subject" autoComplete="off" required className="erp-input erp-u-w-full" />
       </div>
-    </form>
+      <input type="hidden" name="message" value={message} />
+      <div className="erp-field erp-span-12">
+        <label>내용</label>
+        <RichTextEditor
+          value={message}
+          onChange={setMessage}
+          placeholder="어떤 문제가 있었는지, 어떤 화면에서 발생했는지 자세히 적어주시면 빠르게 도와드릴 수 있습니다."
+          minHeight={160}
+        />
+      </div>
+    </ModalFormSheet>
   );
 }
