@@ -14,7 +14,6 @@ import {
   setMessengerChannelMuted,
 } from "@/app/(dashboard)/messenger/actions";
 import type { MessengerMessage, MessengerChannel } from "@/lib/messenger-types";
-import { SplitFilterColumn } from "@/components/erp/split-filter-column";
 import { isImageFile } from "@/lib/file-display";
 import { FilePickerInput } from "@/components/file-picker-input";
 import { useDebouncedCallback } from "@/lib/use-debounced-callback";
@@ -114,6 +113,7 @@ export function MessengerPage({
   const [hasAttachment, setHasAttachment] = useState(false);
   const [composerKey, setComposerKey] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showSearch, setShowSearch] = useState(false);
   const [groupName, setGroupName] = useState("");
   const [pickedMemberIds, setPickedMemberIds] = useState<string[]>([]);
   const router = useRouter();
@@ -491,19 +491,7 @@ export function MessengerPage({
           (카테고리 사이드바 역할) → 채팅방목록 → 대화창. 넓은 화면에서는
           셋 다 항상 보이고, 좁은 화면에서는 mobileView가 가리키는 패널
           하나만 보이게 CSS로 전환한다(erp-theme.css의 @media 참고). */}
-      <div className="erp-split3-shell erp-messenger-split3" data-mobile-view={mobileView}>
-        <SplitFilterColumn
-          className="erp-messenger-roster"
-          ariaLabel="메신저 필터"
-          groups={[
-            {
-              heading: "대화",
-              items: chatFilters.map(([key, label, count]) => ({ key, label, count, active: chatFilter === key, onSelect: () => setChatFilter(key) })),
-            },
-          ]}
-        >
-        </SplitFilterColumn>
-
+      <div className="erp-messenger-shell erp-messenger-split3 erp-messenger-2col" data-mobile-view={mobileView}>
         <section className="erp-split-list erp-messenger-sidebar">
           <div className="erp-split-list-head">
             <div className="erp-seg" role="tablist" aria-label="목록 종류">
@@ -548,9 +536,10 @@ export function MessengerPage({
           ) : (
           <>
           <div className="erp-messenger-mobile-filter erp-date-presets">
-            {chatFilters.map(([key, label]) => (
+            {chatFilters.filter(([key, , count]) => key !== "muted" || count > 0 || chatFilter === "muted").map(([key, label, count]) => (
               <button key={key} type="button" onClick={() => setChatFilter(key)} className={`erp-date-preset-btn${chatFilter === key ? " active" : ""}`}>
                 {label}
+                {count > 0 && key !== "all" ? ` (${count})` : ""}
               </button>
             ))}
           </div>
@@ -631,15 +620,19 @@ export function MessengerPage({
                 <>
                   <div className="erp-messenger-chat-header">
                     <ChannelAvatar channel={activeChannel} profileNames={profileNames} currentUserId={currentUserId} size={36} />
-                    <span className="erp-messenger-chat-header-name">
-                      {channelLabel(activeChannel, profileNames, currentUserId)}
+                    <span className="erp-messenger-chat-header-text">
+                      <span className="erp-messenger-chat-header-name">{channelLabel(activeChannel, profileNames, currentUserId)}</span>
+                      {activeChannel.type !== "dm" && <span className="erp-messenger-chat-header-sub">멤버 {activeChannel.memberIds.length}명</span>}
                     </span>
-                    <span className="erp-messenger-erp-badge">ERP 연동 활성화됨</span>
-                    <button type="button" className="erp-btn erp-btn-xs" onClick={() => toggleMute(activeChannel.id)}>
-                      {mutedIds.has(activeChannel.id) ? "🔕 알림 켜기" : "🔔 알림 끄기"}
+                    <button type="button" className="erp-btn erp-btn-sm" aria-pressed={showSearch} onClick={() => setShowSearch((v) => !v)}>
+                      검색
+                    </button>
+                    <button type="button" className="erp-btn erp-btn-sm" onClick={() => toggleMute(activeChannel.id)}>
+                      {mutedIds.has(activeChannel.id) ? "알림 켜기" : "알림 끄기"}
                     </button>
                   </div>
 
+                  {(showSearch || searchQuery) && (
                   <div className="erp-messenger-search">
                     <input
                       type="text"
@@ -660,6 +653,7 @@ export function MessengerPage({
                       </button>
                     )}
                   </div>
+                  )}
 
                   <div className="erp-messenger-body">
                     {loadingChannel ? (
@@ -681,6 +675,12 @@ export function MessengerPage({
                                   <span>{dateLabel}</span>
                                 </div>
                               )}
+                              <div className="erp-messenger-msg-row" data-mine={mine ? "1" : undefined}>
+                              {!mine && (
+                                <span className="erp-avatar erp-messenger-row-avatar erp-messenger-msg-avatar" aria-hidden style={showMeta ? undefined : { visibility: "hidden" }}>
+                                  {(nameFor(m.sender_id)[0] ?? "?")}
+                                </span>
+                              )}
                               <div className="erp-messenger-bubble-group" data-mine={mine ? "1" : undefined}>
                                 {showMeta && (
                                   <div className="erp-messenger-bubble-meta">
@@ -690,7 +690,7 @@ export function MessengerPage({
 
                                 {m.erp_ref && <ErpRefCard erpRef={m.erp_ref} />}
 
-                                {m.content && (
+                                {m.content && !(m.erp_ref && m.content.startsWith("/")) && (
                                   <div className="erp-messenger-bubble">{highlightText(m.content, query)}</div>
                                 )}
 
@@ -726,6 +726,7 @@ export function MessengerPage({
                                     )}
                                   </div>
                                 )}
+                              </div>
                               </div>
                             </Fragment>
                           );

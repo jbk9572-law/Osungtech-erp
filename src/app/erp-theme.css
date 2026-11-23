@@ -9605,8 +9605,7 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
 .erp-chrome-modern .erp-messenger-chat-header,
 .erp-chrome-modern .erp-messenger-search,
 .erp-chrome-modern .erp-messenger-body,
-.erp-chrome-modern .erp-messenger-command-bar,
-.erp-chrome-modern .erp-messenger-composer {
+.erp-chrome-modern .erp-messenger-command-bar {
   padding-inline: max(var(--erp-space-4), calc((100% - 680px) / 2));
 }
 .erp-chrome-modern .erp-messenger-bubble-group {
@@ -9625,4 +9624,69 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
 }
 .erp-chrome-modern .erp-messenger-body {
   gap: var(--erp-space-3);
+}
+
+/* ── 메신저 2열(예외 변형 messenger-split, design/EXCEPTIONS.md): 왼쪽 목록 300px | 오른쪽 대화 ── */
+/* 메신저 2열 틀 — 3분할(.erp-split3-shell)이 아니라 이 변형 전용 틀이다. 열 사이 겹침·간격 없음 */
+.erp-messenger-shell {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  align-items: stretch;
+  min-height: 0;
+  flex: 1;
+}
+@media (max-width: 768px) {
+  .erp-messenger-shell[data-mobile-view="detail"] .erp-split-list {
+    display: none;
+  }
+}
+.erp-chrome-modern .erp-messenger-2col .erp-messenger-mobile-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--erp-space-1);
+  padding: 0 var(--erp-space-2) var(--erp-space-2);
+}
+.erp-messenger-chat-header-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.erp-messenger-chat-header-sub {
+  font-size: var(--erp-font-xs);
+  color: var(--erp-text-muted);
+}
+/* 작성칸: 첨부·전송이 붙은 하나의 둥근 입력 카드 */
+.erp-chrome-modern .erp-messenger-composer {
+  margin: var(--erp-space-2) 0 var(--erp-space-3);
+  border: 1px solid var(--erp-border-strong);
+  border-radius: var(--erp-radius-xl);
+  background: var(--erp-panel);
+  padding: var(--erp-space-2);
+  margin-inline: max(var(--erp-space-3), calc((100% - 680px) / 2));
+  padding-inline: var(--erp-space-2);
+}
+.erp-chrome-modern .erp-messenger-composer .erp-input {
+  border: none;
+  box-shadow: none;
+  background: transparent;
+}
+
+/* 메신저 한 줄 = (상대방이면 아바타) + 말풍선 묶음. 같은 사람의 연속 메시지는 아바타 자리만 남긴다 */
+.erp-chrome-modern .erp-messenger-msg-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--erp-space-2);
+  align-self: flex-start;
+  max-width: 82%;
+}
+.erp-chrome-modern .erp-messenger-msg-row[data-mine="1"] {
+  align-self: flex-end;
+}
+.erp-chrome-modern .erp-messenger-msg-row > .erp-messenger-bubble-group {
+  max-width: none;
+  min-width: 0;
+}
+.erp-messenger-msg-avatar {
+  margin-top: var(--erp-space-4);
 }
