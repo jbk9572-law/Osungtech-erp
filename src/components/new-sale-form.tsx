@@ -1309,7 +1309,7 @@ export function NewSaleForm({
           >
             <thead>
               <tr>
-                {voucherLayout && <th style={{ width: 40 }}>No</th>}
+                {voucherLayout && <th className="erp-col-xxs">No</th>}
                 {resizableTh("product", "품목")}
                 {resizableTh("spec", "규격")}
                 {resizableTh("lotNumber", "관리번호")}
@@ -1319,7 +1319,7 @@ export function NewSaleForm({
                 {resizableTh("supplyAmount", "공급가액", "num")}
                 {resizableTh("tax", "세액", "num")}
                 {resizableTh("total", "합계", "num")}
-                {voucherLayout && <th style={{ width: 140 }}>재고 확인</th>}
+                {voucherLayout && <th className="erp-col-xl">재고 확인</th>}
                 {!voucherLayout && resizableTh("remark", "비고")}
                 <th style={{ width: colWidths.actions }} />
               </tr>

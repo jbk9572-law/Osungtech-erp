@@ -176,13 +176,13 @@ export async function PaymentRequestDetailPanel({
             <table className="erp-grid">
               <thead>
                 <tr>
-                  <th style={{ width: 100 }}>일자</th>
+                  <th className="erp-col-m">일자</th>
                   <th>사용처</th>
-                  <th style={{ width: 160 }}>용도</th>
-                  <th className="num" style={{ width: 130 }}>
+                  <th className="erp-col-xxl">용도</th>
+                  <th className="num erp-col-xl">
                     금액
                   </th>
-                  <th style={{ width: 160 }}>비고</th>
+                  <th className="erp-col-xxl">비고</th>
                 </tr>
               </thead>
               <tbody>

@@ -124,15 +124,15 @@ export async function SupplierDetailPanel({ id }: { id: string }) {
               <table className="erp-grid">
                 <thead>
                   <tr>
-                    <th style={{ width: 90 }}>일자</th>
-                    <th style={{ width: 90 }}>전표번호</th>
-                    <th className="num" style={{ width: 130 }}>
+                    <th className="erp-col-m">일자</th>
+                    <th className="erp-col-m">전표번호</th>
+                    <th className="num erp-col-xl">
                       전표 금액
                     </th>
-                    <th className="num" style={{ width: 130 }}>
+                    <th className="num erp-col-xl">
                       미지급 잔액
                     </th>
-                    <th style={{ width: 110 }}>경과</th>
+                    <th className="erp-col-l">경과</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -168,13 +168,13 @@ export async function SupplierDetailPanel({ id }: { id: string }) {
               <table className="erp-grid">
                 <thead>
                   <tr>
-                    <th style={{ width: 100 }}>일자</th>
-                    <th className="num" style={{ width: 130 }}>
+                    <th className="erp-col-m">일자</th>
+                    <th className="num erp-col-xl">
                       금액
                     </th>
-                    <th style={{ width: 90 }}>방법</th>
+                    <th className="erp-col-m">방법</th>
                     <th>메모</th>
-                    <th style={{ width: 60 }} />
+                    <th className="erp-col-xs"  />
                   </tr>
                 </thead>
                 <tbody>

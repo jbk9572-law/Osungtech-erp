@@ -579,11 +579,11 @@ export function ManualLayoutClient({
             >
               <thead>
                 <tr>
-                  <th style={{ width: 40 }}>#</th>
-                  <th style={{ width: 150 }}>가로(mm)</th>
-                  <th style={{ width: 150 }}>세로(mm)</th>
-                  <th style={{ width: 150 }}>목표 수량(매)</th>
-                  <th style={{ width: 60 }}></th>
+                  <th className="erp-col-xxs">#</th>
+                  <th className="erp-col-xxl">가로(mm)</th>
+                  <th className="erp-col-xxl">세로(mm)</th>
+                  <th className="erp-col-xxl">목표 수량(매)</th>
+                  <th className="erp-col-xs"></th>
                 </tr>
               </thead>
               <tbody onKeyDown={focusSameColumnNextRow}>

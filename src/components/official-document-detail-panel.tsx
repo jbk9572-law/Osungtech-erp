@@ -209,11 +209,11 @@ export async function OfficialDocumentDetailPanel({
               <table className="erp-grid">
                 <thead>
                   <tr>
-                    <th style={{ width: 70 }}>구분</th>
+                    <th className="erp-col-s">구분</th>
                     <th>이름</th>
                     <th>이메일</th>
-                    <th style={{ width: 100 }}>상태</th>
-                    {allowManage && doc.status === "sent" && <th style={{ width: 140 }}>처리</th>}
+                    <th className="erp-col-m">상태</th>
+                    {allowManage && doc.status === "sent" && <th className="erp-col-xl">처리</th>}
                   </tr>
                 </thead>
                 <tbody>

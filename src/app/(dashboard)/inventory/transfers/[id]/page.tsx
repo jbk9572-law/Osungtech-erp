@@ -72,8 +72,8 @@ export default async function StockTransferDetailPage({
           <thead>
             <tr>
               <th>품목</th>
-              <th style={{ width: 140 }}>규격</th>
-              <th className="num" style={{ width: 110 }}>수량</th>
+              <th className="erp-col-xl">규격</th>
+              <th className="num erp-col-l">수량</th>
               <th>비고</th>
             </tr>
           </thead>

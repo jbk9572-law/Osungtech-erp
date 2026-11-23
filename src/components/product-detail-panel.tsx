@@ -133,10 +133,10 @@ export async function ProductDetailPanel({ id }: { id: string }) {
                     <tr>
                       <th>SKU</th>
                       <th>구성품명</th>
-                      <th className="num" style={{ width: 140 }}>
+                      <th className="num erp-col-xl">
                         1{product.unit}당 소요량
                       </th>
-                      <th style={{ width: 70 }} />
+                      <th className="erp-col-s"  />
                     </tr>
                   </thead>
                   <tbody>

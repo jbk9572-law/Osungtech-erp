@@ -111,7 +111,7 @@ export default async function DepartmentsPage() {
             <table className="erp-grid">
               <thead>
                 <tr>
-                  <th style={{ width: 140 }}>구성원</th>
+                  <th className="erp-col-xl">구성원</th>
                   <th>부서 · 직급/직책</th>
                 </tr>
               </thead>

@@ -153,7 +153,7 @@ export default async function FeatureSettingsPage() {
                 <thead>
                   <tr>
                     <th>세부 메뉴</th>
-                    <th style={{ width: 140 }}>사용 여부</th>
+                    <th className="erp-col-xl">사용 여부</th>
                   </tr>
                 </thead>
                 <tbody>

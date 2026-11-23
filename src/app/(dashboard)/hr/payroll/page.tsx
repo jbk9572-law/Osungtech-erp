@@ -169,7 +169,7 @@ export default async function PayrollPage({
               >
                 <thead>
                   <tr>
-                    <th style={{ width: 180 }}>구성원</th>
+                    <th className="erp-col-w">구성원</th>
                     <th style={{ width: 320 }}>월 기본급 / 부양가족 수</th>
                   </tr>
                 </thead>
@@ -289,22 +289,22 @@ export default async function PayrollPage({
                 >
                   <thead>
                     <tr>
-                      <th style={{ width: 140 }}>구성원</th>
-                      <th className="num" style={{ width: 100 }}>
+                      <th className="erp-col-xl">구성원</th>
+                      <th className="num erp-col-m">
                         기본급
                       </th>
-                      <th style={{ width: 230 }}>성과금 / 특별상여금</th>
-                      <th className="num" style={{ width: 100 }}>
+                      <th className="erp-col-xw">성과금 / 특별상여금</th>
+                      <th className="num erp-col-m">
                         소득세/지방세
                       </th>
-                      <th className="num" style={{ width: 100 }}>
+                      <th className="num erp-col-m">
                         공제합계
                       </th>
-                      <th className="num" style={{ width: 100 }}>
+                      <th className="num erp-col-m">
                         실지급액
                       </th>
-                      <th style={{ width: 90 }}>상태</th>
-                      <th style={{ width: 200 }} />
+                      <th className="erp-col-m">상태</th>
+                      <th className="erp-col-w"  />
                     </tr>
                   </thead>
                   <tbody>

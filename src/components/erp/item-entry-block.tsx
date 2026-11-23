@@ -63,11 +63,11 @@ export function ItemEntryBlock<P extends Product>({
             <thead>
               <tr>
                 <th style={{ width: 320 }}>품목</th>
-                <th style={{ width: 140 }}>규격</th>
+                <th className="erp-col-xl">규격</th>
                 <th className="num" style={{ width: withPrice ? 90 : 100 }}>수량</th>
-                {withPrice && <th className="num" style={{ width: 110 }}>{priceLabel}</th>}
-                {withPrice && <th className="num" style={{ width: 110 }}>{amountLabel}</th>}
-                <th style={{ width: 200 }}>비고</th>
+                {withPrice && <th className="num erp-col-l">{priceLabel}</th>}
+                {withPrice && <th className="num erp-col-l">{amountLabel}</th>}
+                <th className="erp-col-w">비고</th>
                 <th style={{ width: REMOVE_COL_WIDTH }} />
               </tr>
             </thead>

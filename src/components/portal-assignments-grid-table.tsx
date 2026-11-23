@@ -61,13 +61,13 @@ export function PortalAssignmentsGridTable({
         <table className="erp-grid">
           <thead>
             <tr>
-              <th style={{ width: 90 }}>LOT</th>
+              <th className="erp-col-m">LOT</th>
               <th>품목</th>
-              <th style={{ width: 100 }}>규격</th>
-              <th className="num" style={{ width: 90 }}>수량</th>
-              <th style={{ width: 110 }}>제조일</th>
-              <th style={{ width: 100 }}>상태</th>
-              <th style={{ width: 90 }} />
+              <th className="erp-col-m">규격</th>
+              <th className="num erp-col-m">수량</th>
+              <th className="erp-col-l">제조일</th>
+              <th className="erp-col-m">상태</th>
+              <th className="erp-col-m"  />
             </tr>
           </thead>
           <tbody>

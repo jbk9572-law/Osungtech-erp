@@ -9240,3 +9240,26 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   font-weight: 700;
   color: var(--erp-text);
 }
+
+/* ── 표 열 폭 단계(design/COMPONENTS.md §1) — <th>·<col>에 숫자 width 대신 이 클래스를 쓴다. 값은 토큰이라 테마가 한 곳에서 바꾼다. ── */
+:root {
+  --erp-col-xxs: 40px;
+  --erp-col-xs: 60px;
+  --erp-col-s: 80px;
+  --erp-col-m: 100px;
+  --erp-col-l: 120px;
+  --erp-col-xl: 140px;
+  --erp-col-xxl: 160px;
+  --erp-col-w: 200px;
+  --erp-col-xw: 260px;
+}
+
+.erp-col-xxs { width: var(--erp-col-xxs); }
+.erp-col-xs { width: var(--erp-col-xs); }
+.erp-col-s { width: var(--erp-col-s); }
+.erp-col-m { width: var(--erp-col-m); }
+.erp-col-l { width: var(--erp-col-l); }
+.erp-col-xl { width: var(--erp-col-xl); }
+.erp-col-xxl { width: var(--erp-col-xxl); }
+.erp-col-w { width: var(--erp-col-w); }
+.erp-col-xw { width: var(--erp-col-xw); }

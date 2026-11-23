@@ -378,7 +378,7 @@ export function PaperCalcClient({
                         충족여부
                         <FieldHint text="총 생산 수량이 발주 수량 이상이면 충족, 못 미치면 미충족입니다." />
                       </th>
-                      <th style={{ width: 60 }}></th>
+                      <th className="erp-col-xs"></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -412,14 +412,14 @@ export function PaperCalcClient({
                 >
                   <thead>
                     <tr>
-                      <th style={{ width: 40 }}>#</th>
-                      <th style={{ width: 150 }}>
+                      <th className="erp-col-xxs">#</th>
+                      <th className="erp-col-xxl">
                         가로(mm)
                         <FieldHint text="원지에서 재단해 낼 완성 조각의 가로 길이. 아래 원지 크기와 다른 값입니다." />
                       </th>
-                      <th style={{ width: 150 }}>세로(mm)</th>
-                      <th style={{ width: 150 }}>수량(매)</th>
-                      <th style={{ width: 60 }}></th>
+                      <th className="erp-col-xxl">세로(mm)</th>
+                      <th className="erp-col-xxl">수량(매)</th>
+                      <th className="erp-col-xs"></th>
                     </tr>
                   </thead>
                   <tbody onKeyDown={focusSameColumnNextRow}>

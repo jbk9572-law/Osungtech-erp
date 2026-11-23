@@ -105,8 +105,8 @@ export default async function UsersSettingsPage({ searchParams }: { searchParams
               <th>아이디</th>
               <th>이름</th>
               <th>이메일</th>
-              <th style={{ width: 140 }}>역할</th>
-              <th style={{ width: 120 }}>가입일</th>
+              <th className="erp-col-xl">역할</th>
+              <th className="erp-col-l">가입일</th>
             </tr>
           </thead>
           <tbody>

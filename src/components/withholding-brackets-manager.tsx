@@ -41,18 +41,18 @@ export function WithholdingBracketsManager({
         <table className="erp-grid">
           <thead>
             <tr>
-              <th className="num" style={{ width: 90 }}>
+              <th className="num erp-col-m">
                 월급여 이상
               </th>
-              <th className="num" style={{ width: 90 }}>
+              <th className="num erp-col-m">
                 월급여 미만
               </th>
               {Array.from({ length: 11 }, (_, i) => i + 1).map((n) => (
-                <th key={n} className="num" style={{ width: 65 }}>
+                <th key={n} className="num erp-col-s">
                   {n}명
                 </th>
               ))}
-              <th style={{ width: 130 }} />
+              <th className="erp-col-xl"  />
             </tr>
           </thead>
           <tbody>

@@ -70,13 +70,13 @@ export default async function StockLoansPage({ searchParams }: { searchParams: P
         <table className="erp-grid" style={{ width: "100%", minWidth: 960 }}>
           <thead>
             <tr>
-              <th style={{ width: 96 }}>반출일</th>
-              <th style={{ width: 160 }}>반출처</th>
+              <th className="erp-col-m">반출일</th>
+              <th className="erp-col-xxl">반출처</th>
               <th>품목</th>
-              <th className="num" style={{ width: 110 }}>미반납 수량</th>
-              <th style={{ width: 130 }}>반납 예정일</th>
-              <th style={{ width: 90 }}>상태</th>
-              <th style={{ width: 230 }}>처리</th>
+              <th className="num erp-col-l">미반납 수량</th>
+              <th className="erp-col-xl">반납 예정일</th>
+              <th className="erp-col-m">상태</th>
+              <th className="erp-col-xw">처리</th>
             </tr>
           </thead>
           <tbody>

@@ -371,13 +371,13 @@ export default async function InventoryCountPage({
                       <th>품목명</th>
                       <th>규격</th>
                       <th>창고</th>
-                      <th className="num" style={{ width: 130 }}>
+                      <th className="num erp-col-xl">
                         화면 전산 재고
                       </th>
-                      <th className="num" style={{ width: 130 }}>
+                      <th className="num erp-col-xl">
                         이력 합계(정답)
                       </th>
-                      <th className="num" style={{ width: 100 }}>
+                      <th className="num erp-col-m">
                         차이
                       </th>
                     </tr>
@@ -483,13 +483,13 @@ export default async function InventoryCountPage({
                             <th>SKU</th>
                             <th>품목명</th>
                             <th>규격</th>
-                            <th className="num" style={{ width: 110 }}>
+                            <th className="num erp-col-l">
                               이전 수량
                             </th>
-                            <th className="num" style={{ width: 110 }}>
+                            <th className="num erp-col-l">
                               조정 후
                             </th>
-                            <th className="num" style={{ width: 90 }}>
+                            <th className="num erp-col-m">
                               차이
                             </th>
                           </tr>

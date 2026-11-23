@@ -92,15 +92,15 @@ export default async function LeaveBalancesPage() {
           <thead>
             <tr>
               <th>구성원</th>
-              <th style={{ width: 150 }}>입사일</th>
-              <th style={{ width: 260 }}>{year}년 연차 총일수</th>
-              <th className="num" style={{ width: 80 }}>
+              <th className="erp-col-xxl">입사일</th>
+              <th className="erp-col-xw">{year}년 연차 총일수</th>
+              <th className="num erp-col-s">
                 사용
               </th>
-              <th className="num" style={{ width: 80 }}>
+              <th className="num erp-col-s">
                 잔여
               </th>
-              <th style={{ width: 200 }}>추가 부여</th>
+              <th className="erp-col-w">추가 부여</th>
             </tr>
           </thead>
           <tbody>
@@ -184,12 +184,12 @@ export default async function LeaveBalancesPage() {
             <thead>
               <tr>
                 <th>구성원</th>
-                <th className="num" style={{ width: 80 }}>
+                <th className="num erp-col-s">
                   잔여
                 </th>
-                <th style={{ width: 110 }}>사용기한</th>
-                <th style={{ width: 180 }}>1차 (기한 6개월 전)</th>
-                <th style={{ width: 180 }}>2차 (기한 2개월 전)</th>
+                <th className="erp-col-l">사용기한</th>
+                <th className="erp-col-w">1차 (기한 6개월 전)</th>
+                <th className="erp-col-w">2차 (기한 2개월 전)</th>
               </tr>
             </thead>
             <tbody>

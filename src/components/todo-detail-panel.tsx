@@ -160,8 +160,8 @@ export async function TodoDetailPanel({ id, mode = "edit" }: { id: string; mode?
                     <th>
                       모조지 계산 <GridBadge tone="muted">연결됨</GridBadge>
                     </th>
-                    <th style={{ width: 140 }}>규격</th>
-                    <th className="num" style={{ width: 100 }}>
+                    <th className="erp-col-xl">규격</th>
+                    <th className="num erp-col-m">
                       수량
                     </th>
                   </tr>
@@ -271,9 +271,9 @@ export async function TodoDetailPanel({ id, mode = "edit" }: { id: string; mode?
                     <thead>
                       <tr>
                         <th>품목</th>
-                        <th style={{ width: 160 }}>규격</th>
-                        <th style={{ width: 120 }}>관리번호</th>
-                        <th className="num" style={{ width: 110 }}>
+                        <th className="erp-col-xxl">규격</th>
+                        <th className="erp-col-l">관리번호</th>
+                        <th className="num erp-col-l">
                           수량
                         </th>
                       </tr>

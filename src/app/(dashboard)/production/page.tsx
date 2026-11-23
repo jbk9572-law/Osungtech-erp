@@ -137,18 +137,18 @@ export default async function ProductionPage({
         <table className="erp-grid">
           <thead>
               <tr>
-                <th style={{ width: 90 }}>일자</th>
-                <th style={{ width: 90 }}>지시번호</th>
+                <th className="erp-col-m">일자</th>
+                <th className="erp-col-m">지시번호</th>
                 <th>완제품</th>
-                <th className="num" style={{ width: 110 }}>
+                <th className="num erp-col-l">
                   수량
                 </th>
-                <th style={{ width: 110 }}>창고</th>
-                <th style={{ width: 70 }}>공정</th>
-                <th style={{ width: 150 }}>상태</th>
+                <th className="erp-col-l">창고</th>
+                <th className="erp-col-s">공정</th>
+                <th className="erp-col-xxl">상태</th>
                 <th>메모</th>
-                <th style={{ width: 90 }}>등록자</th>
-                <th style={{ width: 70 }} />
+                <th className="erp-col-m">등록자</th>
+                <th className="erp-col-s"  />
               </tr>
             </thead>
             <tbody>
