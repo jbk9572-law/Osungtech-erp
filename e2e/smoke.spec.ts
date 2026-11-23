@@ -3,7 +3,8 @@ import { expect, test } from "@playwright/test";
 test.describe("기본 화면", () => {
   test("로그인 후 대시보드와 상단 리본이 보인다", async ({ page }) => {
     await page.goto("/dashboard");
-    await expect(page.getByRole("button", { name: /빠른 검색/ })).toBeVisible();
+    // 상단바 검색 버튼(모던)과 리본 버튼 두 개가 같은 뜻이라, 리본 쪽을 지정한다.
+    await expect(page.locator(".erp-ribbon-btn", { hasText: "빠른 검색" })).toBeVisible();
   });
 
   test("매출관리 목록이 열린다", async ({ page }) => {

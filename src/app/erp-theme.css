@@ -6745,6 +6745,23 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
     min-height: 40px;
   }
 
+  /* 표 밖의 작은 누르기 칸들 — 기간 프리셋 칩, 세그먼트 버튼, 에디터 툴바 버튼, 조직도 행(배치 점검이 모바일에서 잡은 것들).
+     손가락 기준 최소 36px(조직도처럼 줄로 늘어선 목록은 40px). */
+  .erp-date-preset-btn,
+  .erp-seg-btn,
+  .erp-richtext-toolbar-btn {
+    min-height: 36px;
+  }
+
+  .erp-richtext-toolbar-btn {
+    min-width: 36px;
+  }
+
+  .org-picker-row,
+  .org-picker-toggle {
+    min-height: 40px;
+  }
+
   .erp-titlebar-menu-toggle {
     width: 36px;
     height: 36px;
@@ -8866,4 +8883,17 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
     grid-column: auto;
     border-right: none;
   }
+}
+
+/* ── 짧은 값(날짜·시간·월·숫자) 입력은 칸이 넓어도 늘어나지 않는다 ─────────────────
+   배치 점검이 일정·하청업체·지급결의 입력에서 날짜/시간 칸이 420~520px로 늘어난 것을 잡았다 — 이런 값은 길어야 약 14자라
+   넓은 칸 안에서도 왼쪽에 적당한 폭으로 둔다. 표 안(.erp-grid)은 이 규칙의 대상이 아니다(.erp-field·문서 머리표 값 칸 안의 입력만). */
+.erp-field input[type="date"],
+.erp-field input[type="time"],
+.erp-field input[type="month"],
+.erp-field input[type="number"],
+.erp-doc-header-value input[type="date"],
+.erp-doc-header-value input[type="time"],
+.erp-doc-header-value input[type="month"] {
+  max-width: 14rem;
 }

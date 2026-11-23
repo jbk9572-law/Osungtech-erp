@@ -45,20 +45,27 @@ export function auditLayoutInPage(t: typeof THRESHOLDS): LayoutFinding[] {
   // 1) 페이지 가로 넘침
   if (document.documentElement.scrollWidth > vw + 1) add("page-overflow", document.documentElement, `가로 스크롤 발생(내용 ${document.documentElement.scrollWidth}px > 화면 ${vw}px)`);
 
-  // 2) 잘림: 눌러야 하는 칸/버튼/입력이 overflow:hidden 조상 밖으로 나간 경우
-  const interactive = root.querySelectorAll("button, a.erp-btn, input:not([type=hidden]):not([type=checkbox]):not([type=radio]), select, textarea");
+  // 2) 잘림: 눌러야 하는 칸/버튼/입력이 overflow:hidden 조상 밖으로 나간 경우.
+  //    가장 가까운 "넘침을 다루는 조상"만 본다 — 그게 auto/scroll(가로 스크롤 영역)이면 안쪽 요소가 밖으로 나가 있는 건 정상이다.
+  const interactive = Array.from(root.querySelectorAll("button, a.erp-btn, input:not([type=hidden]):not([type=checkbox]):not([type=radio]), select, textarea")).filter((el) => {
+    // 화면에 보이지 않게 일부러 숨긴 입력(파일 선택 등)은 제외
+    const r = (el as HTMLElement).getBoundingClientRect();
+    return r.width > 3 && r.height > 3;
+  });
   interactive.forEach((el) => {
     if (!visible(el)) return;
     const r = (el as HTMLElement).getBoundingClientRect();
     let p = el.parentElement;
     while (p && p !== document.body) {
       const s = getComputedStyle(p);
-      if (s.overflowX === "hidden" || s.overflowX === "clip") {
-        const pr = p.getBoundingClientRect();
-        if (r.right > pr.right + 1.5 || r.left < pr.left - 1.5) {
-          add("clipped", el, `${describe(p)} 밖으로 ${Math.round(Math.max(r.right - pr.right, pr.left - r.left))}px 잘림`);
-          break;
+      if (s.overflowX !== "visible") {
+        if (s.overflowX === "hidden" || s.overflowX === "clip") {
+          const pr = p.getBoundingClientRect();
+          if (r.right > pr.right + 1.5 || r.left < pr.left - 1.5) {
+            add("clipped", el, `${describe(p)} 밖으로 ${Math.round(Math.max(r.right - pr.right, pr.left - r.left))}px 잘림`);
+          }
         }
+        break;
       }
       p = p.parentElement;
     }
@@ -89,16 +96,19 @@ export function auditLayoutInPage(t: typeof THRESHOLDS): LayoutFinding[] {
       if (br.width < 500) return;
       const kids = Array.from(box.children).filter(visible);
       if (kids.length === 0) return;
-      const rows: { top: number; right: number; hasField: boolean; hasOnlyButtons: boolean }[] = [];
+      const rows: { top: number; bottom: number; right: number; hasField: boolean; hasOnlyButtons: boolean }[] = [];
       for (const k of kids) {
         const r = (k as HTMLElement).getBoundingClientRect();
-        let row = rows.find((x) => Math.abs(x.top - r.top) < 6);
+        // 같은 줄 = 세로 범위가 겹치는 것(버튼은 아래 정렬이라 위 좌표가 달라서 top 비교로는 다른 줄로 오인된다)
+        let row = rows.find((x) => r.top < x.bottom - 2 && r.bottom > x.top + 2);
         const isButton = k.matches("button, a.erp-btn, .erp-btn");
         if (!row) {
-          row = { top: r.top, right: r.right, hasField: !isButton, hasOnlyButtons: isButton };
+          row = { top: r.top, bottom: r.bottom, right: r.right, hasField: !isButton, hasOnlyButtons: isButton };
           rows.push(row);
         } else {
           row.right = Math.max(row.right, r.right);
+          row.top = Math.min(row.top, r.top);
+          row.bottom = Math.max(row.bottom, r.bottom);
           if (!isButton) {
             row.hasField = true;
             row.hasOnlyButtons = false;
@@ -119,10 +129,12 @@ export function auditLayoutInPage(t: typeof THRESHOLDS): LayoutFinding[] {
     });
   }
 
-  // 6) 모바일 터치 크기
+  // 6) 모바일 터치 크기(표 밖의 눌러야 하는 칸)
   if (mobile) {
     interactive.forEach((el) => {
       if (!visible(el)) return;
+      // 표 안의 칸은 행 높이를 지키려고 일부러 작게 둔다(erp-theme.css의 터치 규칙 주석과 같은 기준) — 표 밖만 본다.
+      if (el.closest("table")) return;
       const h = (el as HTMLElement).getBoundingClientRect().height;
       if (h < t.minTouchHeight) add("touch-small", el, `높이 ${Math.round(h)}px(기준 ${t.minTouchHeight}px 이상)`);
     });
