@@ -8811,3 +8811,53 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   color: var(--erp-text-muted);
   text-align: center;
 }
+
+/* ── 문서 머리표(.erp-doc-header)의 칸 비율 변형 ───────────────────────────────
+   기본은 같은 폭 2열이라, 입력이 3칸(거래처·견적일·유효기간)이면 마지막 칸 옆이 비고, 날짜 칸이 이름 칸만큼 넓게 늘어났다.
+   긴 값(거래처·공급처)은 넓게, 날짜는 좁게 — 변형 클래스만 얹으면 되고 기본 동작은 그대로다. */
+.erp-doc-header-wide-first {
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+}
+
+.erp-doc-header-3col {
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
+}
+
+/* 세 칸이 한 줄에 놓이므로 줄마다 오른쪽 구분선을 긋고 마지막 칸만 지운다(기본의 홀수 칸 규칙은 2열용). */
+.erp-doc-header-3col > .erp-doc-header-row {
+  border-right: 1px solid var(--erp-border);
+}
+
+.erp-doc-header-3col > .erp-doc-header-row:nth-child(3) {
+  border-right: none;
+}
+
+/* 폭이 좁아지면(모달 900px 이하) 첫 칸(거래처)을 한 줄 통째로, 날짜 두 칸을 그 아래 나란히 둔다. */
+@media (max-width: 900px) {
+  .erp-doc-header-3col,
+  .erp-doc-header-wide-first {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .erp-doc-header-3col > .erp-doc-header-row:first-child {
+    grid-column: 1 / -1;
+    border-right: none;
+  }
+
+  .erp-doc-header-3col > .erp-doc-header-row:nth-child(2) {
+    border-right: 1px solid var(--erp-border);
+  }
+}
+
+@media (max-width: 640px) {
+  .erp-doc-header-3col,
+  .erp-doc-header-wide-first {
+    grid-template-columns: 1fr;
+  }
+
+  .erp-doc-header-3col > .erp-doc-header-row:nth-child(n),
+  .erp-doc-header-wide-first > .erp-doc-header-row:nth-child(n) {
+    grid-column: auto;
+    border-right: none;
+  }
+}
