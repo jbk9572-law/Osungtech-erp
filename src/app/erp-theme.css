@@ -5275,17 +5275,6 @@ a.erp-detail-tab:hover:not(.active) {
   flex: 1;
   min-width: 0;
 }
-/* 표 위 도구 줄(열 설정) — 좁은 화면은 카드 목록이라 숨긴다 */
-.erp-sheet-tools {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: var(--erp-space-2);
-}
-@media (max-width: 768px) {
-  .erp-sheet-tools {
-    display: none;
-  }
-}
 /* 열 설정 메뉴(스프레드시트형 목록) */
 .erp-colmenu {
   position: relative;
@@ -8747,7 +8736,7 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
 }
 
 @media (max-width: 768px) {
-  /* 좁은 화면: 상태 문구는 다음 줄 전체 폭으로 내리고, 열 설정은 카드 목록이라 숨긴다(.erp-sheet-tools와 같은 기준). */
+  /* 좁은 화면: 상태 문구는 다음 줄 전체 폭으로 내리고, 열 설정은 카드 목록이라 숨긴다(표가 카드 목록으로 바뀌는 폭과 같은 기준). */
   .erp-listtoolbar-status {
     flex: 1 0 100%;
     margin-left: 0;

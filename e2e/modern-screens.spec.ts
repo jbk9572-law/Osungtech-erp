@@ -87,6 +87,27 @@ test.describe("거래처 도구 줄(시범)", () => {
   });
 });
 
+// 같은 도구 줄(공용 ListActionToolbar)을 쓰는 A형 목록 — 거래처 시범과 같은 모양이 나머지 목록에도 나오는지 본다.
+for (const s of [
+  { name: "공급처관리", path: "/suppliers" },
+  { name: "품목관리", path: "/products" },
+  { name: "견적서관리", path: "/quotes" },
+  { name: "구매요청", path: "/purchase-requests" },
+  { name: "구매 견적요청", path: "/purchase-quote-requests" },
+  { name: "영업활동관리", path: "/sales-activities" },
+  { name: "하청업체관리", path: "/subcontractors" },
+  { name: "지급결의", path: "/reports/payment-requests" },
+]) {
+  test(`${s.name}에도 도구 줄(신규·수정·열 설정)이 있다`, async ({ page }) => {
+    await page.goto(s.path);
+    const bar = page.getByRole("toolbar", { name: "목록 작업" });
+    test.skip(!(await bar.isVisible({ timeout: 30_000 }).catch(() => false)), "도구 줄이 없음(기능 꺼짐·클래식·좁은 화면)");
+    await expect(bar.getByRole("link", { name: /F2|^신규|작성|등록/ }).first()).toBeVisible();
+    await expect(bar.getByRole("button", { name: /^수정/ })).toBeDisabled();
+    await expect(bar.getByText("열 설정")).toBeVisible();
+  });
+}
+
 test.describe("모던 틀(상단바·하단 상태줄)", () => {
   test("메뉴 검색 버튼이 빠른 검색을 열고, 상태줄에 연결 상태가 보인다", async ({ page }) => {
     await page.goto("/customers");
