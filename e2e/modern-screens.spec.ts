@@ -118,3 +118,22 @@ test.describe("모던 틀(상단바·하단 상태줄)", () => {
     await expect(page.getByRole("textbox", { name: /메뉴 이름으로 검색/ }).or(page.getByPlaceholder("메뉴 이름으로 검색..."))).toBeVisible({ timeout: 10_000 });
   });
 });
+
+test.describe("구매 견적요청 작성 폼", () => {
+  test("공급처를 검색해 고를 수 있고, 조건이 안 채워지면 등록이 막히며 이유가 보인다", async ({ page }) => {
+    await page.goto("/purchase-quote-requests/new");
+    const picker = page.getByRole("group", { name: "견적을 받을 공급처" });
+    test.skip(!(await picker.isVisible({ timeout: 30_000 }).catch(() => false)), "작성 화면이 열리지 않음(기능 꺼짐 등)");
+    const submit = page.getByRole("button", { name: /견적요청 등록/ });
+    await expect(submit).toBeDisabled();
+    await expect(page.getByText("공급처를 1곳 이상 고르세요.")).toBeVisible();
+    await expect(picker.getByText(/곳 선택됨/)).toContainText("0");
+    const first = picker.getByRole("checkbox").first();
+    test.skip(!(await first.isVisible().catch(() => false)), "공급처가 없어 선택은 건너뜀");
+    await first.check();
+    await expect(picker.getByText(/곳 선택됨/)).toContainText("1");
+    // 공급처만 골라서는 아직 등록할 수 없다(품목 필요) — 데이터는 만들지 않는다.
+    await expect(submit).toBeDisabled();
+    await expect(page.getByText("품목을 1개 이상 입력하세요(수량 1 이상).")).toBeVisible();
+  });
+});

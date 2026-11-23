@@ -8752,3 +8752,62 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
     display: none;
   }
 }
+
+/* ── 체크 목록 선택기(CheckListPicker) — 검색 + 전체 선택 + 선택 수 ───────────── */
+.erp-checklist {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.erp-checklist-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--erp-space-2);
+  padding: var(--erp-space-2) var(--erp-space-3);
+  border-bottom: 1px solid var(--erp-border-strong);
+}
+
+.erp-checklist-search {
+  flex: 1 1 180px;
+  min-width: 140px;
+}
+
+.erp-checklist-count {
+  margin-left: auto;
+  font-size: var(--erp-font-sm);
+  color: var(--erp-text-muted);
+}
+
+.erp-checklist-count b {
+  color: var(--erp-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.erp-checklist-list {
+  max-height: 168px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-y: auto;
+}
+
+.erp-checklist-row {
+  display: flex;
+  align-items: center;
+  gap: var(--erp-space-3);
+  min-height: var(--erp-control-h-md);
+  padding: 0 var(--erp-space-3);
+  cursor: pointer;
+}
+
+.erp-checklist-row:hover {
+  background: var(--erp-bg-subtle);
+}
+
+.erp-checklist-empty {
+  padding: var(--erp-space-4) var(--erp-space-3);
+  color: var(--erp-text-muted);
+  text-align: center;
+}
