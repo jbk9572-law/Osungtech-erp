@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState, type KeyboardEvent } from "react";
+import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
+import { getGridColumnVisibility, saveGridColumnVisibility } from "@/lib/grid-column-visibility-actions";
 
 export const MIN_COL_WIDTH = 48;
 
@@ -16,9 +17,21 @@ function compare(a: CellValue, b: CellValue): number {
   return String(a).localeCompare(String(b), "ko");
 }
 
-export function useSheetTable<T extends { id: string }>(rows: T[], valueOf: (row: T, col: number) => CellValue) {
+// persistKey를 주면 숨긴 열을 계정별로 저장한다(매출·매입의 "열 설정"과 같은 저장 방식 — use-column-visibility.ts). 열 번호를 문자열로 저장한다.
+export function useSheetTable<T extends { id: string }>(rows: T[], valueOf: (row: T, col: number) => CellValue, persistKey?: string) {
   const [sort, setSort] = useState<SortState>(null);
   const [hidden, setHidden] = useState<Set<number>>(new Set());
+  useEffect(() => {
+    if (!persistKey) return;
+    let cancelled = false;
+    getGridColumnVisibility(persistKey).then((saved) => {
+      if (cancelled || !saved) return;
+      setHidden(new Set(saved.map(Number).filter((n) => Number.isInteger(n))));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [persistKey]);
   // 끌어서 바꾼 열 너비(px) — 이 화면을 연 동안만 유지한다(저장하지 않음)
   const [widths, setWidths] = useState<Record<number, number>>({});
   const setWidth = (col: number, px: number | null) =>
@@ -43,6 +56,7 @@ export function useSheetTable<T extends { id: string }>(rows: T[], valueOf: (row
       const next = new Set(p);
       if (next.has(col)) next.delete(col);
       else next.add(col);
+      if (persistKey) saveGridColumnVisibility(persistKey, [...next].map(String)).catch((err) => console.error(`열 설정 저장 실패(${persistKey}):`, err));
       return next;
     });
   const ariaSort = (col: number): "ascending" | "descending" | "none" => (sort?.col === col ? (sort.dir === 1 ? "ascending" : "descending") : "none");

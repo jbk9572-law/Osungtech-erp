@@ -93,7 +93,7 @@ export default async function PlatformStatsPage() {
                     <div key={m.month} className="flex items-center gap-2 erp-u-text-compact">
                       <span className="erp-u-muted erp-u-shrink-0" style={{ width: 56 }}>{m.month}</span>
                       <div className="erp-u-flex-1 erp-u-bg-bg-subtle erp-u-overflow-hidden"
-                        style={{ borderRadius: "var(--erp-comm-radius-sm)", height: 16 }}
+                        style={{ borderRadius: "var(--erp-radius-sm)", height: 16 }}
                       >
                         <div className="erp-u-bg-primary erp-u-h-full"
                           style={{ width: `${(m.count / maxCount) * 100}%`, minWidth: m.count > 0 ? 4 : 0 }}

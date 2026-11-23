@@ -81,7 +81,7 @@ export default async function DocumentsPage({ searchParams }: { searchParams: Pr
         actions={
           <>
           <GuardedLink href="/hr/documents/new" className="erp-btn erp-btn-primary">
-            F2 새 문서
+            새 문서
           </GuardedLink>
           <Link href="/hr/documents/templates" className="erp-btn">
             양식 관리
@@ -120,7 +120,7 @@ export default async function DocumentsPage({ searchParams }: { searchParams: Pr
               icon={<DocumentIcon />}
               title={visible.length === 0 ? "조건에 맞는 문서가 없습니다" : "새 문서를 만들어보세요"}
               actionHref="/hr/documents/new"
-              actionLabel="F2 새 문서"
+              actionLabel="새 문서"
             />
           </div>
         </section>
@@ -129,7 +129,7 @@ export default async function DocumentsPage({ searchParams }: { searchParams: Pr
           {selectedId ? (
             <DocumentDetailPanel key={selectedId} id={selectedId} />
           ) : (
-            <SplitDetailEmpty icon={<DocumentIcon />} title="문서를 선택해주세요" hint="왼쪽 목록에서 문서를 누르면 여기에 내용이 표시됩니다. 새 문서는 [F2 새 문서]로 만듭니다." />
+            <SplitDetailEmpty icon={<DocumentIcon />} title="문서를 선택해주세요" hint="왼쪽 목록에서 문서를 누르면 여기에 내용이 표시됩니다. 새 문서는 [새 문서]로 만듭니다." />
           )}
         </div>
       </div>

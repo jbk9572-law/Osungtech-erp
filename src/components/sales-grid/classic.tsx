@@ -42,7 +42,7 @@ import { GridRowLegend } from "@/components/grid/row-legend";
 import { salesRowChips } from "@/components/grid/sales-row-chips";
 
 // 핵심 칸(체크박스/날짜/거래처/품목/수량/공급가액/세액/작업)은 끌 수
-// 없게 여기 안 넣는다 — 나머지만 "컬럼 설정"에서 계정별로 켜고 끈다.
+// 없게 여기 안 넣는다 — 나머지만 "열 설정"에서 계정별로 켜고 끈다.
 const SALES_HIDEABLE_COLUMNS: ColumnVisibilityOption[] = [
   { key: "docNo", label: "전표번호" },
   { key: "customerCode", label: "거래처코드" },

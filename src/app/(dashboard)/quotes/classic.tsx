@@ -103,7 +103,7 @@ export default async function QuotesPage({
           actions={
             <>
               <Link href={newHref} className="erp-btn erp-btn-primary">
-                F2 견적서 작성
+                견적서 작성
               </Link>
               {selectedId && (
                 <Link href={newHref} className="erp-btn">

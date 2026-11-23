@@ -84,7 +84,7 @@ export default async function PaymentRequestsPage({
         <h1 className="erp-h1">보고서 &gt; 지급결의양식</h1>
         <div className="erp-toolbar erp-u-mb-0">
           <Link href={newHref} className="erp-btn erp-btn-primary">
-            F2 글쓰기
+            글쓰기
           </Link>
           {selectedId && (
             <Link href={newHref} className="erp-btn">

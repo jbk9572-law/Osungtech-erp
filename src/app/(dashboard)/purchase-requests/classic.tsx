@@ -109,7 +109,7 @@ export default async function PurchaseRequestsPage({
           actions={
             <>
               <Link href={newHref} className="erp-btn erp-btn-primary">
-                F2 구매요청 작성
+                구매요청 작성
               </Link>
               {selectedId && (
                 <Link href={newHref} className="erp-btn">

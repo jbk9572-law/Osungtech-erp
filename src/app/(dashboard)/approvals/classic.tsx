@@ -86,7 +86,7 @@ export default async function ApprovalsPage({
           actions={
             <>
               <Link href={newHref} className="erp-btn erp-btn-primary">
-                F2 기안
+                기안
               </Link>
               <Link href="/approvals/lines" className="erp-btn">
                 결재선 설정
@@ -408,7 +408,7 @@ export default async function ApprovalsPage({
               icon={<CheckCircleIcon />}
               title={rows.length === 0 ? "해당하는 문서가 없습니다" : "새 기안을 작성해보세요"}
               actionHref={newHref}
-              actionLabel="F2 기안"
+              actionLabel="기안"
             />
           </div>
         </section>

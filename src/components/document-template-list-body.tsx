@@ -107,7 +107,7 @@ export function DocumentTemplateListBody({
             icon={<DocumentIcon />}
             title={!gridRows.length ? (query.trim() ? "검색 결과가 없습니다" : "등록된 양식이 없습니다") : "새 양식을 등록해보세요"}
             actionHref={basePath}
-            actionLabel="F2 새 양식"
+            actionLabel="새 양식"
           />
         </div>
       </section>

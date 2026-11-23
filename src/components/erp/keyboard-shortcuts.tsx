@@ -82,7 +82,9 @@ export function KeyboardShortcuts({
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      const action = shortcuts[e.key];
+      // 신규 = Ctrl+Enter(엑셀처럼 표 안 F2는 "셀 편집"이라 신규에 쓰지 않는다). 모달이 떠 있을 땐 그 위에 또 열지 않는다. F2도 예전처럼 동작한다.
+      const isNewCombo = e.key === "Enter" && (e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && !closeModal;
+      const action = isNewCombo ? shortcuts.F2 : shortcuts[e.key];
       if (!action) return;
       // href형(페이지 이동) 단축키는 텍스트 입력 중에 눌러도 그대로
       // 페이지를 나가버려 작성 중이던 내용을 잃을 수 있다 — 예를 들어
@@ -117,7 +119,7 @@ export function KeyboardShortcuts({
   }, [shortcuts, router, closeModal]);
 
   const items = HINT_ORDER.filter((key) => shortcuts[key]).map((key) => ({
-    key: key === "Escape" ? "Esc" : key,
+    key: key === "Escape" ? "Esc" : key === "F2" ? "Ctrl+Enter" : key,
     label: HINT_LABELS[key],
   }));
   // 모던 틀은 버튼에 단축키가 적혀 있고 하단 상태줄에 힌트가 있어, 화면 맨 위의 따로 뜬 단축키 줄은 그리지 않는다.

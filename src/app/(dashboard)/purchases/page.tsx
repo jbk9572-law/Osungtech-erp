@@ -9,6 +9,8 @@ import { DateRangeQuickFilters } from "@/components/erp/date-range-quick-filters
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ListPageHeader } from "@/components/erp/page-header";
 import { PageToolbar } from "@/components/erp/page-toolbar";
+import { ToolbarMenu } from "@/components/erp/toolbar-menu";
+import { ToolbarKey } from "@/components/erp/list-toolbar";
 import { buildListReturnParam } from "@/lib/list-return";
 import {
   PurchaseGridTable,
@@ -521,7 +523,7 @@ async function PurchasesPage({
       <PageToolbar
         actions={
           <GuardedLink href="/purchases/new" className="erp-btn erp-btn-primary">
-            F2 신규
+            신규<ToolbarKey>Ctrl+Enter</ToolbarKey>
           </GuardedLink>
         }
         tools={
@@ -530,9 +532,11 @@ async function PurchasesPage({
               href={exportHref}
               title={q ? `이번달 "${q}" 검색 결과를 엑셀로 다운로드` : "이번달(1일~말일) 전체 내역을 엑셀로 다운로드"}
             />
-            <Link href="/purchases/tax-invoices/import" className="erp-btn" title="홈택스 매입내역 엑셀을 업로드해 세금계산서 수취 여부를 매칭">
-              📤 매입세금계산서 수취 관리
-            </Link>
+            <ToolbarMenu label="일괄 작업">
+              <Link href="/purchases/tax-invoices/import" className="erp-colmenu-item" title="홈택스 매입내역 엑셀을 업로드해 세금계산서 수취 여부를 매칭">
+                매입세금계산서 수취 관리
+              </Link>
+            </ToolbarMenu>
           </>
         }
       />

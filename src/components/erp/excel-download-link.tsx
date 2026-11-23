@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
 export function ExcelDownloadLink({
   href,
   title = "현재 화면 그대로 엑셀로 다운로드",
-  label = "📥 엑셀 다운로드",
+  label = "엑셀",
   pushRight = false,
   primary = false,
 }: {

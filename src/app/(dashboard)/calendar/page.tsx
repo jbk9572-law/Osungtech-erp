@@ -102,7 +102,7 @@ export default async function CalendarPage({
         title="캘린더"
         actions={
           <GuardedLink href="/calendar/new" className="erp-btn erp-btn-primary">
-            F2 새 일정
+            새 일정
           </GuardedLink>
         }
       />

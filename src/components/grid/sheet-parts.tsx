@@ -39,7 +39,7 @@ export function SortableTh({ label, col, sort, ariaSort, onSort, num, width, onR
 export function SheetColumnMenu({ labels, hidden, onToggle }: { labels: string[]; hidden: Set<number>; onToggle: (col: number) => void }) {
   return (
     <details className="erp-colmenu">
-      <summary className="erp-btn erp-btn-sm">열 설정{hidden.size ? ` (${hidden.size}개 숨김)` : ""}</summary>
+      <summary className="erp-btn">열 설정{hidden.size ? ` (${hidden.size}개 숨김)` : ""}</summary>
       <div className="erp-colmenu-list" role="group" aria-label="열 보이기">
         {labels.map((l, i) => (
           <label key={l} className="erp-colmenu-item">

@@ -19,7 +19,7 @@ import { PageGuide } from "@/components/erp/page-guide";
 import { QUICK_SEARCH_EVENT } from "@/lib/quick-search-event";
 
 const SHORTCUTS: { key: string; label: string }[] = [
-  { key: "F2", label: "신규" },
+  { key: "Ctrl+Enter", label: "신규" },
   { key: "F3", label: "상세조회" },
   { key: "F4", label: "수정" },
   { key: "F5", label: "조회" },

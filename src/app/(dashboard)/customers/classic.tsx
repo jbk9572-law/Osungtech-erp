@@ -109,7 +109,7 @@ async function CustomersPage({
         <h1 className="erp-h1">거래처관리 &gt; 출고처관리</h1>
         <div className="erp-toolbar erp-u-mb-0">
           <Link href={newHref} className="erp-btn erp-btn-primary">
-            F2 신규
+            신규
           </Link>
           <Link href={currentHref} className="erp-btn">
             새로고침

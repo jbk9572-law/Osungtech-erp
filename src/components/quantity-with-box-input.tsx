@@ -2,7 +2,6 @@
 
 import { NumberInput } from "@/components/number-input";
 import { QtyWithBoxes } from "@/components/qty-with-boxes";
-import { formatNumber } from "@/lib/format-number";
 
 // 박스×포장수량 환산(예: 50*20)은 저장된 뒤 매출/매입 상세 페이지 목록에서만
 // 보여준다(formatPackageQty 참고). 등록 화면 입력칸은 수량 하나만 받고,

@@ -1,5 +1,6 @@
 "use client";
 
+import { createPortal } from "react-dom";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
@@ -52,9 +53,12 @@ export type QuickSaleData = {
 export function UnifiedSaleModalTrigger({
   loadData,
   today,
+  asMenuItem = false,
 }: {
   loadData: () => Promise<QuickSaleData | null>;
   today: string;
+  // 도구 줄 "일괄 작업" 메뉴 안에 항목으로 넣을 때 true — 버튼 모양만 메뉴 항목으로 바뀐다.
+  asMenuItem?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [data, setData] = useState<QuickSaleData | null>(null);
@@ -87,11 +91,11 @@ export function UnifiedSaleModalTrigger({
 
   return (
     <>
-      <button type="button" className="erp-btn" disabled={loading} onClick={openModal}>
-        {loading ? "불러오는 중..." : "⚡ 빠른등록(매출·수금·반품)"}
+      <button type="button" className={asMenuItem ? "erp-colmenu-item" : "erp-btn"} disabled={loading} onClick={openModal}>
+        {loading ? "불러오는 중..." : "빠른등록 (매출·수금·반품)"}
       </button>
       {failed && <span className="erp-u-muted erp-u-text-caption" role="alert">불러오지 못했습니다. 다시 눌러주세요.</span>}
-      {open && data && (
+      {open && data && createPortal(
         <UnifiedSaleModal
           customers={data.customers}
           products={data.products}
@@ -100,7 +104,8 @@ export function UnifiedSaleModalTrigger({
           history={data.history}
           today={today}
           onClose={() => setOpen(false)}
-        />
+        />,
+        document.body,
       )}
     </>
   );

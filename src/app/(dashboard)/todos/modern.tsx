@@ -198,7 +198,7 @@ export default async function TodosPage({
         actions={
           <>
           <GuardedLink href="/todos/new" className="erp-btn erp-btn-primary">
-            F2 새 할일
+            새 할일
           </GuardedLink>
           {selectedId && (
             <Link href={newHref} className="erp-btn">
@@ -288,7 +288,7 @@ export default async function TodosPage({
           {selectedId ? (
             <TodoDetailPanel key={selectedId} id={selectedId} mode="view" />
           ) : (
-            <SplitDetailEmpty icon={<CheckCircleIcon />} title="할 일을 선택해주세요" hint="왼쪽 목록에서 할 일을 누르면 여기에 내용이 표시됩니다. 새 할 일은 [F2 새 할일]로 등록합니다." />
+            <SplitDetailEmpty icon={<CheckCircleIcon />} title="할 일을 선택해주세요" hint="왼쪽 목록에서 할 일을 누르면 여기에 내용이 표시됩니다. 새 할 일은 [새 할일]로 등록합니다." />
           )}
         </div>
       </div>

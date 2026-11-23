@@ -3,7 +3,7 @@
 import { useThemeFeatures } from "@/lib/erp-theme-features";
 
 // 표 머리글 위에 얹는 "묶음 머리글" 줄(예: 공급가액·세액 위의 "금액(원)") — 테마 기능 groupedHeader가 켜졌을 때만 그린다.
-// 숨겨진 칸(컬럼 설정)도 DOM에는 남아 있으므로 칸 수(before/span/after)는 고정 값이다 — 아래 머리글 줄의 th 개수와 맞춘다.
+// 숨겨진 칸(열 설정)도 DOM에는 남아 있으므로 칸 수(before/span/after)는 고정 값이다 — 아래 머리글 줄의 th 개수와 맞춘다.
 // 매출/매입 목록이 같이 쓴다.
 export function GridGroupHeaderRow({
   before,

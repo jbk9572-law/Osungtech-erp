@@ -91,7 +91,7 @@ export default async function TaxInvoiceExportPage({
         <Link href={`?${toggleParams.toString()}`} className="erp-btn">
           {summarize ? "✓ 품목 5개 이상 건 자동 요약 (켜짐)" : "품목 5개 이상 건 자동 요약 (꺼짐)"}
         </Link>
-        <ExcelDownloadLink href={downloadHref} label={`📥 엑셀 다운로드 (${formatNumber(rows.length)}건)`} primary />
+        <ExcelDownloadLink href={downloadHref} label={`엑셀 다운로드 (${formatNumber(rows.length)}건)`} primary />
         <MarkHometaxUploadedButton taxInvoiceIds={uploadableInvoices.map((inv) => inv.id)} />
       </div>
 

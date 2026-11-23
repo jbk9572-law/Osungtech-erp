@@ -43,7 +43,7 @@ export function ExcelImportForm({
       )}
       {exportHref && (
         <a href={exportHref} className="erp-btn">
-          📥 엑셀로 내보내기
+          엑셀로 내보내기
         </a>
       )}
       <FilePickerInput

@@ -118,7 +118,7 @@ export default async function MailPage({
         actions={
           <>
             <Link href={composeHref} className="erp-btn erp-btn-primary">
-              F2 메일쓰기
+              메일쓰기
             </Link>
             <SyncMailButton />
             {(id || compose) && (
@@ -180,7 +180,7 @@ export default async function MailPage({
               icon={<MailIcon />}
               title={(messages ?? []).length === 0 ? "메일이 없습니다" : folder === "INBOX" ? "받은 메일이 이게 전부예요" : "보낸 메일이 이게 전부예요"}
               actionHref={composeHref}
-              actionLabel="F2 메일쓰기"
+              actionLabel="메일쓰기"
             />
           </div>
         </section>

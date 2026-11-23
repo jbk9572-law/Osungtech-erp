@@ -112,7 +112,7 @@ export async function OfficialDocumentsList({ box, id }: { box: "mine" | "receiv
         <h1 className="erp-h1">공문관리 &gt; {TABS.find((t) => t.key === box)?.label}</h1>
         <div className="erp-toolbar erp-u-mb-0">
           <Link href={newHref} className="erp-btn erp-btn-primary">
-            F2 새 공문
+            새 공문
           </Link>
           {selectedId && (
             <Link href={newHref} className="erp-btn">
@@ -166,7 +166,7 @@ export async function OfficialDocumentsList({ box, id }: { box: "mine" | "receiv
               icon={<DocumentIcon />}
               title={rows.length === 0 ? "공문이 없습니다" : "새 공문을 작성해보세요"}
               actionHref={newHref}
-              actionLabel="F2 새 공문"
+              actionLabel="새 공문"
             />
           </div>
         </section>

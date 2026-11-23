@@ -146,7 +146,7 @@ export default async function WarehousesPage({
         <FormSection tabLabel={`창고 이동 이력 (${transfers.length})`}>
           <div className="erp-u-flex erp-u-mb-10 erp-u-justify-end">
             <GuardedLink href="/inventory/transfers/new" className="erp-btn erp-btn-primary">
-              F2 창고 이동 등록
+              창고 이동 등록
             </GuardedLink>
           </div>
 

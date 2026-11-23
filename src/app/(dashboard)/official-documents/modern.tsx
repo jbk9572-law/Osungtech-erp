@@ -104,7 +104,7 @@ export async function OfficialDocumentsList({ box, id, status: statusParam }: { 
         actions={
           <>
           <GuardedLink href="/official-documents/new" className="erp-btn erp-btn-primary">
-            F2 새 공문
+            새 공문
           </GuardedLink>
           {selectedId && (
             <Link href={listHref} className="erp-btn">
@@ -159,7 +159,7 @@ export async function OfficialDocumentsList({ box, id, status: statusParam }: { 
               icon={<DocumentIcon />}
               title={visible.length === 0 ? "공문이 없습니다" : "새 공문을 작성해보세요"}
               actionHref="/official-documents/new"
-              actionLabel="F2 새 공문"
+              actionLabel="새 공문"
             />
           </div>
         </section>
@@ -168,7 +168,7 @@ export async function OfficialDocumentsList({ box, id, status: statusParam }: { 
           {selectedId ? (
             <OfficialDocumentDetailPanel id={selectedId} closeHref={listHref} selfHref={`${listHref}${listHref.includes("?") ? "&" : "?"}id=${selectedId}`} />
           ) : (
-            <SplitDetailEmpty icon={<DocumentIcon />} title="공문을 선택해주세요" hint="왼쪽 목록에서 공문을 누르면 여기에 내용이 표시됩니다. 새 공문은 [F2 새 공문]으로 작성합니다." />
+            <SplitDetailEmpty icon={<DocumentIcon />} title="공문을 선택해주세요" hint="왼쪽 목록에서 공문을 누르면 여기에 내용이 표시됩니다. 새 공문은 [새 공문]으로 작성합니다." />
           )}
         </div>
       </div>

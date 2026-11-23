@@ -524,6 +524,7 @@
   --erp-grid-cell-valign: top;
   --erp-tree-item-h: 28px;
   --erp-tree-item-size: var(--erp-font-base);
+  --erp-tree-indent: 14px;
   --erp-tree-group-size: var(--erp-font-xs);
 }
 
@@ -703,6 +704,8 @@
   --erp-tree-item-h: 32px;
   --erp-tree-item-size: 13px;
   --erp-tree-group-size: 11.5px;
+  /* 하위 항목 글자가 그룹 이름 글자(12px 여백 + 화살표 10px + 간격 4px)와 같은 줄에서 시작한다 — 계층이 거꾸로 보이지 않게(R-004) */
+  --erp-tree-indent: 26px;
   --erp-radius-xs: 3px;
   --erp-radius-sm: 4px;
   --erp-radius-md: 5px;
@@ -711,6 +714,12 @@
   --erp-radius-2xl: 8px;
   --erp-radius-3xl: 12px;
   --erp-radius-4xl: 12px;
+  /* 그룹웨어(소통형) 모서리도 일반 모서리 단계에서 가져온다 — 매출관리와 그룹웨어의 R값이 따로 놀지 않게(R-009). 값을 새로 짓지 않는다. */
+  --erp-comm-radius: var(--erp-radius-xl);
+  --erp-comm-radius-row: var(--erp-radius-lg);
+  --erp-comm-radius-pill: var(--erp-radius-md);
+  --erp-comm-radius-bubble: var(--erp-radius-3xl);
+  --erp-comm-radius-sm: var(--erp-radius-md);
 }
 
 /* 셸(.erp)이 화면 높이를 꽉 채우고 안쪽(.erp-page 등)만 스크롤하는 구조라, 문서(html/body) 자체는 절대 스크롤되면 안 된다 —
@@ -5351,6 +5360,24 @@ a.erp-detail-tab:hover:not(.active) {
   border-radius: var(--erp-radius-md, 0);
   box-shadow: var(--erp-shadow-md);
 }
+.erp-colmenu-list[hidden] {
+  display: none;
+}
+a.erp-colmenu-item,
+button.erp-colmenu-item {
+  width: 100%;
+  background: none;
+  border: 0;
+  color: var(--erp-text);
+  text-align: left;
+  text-decoration: none;
+  font: inherit;
+  border-radius: var(--erp-radius-sm);
+}
+a.erp-colmenu-item:hover,
+button.erp-colmenu-item:hover {
+  background: var(--erp-hover);
+}
 .erp-colmenu-item {
   display: flex;
   align-items: center;
@@ -9028,7 +9055,7 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   height: var(--erp-tree-item-h);
   margin: 0;
   width: 100%;
-  padding: 0 12px 0 14px;
+  padding: 0 12px 0 var(--erp-tree-indent, 14px);
   border-radius: 0;
   font-size: var(--erp-tree-item-size);
   font-weight: 400;

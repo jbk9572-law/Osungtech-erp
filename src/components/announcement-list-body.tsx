@@ -181,7 +181,7 @@ export function AnnouncementListBody({
               icon={<MegaphoneIcon />}
               title="목록이 이게 전부예요"
               actionHref={writeHref}
-              actionLabel="F2 글쓰기"
+              actionLabel="글쓰기"
             />
           )}
         </div>

@@ -85,7 +85,7 @@ export default async function ProductionPage({
         actions={
           <>
             <GuardedLink href="/production/new" className="erp-btn erp-btn-primary">
-              F2 생산지시 등록
+              생산지시 등록
             </GuardedLink>
             <Link href="/inventory/lot-lookup" className="erp-btn">
               품목·관리번호 통합조회

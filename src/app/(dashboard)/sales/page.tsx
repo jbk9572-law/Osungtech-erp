@@ -9,6 +9,8 @@ import { DateRangeQuickFilters } from "@/components/erp/date-range-quick-filters
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ListPageHeader } from "@/components/erp/page-header";
 import { PageToolbar } from "@/components/erp/page-toolbar";
+import { ToolbarMenu } from "@/components/erp/toolbar-menu";
+import { ToolbarKey } from "@/components/erp/list-toolbar";
 import { buildListReturnParam } from "@/lib/list-return";
 import {
   SalesGridTable,
@@ -545,12 +547,9 @@ async function SalesPage({
 
       <PageToolbar
         actions={
-          <>
-            <GuardedLink href="/sales/new" className="erp-btn erp-btn-primary">
-              F2 신규
-            </GuardedLink>
-            <UnifiedSaleModalTrigger loadData={loadQuickSaleData} today={todayKstStr()} />
-          </>
+          <GuardedLink href="/sales/new" className="erp-btn erp-btn-primary">
+            신규<ToolbarKey>Ctrl+Enter</ToolbarKey>
+          </GuardedLink>
         }
         tools={
           <>
@@ -558,12 +557,15 @@ async function SalesPage({
               href={exportHref}
               title={q ? `이번달 "${q}" 검색 결과를 엑셀로 다운로드` : "이번달(1일~말일) 전체 내역을 엑셀로 다운로드"}
             />
-            <Link href="/sales/tax-invoices/export" className="erp-btn" title="발행된 세금계산서를 홈택스 일괄발급용 엑셀로 다운로드">
-              📥 홈택스 일괄발급 엑셀
-            </Link>
-            <Link href="/sales/tax-invoices/bulk-create" className="erp-btn" title="세금계산서가 없는 매출 건을 여러 개 골라 한 번에 작성">
-              🧾 세금계산서 일괄 작성
-            </Link>
+            <ToolbarMenu label="일괄 작업">
+              <UnifiedSaleModalTrigger asMenuItem loadData={loadQuickSaleData} today={todayKstStr()} />
+              <Link href="/sales/tax-invoices/export" className="erp-colmenu-item" title="발행된 세금계산서를 홈택스 일괄발급용 엑셀로 다운로드">
+                홈택스 일괄발급 엑셀
+              </Link>
+              <Link href="/sales/tax-invoices/bulk-create" className="erp-colmenu-item" title="세금계산서가 없는 매출 건을 여러 개 골라 한 번에 작성">
+                세금계산서 일괄 작성
+              </Link>
+            </ToolbarMenu>
           </>
         }
       />

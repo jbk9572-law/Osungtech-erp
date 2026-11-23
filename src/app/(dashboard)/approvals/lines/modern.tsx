@@ -73,7 +73,7 @@ export default async function ApprovalLinesPage({
         <>
           {activeTab === "lines" && (
             <GuardedLink href="/approvals/lines/new" className="erp-btn erp-btn-primary">
-              F2 새 결재선
+              새 결재선
             </GuardedLink>
           )}
           <CloseButton href="/approvals">ESC 기안함으로</CloseButton>
@@ -309,7 +309,7 @@ export default async function ApprovalLinesPage({
               </div>
             </>
           ) : (
-            <SplitDetailEmpty icon={<GroupIcon />} title="결재선을 선택해주세요" hint="왼쪽 목록에서 결재선을 누르면 여기에 내용이 표시됩니다. 새 결재선은 [F2 새 결재선]으로 추가합니다." />
+            <SplitDetailEmpty icon={<GroupIcon />} title="결재선을 선택해주세요" hint="왼쪽 목록에서 결재선을 누르면 여기에 내용이 표시됩니다. 새 결재선은 [새 결재선]으로 추가합니다." />
           )}
         </div>
       </div>

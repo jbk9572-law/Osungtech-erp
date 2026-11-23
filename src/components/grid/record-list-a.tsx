@@ -62,7 +62,7 @@ export function RecordListA({
   const router = useRouter();
   const [activeId, setActiveId] = useState<string | null>(null);
   const sortable = rows.some((r) => r.values);
-  const { ordered, sort, toggleSort, widths, setWidth, hidden, toggleHidden, isVisible, ariaSort } = useSheetTable(rows, (r, c) => r.values?.[c]);
+  const { ordered, sort, toggleSort, widths, setWidth, hidden, toggleHidden, isVisible, ariaSort } = useSheetTable(rows, (r, c) => r.values?.[c], `sheet:${newHref}`);
   const active = ordered.find((r) => r.id === activeId) ?? null;
   const noopAction = async () => undefined;
   const { selected, toggle, bar } = useBulkDelete(

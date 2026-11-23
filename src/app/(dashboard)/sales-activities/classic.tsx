@@ -114,7 +114,7 @@ export default async function SalesActivitiesPage({
           actions={
             <>
               <Link href={newHref} className="erp-btn erp-btn-primary">
-                F2 새 활동 기록
+                새 활동 기록
               </Link>
               {selectedId && (
                 <Link href={newHref} className="erp-btn">

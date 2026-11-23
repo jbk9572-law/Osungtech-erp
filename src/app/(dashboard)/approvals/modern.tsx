@@ -86,7 +86,7 @@ export default async function ApprovalsPage({
           actions={
             <>
               <GuardedLink href="/approvals/new" className="erp-btn erp-btn-primary">
-                F2 기안
+                기안
               </GuardedLink>
               <Link href="/approvals/lines" className="erp-btn">
                 결재선 설정
@@ -355,7 +355,7 @@ export default async function ApprovalsPage({
               icon={<CheckCircleIcon />}
               title={rows.length === 0 ? "해당하는 문서가 없습니다" : "새 기안을 작성해보세요"}
               actionHref="/approvals/new"
-              actionLabel="F2 기안"
+              actionLabel="기안"
             />
           </div>
         </section>
@@ -364,7 +364,7 @@ export default async function ApprovalsPage({
           {selectedId ? (
             <ApprovalDetailPanel key={selectedId} id={selectedId} closeHref={newHref} />
           ) : (
-            <SplitDetailEmpty icon={<CheckCircleIcon />} title="문서를 선택해주세요" hint="왼쪽 목록에서 기안을 누르면 여기에 내용이 표시됩니다. 새 기안은 [F2 기안]으로 작성합니다." />
+            <SplitDetailEmpty icon={<CheckCircleIcon />} title="문서를 선택해주세요" hint="왼쪽 목록에서 기안을 누르면 여기에 내용이 표시됩니다. 새 기안은 [기안]으로 작성합니다." />
           )}
         </div>
       </div>

@@ -32,7 +32,7 @@ export function GridSelectionStats() {
       }
       const texts: string[] = [];
       table.querySelectorAll("tbody td.num").forEach((td) => {
-        // 숨긴 칸(컬럼 설정·테마 전용 칸)은 건너뛴다.
+        // 숨긴 칸(열 설정·테마 전용 칸)은 건너뛴다.
         if (!(td as HTMLElement).offsetParent) return;
         if (sel.containsNode(td, true)) texts.push(td.textContent ?? "");
       });

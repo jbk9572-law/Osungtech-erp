@@ -114,7 +114,7 @@ export function PartyListA({
       ),
     [rows, filter, recentSince],
   );
-  const { ordered, sort, toggleSort, widths, setWidth, hidden, toggleHidden, isVisible, ariaSort } = useSheetTable(visible, partyValue);
+  const { ordered, sort, toggleSort, widths, setWidth, hidden, toggleHidden, isVisible, ariaSort } = useSheetTable(visible, partyValue, `sheet:${hrefBase}`);
   const router = useRouter();
   const balanceSum = rows.reduce((n, r) => n + (r.balance > 0 ? r.balance : 0), 0);
 

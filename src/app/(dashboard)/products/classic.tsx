@@ -147,7 +147,7 @@ async function ProductsPage({
           actions={
             <>
               <Link href={newHref} className="erp-btn erp-btn-primary">
-                F2 신규
+                신규
               </Link>
               <Link href={currentHref} className="erp-btn">
                 새로고침

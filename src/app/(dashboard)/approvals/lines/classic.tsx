@@ -73,7 +73,7 @@ export default async function ApprovalLinesPage({
         <>
           {activeTab === "lines" && (
             <Link href="/approvals/lines" className="erp-btn erp-btn-primary">
-              F2 새 결재선
+              새 결재선
             </Link>
           )}
           <CloseButton href="/approvals">ESC 기안함으로</CloseButton>

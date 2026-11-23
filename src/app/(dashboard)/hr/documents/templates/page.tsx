@@ -68,7 +68,7 @@ export default async function DocumentTemplatesPage({
         actions={
           <>
             <Link href={listHref} className="erp-btn erp-btn-primary">
-              F2 새 양식
+              새 양식
             </Link>
             <Link href="/hr/documents" className="erp-btn erp-btn-dark">
               ESC 문서함으로

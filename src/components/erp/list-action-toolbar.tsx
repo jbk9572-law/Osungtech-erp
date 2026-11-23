@@ -82,7 +82,7 @@ export function ListActionToolbar({
           )}
           <GuardedLink href={newHref} className="erp-btn">
             {newLabel}
-            <ToolbarKey>F2</ToolbarKey>
+            <ToolbarKey>Ctrl+Enter</ToolbarKey>
           </GuardedLink>
           {editHref ? (
             <Link href={editHref} className="erp-btn erp-listtoolbar-wide">

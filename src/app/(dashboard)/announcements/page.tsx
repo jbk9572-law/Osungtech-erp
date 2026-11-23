@@ -103,7 +103,7 @@ export default async function AnnouncementsPage({
           <>
           {isManagerOrAdmin && (
             <Link href={newHref} className="erp-btn erp-btn-primary">
-              F2 글쓰기
+              글쓰기
             </Link>
           )}
           {selectedId && (

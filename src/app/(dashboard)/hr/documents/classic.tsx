@@ -75,7 +75,7 @@ export default async function DocumentsPage({
         <h1 className="erp-h1">그룹웨어 &gt; 문서함</h1>
         <div className="erp-toolbar erp-u-mb-0">
           <Link href={newHref} className="erp-btn erp-btn-primary">
-            F2 새 문서
+            새 문서
           </Link>
           <Link href="/hr/documents/templates" className="erp-btn">
             양식 관리
@@ -119,7 +119,7 @@ export default async function DocumentsPage({
               icon={<DocumentIcon />}
               title={(docs ?? []).length === 0 ? "생성된 문서가 없습니다" : "새 문서를 만들어보세요"}
               actionHref={newHref}
-              actionLabel="F2 새 문서"
+              actionLabel="새 문서"
             />
           </div>
         </section>

@@ -85,7 +85,7 @@ export default async function DepartmentsPage() {
         title="환경설정 > 조직도 관리"
         actions={
           <GuardedLink href="/settings/departments/new" className="erp-btn erp-btn-primary">
-            F2 새 부서
+            새 부서
           </GuardedLink>
         }
       />

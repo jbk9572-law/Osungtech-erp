@@ -145,7 +145,7 @@ export default async function TodosPage({
         <h1 className="erp-h1">할일관리</h1>
         <div className="erp-toolbar erp-u-mb-0">
           <Link href={newHref} className="erp-btn erp-btn-primary">
-            F2 글쓰기
+            글쓰기
           </Link>
           {selectedId && (
             <Link href={newHref} className="erp-btn">
