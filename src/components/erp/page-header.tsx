@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { useThemeFeatures } from "@/lib/erp-theme-features";
 import { ListToolbar } from "@/components/erp/list-toolbar";
+import { useModalClose } from "@/lib/modal-context";
 
 // 목록+상세 분할뷰(.erp-split-detail)에서 아무것도 선택 안 했을 때 —
 // 메일함/문서양식관리/결재선처럼 "고른 걸 보여주는" 화면(할일관리·
@@ -98,15 +99,19 @@ export function ListPageHeader({
   description?: ReactNode;
 }) {
   // 모던 테마는 제목 줄 오른쪽에 툴바를 둔다(A/B형 공통 제목줄과 같은 모양) — 클래식은 기존 그대로(제목 아래 툴바).
-  const { listSidePanel } = useThemeFeatures();
+  const { listSidePanel, appChrome } = useThemeFeatures();
+  const inModal = useModalClose() !== null;
   if (listSidePanel) {
+    // 모던 틀: "새 ○○" 같은 버튼은 제목줄 오른쪽이 아니라 모든 목록 화면 공통의 도구 줄에 둔다(R-007). 모달 안의 화면은 제자리.
+    const toolbarActions = appChrome && !inModal && actions;
     return (
       <>
         {eyebrow && <span className="erp-eyebrow">{eyebrow}</span>}
         <div className="erp-page-head">
           <h1 className="erp-h1">{title}</h1>
-          {actions && <div className="erp-page-head-actions">{actions}</div>}
+          {actions && !toolbarActions && <div className="erp-page-head-actions">{actions}</div>}
         </div>
+        {toolbarActions && <ListToolbar actions={actions} />}
         {description && <p className="erp-page-desc erp-u-mb-12">{description}</p>}
       </>
     );

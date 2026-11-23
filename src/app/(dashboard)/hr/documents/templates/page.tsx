@@ -1,3 +1,4 @@
+import { ToolbarKey } from "@/components/erp/list-toolbar";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentActor } from "@/lib/current-actor";
@@ -66,14 +67,9 @@ export default async function DocumentTemplatesPage({
       <ListPageHeader
         title="그룹웨어 > 문서 양식 관리"
         actions={
-          <>
-            <Link href={listHref} className="erp-btn erp-btn-primary">
-              새 양식
-            </Link>
-            <Link href="/hr/documents" className="erp-btn erp-btn-dark">
-              ESC 문서함으로
-            </Link>
-          </>
+          <Link href={listHref} className="erp-btn erp-btn-primary">
+            신규<ToolbarKey>Ctrl+Enter</ToolbarKey>
+          </Link>
         }
       />
 

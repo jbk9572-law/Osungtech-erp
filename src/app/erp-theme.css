@@ -9503,3 +9503,8 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   border: 1px solid var(--erp-border-strong);
   border-radius: var(--erp-radius-xl);
 }
+
+/* 모던 틀: 목록 아래 빈 공간 채움 안내의 "새 ○○" 버튼은 도구 줄 [신규]와 겹치므로 그리지 않는다(R-007) — 글만 남긴다 */
+.erp-chrome-modern .erp-split-list-filler .erp-btn {
+  display: none;
+}

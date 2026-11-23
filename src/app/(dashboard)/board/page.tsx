@@ -2,6 +2,9 @@ import { selectInChunks } from "@/lib/fetch-all-rows";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ListPageHeader, SplitDetailEmpty } from "@/components/erp/page-header";
+import Link from "next/link";
+import { PageToolbar } from "@/components/erp/page-toolbar";
+import { ToolbarMenu } from "@/components/erp/toolbar-menu";
 import { PageGuide } from "@/components/erp/page-guide";
 import { DocumentIcon } from "@/components/erp/groupware-icons";
 import { isFeatureEnabled } from "@/lib/require-feature-enabled";
@@ -206,6 +209,18 @@ export default async function BoardPage({
     <div className="erp-comm-shell">
       <KeyboardShortcuts shortcuts={{ Escape: { href: selectedId ? listHref : "/dashboard" } }} />
       <ListPageHeader title="게시판" />
+      {/* 새로 쓰기는 도구 줄의 [신규 ▾] 하나로 — 글 종류별 버튼을 목록 안에 늘어놓지 않는다(R-005·R-007) */}
+      <PageToolbar
+        actions={
+          <ToolbarMenu label="신규">
+            {writeLinks.map((w) => (
+              <Link key={w.category} href={w.href} className="erp-colmenu-item">
+                {w.label.replace(/^새 /, "")}
+              </Link>
+            ))}
+          </ToolbarMenu>
+        }
+      />
       <PageGuide>
         공지사항 / 인사문서함 / 공문함 / 결재·기안함의 최근 항목을 한 화면에 모아 보여줍니다. 각 항목은 이 화면 안에서
         바로 확인할 수 있고, 수정·삭제 같은 세부 처리는 원래 메뉴와 완전히 같은 화면을 그대로 씁니다.
@@ -215,7 +230,6 @@ export default async function BoardPage({
         <BoardListBody
           rows={rows}
           counts={counts}
-          writeLinks={writeLinks}
           selectedId={selectedId}
           selectedType={selectedType}
           basePath={listHref}

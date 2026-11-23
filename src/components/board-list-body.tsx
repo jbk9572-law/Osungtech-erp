@@ -49,14 +49,12 @@ export type BoardWriteLink = { category: BoardCategory; label: string; href: str
 export function BoardListBody({
   rows,
   counts,
-  writeLinks,
   selectedId,
   selectedType,
   basePath,
 }: {
   rows: BoardRow[];
   counts: Record<Filter, number>;
-  writeLinks: BoardWriteLink[];
   selectedId?: string;
   selectedType?: BoardCategory;
   basePath: string;
@@ -85,16 +83,6 @@ export function BoardListBody({
           <span>게시판</span>
           <span className="erp-u-muted erp-u-normal">총 {filtered.length}건</span>
         </div>
-
-        {writeLinks.length > 0 && (
-          <div className="erp-u-flex erp-u-gap-6 erp-u-wrap" style={{ padding: "8px 8px 0" }}>
-            {writeLinks.map((w) => (
-              <Link key={w.category} href={w.href} className="erp-btn" style={{ fontSize: 11, minWidth: 0 }}>
-                + {w.label}
-              </Link>
-            ))}
-          </div>
-        )}
 
         <div className="erp-u-p-8">
           <input
@@ -133,7 +121,7 @@ export function BoardListBody({
               {query.trim() ? "검색 결과가 없습니다." : "표시할 항목이 없습니다."}
             </p>
           ) : (
-            <SplitListFiller icon={<DocumentIcon />} title="위 + 버튼으로 새 글을 작성해보세요" />
+            <SplitListFiller icon={<DocumentIcon />} title="새 글은 위 [신규]에서 작성합니다" />
           )}
         </div>
       </section>
