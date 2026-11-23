@@ -8226,28 +8226,28 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
 }
 
 /* 전표 표 — 칸마다 테두리 입력칸이 박힌 폼 모양 대신 스프레드시트처럼: 평소엔 테두리 없이 값만 보이고,
-   마우스를 올리면 칸 윤곽, 누르면 파란 선택 칸이 된다. voucher 폼(.erp-voucher) 안의 표에만 적용. */
-.erp-voucher .erp-grid tbody .erp-input:not(:disabled),
-.erp-voucher .erp-grid tbody .erp-select:not(:disabled) {
+   마우스를 올리면 칸 윤곽, 누르면 파란 선택 칸이 된다. voucher 폼(.erp-voucher)과 모던 틀(.erp-chrome-modern) 안의 모든 표에 적용 — 표 안 입력칸 모양을 입력칸마다 따로 정하지 않고 여기 한 곳에서 정한다(R-002). */
+:is(.erp-voucher, .erp-chrome-modern) .erp-grid tbody .erp-input:not(:disabled),
+:is(.erp-voucher, .erp-chrome-modern) .erp-grid tbody .erp-select:not(:disabled) {
   background: transparent;
   border-color: transparent;
   box-shadow: none;
 }
-.erp-voucher .erp-grid tbody .erp-input:not(:disabled):hover,
-.erp-voucher .erp-grid tbody .erp-select:not(:disabled):hover {
+:is(.erp-voucher, .erp-chrome-modern) .erp-grid tbody .erp-input:not(:disabled):hover,
+:is(.erp-voucher, .erp-chrome-modern) .erp-grid tbody .erp-select:not(:disabled):hover {
   border-color: var(--erp-border);
 }
-.erp-voucher .erp-grid tbody .erp-input:focus,
-.erp-voucher .erp-grid tbody .erp-select:focus {
+:is(.erp-voucher, .erp-chrome-modern) .erp-grid tbody .erp-input:focus,
+:is(.erp-voucher, .erp-chrome-modern) .erp-grid tbody .erp-select:focus {
   background: var(--erp-panel);
   border-color: var(--erp-primary);
   box-shadow: 0 0 0 2px var(--erp-focus-ring);
   transform: none;
 }
 /* 읽기 전용(자동 채움) 칸 — 테두리 없이 옅은 바닥색만. 입력 칸과 같은 모양(테두리 없음)이라 칸마다 둥근 테두리가 따로 놀지 않는다(R-002) */
-.erp-voucher .erp-grid tbody .erp-input:disabled,
-.erp-voucher .erp-grid tbody .erp-input[readonly],
-.erp-voucher .erp-grid tbody .erp-select:disabled {
+:is(.erp-voucher, .erp-chrome-modern) .erp-grid tbody .erp-input:disabled,
+:is(.erp-voucher, .erp-chrome-modern) .erp-grid tbody .erp-input[readonly],
+:is(.erp-voucher, .erp-chrome-modern) .erp-grid tbody .erp-select:disabled {
   border-color: transparent;
   box-shadow: none;
   background: var(--erp-bg-subtle);
@@ -9509,4 +9509,10 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
 /* 모던 틀: 목록 아래 빈 공간 채움 안내의 "새 ○○" 버튼은 도구 줄 [신규]와 겹치므로 그리지 않는다(R-007) — 글만 남긴다 */
 .erp-chrome-modern .erp-split-list-filler .erp-btn {
   display: none;
+}
+
+/* 모던 틀: 상단 안내 박스는 본문과 같은 13px로 — 화면마다 작은 글자로 길게 늘어놓지 않게 크기를 한 곳에서 정한다(R-012) */
+.erp-chrome-modern .erp-page-guide {
+  font-size: var(--erp-font-base);
+  line-height: 1.5;
 }
