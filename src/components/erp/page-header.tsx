@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { useThemeFeatures } from "@/lib/erp-theme-features";
+import { ListToolbar } from "@/components/erp/list-toolbar";
 
 // 목록+상세 분할뷰(.erp-split-detail)에서 아무것도 선택 안 했을 때 —
 // 메일함/문서양식관리/결재선처럼 "고른 걸 보여주는" 화면(할일관리·
@@ -64,6 +65,17 @@ export function SplitListFiller({
 // 쉬웠다. 이 레이아웃을 쓰는 화면은 전부 이 컴포넌트만 쓴다.
 // 제목(왼쪽) + 툴바(오른쪽) 한 줄 헤더 — 모던 테마의 A/B형 화면 공통 제목줄. 화면마다 `erp-page-toolbar erp-detail-header-row` 마크업을 다시 짜지 않는다.
 export function ListTitleBar({ title, actions }: { title: ReactNode; actions?: ReactNode }) {
+  // 모던 틀(시안 A·B형): 화면 이름은 상단바 경로·탭에 이미 있고 제목 박스는 없다 — 제목은 화면 낭독용으로만 남기고,
+  // 화면이 넘긴 버튼은 시안의 도구 줄 자리에 둔다.
+  const { appChrome } = useThemeFeatures();
+  if (appChrome) {
+    return (
+      <>
+        <h1 className="erp-h1 erp-sr-only">{title}</h1>
+        {actions && <ListToolbar actions={actions} />}
+      </>
+    );
+  }
   return (
     <div className="erp-page-toolbar erp-detail-header-row">
       <h1 className="erp-h1">{title}</h1>
@@ -91,7 +103,10 @@ export function ListPageHeader({
     return (
       <>
         {eyebrow && <span className="erp-eyebrow">{eyebrow}</span>}
-        <ListTitleBar title={title} actions={actions} />
+        <div className="erp-page-head">
+          <h1 className="erp-h1">{title}</h1>
+          {actions && <div className="erp-page-head-actions">{actions}</div>}
+        </div>
         {description && <p className="erp-page-desc erp-u-mb-12">{description}</p>}
       </>
     );

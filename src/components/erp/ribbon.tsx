@@ -156,13 +156,17 @@ export function Ribbon({
       <button
         type="button"
         className="erp-ribbon-btn"
+        title="새로고침"
+        aria-label="새로고침"
         onClick={() => window.location.reload()}
       >
-        ↻ 새로고침
+        <span aria-hidden>↻</span>
+        <span className="erp-ribbon-label"> 새로고침</span>
       </button>
 
-      <button type="button" className="erp-ribbon-btn" onClick={openFavorites}>
-        ★ 즐겨찾기
+      <button type="button" className="erp-ribbon-btn" title="즐겨찾기" aria-label="즐겨찾기" onClick={openFavorites}>
+        <span aria-hidden>★</span>
+        <span className="erp-ribbon-label"> 즐겨찾기</span>
       </button>
       {openPanel === "favorites" &&
         renderDropdown(
@@ -195,8 +199,9 @@ export function Ribbon({
           ),
         )}
 
-      <button type="button" className="erp-ribbon-btn" onClick={openRecents}>
-        🕘 최근 메뉴
+      <button type="button" className="erp-ribbon-btn" title="최근 메뉴" aria-label="최근 메뉴" onClick={openRecents}>
+        <span aria-hidden>🕘</span>
+        <span className="erp-ribbon-label"> 최근 메뉴</span>
       </button>
       {openPanel === "recent" &&
         renderDropdown(
@@ -235,7 +240,7 @@ export function Ribbon({
 
       <button
         type="button"
-        className="erp-ribbon-btn"
+        className="erp-ribbon-btn erp-ribbon-btn-search"
         title="Ctrl+K"
         onClick={() => {
           setQuery("");
@@ -250,21 +255,27 @@ export function Ribbon({
         <button
           type="button"
           className="erp-ribbon-btn"
+          title="회사 전환"
+          aria-label="회사 전환"
           onClick={() => {
             setTenantQuery("");
             setModal("tenants");
           }}
         >
-          🏢 회사 전환
+          <span aria-hidden>🏢</span>
+          <span className="erp-ribbon-label"> 회사 전환</span>
         </button>
       )}
 
       <button
         type="button"
         className="erp-ribbon-btn"
+        title="도움말"
+        aria-label="도움말"
         onClick={() => setModal("help")}
       >
-        ? 도움말
+        <span aria-hidden>?</span>
+        <span className="erp-ribbon-label"> 도움말</span>
       </button>
 
       {modal === "search" && (
