@@ -34,8 +34,9 @@ function measureInPage() {
   check("버튼 높이(일반)", "28", q(".erp-btn:not(.erp-btn-sm):not(.erp-btn-xs)"), h, (n) => n === 28);
   check("버튼 높이(작은)", "24", q(".erp-btn-sm, .erp-btn-xs"), h, (n) => n === 24);
   check("입력칸 높이", "28", q("input.erp-input:not([type=checkbox]):not([type=radio]), select.erp-input"), h, (n) => n === 28);
-  // 표 행은 1px 안팎(경계선)까지 허용한다 — 재고 막대처럼 칸 안에 부속 요소가 있는 행은 그 이상으로 커져 어긋남으로 센다.
-  check("표 행 높이", "26±1", q(".erp-grid tbody td"), h, (n) => n >= 25 && n <= 27);
+  // 표 행은 ±1.5px(경계선)까지 허용한다. 재고 막대가 있는 행은 예외 변형 stock-bar-row(최대 31px, design/EXCEPTIONS.md).
+  check("표 행 높이", "26±1.5", q(".erp-grid tbody td:not(:has(.erp-stock-bar))"), h, (n) => n >= 24.5 && n <= 27.5);
+  check("표 행 높이(재고 막대 줄·예외)", "≤31", q(".erp-grid tbody td:has(.erp-stock-bar)"), h, (n) => n <= 31);
   check("표 머리 높이", "26", q(".erp-grid thead th"), h, (n) => n >= 22 && n <= 28);
   check("상세 패널 폭", "320", q(".erp-detail-side"), w, (n) => n === 320);
   check("카드 모서리", "8", q(".erp-settings-card, .erp-state"), rad, (n) => n === 8);

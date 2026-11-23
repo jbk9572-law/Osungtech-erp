@@ -679,8 +679,9 @@
   --erp-comm-shadow-row: none;
 }
 
-/* ══ 테마: grid-modern2 (모던 2 — 규칙표 값 미리보기) ════════════════════════
-   grid-modern과 같은 색·구조에 design/SPEC.md의 수치만 덮는다: 본문 13px, 컨트롤 28/24px, 좌측 메뉴 208px(글자 13), 상세 패널 320px, 모서리 4단계. */
+/* ══ 규칙표 값(design/SPEC.md) — grid-modern·grid-modern2 공통 ════════════════════════
+   같은 색·구조 위에 규칙표의 수치를 덮는다(2026-11-23 모던도 규칙표 값으로 통일, grid-modern2는 같은 값의 별칭): 본문 13px, 컨트롤 28/24px, 좌측 메뉴 208px(글자 13), 상세 패널 320px, 모서리 4단계. */
+[data-theme="grid-modern"],
 [data-theme="grid-modern2"] {
   --erp-font-2xs: 10px;
   --erp-font-xs: 10.5px;
