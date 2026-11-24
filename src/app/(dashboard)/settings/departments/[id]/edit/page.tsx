@@ -4,8 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { DepartmentForm } from "@/components/department-form";
 import { updateDepartment } from "@/app/(dashboard)/settings/departments/actions";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
-import { CloseButton } from "@/components/erp/close-button";
-import { ListPageHeader, FormSection } from "@/components/erp/page-header";
+import { ListPageHeader } from "@/components/erp/page-header";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 
 export default async function EditDepartmentPage({
@@ -32,16 +31,13 @@ export default async function EditDepartmentPage({
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/settings/departments" } }} />
       <ListPageHeader
         title="환경설정 > 조직도 관리 > 부서 수정"
-        actions={<CloseButton href="/settings/departments">ESC 목록으로</CloseButton>}
       />
-      <FormSection tabLabel="부서 수정">
-        <DepartmentForm
-          action={updateDepartment}
-          submitLabel="저장"
-          candidates={departments}
-          initial={{ id: department.id, name: department.name, parentDepartmentId: department.parent_department_id }}
-        />
-      </FormSection>
+      <DepartmentForm
+        action={updateDepartment}
+        submitLabel="저장"
+        candidates={departments}
+        initial={{ id: department.id, name: department.name, parentDepartmentId: department.parent_department_id }}
+      />
     </div>
   );
 }

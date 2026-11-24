@@ -2,8 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { SubcontractorForm } from "@/components/subcontractor-form";
 import { createSubcontractor } from "@/app/(dashboard)/subcontractors/actions";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
-import { CloseButton } from "@/components/erp/close-button";
-import { ListPageHeader, FormSection } from "@/components/erp/page-header";
+import { ListPageHeader } from "@/components/erp/page-header";
 import { canViewPage } from "@/lib/department-page-access";
 import { AccessWall } from "@/components/erp/access-wall";
 
@@ -16,10 +15,8 @@ export default async function NewSubcontractorPage() {
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/subcontractors" } }} />
-      <ListPageHeader title="생산관리 &gt; 하청업체 추가" actions={<CloseButton href="/subcontractors">ESC 목록으로</CloseButton>} />
-      <FormSection tabLabel="업체 추가">
-        <SubcontractorForm action={createSubcontractor} submitLabel="추가" />
-      </FormSection>
+      <ListPageHeader title="생산관리 &gt; 하청업체 추가" />
+      <SubcontractorForm action={createSubcontractor} submitLabel="추가" />
     </div>
   );
 }

@@ -7449,6 +7449,18 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   align-items: center;
   gap: var(--erp-space-1);
 }
+/* 모던 표: 열 폭 단계를 한 단계씩 넓히고 칸 안 좌우 여백을 10px로 — 숫자·한글이 답답하게 붙어 보이던 것을 푼다(클래식은 그대로) */
+.erp-chrome-modern {
+  --erp-col-s: 90px;
+  --erp-col-m: 110px;
+  --erp-col-l: 130px;
+  --erp-col-xl: 150px;
+  --erp-col-xxl: 180px;
+  --erp-col-w: 220px;
+  --erp-col-xw: 280px;
+  --erp-grid-cell-px: 10px;
+}
+
 /* 화면 안 탭 줄(InventorySubTabs) — 같은 업무 묶음의 화면을 탭으로 오간다. 활성 탭은 아래 파란 선 */
 .erp-subtabs {
   display: flex;

@@ -162,7 +162,7 @@ export default async function ApprovalsPage({
                             action={deleteApprovalDraft}
                             hiddenFields={{ id: d.id }}
                             warningText="이 임시저장 문서를 삭제하시겠습니까?"
-                            triggerStyle={{ minWidth: 0, height: 24, padding: "0 8px", fontSize: 11 }}
+                            triggerClassName="erp-btn erp-btn-danger erp-btn-xs"
                           />
                         </div>
                       </td>

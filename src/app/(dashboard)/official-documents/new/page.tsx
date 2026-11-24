@@ -2,8 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { OfficialDocumentForm } from "@/components/official-document-form";
 import { createOfficialDocument } from "@/app/(dashboard)/official-documents/actions";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
-import { CloseButton } from "@/components/erp/close-button";
-import { ListPageHeader, FormSection } from "@/components/erp/page-header";
+import { ListPageHeader } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { requireFeatureEnabled } from "@/lib/require-feature-enabled";
@@ -21,13 +20,11 @@ export default async function NewOfficialDocumentPage() {
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/official-documents" } }} />
-      <ListPageHeader title="공문관리 &gt; 새 공문" actions={<CloseButton href="/official-documents">ESC 목록으로</CloseButton>} />
+      <ListPageHeader title="공문관리 &gt; 새 공문" />
       <PageGuide>
         결재까지는 전자결재와 같은 결재선을 타고, 결재가 끝나면 문서번호가 부여됩니다. 발송은 이메일 주소가 있는 수신처는 자동 발송을 시도하고, 그 외에는 직접 발송 처리로 기록합니다.
       </PageGuide>
-      <FormSection tabLabel="공문 작성">
-        <OfficialDocumentForm action={createOfficialDocument} templates={templates} profiles={profiles.map((p) => ({ id: p.id, name: p.full_name || "구성원" }))} />
-      </FormSection>
+      <OfficialDocumentForm action={createOfficialDocument} templates={templates} profiles={profiles.map((p) => ({ id: p.id, name: p.full_name || "구성원" }))} />
     </div>
   );
 }

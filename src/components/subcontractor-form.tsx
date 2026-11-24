@@ -2,7 +2,7 @@
 
 import { useActionState, useRef } from "react";
 import type { FormState } from "@/components/form-message";
-import { FormMessage } from "@/components/form-message";
+import { ModalFormSheet } from "@/components/erp/modal-form-sheet";
 import { PhoneInputGroup } from "@/components/phone-input-group";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 
@@ -30,27 +30,21 @@ export function SubcontractorForm({
   useKeyShortcut("F7", submitRef);
 
   return (
-    <form action={formAction} className="grid grid-cols-1 gap-3 md:grid-cols-2">
+    <ModalFormSheet title="새 하청업체" tabLabel="하청업체 등록" formAction={formAction} state={state} pending={pending} submitRef={submitRef} submitLabel={`F7 ${submitLabel}`}>
       {idFieldValue && <input type="hidden" name="id" value={idFieldValue} />}
-      <input
-        name="name"
-        autoComplete="off"
-        placeholder="업체명"
-        aria-label="업체명"
-        required
-        defaultValue={initial?.name ?? ""}
-        className="erp-input"
-      />
-      <input
-        name="contact_name"
-        autoComplete="off"
-        placeholder="담당자"
-        aria-label="담당자"
-        defaultValue={initial?.contact_name ?? ""}
-        className="erp-input"
-      />
-      <PhoneInputGroup namePrefix="phone" defaultValue={initial?.phone} />
-      <div className="erp-field">
+      <div className="erp-field erp-span-6">
+        <label htmlFor="sc-name">업체명</label>
+        <input id="sc-name" name="name" autoComplete="off" required defaultValue={initial?.name ?? ""} className="erp-input erp-u-w-full" />
+      </div>
+      <div className="erp-field erp-span-6">
+        <label htmlFor="sc-contact">담당자</label>
+        <input id="sc-contact" name="contact_name" autoComplete="off" defaultValue={initial?.contact_name ?? ""} className="erp-input erp-u-w-full" />
+      </div>
+      <div className="erp-field erp-span-6">
+        <label>연락처</label>
+        <PhoneInputGroup namePrefix="phone" defaultValue={initial?.phone} />
+      </div>
+      <div className="erp-field erp-span-6">
         <label htmlFor="sc-default-unit-cost">기본 가공비 단가 (원, 선택)</label>
         <input
           id="sc-default-unit-cost"
@@ -60,29 +54,13 @@ export function SubcontractorForm({
           step="1"
           autoComplete="off"
           defaultValue={initial?.default_unit_cost ?? ""}
-          className="erp-input"
+          className="erp-input erp-u-w-full"
         />
       </div>
-      <textarea
-        name="memo"
-        placeholder="비고 (맡기는 공정, 특이사항 등)"
-        aria-label="비고"
-        defaultValue={initial?.memo ?? ""}
-        rows={2}
-        className="erp-input erp-textarea-compact md:col-span-2"
-      />
-      <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary erp-form-submit">
-        {pending ? (
-          <>
-            <span className="erp-spinner" aria-hidden /> 저장 중...
-          </>
-        ) : (
-          `F7 ${submitLabel}`
-        )}
-      </button>
-      <div className="md:col-span-2">
-        <FormMessage state={state} />
+      <div className="erp-field erp-span-12">
+        <label htmlFor="sc-memo">비고 (맡기는 공정, 특이사항 등)</label>
+        <textarea id="sc-memo" name="memo" defaultValue={initial?.memo ?? ""} rows={2} className="erp-input erp-textarea-compact erp-u-w-full" />
       </div>
-    </form>
+    </ModalFormSheet>
   );
 }

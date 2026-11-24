@@ -1,7 +1,8 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { FormMessage, type FormState } from "@/components/form-message";
+import { type FormState } from "@/components/form-message";
+import { ModalFormSheet } from "@/components/erp/modal-form-sheet";
 import { useFormRedirect } from "@/lib/use-form-redirect";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { extractTemplateFields, isServerAutoField, renderTemplate, SERVER_AUTO_FIELD_LABELS } from "@/lib/document-template";
@@ -86,7 +87,8 @@ export function OfficialDocumentForm({
   }
 
   return (
-    <form action={formAction} onKeyDown={preventEnterSubmit} className="grid grid-cols-1 gap-3">
+    <div onKeyDown={preventEnterSubmit}>
+    <ModalFormSheet title="새 공문" tabLabel="공문 작성" formAction={formAction} state={state} pending={pending} submitLabel="작성 저장(임시저장)">
       {recipients.map((r) => (
         <span key={r.key}>
           <input type="hidden" name="recipient_kind" value={r.kind} />
@@ -96,8 +98,8 @@ export function OfficialDocumentForm({
         </span>
       ))}
 
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-        <div className="erp-field">
+      <>
+        <div className="erp-field erp-span-4">
           <label htmlFor="od-template">양식 (선택)</label>
           <ErpSelect
             id="od-template"
@@ -110,7 +112,7 @@ export function OfficialDocumentForm({
           />
           <input type="hidden" name="template_id" value={templateId} />
         </div>
-        <div className="erp-field">
+        <div className="erp-field erp-span-4">
           <label htmlFor="od-title">제목</label>
           <input
             id="od-title"
@@ -123,16 +125,16 @@ export function OfficialDocumentForm({
             required
           />
         </div>
-        <div className="erp-field">
+        <div className="erp-field erp-span-4">
           <label htmlFor="od-effective-date">시행일자 (선택 — 비우면 발송일)</label>
-          <input id="od-effective-date" type="date" name="effective_date" className="erp-input w-full" />
+          <input id="od-effective-date" type="date" name="effective_date" className="erp-input erp-u-w-full" />
         </div>
-      </div>
+      </>
 
       {editableFields.length > 0 && (
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        <>
           {editableFields.map((f) => (
-            <div key={f} className="erp-field">
+            <div key={f} className="erp-field erp-span-4">
               <label htmlFor={`od-tf-${f}`}>{f}</label>
               <input
                 id={`od-tf-${f}`}
@@ -148,23 +150,23 @@ export function OfficialDocumentForm({
               />
             </div>
           ))}
-        </div>
+        </>
       )}
       {autoFields.length > 0 && (
-        <PageGuide className="mb-0">
+        <PageGuide className="mb-0 erp-span-12">
           {autoFields.map((f) => SERVER_AUTO_FIELD_LABELS[f]).join(", ")}은(는) 결재가 끝나 문서번호가
           부여되는 시점 기준으로 자동으로 채워집니다.
         </PageGuide>
       )}
 
-      <div className="erp-field">
+      <div className="erp-field erp-span-12">
         <label htmlFor="od-body">본문</label>
         <input type="hidden" name="body" value={body} />
         <RichTextEditor id="od-body" value={body} onChange={setBody} placeholder="본문을 입력하세요..." minHeight={220} />
       </div>
 
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
-        <div className="erp-field">
+      <>
+        <div className="erp-field erp-span-3">
           <label htmlFor="od-disclosure">공개구분</label>
           <ErpSelect
             id="od-disclosure"
@@ -174,7 +176,7 @@ export function OfficialDocumentForm({
             options={Object.entries(DISCLOSURE_LABELS).map(([value, label]) => ({ value, label }))}
           />
         </div>
-        <div className="erp-field">
+        <div className="erp-field erp-span-3">
           <label htmlFor="od-retention">보존연한</label>
           <ErpSelect
             id="od-retention"
@@ -184,7 +186,7 @@ export function OfficialDocumentForm({
             options={Object.entries(RETENTION_LABELS).map(([value, label]) => ({ value, label }))}
           />
         </div>
-        <div className="erp-field">
+        <div className="erp-field erp-span-4">
           <label htmlFor="od-visibility">사내 열람범위</label>
           <ErpSelect
             id="od-visibility"
@@ -197,7 +199,7 @@ export function OfficialDocumentForm({
             ]}
           />
         </div>
-        <label className="flex items-center gap-2 self-end pb-2 text-sm">
+        <label className="erp-field erp-span-2 erp-u-flex erp-u-items-center erp-u-gap-6">
           <input
             type="checkbox"
             name="internal_only"
@@ -207,10 +209,10 @@ export function OfficialDocumentForm({
           />
           사내 공문(외부 발송 없음)
         </label>
-      </div>
+      </>
 
       {!internalOnly && (
-        <div>
+        <div className="erp-field erp-span-12">
           <div className="mb-1.5 flex items-center justify-between">
             <p className="text-xs font-semibold erp-u-text">
               수신처
@@ -275,12 +277,7 @@ export function OfficialDocumentForm({
         </div>
       )}
 
-      <div className="flex items-center gap-2">
-        <button type="submit" disabled={pending} className="erp-btn erp-btn-primary">
-          {pending ? "저장 중..." : "작성 저장(임시저장)"}
-        </button>
-        <FormMessage state={state} />
-      </div>
-    </form>
+    </ModalFormSheet>
+    </div>
   );
 }

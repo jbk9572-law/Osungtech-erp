@@ -1,7 +1,8 @@
 "use client";
 
 import { useActionState, useMemo, useRef, useState } from "react";
-import { FormMessage, type FormState } from "@/components/form-message";
+import { type FormState } from "@/components/form-message";
+import { ModalFormSheet } from "@/components/erp/modal-form-sheet";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { extractTemplateFields, isServerAutoField, SERVER_AUTO_FIELD_LABELS } from "@/lib/document-template";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
@@ -80,11 +81,13 @@ export function GenerateDocumentForm({
   }
 
   return (
-    <form action={formAction} onKeyDown={preventEnterSubmit} className="grid grid-cols-1 gap-3">
+    <div onKeyDown={preventEnterSubmit}>
+    <ModalFormSheet title="새 문서" tabLabel="새 문서 작성" formAction={formAction} state={state} pending={pending}
+      disabled={!templateId} submitRef={submitRef} submitLabel={pending ? "생성 중..." : "F7 문서 생성"}>
       <input type="hidden" name="template_id" value={templateId} />
       <input type="hidden" name="subject_user_id" value={subjectUserId} />
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-        <div className="erp-field">
+      <>
+        <div className="erp-field erp-span-4">
           <label htmlFor="gd-template">양식</label>
           <ErpSelect
             id="gd-template"
@@ -99,7 +102,7 @@ export function GenerateDocumentForm({
             options={templates.map((t) => ({ value: t.id, label: t.name }))}
           />
         </div>
-        <div className="erp-field">
+        <div className="erp-field erp-span-4">
           <label htmlFor="gd-subject">대상 직원 (선택)</label>
           <ErpSelect
             id="gd-subject"
@@ -111,7 +114,7 @@ export function GenerateDocumentForm({
             options={[{ value: "", label: "해당 없음" }, ...employees.map((e) => ({ value: e.id, label: e.full_name || "구성원" }))]}
           />
         </div>
-        <div className="erp-field">
+        <div className="erp-field erp-span-4">
           <label htmlFor="gd-title">제목</label>
           <input
             id="gd-title"
@@ -120,14 +123,14 @@ export function GenerateDocumentForm({
             autoComplete="off"
             value={title || selectedTemplate?.name || ""}
             onChange={(e) => setTitle(e.target.value)}
-            className="erp-input w-full"
+            className="erp-input erp-u-w-full"
             required
           />
         </div>
-      </div>
+      </>
 
       {autoFields.length > 0 && (
-        <PageGuide className="mb-0">
+        <PageGuide className="mb-0 erp-span-12">
           {autoFields.map((f) => SERVER_AUTO_FIELD_LABELS[f]).join(", ")}은(는) 문서를 생성하는 지금
           시점 기준으로 자동으로 채워집니다.
         </PageGuide>
@@ -135,14 +138,14 @@ export function GenerateDocumentForm({
       {fields.length === 0 ? (
         selectedTemplate &&
         autoFields.length === 0 && (
-          <p className="text-xs erp-u-muted">
+          <p className="erp-span-12 text-xs erp-u-muted">
             이 양식에는 채울 필드가 없습니다.
           </p>
         )
       ) : (
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        <>
           {fields.map((f) => (
-            <div key={f} className="erp-field">
+            <div key={f} className="erp-field erp-span-4">
               <label htmlFor={`gd-field-${f}`}>{FIELD_LABELS[f] ?? f}</label>
               <input
                 id={`gd-field-${f}`}
@@ -150,21 +153,15 @@ export function GenerateDocumentForm({
                 autoComplete="off"
                 value={values[f] ?? ""}
                 onChange={(e) => setValues((prev) => ({ ...prev, [f]: e.target.value }))}
-                className="erp-input w-full"
+                className="erp-input erp-u-w-full"
               />
               <input type="hidden" name="field_name" value={f} />
               <input type="hidden" name="field_value" value={values[f] ?? ""} />
             </div>
           ))}
-        </div>
+        </>
       )}
-
-      <div className="erp-form-actions">
-        <button ref={submitRef} type="submit" disabled={pending || !templateId} className="erp-btn erp-btn-primary erp-form-submit">
-          {pending ? "생성 중..." : "F7 문서 생성"}
-        </button>
-        <FormMessage state={state} />
-      </div>
-    </form>
+    </ModalFormSheet>
+    </div>
   );
 }

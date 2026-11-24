@@ -152,7 +152,7 @@ export async function ProductDetailPanel({ id }: { id: string }) {
                             action={deleteBomItem}
                             hiddenFields={{ id: row.id, parent_product_id: product.id }}
                             warningText="이 구성품을 BOM에서 삭제하시겠습니까?"
-                            triggerStyle={{ minWidth: 0, height: 24, padding: "1px 8px", fontSize: 11 }}
+                            triggerClassName="erp-btn erp-btn-danger erp-btn-xs"
                           />
                         </td>
                       </tr>
@@ -181,7 +181,7 @@ export async function ProductDetailPanel({ id }: { id: string }) {
                         action={deleteBomItem}
                         hiddenFields={{ id: row.id, parent_product_id: product.id }}
                         warningText="이 구성품을 BOM에서 삭제하시겠습니까?"
-                        triggerStyle={{ minWidth: 0, height: 24, padding: "1px 8px", fontSize: 11 }}
+                        triggerClassName="erp-btn erp-btn-danger erp-btn-xs"
                       />
                     </div>
                   </div>

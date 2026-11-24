@@ -97,7 +97,8 @@ export function ErpShell({
     const mq = window.matchMedia("(max-width: 768px)");
     // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time sync from matchMedia on mount
     setIsMobile(mq.matches);
-    setCollapsed(mq.matches);
+    // 처음 열 때 화면 폭이 1400px보다 좁으면 메뉴를 접어 둔다(표가 넓게) — 사용자가 펼치면 그대로 둔다
+    setCollapsed(mq.matches || window.innerWidth < 1400);
     const handleChange = (e: MediaQueryListEvent) => {
       setIsMobile(e.matches);
       setCollapsed(e.matches);

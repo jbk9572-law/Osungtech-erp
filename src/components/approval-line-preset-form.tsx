@@ -38,7 +38,8 @@ export function ApprovalLinePresetForm({
         tabLabel={initial ? "결재선 수정" : "결재선 등록"}
         formAction={formAction}
         state={state}
-        pending={pending || approvers.length === 0}
+        pending={pending}
+        disabled={approvers.length === 0}
         submitRef={submitRef}
         submitLabel={`F7 ${submitLabel}`}
       >

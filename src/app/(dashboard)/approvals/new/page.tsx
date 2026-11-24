@@ -2,8 +2,7 @@ import { createClient, getUser } from "@/lib/supabase/server";
 import { ApprovalDocumentForm } from "@/components/approval-document-form";
 import { submitApprovalDocument, submitApprovalDraft, saveApprovalDraft } from "@/app/(dashboard)/approvals/actions";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
-import { CloseButton } from "@/components/erp/close-button";
-import { ListPageHeader, FormSection } from "@/components/erp/page-header";
+import { ListPageHeader } from "@/components/erp/page-header";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { buildOrgTree } from "@/lib/org-chart";
 
@@ -76,27 +75,22 @@ export default async function NewApprovalDocumentPage({
     : undefined;
 
   return (
-    <div className="erp-comm-shell">
+    <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/approvals" } }} />
       <ListPageHeader
         title={initialDraft ? "전자결재 > 기안 (임시저장 이어쓰기)" : "전자결재 > 기안"}
-        actions={<CloseButton href="/approvals">ESC 목록으로</CloseButton>}
       />
 
-      <div>
-        <FormSection tabLabel="기안서 작성">
-          <ApprovalDocumentForm
-            action={initialDraft ? submitApprovalDraft : submitApprovalDocument}
-            draftAction={saveApprovalDraft}
-            orgTree={orgTree}
-            templates={templates}
-            presets={presets}
-            matrixByTemplate={matrixByTemplate}
-            profileNameById={profileNameById}
-            initialDraft={initialDraft}
-          />
-        </FormSection>
-      </div>
+        <ApprovalDocumentForm
+          action={initialDraft ? submitApprovalDraft : submitApprovalDocument}
+          draftAction={saveApprovalDraft}
+          orgTree={orgTree}
+          templates={templates}
+          presets={presets}
+          matrixByTemplate={matrixByTemplate}
+          profileNameById={profileNameById}
+          initialDraft={initialDraft}
+        />
     </div>
   );
 }

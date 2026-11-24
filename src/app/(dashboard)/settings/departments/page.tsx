@@ -39,7 +39,7 @@ function DepartmentNode({ node, depth }: { node: OrgDepartmentNode; depth: numbe
               action={deleteDepartment}
               hiddenFields={{ id: node.id }}
               warningText="이 부서를 삭제하시겠습니까? 하위 부서/소속 직원은 미배정으로 남습니다."
-              triggerStyle={{ minWidth: 0, height: 24, padding: "0 8px", fontSize: 11 }}
+              triggerClassName="erp-btn erp-btn-danger erp-btn-xs"
             />
           </>
         )}

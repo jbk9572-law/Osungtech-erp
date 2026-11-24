@@ -13,6 +13,7 @@ import { getThemeFeatures } from "@/lib/erp-theme-config";
 import { ClockInOutPanel } from "@/components/clock-in-out-panel";
 import { LeaveRequestForm } from "@/components/leave-request-form";
 import { AttendanceCorrectionForm } from "@/components/attendance-correction-form";
+import { GuardedLink } from "@/components/erp/guarded-link";
 import { InlineConfirmDelete } from "@/components/inline-confirm-delete";
 import { LeaveDecisionButton } from "@/components/leave-decision-button";
 import {
@@ -180,7 +181,21 @@ export default async function AttendancePage() {
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/dashboard" } }} />
-      <ListPageHeader title="인사관리 > 근태" />
+      <ListPageHeader
+        title="인사관리 > 근태"
+        actions={
+          sidePanel ? (
+            <>
+              <GuardedLink href="/hr/attendance/leave/new" className="erp-btn erp-btn-primary">
+                휴가 신청
+              </GuardedLink>
+              <GuardedLink href="/hr/attendance/correction/new" className="erp-btn">
+                근태 정정 신청
+              </GuardedLink>
+            </>
+          ) : undefined
+        }
+      />
 
       <PageGuide>
         연차 총일수는 관리자가 &quot;연차관리&quot; 화면에서 직접 설정합니다(노동법
@@ -246,21 +261,20 @@ export default async function AttendancePage() {
       </div>
       </KpiStripFrame>
 
-      <FormSection tabLabel="휴가 신청">
-        <LeaveRequestForm action={requestLeave} today={today} orgTree={orgTree} presets={presets} profileNameById={profileNameById} />
-      </FormSection>
-
-      <div className="erp-u-mt-14">
-        <FormSection tabLabel="근태 정정 신청">
-          <AttendanceCorrectionForm
-            action={requestAttendanceCorrection}
-            today={today}
-            orgTree={orgTree}
-            presets={presets}
-            profileNameById={profileNameById}
-          />
-        </FormSection>
-      </div>
+      {!sidePanel && (
+        <>
+          <LeaveRequestForm action={requestLeave} today={today} orgTree={orgTree} presets={presets} profileNameById={profileNameById} />
+          <div className="erp-u-mt-14">
+            <AttendanceCorrectionForm
+              action={requestAttendanceCorrection}
+              today={today}
+              orgTree={orgTree}
+              presets={presets}
+              profileNameById={profileNameById}
+            />
+          </div>
+        </>
+      )}
 
       {isAdmin && teamWarnings.length > 0 && (
         <div className="erp-detail erp-u-mb-14">
@@ -454,8 +468,7 @@ export default async function AttendancePage() {
                             {l.approval_document_id && (
                               <Link
                                 href={`/approvals/${l.approval_document_id}`}
-                                className="erp-btn"
-                                style={{ minWidth: 0, height: 24, padding: "1px 8px", fontSize: 11 }}
+                                className="erp-btn erp-btn-xs"
                               >
                                 결재 문서
                               </Link>
@@ -466,8 +479,7 @@ export default async function AttendancePage() {
                                 hiddenFields={{ id: l.id }}
                                 warningText="이 휴가 신청을 취소하시겠습니까? 결재선이 연결된 신청이면 기안 문서도 함께 회수됩니다."
                                 triggerLabel="취소"
-                                triggerClassName="erp-btn"
-                                triggerStyle={{ minWidth: 0, height: 24, padding: "1px 8px", fontSize: 11 }}
+                                triggerClassName="erp-btn erp-btn-xs"
                               />
                             )}
                           </div>
@@ -510,8 +522,7 @@ export default async function AttendancePage() {
                         {l.approval_document_id && (
                           <Link
                             href={`/approvals/${l.approval_document_id}`}
-                            className="erp-btn"
-                            style={{ minWidth: 0, height: 24, padding: "1px 8px", fontSize: 11 }}
+                            className="erp-btn erp-btn-xs"
                           >
                             결재 문서
                           </Link>
@@ -522,8 +533,7 @@ export default async function AttendancePage() {
                             hiddenFields={{ id: l.id }}
                             warningText="이 휴가 신청을 취소하시겠습니까? 결재선이 연결된 신청이면 기안 문서도 함께 회수됩니다."
                             triggerLabel="취소"
-                            triggerClassName="erp-btn"
-                            triggerStyle={{ minWidth: 0, height: 24, padding: "1px 8px", fontSize: 11 }}
+                            triggerClassName="erp-btn erp-btn-xs"
                           />
                         )}
                       </div>
@@ -579,8 +589,7 @@ export default async function AttendancePage() {
                             {c.approval_document_id && (
                               <Link
                                 href={`/approvals/${c.approval_document_id}`}
-                                className="erp-btn"
-                                style={{ minWidth: 0, height: 24, padding: "1px 8px", fontSize: 11 }}
+                                className="erp-btn erp-btn-xs"
                               >
                                 결재 문서
                               </Link>
@@ -591,8 +600,7 @@ export default async function AttendancePage() {
                                 hiddenFields={{ id: c.id }}
                                 warningText="이 근태 정정 신청을 취소하시겠습니까? 연결된 기안 문서도 함께 회수됩니다."
                                 triggerLabel="취소"
-                                triggerClassName="erp-btn"
-                                triggerStyle={{ minWidth: 0, height: 24, padding: "1px 8px", fontSize: 11 }}
+                                triggerClassName="erp-btn erp-btn-xs"
                               />
                             )}
                           </div>
@@ -631,8 +639,7 @@ export default async function AttendancePage() {
                         {c.approval_document_id && (
                           <Link
                             href={`/approvals/${c.approval_document_id}`}
-                            className="erp-btn"
-                            style={{ minWidth: 0, height: 24, padding: "1px 8px", fontSize: 11 }}
+                            className="erp-btn erp-btn-xs"
                           >
                             결재 문서
                           </Link>
@@ -643,8 +650,7 @@ export default async function AttendancePage() {
                             hiddenFields={{ id: c.id }}
                             warningText="이 근태 정정 신청을 취소하시겠습니까? 연결된 기안 문서도 함께 회수됩니다."
                             triggerLabel="취소"
-                            triggerClassName="erp-btn"
-                            triggerStyle={{ minWidth: 0, height: 24, padding: "1px 8px", fontSize: 11 }}
+                            triggerClassName="erp-btn erp-btn-xs"
                           />
                         )}
                       </div>

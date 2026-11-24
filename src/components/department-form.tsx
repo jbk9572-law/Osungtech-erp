@@ -1,7 +1,8 @@
 "use client";
 
 import { useActionState, useRef, useState } from "react";
-import { FormMessage, type FormState } from "@/components/form-message";
+import { type FormState } from "@/components/form-message";
+import { ModalFormSheet } from "@/components/erp/modal-form-sheet";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { ErpSelect } from "@/components/erp/erp-select";
 
@@ -22,13 +23,13 @@ export function DepartmentForm({
   useKeyShortcut("F7", submitRef);
 
   return (
-    <form action={formAction} className="grid grid-cols-1 gap-3 md:grid-cols-3">
+    <ModalFormSheet title={initial?.id ? "부서 수정" : "새 부서"} tabLabel={initial?.id ? "부서 수정" : "부서 등록"} formAction={formAction} state={state} pending={pending} submitRef={submitRef} submitLabel={`F7 ${submitLabel}`}>
       {initial?.id && <input type="hidden" name="id" value={initial.id} />}
-      <div className="erp-field">
+      <div className="erp-field erp-span-6">
         <label htmlFor="dept-name">부서명</label>
-        <input id="dept-name" type="text" name="name" autoComplete="off" defaultValue={initial?.name} className="erp-input w-full" required />
+        <input id="dept-name" type="text" name="name" autoComplete="off" defaultValue={initial?.name} className="erp-input erp-u-w-full" required />
       </div>
-      <div className="erp-field">
+      <div className="erp-field erp-span-6">
         <label htmlFor="dept-parent">상위 부서 (선택)</label>
         <ErpSelect
           id="dept-parent"
@@ -41,15 +42,6 @@ export function DepartmentForm({
           ]}
         />
       </div>
-      <div className="erp-field">
-        <label aria-hidden="true">&nbsp;</label>
-        <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary erp-form-submit">
-          {pending ? "저장 중..." : `F7 ${submitLabel}`}
-        </button>
-      </div>
-      <div className="md:col-span-3">
-        <FormMessage state={state} />
-      </div>
-    </form>
+    </ModalFormSheet>
   );
 }

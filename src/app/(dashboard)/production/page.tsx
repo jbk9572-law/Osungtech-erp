@@ -175,7 +175,7 @@ export default async function ProductionPage({
                         action={deleteWorkOrder}
                         hiddenFields={{ id: row.id }}
                         warningText="이 생산지시를 삭제하시겠습니까? 지금까지 진행된 만큼 구성품/완제품 재고가 되돌려집니다."
-                        triggerStyle={{ minWidth: 0, height: 24, padding: "1px 8px", fontSize: 11 }}
+                        triggerClassName="erp-btn erp-btn-danger erp-btn-xs"
                       />
                     </td>
                   </tr>
@@ -245,7 +245,7 @@ export default async function ProductionPage({
                     action={deleteWorkOrder}
                     hiddenFields={{ id: row.id }}
                     warningText="이 생산지시를 삭제하시겠습니까? 지금까지 진행된 만큼 구성품/완제품 재고가 되돌려집니다."
-                    triggerStyle={{ minWidth: 0, height: 24, padding: "1px 8px", fontSize: 11 }}
+                    triggerClassName="erp-btn erp-btn-danger erp-btn-xs"
                   />
                 </div>
               </div>

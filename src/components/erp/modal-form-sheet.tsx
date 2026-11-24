@@ -16,8 +16,10 @@ export function ModalFormSheet({
   formAction,
   state,
   pending,
+  disabled,
   submitRef,
   submitLabel,
+  secondary,
   children,
 }: {
   title: string;
@@ -26,8 +28,12 @@ export function ModalFormSheet({
   formAction: (formData: FormData) => void;
   state: FormState;
   pending: boolean;
+  /** 저장 중이 아닌데 저장을 막을 때(예: 결재자 미선택) — 버튼만 비활성, 글자는 그대로 */
+  disabled?: boolean;
   submitRef?: RefObject<HTMLButtonElement | null>;
   submitLabel: string;
+  /** 저장 버튼 앞에 놓는 보조 버튼·메시지(예: [임시저장]). 이 폼의 submit 버튼이면 formAction을 따로 줄 수 있다. */
+  secondary?: ReactNode;
   children: ReactNode;
 }) {
   const sheetClass = useFormSheetClass();
@@ -43,7 +49,8 @@ export function ModalFormSheet({
   const actions = (
     <div className="erp-form-actions">
       <FormMessage state={state} />
-      <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary">
+      {secondary}
+      <button ref={submitRef} type="submit" disabled={pending || disabled} className="erp-btn erp-btn-primary">
         {pending ? (
           <>
             <span className="erp-spinner" aria-hidden /> 저장 중...

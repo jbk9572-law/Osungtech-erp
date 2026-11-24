@@ -1,7 +1,8 @@
 "use client";
 
 import { useActionState, useRef, useState } from "react";
-import { FormMessage, type FormState } from "@/components/form-message";
+import { type FormState } from "@/components/form-message";
+import { ModalFormSheet } from "@/components/erp/modal-form-sheet";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { OrgChartApproverPicker, type PickedPerson } from "@/components/org-chart-approver-picker";
@@ -63,104 +64,75 @@ export function LeaveRequestForm({
   }
 
   return (
-    <form action={formAction} onKeyDown={preventEnterSubmit} className="grid grid-cols-1 gap-3">
-      {approvers.map((a) => (
-        <input key={a.id} type="hidden" name="approver_id" value={a.id} />
-      ))}
-      {references.map((r) => (
-        <input key={r.id} type="hidden" name="reference_id" value={r.id} />
-      ))}
+    <div onKeyDown={preventEnterSubmit}>
+      <ModalFormSheet
+        title="휴가 신청"
+        tabLabel="휴가 신청"
+        formAction={formAction}
+        state={state}
+        pending={pending}
+        disabled={approvers.length === 0}
+        submitRef={submitRef}
+        submitLabel={pending ? "신청 중..." : "F7 휴가 신청"}
+      >
+        {approvers.map((a) => (
+          <input key={a.id} type="hidden" name="approver_id" value={a.id} />
+        ))}
+        {references.map((r) => (
+          <input key={r.id} type="hidden" name="reference_id" value={r.id} />
+        ))}
 
-      <input type="hidden" name="leave_unit" value={leaveUnit} />
+        <input type="hidden" name="leave_unit" value={leaveUnit} />
 
-      <div className="erp-field" style={{ maxWidth: 480 }}>
-        <label htmlFor="lv-unit">휴가 단위</label>
-        <ErpSelect
-          id="lv-unit"
-          value={leaveUnit}
-          onChange={(v) => applyLeaveUnit(v as LeaveUnit)}
-          options={LEAVE_UNIT_OPTIONS.map((unit) => ({ value: unit, label: LEAVE_UNIT_LABEL[unit] }))}
-        />
-      </div>
-
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
-        <div className="erp-field">
-          <label htmlFor="lv-start">시작일</label>
-          <input
-            id="lv-start"
-            type="date"
-            name="start_date"
-            value={startDate}
-            onChange={(e) => handleStartDateChange(e.target.value)}
-            className="erp-input w-full"
-            required
-          />
-        </div>
-        <div className="erp-field">
-          <label htmlFor="lv-end">종료일</label>
-          <input
-            id="lv-end"
-            type="date"
-            name="end_date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            disabled={leaveUnit !== "full"}
-            className="erp-input w-full"
-            required
-          />
-        </div>
-        <div className="erp-field">
-          <label htmlFor="lv-days">사용 일수</label>
-          <input
-            id="lv-days"
-            type="number"
-            name="days"
-            step="0.25"
-            min="0.25"
-            value={days}
-            onChange={(e) => setDays(e.target.value)}
-            disabled={leaveUnit !== "full"}
-            className="erp-input w-full"
-            required
-          />
-        </div>
-        <div className="erp-field">
-          <label htmlFor="lv-reason">사유 (선택)</label>
-          <input id="lv-reason" type="text" name="reason" autoComplete="off" className="erp-input w-full" />
-        </div>
-      </div>
-
-      {presets.length > 0 && (
-        <div className="erp-field" style={{ maxWidth: 320 }}>
-          <label htmlFor="lv-preset">저장된 결재선 불러오기</label>
+        <div className="erp-field erp-span-4">
+          <label htmlFor="lv-unit">휴가 단위</label>
           <ErpSelect
-            id="lv-preset"
-            value={presetId}
-            onChange={applyPreset}
-            options={[{ value: "", label: "선택 안 함" }, ...presets.map((p) => ({ value: p.id, label: p.name }))]}
+            id="lv-unit"
+            value={leaveUnit}
+            onChange={(v) => applyLeaveUnit(v as LeaveUnit)}
+            options={LEAVE_UNIT_OPTIONS.map((unit) => ({ value: unit, label: LEAVE_UNIT_LABEL[unit] }))}
           />
         </div>
-      )}
+        {presets.length > 0 && (
+          <div className="erp-field erp-span-4">
+            <label htmlFor="lv-preset">저장된 결재선 불러오기</label>
+            <ErpSelect
+              id="lv-preset"
+              value={presetId}
+              onChange={applyPreset}
+              options={[{ value: "", label: "선택 안 함" }, ...presets.map((p) => ({ value: p.id, label: p.name }))]}
+            />
+          </div>
+        )}
 
-      <div>
-        <p className="mb-1.5 text-xs font-semibold erp-u-text">
-          결재선 · 참조자 선택
-        </p>
-        <OrgChartApproverPicker
-          tree={orgTree}
-          approvers={approvers}
-          references={references}
-          onChangeApprovers={setApprovers}
-          onChangeReferences={setReferences}
-        />
-      </div>
+        <div className="erp-field erp-span-3">
+          <label htmlFor="lv-start">시작일</label>
+          <input id="lv-start" type="date" name="start_date" value={startDate} onChange={(e) => handleStartDateChange(e.target.value)} className="erp-input erp-u-w-full" required />
+        </div>
+        <div className="erp-field erp-span-3">
+          <label htmlFor="lv-end">종료일</label>
+          <input id="lv-end" type="date" name="end_date" value={endDate} onChange={(e) => setEndDate(e.target.value)} disabled={leaveUnit !== "full"} className="erp-input erp-u-w-full" required />
+        </div>
+        <div className="erp-field erp-span-2">
+          <label htmlFor="lv-days">사용 일수</label>
+          <input id="lv-days" type="number" name="days" step="0.25" min="0.25" value={days} onChange={(e) => setDays(e.target.value)} disabled={leaveUnit !== "full"} className="erp-input erp-u-w-full" required />
+        </div>
+        <div className="erp-field erp-span-4">
+          <label htmlFor="lv-reason">사유 (선택)</label>
+          <input id="lv-reason" type="text" name="reason" autoComplete="off" className="erp-input erp-u-w-full" />
+        </div>
 
-      <div className="erp-form-actions">
-        <button ref={submitRef} type="submit" disabled={pending || approvers.length === 0} className="erp-btn erp-btn-primary erp-form-submit">
-          {pending ? "신청 중..." : "F7 휴가 신청"}
-        </button>
-        <FormMessage state={state} />
-      </div>
-    </form>
+        <div className="erp-field erp-span-12">
+          <label>결재선 · 참조자 선택</label>
+          <OrgChartApproverPicker
+            tree={orgTree}
+            approvers={approvers}
+            references={references}
+            onChangeApprovers={setApprovers}
+            onChangeReferences={setReferences}
+          />
+        </div>
+      </ModalFormSheet>
+    </div>
   );
 }

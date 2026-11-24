@@ -21,7 +21,7 @@ export function PartyPaymentDeleteForm({
       action={action}
       hiddenFields={{ id, [partyIdField]: partyId }}
       warningText="이 내역을 삭제하시겠습니까? 되돌릴 수 없습니다."
-      triggerStyle={{ minWidth: 0, height: 24, padding: "1px 8px", fontSize: 11 }}
+      triggerClassName="erp-btn erp-btn-danger erp-btn-xs"
     />
   );
 }

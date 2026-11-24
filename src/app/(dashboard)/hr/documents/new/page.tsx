@@ -1,7 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
-import { CloseButton } from "@/components/erp/close-button";
-import { ListPageHeader, FormSection } from "@/components/erp/page-header";
+import { ListPageHeader } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
 import { GenerateDocumentForm } from "@/components/generate-document-form";
 import { createDocument } from "@/app/(dashboard)/hr/documents/actions";
@@ -32,22 +31,20 @@ export default async function NewDocumentPage() {
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/hr/documents" } }} />
-      <ListPageHeader title="그룹웨어 &gt; 새 문서" actions={<CloseButton href="/hr/documents">ESC 목록으로</CloseButton>} />
+      <ListPageHeader title="그룹웨어 &gt; 새 문서" />
       <PageGuide>
         양식을 고르면 그 안에 있는 병합필드 입력칸이 나타납니다. 대상 직원을 고르면 직원명 등 알아볼 수 있는 필드는 자동으로 채워집니다(수정 가능).
       </PageGuide>
       {templates.length === 0 ? (
         <p className="text-sm erp-u-muted">사용 가능한 양식이 없습니다. 문서 양식 관리에서 먼저 등록해주세요.</p>
       ) : (
-        <FormSection tabLabel="새 문서 작성">
-          <GenerateDocumentForm
+        <GenerateDocumentForm
             action={createDocument}
             templates={templates}
             employees={employees}
             companyName={company?.name ?? null}
             representativeName={company?.representative_name ?? null}
           />
-        </FormSection>
       )}
     </div>
   );

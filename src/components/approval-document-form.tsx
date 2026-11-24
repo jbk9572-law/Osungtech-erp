@@ -10,6 +10,7 @@ import type { OrgDepartmentNode } from "@/lib/org-chart";
 import { extractTemplateFields, renderTemplate } from "@/lib/document-template";
 import { RichTextEditor } from "@/components/rich-text-editor-dynamic";
 import { ErpSelect } from "@/components/erp/erp-select";
+import { ModalFormSheet } from "@/components/erp/modal-form-sheet";
 
 type TemplateOption = { id: string; name: string; body: string };
 export type ApprovalLinePresetOption = { id: string; name: string; approverIds: string[]; referenceIds: string[] };
@@ -83,17 +84,34 @@ export function ApprovalDocumentForm({
   }
 
   return (
-    <form action={formAction} onKeyDown={preventEnterSubmit} className="grid grid-cols-1 gap-3">
-      {initialDraft && <input type="hidden" name="draft_id" value={initialDraft.id} />}
-      {approvers.map((a) => (
-        <input key={a.id} type="hidden" name="approver_id" value={a.id} />
-      ))}
-      {references.map((r) => (
-        <input key={r.id} type="hidden" name="reference_id" value={r.id} />
-      ))}
+    <div onKeyDown={preventEnterSubmit}>
+      <ModalFormSheet
+        title={initialDraft ? "기안 (임시저장 이어쓰기)" : "새 기안"}
+        tabLabel="기안서 작성"
+        formAction={formAction}
+        state={state}
+        pending={pending || draftPending}
+        disabled={approvers.length === 0}
+        submitRef={submitRef}
+        submitLabel={pending ? "상신 중..." : "F7 상신"}
+        secondary={
+          <>
+            <FormMessage state={draftState} />
+            <button type="submit" formAction={draftFormAction} disabled={pending || draftPending} className="erp-btn">
+              {draftPending ? "저장 중..." : "임시저장"}
+            </button>
+          </>
+        }
+      >
+        {initialDraft && <input type="hidden" name="draft_id" value={initialDraft.id} />}
+        {approvers.map((a) => (
+          <input key={a.id} type="hidden" name="approver_id" value={a.id} />
+        ))}
+        {references.map((r) => (
+          <input key={r.id} type="hidden" name="reference_id" value={r.id} />
+        ))}
 
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-        <div className="erp-field">
+        <div className={`erp-field ${presets.length > 0 ? "erp-span-4" : "erp-span-6"}`}>
           <label htmlFor="ad-template">양식 (선택)</label>
           <ErpSelect
             id="ad-template"
@@ -106,7 +124,7 @@ export function ApprovalDocumentForm({
           />
         </div>
         {presets.length > 0 && (
-          <div className="erp-field">
+          <div className="erp-field erp-span-4">
             <label htmlFor="ad-preset">저장된 결재선 불러오기</label>
             <ErpSelect
               id="ad-preset"
@@ -116,72 +134,46 @@ export function ApprovalDocumentForm({
             />
           </div>
         )}
-        <div className="erp-field">
+        <div className={`erp-field ${presets.length > 0 ? "erp-span-4" : "erp-span-6"}`}>
           <label htmlFor="ad-title">제목</label>
-          <input
-            id="ad-title"
-            type="text"
-            name="title"
-            autoComplete="off"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="erp-input w-full"
-            required
+          <input id="ad-title" type="text" name="title" autoComplete="off" value={title} onChange={(e) => setTitle(e.target.value)} className="erp-input erp-u-w-full" required />
+        </div>
+
+        {templateFields.map((f) => (
+          <div key={f} className="erp-field erp-span-4">
+            <label htmlFor={`ad-tf-${f}`}>{f}</label>
+            <input
+              id={`ad-tf-${f}`}
+              type="text"
+              autoComplete="off"
+              value={templateValues[f] ?? ""}
+              onChange={(e) => {
+                const nextValues = { ...templateValues, [f]: e.target.value };
+                setTemplateValues(nextValues);
+                if (selectedTemplate) setContent(renderTemplate(selectedTemplate.body, nextValues));
+              }}
+              className="erp-input erp-u-w-full"
+            />
+          </div>
+        ))}
+
+        <div className="erp-field erp-span-12">
+          <label htmlFor="ad-content">내용</label>
+          <input type="hidden" name="content" value={content} />
+          <RichTextEditor id="ad-content" value={content} onChange={setContent} placeholder="내용을 입력하세요..." minHeight={220} />
+        </div>
+
+        <div className="erp-field erp-span-12">
+          <label>결재선 · 참조자 선택</label>
+          <OrgChartApproverPicker
+            tree={orgTree}
+            approvers={approvers}
+            references={references}
+            onChangeApprovers={setApprovers}
+            onChangeReferences={setReferences}
           />
         </div>
-      </div>
-
-      {templateFields.length > 0 && (
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-          {templateFields.map((f) => (
-            <div key={f} className="erp-field">
-              <label htmlFor={`ad-tf-${f}`}>{f}</label>
-              <input
-                id={`ad-tf-${f}`}
-                type="text"
-                autoComplete="off"
-                value={templateValues[f] ?? ""}
-                onChange={(e) => {
-                  const nextValues = { ...templateValues, [f]: e.target.value };
-                  setTemplateValues(nextValues);
-                  if (selectedTemplate) setContent(renderTemplate(selectedTemplate.body, nextValues));
-                }}
-                className="erp-input w-full"
-              />
-            </div>
-          ))}
-        </div>
-      )}
-
-      <div className="erp-field">
-        <label htmlFor="ad-content">내용</label>
-        <input type="hidden" name="content" value={content} />
-        <RichTextEditor id="ad-content" value={content} onChange={setContent} placeholder="내용을 입력하세요..." minHeight={220} />
-      </div>
-
-      <div>
-        <p className="mb-1.5 text-xs font-semibold erp-u-text">
-          결재선 · 참조자 선택
-        </p>
-        <OrgChartApproverPicker
-          tree={orgTree}
-          approvers={approvers}
-          references={references}
-          onChangeApprovers={setApprovers}
-          onChangeReferences={setReferences}
-        />
-      </div>
-
-      <div className="flex flex-wrap items-center gap-2">
-        <button type="submit" formAction={draftFormAction} disabled={pending || draftPending} className="erp-btn">
-          {draftPending ? "저장 중..." : "임시저장"}
-        </button>
-        <button ref={submitRef} type="submit" disabled={pending || draftPending || approvers.length === 0} className="erp-btn erp-btn-primary erp-form-submit">
-          {pending ? "상신 중..." : "F7 상신"}
-        </button>
-        <FormMessage state={state} />
-        <FormMessage state={draftState} />
-      </div>
-    </form>
+      </ModalFormSheet>
+    </div>
   );
 }
