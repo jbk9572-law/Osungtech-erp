@@ -69,17 +69,18 @@ export default async function CustomerOrdersPage({
         포털에 보여줄 수 있습니다.
       </PageGuide>
 
-      <div className="erp-toolbar">
+      <nav className="erp-subtabs" aria-label="발주 상태">
         {TABS.map((t) => (
           <a
             key={t.key}
             href={`/customer-orders?status=${t.key}`}
-            className={`erp-btn${activeTab === t.key ? " erp-btn-primary" : ""}`}
+            className={`erp-subtab${activeTab === t.key ? " active" : ""}`}
+            aria-current={activeTab === t.key ? "page" : undefined}
           >
             {t.label}
           </a>
         ))}
-      </div>
+      </nav>
 
       <div className="flex flex-col gap-3">
         {(orders ?? []).map((o) => {
