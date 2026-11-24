@@ -3,6 +3,7 @@ import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ListPageHeader } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
 import { MonthNavigator } from "@/components/erp/month-navigator";
+import { ListFilterBar } from "@/components/erp/list-filter-bar";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { currentMonth, getMonthRange, shiftMonth } from "@/lib/date-presets";
 import { effectiveMonth } from "@/lib/carryover";
@@ -84,10 +85,20 @@ export default async function IncomeStatementPage({
         실제 세무 신고용 재무제표가 아니라 내부 경영 참고용입니다(감가상각, 인건비 등은 포함되지 않습니다).
       </PageGuide>
 
-      <MonthNavigator baseHref="/reports/income-statement" month={month} />
-      <div className="erp-toolbar erp-u-mb-8">
-        <ExcelDownloadLink href={`/api/reports/income-statement/export?month=${month}`} pushRight />
-      </div>
+      <ListFilterBar
+        formId="income-statement-form"
+        basePath="/reports/income-statement"
+        month={month}
+        tools={<ExcelDownloadLink href={`/api/reports/income-statement/export?month=${month}`} />}
+        legacy={
+          <>
+            <MonthNavigator baseHref="/reports/income-statement" month={month} />
+            <div className="erp-toolbar erp-u-mb-8">
+              <ExcelDownloadLink href={`/api/reports/income-statement/export?month=${month}`} pushRight />
+            </div>
+          </>
+        }
+      />
 
       <div className="erp-grid-wrap">
         <table className="erp-grid">

@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ListPageHeader } from "@/components/erp/page-header";
 import { MonthNavigator } from "@/components/erp/month-navigator";
+import { ListFilterBar } from "@/components/erp/list-filter-bar";
 import { currentMonth } from "@/lib/date-presets";
 import { GridBadge } from "@/components/grid/badge";
 import { fetchMonthlyReportData, type View } from "@/lib/monthly-report-data";
@@ -58,22 +59,8 @@ export default async function MonthlyReportPage({
   const viewSuffix = view !== "product" ? `&view=${view}` : "";
   const suffix = `${qSuffix}${viewSuffix}`;
 
-  return (
-    <div>
-      <KeyboardShortcuts
-        shortcuts={{
-          F5: { submitFormSelector: "#monthly-report-search-form" },
-          Escape: { href: "/dashboard" },
-        }}
-      />
-      <ListPageHeader title="확장모듈 > 월별 리포트" />
-
-      <MonthNavigator baseHref="/reports/monthly" month={month} suffix={suffix} />
-      <div className="erp-toolbar erp-u-mb-8">
-        <ExcelDownloadLink href={`/api/reports/monthly/export?month=${month}${suffix}`} pushRight />
-      </div>
-
-      <nav className="erp-subtabs" aria-label="보기 방식">
+  const viewTabs = (
+        <nav className="erp-subtabs" aria-label="보기 방식">
         <Link
           href={`/reports/monthly?month=${month}${qSuffix}`}
           className={`erp-subtab${view === "product" ? " active" : ""}`}
@@ -93,7 +80,35 @@ export default async function MonthlyReportPage({
           매출처별
         </Link>
       </nav>
+  );
 
+  return (
+    <div>
+      <KeyboardShortcuts
+        shortcuts={{
+          F5: { submitFormSelector: "#monthly-report-search-form" },
+          Escape: { href: "/dashboard" },
+        }}
+      />
+      <ListPageHeader title="확장모듈 > 월별 리포트" />
+
+      <ListFilterBar
+        formId="monthly-report-search-form"
+        basePath="/reports/monthly"
+        month={month}
+        q={q}
+        searchPlaceholder="품목명, SKU, 규격, 거래처명 검색…"
+        hidden={{ view }}
+        tools={<ExcelDownloadLink href={`/api/reports/monthly/export?month=${month}${suffix}`} />}
+        after={viewTabs}
+        legacy={
+          <>
+      <MonthNavigator baseHref="/reports/monthly" month={month} suffix={suffix} />
+      <div className="erp-toolbar erp-u-mb-8">
+        <ExcelDownloadLink href={`/api/reports/monthly/export?month=${month}${suffix}`} pushRight />
+      </div>
+
+          {viewTabs}
       <form method="get" id="monthly-report-search-form" className="erp-field-grid">
         <input type="hidden" name="view" value={view} />
         <div className="erp-field erp-span-2">
@@ -130,6 +145,9 @@ export default async function MonthlyReportPage({
           </Link>
         )}
       </form>
+          </>
+        }
+      />
 
       <div className="erp-kpi-row">
         <div className="erp-home-panel erp-kpi-card">

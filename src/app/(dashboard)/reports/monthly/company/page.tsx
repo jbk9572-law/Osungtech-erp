@@ -5,6 +5,7 @@ import { ClickableRow } from "@/components/clickable-row";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ListPageHeader } from "@/components/erp/page-header";
 import { MonthNavigator } from "@/components/erp/month-navigator";
+import { ListFilterBar } from "@/components/erp/list-filter-bar";
 import { currentMonth, getMonthRange, shiftMonth } from "@/lib/date-presets";
 import { effectiveMonth } from "@/lib/carryover";
 import { GridBadge } from "@/components/grid/badge";
@@ -150,6 +151,7 @@ export default async function MonthlyReportCompanyPage({
   );
 
   const companySuffix = `&company=${encodeURIComponent(company ?? "")}`;
+  const companyParams: Record<string, string> = { company: company ?? "" };
 
   return (
     <div>
@@ -160,12 +162,24 @@ export default async function MonthlyReportCompanyPage({
       />
       <ListPageHeader title={`확장모듈 > 월별 리포트 > ${companyName || "거래처"} 상세내역`} />
 
-      <MonthNavigator baseHref="/reports/monthly/company" month={month} suffix={companySuffix} />
+      <ListFilterBar
+        formId="monthly-company-form"
+        basePath="/reports/monthly/company"
+        month={month}
+        hidden={companyParams}
+        actions={<CloseButton href={`/reports/monthly?month=${month}`}>ESC 목록으로</CloseButton>}
+        tools={<ExcelDownloadLink href={`/api/reports/monthly/company/export?month=${month}${companySuffix}`} />}
+        legacy={
+          <>
+            <MonthNavigator baseHref="/reports/monthly/company" month={month} suffix={companySuffix} />
 
-      <div className="erp-toolbar erp-u-mb-12">
-        <CloseButton href={`/reports/monthly?month=${month}`}>ESC 목록으로</CloseButton>
-        <ExcelDownloadLink href={`/api/reports/monthly/company/export?month=${month}${companySuffix}`} pushRight />
-      </div>
+            <div className="erp-toolbar erp-u-mb-12">
+              <CloseButton href={`/reports/monthly?month=${month}`}>ESC 목록으로</CloseButton>
+              <ExcelDownloadLink href={`/api/reports/monthly/company/export?month=${month}${companySuffix}`} pushRight />
+            </div>
+          </>
+        }
+      />
 
       <div className="erp-grid-wrap">
         <table className="erp-grid">

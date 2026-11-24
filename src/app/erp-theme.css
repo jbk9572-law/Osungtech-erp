@@ -107,7 +107,6 @@
 .erp-u-color-success { color: var(--erp-success) !important; }
 .erp-u-color-warning { color: var(--erp-warning) !important; }
 .erp-u-radius-lg { border-radius: var(--erp-radius-lg, 0) !important; }
-.erp-u-radius-sm { border-radius: var(--erp-radius-sm, 0) !important; }
 .erp-u-radius-xl { border-radius: var(--erp-radius-xl, 0) !important; }
 .erp-u-absolute { position: absolute !important; }
 .erp-u-bg-page { background: var(--erp-bg) !important; }

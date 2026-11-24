@@ -50,7 +50,8 @@ export function NotesBanner({ partyLabel, partyNote, items }: { partyLabel: stri
       <div ref={bodyRef} className={`erp-notes-body${open ? "" : " is-clamped"}`}>
         {party && (
           <div>
-            <b>{partyLabel}</b> {party}
+            {partyLabel && <b>{partyLabel} </b>}
+            {party}
           </div>
         )}
         {items.length > 0 && !open && (

@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { useHighlightScroll } from "@/lib/use-highlight-scroll";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import { useDropdownReposition } from "@/lib/use-dropdown-reposition";
+import { NotesBanner } from "@/components/erp/notes-banner";
 import { useThemeFeatures } from "@/lib/erp-theme-features";
 
 type Party = { id: string; name: string; notes?: string | null };
@@ -116,12 +117,7 @@ export function PartySearchSelect({
           변경
         </button>
       )}
-      {!hideNote && !open && selected?.notes && (
-        <p className="erp-u-mt-4 erp-u-pad-4-8 erp-u-text-sm erp-u-color-info-text erp-u-bg-info-bg erp-u-border-info-border erp-u-radius-sm"
-        >
-          특이사항: {selected.notes}
-        </p>
-      )}
+      {!hideNote && !open && selected?.notes && <NotesBanner partyLabel="" partyNote={selected.notes} items={[]} />}
       {open &&
         dropdownRect &&
         typeof document !== "undefined" &&
