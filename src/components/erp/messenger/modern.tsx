@@ -14,6 +14,7 @@ import {
   setMessengerChannelMuted,
 } from "@/app/(dashboard)/messenger/actions";
 import type { MessengerMessage, MessengerChannel } from "@/lib/messenger-types";
+import type { ErpRefAccess } from "@/lib/messenger-erp-access";
 import { isImageFile } from "@/lib/file-display";
 import { FilePickerInput } from "@/components/file-picker-input";
 import { useDebouncedCallback } from "@/lib/use-debounced-callback";
@@ -21,7 +22,8 @@ import { useConfirmTwice } from "@/lib/use-confirm-twice";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import { ListPageHeader } from "@/components/erp/page-header";
 import { PaperclipIcon, SendIcon } from "@/components/erp/groupware-icons";
-import { ErpRefCard, MessengerAttachmentBlock, highlightText, MessengerCommandBar, commandHintFor, DEFAULT_COMPOSER_HINT } from "@/components/erp/messenger/parts";
+import { ComposerCommands } from "@/components/erp/messenger/command-picker";
+import { ErpRefCard, MessengerAttachmentBlock, highlightText, commandHintFor, DEFAULT_COMPOSER_HINT } from "@/components/erp/messenger/parts";
 import { StateView } from "@/components/erp/state-view";
 import { ChannelAvatar, channelLabel } from "@/components/erp/messenger-channel";
 
@@ -77,6 +79,7 @@ export function MessengerPage({
   currentUserId,
   isAdmin,
   mutedChannelIds,
+  erpRefAccess,
 }: {
   channels: MessengerChannel[];
   activeChannelId: string | null;
@@ -85,6 +88,7 @@ export function MessengerPage({
   currentUserId: string;
   isAdmin: boolean;
   mutedChannelIds: string[];
+  erpRefAccess?: ErpRefAccess;
 }) {
   const [view, setView] = useState<View>("rooms");
   const [chatFilter, setChatFilter] = useState<"all" | "unread" | "dm" | "group" | "muted">("all");
@@ -98,7 +102,6 @@ export function MessengerPage({
   const [loadingChannel, setLoadingChannel] = useState(false);
   const [sendError, setSendError] = useState<string | undefined>();
   const [sendNotice, setSendNotice] = useState<string | undefined>();
-  // 명령 버튼을 누르면 입력창 안내 문구가 그 명령의 입력 형식으로 바뀐다(보낸 뒤엔 원래대로)
   const [commandHint, setCommandHint] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | undefined>();
   const [channelError, setChannelError] = useState<string | undefined>();
@@ -686,7 +689,7 @@ export function MessengerPage({
                                   </div>
                                 )}
 
-                                {m.erp_ref && <ErpRefCard erpRef={m.erp_ref} />}
+                                {m.erp_ref && <ErpRefCard erpRef={m.erp_ref} allowed={erpRefAccess?.[m.erp_ref.kind] !== false} />}
 
                                 {m.content && !(m.erp_ref && m.content.startsWith("/")) && (
                                   <div className="erp-messenger-bubble">{highlightText(m.content, query)}</div>
@@ -739,7 +742,7 @@ export function MessengerPage({
                     )}
                   </div>
 
-                  <MessengerCommandBar onPick={insertCommand} />
+                  <ComposerCommands composerRef={composerRef} formRef={formRef} onManual={insertCommand} />
 
                   <form ref={formRef} action={handleSend} className="erp-messenger-composer">
                     <textarea
@@ -789,16 +792,8 @@ export function MessengerPage({
                       </button>
                     </div>
                   </form>
-                  {sendNotice && !sendError && (
-                    <p className="erp-u-muted erp-u-text-sm" style={{ padding: "0 12px 8px" }}>
-                      {sendNotice}
-                    </p>
-                  )}
-                  {sendError && (
-                    <p className="erp-u-danger erp-u-text-sm" style={{ padding: "0 12px 8px" }}>
-                      {sendError}
-                    </p>
-                  )}
+                  {sendNotice && !sendError && <p className="erp-u-muted erp-u-text-sm" style={{ padding: "0 12px 8px" }}>{sendNotice}</p>}
+                  {sendError && <p className="erp-u-danger erp-u-text-sm" style={{ padding: "0 12px 8px" }}>{sendError}</p>}
                   {deleteError && (
                     <p className="erp-u-danger erp-u-text-sm" style={{ padding: "0 12px 8px" }}>
                       삭제 실패: {deleteError}

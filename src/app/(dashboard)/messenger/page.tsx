@@ -5,6 +5,7 @@ import { isFeatureEnabled } from "@/lib/require-feature-enabled";
 import { MessengerPage } from "@/components/erp/messenger-page";
 import type { MessengerChannel, MessengerErpRef } from "@/lib/messenger-types";
 import type { Json } from "@/types/database.types";
+import { getErpRefAccess, type ErpRefAccess } from "@/lib/messenger-erp-access";
 
 // 예전엔 우측하단에 항상 떠 있는 팝업 위젯이었는데(모든 화면 전역),
 // 이제 그룹웨어 > 메신저로 찾아 들어오는 일반 페이지다 — 다른
@@ -73,6 +74,11 @@ export default async function MessengerPageRoute() {
       : Promise.resolve({ data: null }),
   ]);
 
+  // 열람 권한이 없는 카드는 서버에서 내용을 비워 보낸다(화면에서만 가리면 개발자 도구로 보인다)
+  const erpRefAccess = await getErpRefAccess(supabase);
+  const guardRef = (ref: MessengerErpRef | null): MessengerErpRef | null =>
+    ref && erpRefAccess[ref.kind] === false ? { kind: ref.kind, title: "권한 없음", lines: [], href: "", restricted: true } : ref;
+
   const membersByChannel = new Map<string, string[]>();
   for (const m of memberRows ?? []) {
     const list = membersByChannel.get(m.channel_id) ?? [];
@@ -104,7 +110,8 @@ export default async function MessengerPageRoute() {
       initialMessages={(messages ?? [])
         .slice()
         .reverse()
-        .map((m) => ({ ...m, erp_ref: m.erp_ref as MessengerErpRef | null }))}
+        .map((m) => ({ ...m, erp_ref: guardRef(m.erp_ref as MessengerErpRef | null) }))}
+      erpRefAccess={erpRefAccess}
       profileNames={profileNames}
       currentUserId={user.id}
       isAdmin={isAdmin}

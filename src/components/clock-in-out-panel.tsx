@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useActionState, useRef, useState } from "react";
 import { FormMessage, type FormState } from "@/components/form-message";
 
@@ -78,6 +79,7 @@ export function ClockInOutPanel({
   clockInAction,
   clockOutAction,
   compact = false,
+  children,
 }: {
   clockedIn: boolean;
   clockedOut: boolean;
@@ -89,6 +91,8 @@ export function ClockInOutPanel({
   clockOutAction: (prevState: FormState, formData: FormData) => Promise<FormState>;
   // 메인 화면 위젯용 — 위치 안내 문구와 아래 여백을 뺀다.
   compact?: boolean;
+  /** 출근·퇴근 카드와 같은 줄(같은 폭 격자)에 이어 놓을 카드들 — 4칸 한 줄로 맞출 때(예: 연차·주간 근무시간). */
+  children?: ReactNode;
 }) {
   const [inState, inFormAction, inPending] = useActionState(clockInAction, undefined);
   const [outState, outFormAction, outPending] = useActionState(clockOutAction, undefined);
@@ -159,6 +163,7 @@ export function ClockInOutPanel({
         </p>}
         <FormMessage state={outState} />
       </div>
+      {children}
     </div>
   );
 }

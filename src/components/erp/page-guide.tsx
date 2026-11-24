@@ -42,7 +42,7 @@ export function PageGuide({
   // 땐 기본 마진을 아예 빼고 className 쪽만 적용한다.
   const hasMarginOverride = /\bm[bty]?-\d/.test(className);
   return (
-    <div className={`${hasMarginOverride ? "" : "mb-4"} erp-page-guide p-2 text-xs ${className}`} style={TONE_STYLE[tone]}>
+    <div data-tone={tone} className={`${hasMarginOverride ? "" : "mb-4"} erp-page-guide p-2 text-xs ${className}`} style={TONE_STYLE[tone]}>
       {children}
     </div>
   );

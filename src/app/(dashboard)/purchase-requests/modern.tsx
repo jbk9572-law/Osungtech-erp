@@ -1,3 +1,4 @@
+import { ListFilterCard } from "@/components/erp/list-filter-card";
 import { createClient } from "@/lib/supabase/server";
 import { GridBadge, type BadgeTone } from "@/components/grid/badge";
 import { DateRangeSearchForm } from "@/components/erp/date-range-search-form";
@@ -72,9 +73,10 @@ export default async function PurchaseRequestsPage({
 
   const filters = (
     <>
-      <DateRangeQuickFilters basePath="/purchase-requests" presets={presets} monthButtons={monthButtons} from={from} to={to} />
-
-      <DateRangeSearchForm formId="purchase-requests-search-form" idPrefix="pr" from={from} to={to} q={q} qLabel="공급처 / 작성자 / 메모 검색" qPlaceholder="공급처명, 작성자, 메모" resetHref="/purchase-requests" showReset={!!(from || to || q || limitParam)} hideSubmit />
+      <ListFilterCard>
+        <DateRangeQuickFilters basePath="/purchase-requests" presets={presets} monthButtons={monthButtons} from={from} to={to} />
+        <DateRangeSearchForm formId="purchase-requests-search-form" idPrefix="pr" from={from} to={to} q={q} qLabel="공급처 / 작성자 / 메모 검색" qPlaceholder="공급처명, 작성자, 메모" resetHref="/purchase-requests" showReset={!!(from || to || q || limitParam)} hideSubmit />
+      </ListFilterCard>
     </>
   );
 

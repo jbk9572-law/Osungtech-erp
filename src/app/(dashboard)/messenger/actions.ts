@@ -7,6 +7,7 @@ import { notify } from "@/lib/notify";
 import { uploadAttachment, deleteAttachment, getAttachmentDownloadUrl } from "@/lib/storage/upload-attachment";
 import type { MessengerMessage, MessengerErpRef } from "@/lib/messenger-types";
 import { formatNumber } from "@/lib/format-number";
+import { canViewPage } from "@/lib/department-page-access";
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
 
@@ -427,4 +428,62 @@ export async function markMessengerChannelRead(channelId: string): Promise<void>
   const supabase = await createClient();
   const { error } = await supabase.rpc("mark_messenger_channel_read", { p_channel_id: channelId });
   if (error) console.error("메신저 읽음 처리 실패:", error.message);
+}
+
+// ── 명령 선택창(번호·이름을 외워서 치지 않고 목록에서 고르기) ─────────────────────────────
+// 각 명령이 보여줄 목록 — 권한 있는 사람에게만 목록을 준다(메신저로 권한 밖 전표를 엿보지 못하게). 최근 30건 + 검색어만 가져와 응답을 가볍게 유지한다.
+export type CommandPickItem = { value: string; title: string; sub: string };
+export type CommandPickResult = { items: CommandPickItem[]; denied?: boolean; error?: string };
+
+const PICK_LIMIT = 30;
+const COMMAND_PAGE: Record<string, string> = { "/매출전표": "/sales", "/재고조회": "/inventory", "/일정마감": "/sales-activities", "/게시판공지": "/announcements" };
+
+export async function listCommandItems(command: string, rawQuery: string): Promise<CommandPickResult> {
+  const user = await getUser();
+  if (!user) return { items: [], error: "로그인이 필요합니다." };
+  const page = COMMAND_PAGE[command];
+  if (!page) return { items: [], error: "알 수 없는 명령입니다." };
+  const supabase = await createClient();
+  if (!(await canViewPage(supabase, page))) return { items: [], denied: true };
+  const q = rawQuery.trim().slice(0, 40);
+  const like = `%${q.replace(/[%_,]/g, " ")}%`;
+
+  if (command === "/매출전표") {
+    let query = supabase.from("sales_orders").select("doc_no, order_date, customers!inner(name)").order("doc_no", { ascending: false }).limit(PICK_LIMIT);
+    if (q) {
+      const n = Number(q);
+      query = Number.isFinite(n) && /^\d+$/.test(q) ? query.eq("doc_no", n) : query.ilike("customers.name", like);
+    }
+    const { data, error } = await query;
+    if (error) return { items: [], error: "목록을 불러오지 못했습니다." };
+    return { items: (data ?? []).map((r) => ({ value: String(r.doc_no), title: `#${r.doc_no} · ${r.customers?.name ?? "-"}`, sub: formatKstDate(r.order_date) })) };
+  }
+  if (command === "/재고조회") {
+    let query = supabase.from("products").select("name, sku, spec").order("name").limit(PICK_LIMIT);
+    if (q) query = query.or(`name.ilike.${like},sku.ilike.${like}`);
+    const { data, error } = await query;
+    if (error) return { items: [], error: "목록을 불러오지 못했습니다." };
+    return { items: (data ?? []).map((r) => ({ value: r.name, title: r.name, sub: [r.sku, r.spec].filter(Boolean).join(" · ") })) };
+  }
+  if (command === "/게시판공지") {
+    let query = supabase.from("announcements").select("title, created_at").order("created_at", { ascending: false }).limit(PICK_LIMIT);
+    if (q) query = query.ilike("title", like);
+    const { data, error } = await query;
+    if (error) return { items: [], error: "목록을 불러오지 못했습니다." };
+    return { items: (data ?? []).map((r) => ({ value: r.title, title: r.title, sub: formatKstDate(r.created_at) })) };
+  }
+  // /일정마감 — 거래처 이름으로 고른다
+  let query = supabase.from("sales_activities").select("next_action_date, customers!inner(name)").eq("next_action_done", false).not("next_action_date", "is", null).order("next_action_date", { ascending: true }).limit(PICK_LIMIT);
+  if (q) query = query.ilike("customers.name", like);
+  const { data, error } = await query;
+  if (error) return { items: [], error: "목록을 불러오지 못했습니다." };
+  const seen = new Set<string>();
+  const items: CommandPickItem[] = [];
+  for (const r of data ?? []) {
+    const name = r.customers?.name;
+    if (!name || seen.has(name) || !r.next_action_date) continue;
+    seen.add(name);
+    items.push({ value: name, title: name, sub: `예정 ${formatKstDate(r.next_action_date)}` });
+  }
+  return { items };
 }

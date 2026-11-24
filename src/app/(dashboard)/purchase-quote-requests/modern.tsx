@@ -1,3 +1,4 @@
+import { ListFilterCard } from "@/components/erp/list-filter-card";
 import { createClient } from "@/lib/supabase/server";
 import { RecordPageA } from "@/components/grid/record-page-a";
 import type { RecordRow } from "@/components/grid/record-list-a";
@@ -69,9 +70,10 @@ export default async function PurchaseQuoteRequestsPage({
 
   const filters = (
     <>
-      <DateRangeQuickFilters basePath="/purchase-quote-requests" presets={presets} monthButtons={monthButtons} from={from} to={to} />
-
-      <DateRangeSearchForm formId="purchase-quote-requests-search-form" idPrefix="pqr" from={from} to={to} q={q} qLabel="매입처 / 메모 검색" qPlaceholder="매입처명, 메모" resetHref="/purchase-quote-requests" showReset={!!(from || to || q || limitParam)} hideSubmit />
+      <ListFilterCard>
+        <DateRangeQuickFilters basePath="/purchase-quote-requests" presets={presets} monthButtons={monthButtons} from={from} to={to} />
+        <DateRangeSearchForm formId="purchase-quote-requests-search-form" idPrefix="pqr" from={from} to={to} q={q} qLabel="매입처 / 메모 검색" qPlaceholder="매입처명, 메모" resetHref="/purchase-quote-requests" showReset={!!(from || to || q || limitParam)} hideSubmit />
+      </ListFilterCard>
     </>
   );
 

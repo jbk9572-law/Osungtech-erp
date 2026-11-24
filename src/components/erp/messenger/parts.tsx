@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { resolveMessengerAttachmentUrl } from "@/app/(dashboard)/messenger/actions";
 import type { MessengerErpRef } from "@/lib/messenger-types";
 import { fileKind, formatFileSize } from "@/lib/file-display";
@@ -124,9 +125,22 @@ const ERP_REF_ICON: Record<MessengerErpRef["kind"], string> = {
 // 아이콘만 바뀌고 나머지(제목/뱃지/라벨-값 줄/링크)는 전부 공통 렌더링
 // 이다. 새 명령어가 actions.ts에 추가돼도 kind를 ERP_REF_ICON에 한 줄만
 // 추가하면 이 컴포넌트는 그대로 재사용된다.
-export function ErpRefCard({ erpRef }: { erpRef: MessengerErpRef }) {
+export function ErpRefCard({ erpRef, allowed = true }: { erpRef: MessengerErpRef; allowed?: boolean }) {
+  // 열람 권한이 없으면 내용(거래처·금액 등)을 그리지 않고 "권한 없음"만 — 서버가 이미 비워 보내지만 실시간으로 들어온 카드도 같이 가린다
+  if (!allowed || erpRef.restricted) {
+    return (
+      <div className="erp-messenger-erp-card is-restricted" aria-label="열람 권한 없음">
+        <div className="erp-messenger-erp-card-head">
+          <span aria-hidden>🔒</span>
+          <span className="erp-messenger-erp-card-title">권한 없음</span>
+        </div>
+        <div className="erp-messenger-erp-card-lines erp-u-muted">이 항목을 볼 권한이 없습니다.</div>
+      </div>
+    );
+  }
+  // next/link — 같은 앱 안의 이동이라 매출 전표 등 모달 경로(@modal)가 대화 화면 위에 모달로 뜬다(전체 화면 이동·탭 열림 아님)
   return (
-    <a href={erpRef.href} className="erp-messenger-erp-card">
+    <Link href={erpRef.href} className="erp-messenger-erp-card">
       <div className="erp-messenger-erp-card-head">
         <span aria-hidden>{ERP_REF_ICON[erpRef.kind]}</span>
         <span className="erp-messenger-erp-card-title">{erpRef.title}</span>
@@ -140,7 +154,7 @@ export function ErpRefCard({ erpRef }: { erpRef: MessengerErpRef }) {
           </div>
         ))}
       </div>
-    </a>
+    </Link>
   );
 }
 

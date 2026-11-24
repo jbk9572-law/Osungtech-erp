@@ -8,7 +8,6 @@ import { PageGuide } from "@/components/erp/page-guide";
 import { GridBadge } from "@/components/grid/badge";
 import { KpiStripFrame } from "@/components/erp/kpi-strip-frame";
 import { RowNoCell, RowNoHead } from "@/components/grid/row-no-cell";
-import { DetailSideShell } from "@/components/grid/detail-side-shell";
 import { getTenantTheme } from "@/lib/tenant-theme";
 import { getThemeFeatures } from "@/lib/erp-theme-config";
 import { ClockInOutPanel } from "@/components/clock-in-out-panel";
@@ -204,8 +203,55 @@ export default async function AttendancePage() {
         결재선을 타므로, 진행 상황은 기안함에서도 확인할 수 있습니다.
       </PageGuide>
 
-      <div className={sidePanel ? "erp-master-detail" : undefined}>
-      <div className={sidePanel ? "erp-master-detail-main" : undefined}>
+      {sidePanel ? (
+        // 모던: 출근 · 퇴근 · 연차 · 주간 근무시간을 같은 폭 4칸 한 줄로
+        <ClockInOutPanel
+        clockedIn={!!todayRecord?.clock_in_at}
+        clockedOut={!!todayRecord?.clock_out_at}
+        clockInTime={fmtTime(todayRecord?.clock_in_at ?? null)}
+        clockOutTime={fmtTime(todayRecord?.clock_out_at ?? null)}
+        clockInLocation={todayRecord?.clock_in_at ? describeLocation(todayRecord.clock_in_lat, todayRecord.clock_in_lng) : null}
+        clockOutLocation={todayRecord?.clock_out_at ? describeLocation(todayRecord.clock_out_lat, todayRecord.clock_out_lng) : null}
+        clockInAction={clockIn}
+        clockOutAction={clockOut}
+        >
+          <div className="erp-home-panel erp-kpi-card">
+            <div className="erp-kpi-label">{year}년 연차</div>
+            <div className="erp-kpi-trio">
+              <div>
+                <span>총</span>
+                <b>{formatNumber(totalDays)}일</b>
+              </div>
+              <div>
+                <span>사용</span>
+                <b>{formatNumber(usedThisYear)}일</b>
+              </div>
+              <div>
+                <span>잔여</span>
+                <b className={remaining < 0 ? "erp-u-danger" : "is-ok"}>{formatNumber(remaining)}일</b>
+              </div>
+            </div>
+            <div className="erp-kpi-foot">
+              진행 중 신청 {formatNumber((myLeaves ?? []).filter((l) => l.status === "pending").length)}건 · <Link href="/approvals">전자결재 기안함 ›</Link>
+            </div>
+          </div>
+          <div className="erp-home-panel erp-kpi-card">
+            <div className="erp-kpi-label">
+              이번주 근무시간 ({week.start.slice(5)}~{week.end.slice(5)})
+            </div>
+            <div className={myWeekTone === "danger" ? "erp-kpi-value erp-u-danger" : "erp-kpi-value"}>
+              {formatNumber(myWeekHours)}시간
+              {myWeekTone !== "ok" && (
+                <GridBadge tone={myWeekTone === "danger" ? "danger" : "warn"} className="erp-u-ml-6">
+                  {myWeekTone === "danger" ? "52시간 초과" : "초과 주의"}
+                </GridBadge>
+              )}
+            </div>
+            <div className="erp-kpi-foot">주 {WEEKLY_HOURS_WARNING}시간 이상이면 주의, 52시간 초과는 위반</div>
+          </div>
+        </ClockInOutPanel>
+      ) : (
+        <>
       <ClockInOutPanel
         clockedIn={!!todayRecord?.clock_in_at}
         clockedOut={!!todayRecord?.clock_out_at}
@@ -260,6 +306,8 @@ export default async function AttendancePage() {
         </div>
       </div>
       </KpiStripFrame>
+        </>
+      )}
 
       {!sidePanel && (
         <>
@@ -422,6 +470,7 @@ export default async function AttendancePage() {
         </div>
       )}
 
+      <div className="erp-two-col">
       <div className="erp-detail">
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">내 휴가 신청 이력</span>
@@ -663,37 +712,6 @@ export default async function AttendancePage() {
           )}
         </div>
       </div>
-      </div>
-      {sidePanel && (
-        <DetailSideShell
-          ariaLabel="내 연차 현황"
-          emptyText=""
-          content={{
-            title: "내 연차 현황",
-            subtitle: `${year}년`,
-            totals: [
-              { label: "연차 총일수", value: `${formatNumber(totalDays)}일` },
-              { label: "사용(승인 기준)", value: `${formatNumber(usedThisYear)}일` },
-              { label: "잔여", value: `${formatNumber(remaining)}일`, tone: remaining < 0 ? "danger" : "success", strong: true },
-            ],
-            sections: [
-              {
-                heading: "진행 중인 휴가 신청",
-                rows: (myLeaves ?? [])
-                  .filter((l) => l.status === "pending")
-                  .slice(0, 5)
-                  .map((l) => ({
-                    left: l.start_date === l.end_date ? l.start_date.slice(5) : `${l.start_date.slice(5)} ~ ${l.end_date.slice(5)}`,
-                    mid: LEAVE_UNIT_LABEL[l.leave_unit as LeaveUnit] ?? l.leave_unit,
-                    right: `${formatNumber(Number(l.days))}일`,
-                  })),
-                emptyText: "진행 중인 신청이 없습니다.",
-              },
-            ],
-            links: [{ label: "전자결재 기안함", href: "/approvals" }],
-          }}
-        />
-      )}
       </div>
     </div>
   );

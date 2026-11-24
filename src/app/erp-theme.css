@@ -5031,9 +5031,59 @@ a.erp-detail-tab:hover:not(.active) {
   margin-bottom: 12px;
 }
 
-@media (max-width: 640px) {
+/* 같은 폭 2칸 카드 줄(예: 근태의 휴가 이력 | 정정 이력) — 좁은 화면에서는 한 칸으로 쌓인다 */
+.erp-two-col {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--erp-space-4);
+  align-items: start;
+}
+.erp-two-col > .erp-detail {
+  margin: 0;
+  min-width: 0;
+}
+@media (max-width: 1000px) {
+  .erp-two-col {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* 카드 줄 안의 공용 조각 — 숫자 3개(총·사용·잔여)를 한 카드에, 카드 맨 아래 보조 문구(근태·대시보드 등 같은 줄을 쓰는 화면이 같이 쓴다) */
+.erp-kpi-trio {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--erp-space-2);
+}
+.erp-kpi-trio > div > span {
+  display: block;
+  font-size: var(--erp-font-xs);
+  color: var(--erp-text-muted);
+}
+.erp-kpi-trio > div > b {
+  font-size: var(--erp-font-xl, 18px);
+  font-weight: 700;
+}
+.erp-kpi-trio .is-ok { color: var(--erp-success); }
+.erp-kpi-foot {
+  margin-top: auto;
+  padding-top: var(--erp-space-2);
+  font-size: var(--erp-font-xs);
+  color: var(--erp-text-muted);
+}
+.erp-kpi-row > .erp-home-panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+@media (max-width: 1000px) {
   .erp-kpi-row {
     grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 520px) {
+  .erp-kpi-row {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -9805,6 +9855,86 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
 .erp-chrome-modern .erp-page-guide {
   font-size: var(--erp-font-base);
   line-height: 1.5;
+}
+/* 모던: 안내(팁)는 박스 없이 흐린 한 덩어리 글로 — 화면 위쪽이 박스로 번잡해지지 않게. 경고·위험 톤은 박스 그대로(놓치면 안 되는 내용) */
+.erp-chrome-modern .erp-page-guide[data-tone="info"],
+.erp-chrome-modern .erp-page-guide[data-tone="success"] {
+  padding: 0 var(--erp-space-1);
+  margin-bottom: var(--erp-space-3);
+  background: transparent !important;
+  border: 0 !important;
+  color: var(--erp-text-muted) !important;
+  font-size: var(--erp-font-sm);
+}
+/* 조회 조건 묶음(ListFilterCard) — 칩 줄 + 기간·검색 폼을 박스 하나로 */
+.erp-filter-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--erp-space-3);
+  margin-bottom: var(--erp-space-3);
+  padding: var(--erp-space-3) var(--erp-space-4);
+  background: var(--erp-panel);
+  border: 1px solid var(--erp-border-strong);
+  border-radius: var(--erp-radius-xl);
+}
+.erp-filter-card .erp-field-grid {
+  margin: 0;
+}
+
+/* 메신저 명령 선택창 — 입력창 위로 뜨는 목록(최근 항목 + 검색), 고르면 바로 카드로 보낸다 */
+.erp-messenger-picker-anchor {
+  position: relative;
+}
+.erp-messenger-picker {
+  position: absolute;
+  left: var(--erp-space-3);
+  bottom: calc(100% + var(--erp-space-2));
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: var(--erp-space-2);
+  width: min(380px, calc(100% - 2 * var(--erp-space-3)));
+  padding: var(--erp-space-3);
+  background: var(--erp-panel);
+  border: 1px solid var(--erp-border-strong);
+  border-radius: var(--erp-radius-xl);
+  box-shadow: var(--erp-shadow-md);
+}
+.erp-messenger-picker-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--erp-font-sm);
+}
+.erp-messenger-picker-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 240px;
+  overflow-y: auto;
+  font-size: var(--erp-font-sm);
+}
+.erp-messenger-picker-list > li:not(:has(button)) {
+  padding: var(--erp-space-3);
+}
+.erp-messenger-picker-item {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--erp-space-3);
+  width: 100%;
+  padding: var(--erp-space-2) var(--erp-space-3);
+  background: none;
+  border: 0;
+  border-radius: var(--erp-radius-md);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.erp-messenger-picker-item:hover {
+  background: var(--erp-hover);
+}
+.erp-messenger-erp-card.is-restricted {
+  opacity: 0.7;
 }
 
 /* 메신저(모던): 가운데 목록 위 [채팅방 | 사원] 전환 + 사원 검색, 행 높이·아바타는 규칙표 값(항목 32px, 아바타 28px) */

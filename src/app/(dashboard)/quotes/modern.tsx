@@ -1,3 +1,4 @@
+import { ListFilterCard } from "@/components/erp/list-filter-card";
 import { createClient } from "@/lib/supabase/server";
 import { QuoteStatusBadge } from "@/components/quote-status-badge";
 import { DateRangeSearchForm } from "@/components/erp/date-range-search-form";
@@ -68,9 +69,10 @@ export default async function QuotesPage({
 
   const filters = (
     <>
-      <DateRangeQuickFilters basePath="/quotes" presets={presets} monthButtons={monthButtons} from={from} to={to} />
-
-      <DateRangeSearchForm formId="quotes-search-form" idPrefix="quotes" from={from} to={to} q={q} qLabel="거래처 / 견적번호 / 메모 검색" qPlaceholder="거래처명, 견적번호, 메모" resetHref="/quotes" showReset={!!(from || to || q || limitParam)} hideSubmit />
+      <ListFilterCard>
+        <DateRangeQuickFilters basePath="/quotes" presets={presets} monthButtons={monthButtons} from={from} to={to} />
+        <DateRangeSearchForm formId="quotes-search-form" idPrefix="quotes" from={from} to={to} q={q} qLabel="거래처 / 견적번호 / 메모 검색" qPlaceholder="거래처명, 견적번호, 메모" resetHref="/quotes" showReset={!!(from || to || q || limitParam)} hideSubmit />
+      </ListFilterCard>
     </>
   );
 

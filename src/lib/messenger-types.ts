@@ -12,6 +12,8 @@ export type MessengerErpRef = {
   badge?: string;
   lines: { label: string; value: string }[];
   href: string;
+  /** 읽는 사람에게 열람 권한이 없어 내용을 가린 카드(서버가 lines를 비우고 표시한다) */
+  restricted?: boolean;
 };
 
 export type MessengerMessage = {

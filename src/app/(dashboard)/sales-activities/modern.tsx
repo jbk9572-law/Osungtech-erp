@@ -1,3 +1,4 @@
+import { ListFilterCard } from "@/components/erp/list-filter-card";
 import { createClient } from "@/lib/supabase/server";
 import { RecordPageA } from "@/components/grid/record-page-a";
 import type { RecordRow } from "@/components/grid/record-list-a";
@@ -120,6 +121,12 @@ export default async function SalesActivitiesPage({
         거래처별 상담/방문/전화 이력을 기록하고, 다음 팔로우업 예정일을 정해두면 여기서 한눈에 챙길 수 있습니다.
       </PageGuide>
 
+
+      <ListFilterCard>
+        <DateRangeQuickFilters basePath="/sales-activities" presets={presets} monthButtons={monthButtons} from={from} to={to} />
+        <DateRangeSearchForm formId="sales-activities-search-form" idPrefix="sa" from={from} to={to} q={q} qLabel="거래처 / 제목 / 내용 검색" qPlaceholder="거래처명, 제목, 내용" resetHref="/sales-activities" showReset={!!(from || to || q || limitParam)} hideSubmit />
+      </ListFilterCard>
+
       {upcoming.length > 0 && (
         <details className="erp-fold-section">
           <summary>
@@ -158,10 +165,6 @@ export default async function SalesActivitiesPage({
             </div>
         </details>
       )}
-
-      <DateRangeQuickFilters basePath="/sales-activities" presets={presets} monthButtons={monthButtons} from={from} to={to} />
-
-      <DateRangeSearchForm formId="sales-activities-search-form" idPrefix="sa" from={from} to={to} q={q} qLabel="거래처 / 제목 / 내용 검색" qPlaceholder="거래처명, 제목, 내용" resetHref="/sales-activities" showReset={!!(from || to || q || limitParam)} hideSubmit />
     </>
   );
 

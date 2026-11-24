@@ -2,7 +2,7 @@
   "app/(dashboard)/hr/actions.ts": 906,
   "components/dashboard-calendar.tsx": 1217,
   "components/erp/messenger/classic.tsx": 939,
-  "components/erp/messenger/modern.tsx": 816,
+  "components/erp/messenger/modern.tsx": 811,
   "components/new-purchase-form.tsx": 1582,
   "components/new-sale-form.tsx": 1510,
   "components/sales-grid/classic.tsx": 801,
