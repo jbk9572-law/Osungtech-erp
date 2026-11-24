@@ -29,7 +29,7 @@ import type { OrderPaymentStatus } from "@/lib/order-payment-status";
 import { CarryoverBadge, DeliveryMethodCell, OrderDateCell, TaxTypeCell } from "@/components/grid/order-row-cells";
 import { carryoverRowClass, usesShortDate } from "@/lib/carryover";
 import { RowCheckbox } from "@/components/grid/row-checkbox";
-import { OrderSidePanel } from "@/components/grid/order-side-panel";
+import { OrderBottomPanel } from "@/components/grid/order-bottom-panel";
 import type { OrderDetailSelection } from "@/components/grid/order-detail-panel";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import { formatCarryoverDate } from "@/lib/carryover";
@@ -555,8 +555,6 @@ export function PurchaseGridTable({
       </GridToolbar>
       <GridRowLegend />
 
-      <div className="erp-master-detail">
-      <div className="erp-master-detail-main">
       <div className="erp-grid-wrap has-card-view">
         <table className="erp-grid">
           <thead>
@@ -661,9 +659,7 @@ export function PurchaseGridTable({
           )}
         </table>
       </div>
-      </div>
-      <OrderSidePanel selection={activeSelection} priceLabel="매입가" />
-      </div>
+      <OrderBottomPanel selection={activeSelection} priceLabel="매입가" />
 
       <div className="erp-row-card-toolbar">
         <button

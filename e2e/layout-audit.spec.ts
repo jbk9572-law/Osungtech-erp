@@ -1,4 +1,6 @@
-import { test } from "@playwright/test";
+import fs from "node:fs";
+import path from "node:path";
+import { expect, test } from "@playwright/test";
 import { THRESHOLDS, auditLayoutInPage, type LayoutFinding } from "./support/layout-audit";
 
 // 입력 화면·목록 화면을 데스크톱·모바일 폭으로 열어 배치를 잰다(support/layout-audit.ts). 읽기만 하고 데이터를 만들지 않는다.
@@ -11,6 +13,7 @@ const ROUTES = [
   "/settings/departments/new", "/settings/company", "/customers", "/suppliers", "/products", "/quotes",
   "/purchase-requests", "/purchase-quote-requests", "/sales-activities", "/subcontractors", "/receivables", "/payables",
   "/sales", "/purchases", "/inventory", "/todos",
+  "/messenger", "/calendar", "/hr/attendance", "/announcements", "/board", "/approvals", "/production", "/inventory/warehouses",
 ];
 const VIEWPORTS = [
   { name: "데스크톱", width: 1360, height: 800 },
@@ -18,6 +21,12 @@ const VIEWPORTS = [
 ];
 
 const all: Record<string, LayoutFinding[]> = {};
+
+// 새로 추가한 "구조 구멍" 규칙 — 기준선(e2e/layout-audit-baseline.json: { "<경로> · <폭>": 건수 })이 있으면 그보다 늘어난 것만 실패시킨다.
+// 기준선 파일이 아직 없으면 보고만 한다(첫 CI 로그의 AUDIT 줄에서 현재 건수를 모아 기준선을 만든다).
+const STRICT_RULES = new Set(["oversized-box", "box-overlap", "modal-close-overlap"]);
+const baselinePath = path.join(__dirname, "layout-audit-baseline.json");
+const baseline: Record<string, number> | null = fs.existsSync(baselinePath) ? JSON.parse(fs.readFileSync(baselinePath, "utf8")) : null;
 
 for (const vp of VIEWPORTS) {
   test.describe(`배치 점검 · ${vp.name}`, () => {
@@ -35,6 +44,9 @@ for (const vp of VIEWPORTS) {
         all[`${route} · ${vp.name}`] = findings;
         for (const f of findings) console.log(`AUDIT ${route} [${vp.name}] ${f.rule} — ${f.where} — ${f.detail}`);
         console.log(`AUDIT-SUMMARY ${route} [${vp.name}] ${findings.length}건`);
+        const strict = findings.filter((f) => STRICT_RULES.has(f.rule)).length;
+        console.log(`AUDIT-STRICT ${route} [${vp.name}] ${strict}건`);
+        if (baseline) expect(strict, `${route} [${vp.name}] 구조 구멍 규칙(빈 공간 박스·테두리 겹침·모달 ✕ 침범)이 기준선(${baseline[`${route} · ${vp.name}`] ?? 0}건)보다 늘었습니다`).toBeLessThanOrEqual(baseline[`${route} · ${vp.name}`] ?? 0);
         await test.info().attach("layout-findings.json", { body: JSON.stringify(findings, null, 2), contentType: "application/json" });
       });
     }

@@ -10,6 +10,10 @@ export const THRESHOLDS = {
   maxRowGapRatio: 0.12,
   /** 모바일에서 눌러야 하는 칸의 최소 높이(px) */
   minTouchHeight: 30,
+  /** 입력칸·버튼이 든 폼(.erp-party-search 등)의 높이가 안의 컨트롤 높이 합의 이 배수를 넘으면 "빈 공간 박스" */
+  maxFormHeightRatio: 3,
+  /** 두 형제 박스가 이 값(px) 이상 서로 파고들면 "테두리 겹침" */
+  minOverlapPx: 2,
   /** 이 폭 이하의 화면을 모바일로 본다 */
   mobileMaxWidth: 640,
 };
@@ -137,6 +141,49 @@ export function auditLayoutInPage(t: typeof THRESHOLDS): LayoutFinding[] {
       if (el.closest("table")) return;
       const h = (el as HTMLElement).getBoundingClientRect().height;
       if (h < t.minTouchHeight) add("touch-small", el, `높이 ${Math.round(h)}px(기준 ${t.minTouchHeight}px 이상)`);
+    });
+  }
+
+  // 7) 빈 공간 박스: 컨트롤(입력·버튼)이 든 폼/박스가 컨트롤 높이 합에 비해 비정상적으로 큰 경우 — 세로 칸 안에서 flex-basis가 높이가 되어 늘어나는 류의 구멍
+  root.querySelectorAll("form, .erp-party-search, .erp-filter-card").forEach((box) => {
+    if (!visible(box)) return;
+    const r = (box as HTMLElement).getBoundingClientRect();
+    const controls = Array.from(box.querySelectorAll("input:not([type=hidden]), select, textarea, button")).filter((c) => visible(c));
+    if (controls.length === 0 || controls.length > 6) return; // 큰 입력 폼은 대상이 아니다(컨트롤이 적은 검색 줄류만)
+    const ch = controls.map((c) => (c as HTMLElement).getBoundingClientRect().height);
+    const maxH = Math.max(...ch);
+    if (r.height > maxH * t.maxFormHeightRatio + 24 && r.height > 90) add("oversized-box", box, `높이 ${Math.round(r.height)}px — 안의 가장 큰 컨트롤은 ${Math.round(maxH)}px`);
+  });
+
+  // 8) 테두리 겹침: 같은 부모의 형제 박스(테두리·배경이 있는 것)가 서로 파고든 경우. 서로 맞닿기만(0~1px)하는 표 머리·몸 같은 건 제외.
+  const boxy = (e: Element) => {
+    const s = getComputedStyle(e as HTMLElement);
+    return (parseFloat(s.borderTopWidth) > 0 || parseFloat(s.borderLeftWidth) > 0) && s.position !== "absolute" && s.position !== "fixed" && s.position !== "sticky";
+  };
+  root.querySelectorAll("*").forEach((parent) => {
+    const kids = Array.from(parent.children).filter((k) => visible(k) && boxy(k));
+    for (let i = 0; i < kids.length; i++) {
+      for (let j = i + 1; j < kids.length; j++) {
+        const a = (kids[i] as HTMLElement).getBoundingClientRect();
+        const b = (kids[j] as HTMLElement).getBoundingClientRect();
+        const ox = Math.min(a.right, b.right) - Math.max(a.left, b.left);
+        const oy = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+        if (ox >= t.minOverlapPx && oy >= t.minOverlapPx) add("box-overlap", kids[j], `형제 박스 ${describe(kids[i])} 와 ${Math.round(ox)}×${Math.round(oy)}px 겹침`);
+      }
+    }
+  });
+
+  // 9) 모달 ✕ 침범: 모달 닫기(✕) 버튼 영역에 다른 눌러야 하는 요소가 겹친 경우
+  const modal = document.querySelector(".erp-modal[role='dialog']");
+  const closeBtn = modal?.querySelector("[aria-label='닫기'], .erp-modal-close, button[class*='modal-close']");
+  if (modal && closeBtn && visible(closeBtn)) {
+    const c = (closeBtn as HTMLElement).getBoundingClientRect();
+    interactive.forEach((el) => {
+      if (el === closeBtn || closeBtn.contains(el) || el.contains(closeBtn) || !visible(el)) return;
+      const r = (el as HTMLElement).getBoundingClientRect();
+      const ox = Math.min(c.right, r.right) - Math.max(c.left, r.left);
+      const oy = Math.min(c.bottom, r.bottom) - Math.max(c.top, r.top);
+      if (ox > 1 && oy > 1) add("modal-close-overlap", el, `✕ 버튼과 ${Math.round(ox)}×${Math.round(oy)}px 겹침`);
     });
   }
 

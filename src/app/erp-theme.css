@@ -5031,6 +5031,72 @@ a.erp-detail-tab:hover:not(.active) {
   margin-bottom: 12px;
 }
 
+/* 전표형 목록(매출·매입)의 아래 상세 패널(OrderBottomPanel) — 윗줄 강조색 + 머리줄 + [품목 표 | 합계·부가정보]. 품목 표는 최대 높이를 두고 안에서만 스크롤 */
+.erp-detail-bottom {
+  margin-top: var(--erp-space-4);
+  background: var(--erp-panel);
+  border: 1px solid var(--erp-border-strong);
+  border-top: 2px solid var(--erp-primary);
+  border-radius: var(--erp-radius-xl);
+}
+.erp-detail-bottom[data-tone="danger"] { border-top-color: var(--erp-danger); }
+.erp-detail-bottom[data-tone="warn"] { border-top-color: var(--erp-warning); }
+.erp-detail-bottom[data-tone="success"] { border-top-color: var(--erp-success); }
+.erp-detail-bottom-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--erp-space-2) var(--erp-space-4);
+  padding: var(--erp-space-3) var(--erp-space-4);
+  background: var(--erp-bg-subtle);
+  border-bottom: 1px solid var(--erp-border);
+  border-radius: var(--erp-radius-xl) var(--erp-radius-xl) 0 0;
+}
+.erp-detail-bottom-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--erp-space-2);
+  font-size: var(--erp-font-sm);
+}
+.erp-detail-bottom-title > b {
+  font-size: var(--erp-font-md);
+}
+.erp-detail-bottom-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--erp-space-2);
+}
+.erp-detail-bottom-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: var(--erp-space-4);
+  align-items: start;
+  padding: var(--erp-space-3) var(--erp-space-4) var(--erp-space-4);
+}
+.erp-detail-bottom-items {
+  max-height: 260px;
+  margin: 0;
+  overflow-y: auto;
+}
+.erp-detail-bottom-items thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.erp-detail-bottom-side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--erp-space-3);
+  min-width: 0;
+}
+@media (max-width: 900px) {
+  .erp-detail-bottom-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 /* 같은 폭 2칸 카드 줄(예: 근태의 휴가 이력 | 정정 이력) — 좁은 화면에서는 한 칸으로 쌓인다 */
 .erp-two-col {
   display: grid;
