@@ -161,6 +161,7 @@ export function PartyListA({
         total={rows.length}
         selectedCount={selected.size}
         dataKey={rows}
+        search={listFrameV2 ? searchSlot : undefined}
       />
   );
   const filterEl = (
@@ -173,7 +174,7 @@ export function PartyListA({
             </button>
           ))}
         </div>
-        {searchSlot}
+        {!listFrameV2 && searchSlot}
       </div>
   );
   const summaryEl = hideSummary ? null : (

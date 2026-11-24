@@ -1,3 +1,4 @@
+import { InventorySubTabs } from "@/components/erp/inventory-sub-tabs";
 import Link from "next/link";
 import { GuardedLink } from "@/components/erp/guarded-link";
 import { createClient } from "@/lib/supabase/server";
@@ -53,6 +54,7 @@ export default async function StockLoansPage({ searchParams }: { searchParams: P
     <div>
       <KeyboardShortcuts shortcuts={{ F2: { href: "/sales/new" }, Escape: { href: "/inventory" } }} />
       <ListPageHeader title="재고관리 > 일시반출 현황" />
+      <InventorySubTabs />
       <PageGuide>
         거래처에 물건을 잠시 빌려줬다가 돌려받는 거래입니다. 반출하면 재고가 바로 빠지고, 반납 처리하면 재고가 돌아옵니다. 매출·미수금·세금계산서에는 잡히지 않습니다.
         새 반출은 <GuardedLink href="/sales/new" className="underline">매출 전표 등록</GuardedLink>의 &quot;일시반출&quot; 탭에서 등록하세요.

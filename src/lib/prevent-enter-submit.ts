@@ -4,7 +4,7 @@ import type { KeyboardEvent } from "react";
 // 문제를 막는다. F7 단축키나 등록 버튼 클릭으로만 제출되게 하고, 버튼에
 // 포커스가 있을 때의 Enter(=클릭)와 textarea/리치텍스트 에디터(contentEditable)의
 // 줄바꿈은 그대로 둔다.
-export function preventEnterSubmit(e: KeyboardEvent<HTMLFormElement>) {
+export function preventEnterSubmit(e: KeyboardEvent<HTMLElement>) {
   const target = e.target as HTMLElement;
   if (
     e.key === "Enter" &&

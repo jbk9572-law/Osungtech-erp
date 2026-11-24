@@ -2,8 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { ApprovalLinePresetForm } from "@/components/approval-line-preset-form";
 import { createApprovalLinePreset } from "@/app/(dashboard)/approvals/lines/actions";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
-import { CloseButton } from "@/components/erp/close-button";
-import { ListPageHeader, FormSection } from "@/components/erp/page-header";
+import { ListPageHeader } from "@/components/erp/page-header";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { requireFeatureEnabled } from "@/lib/require-feature-enabled";
 import { buildOrgTree } from "@/lib/org-chart";
@@ -27,10 +26,8 @@ export default async function NewApprovalLinePage() {
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/approvals/lines" } }} />
-      <ListPageHeader title="전자결재 &gt; 새 결재선" actions={<CloseButton href="/approvals/lines">ESC 목록으로</CloseButton>} />
-      <FormSection tabLabel="결재선 등록">
-        <ApprovalLinePresetForm action={createApprovalLinePreset} orgTree={orgTree} submitLabel="추가" />
-      </FormSection>
+      <ListPageHeader title="전자결재 &gt; 새 결재선" />
+      <ApprovalLinePresetForm action={createApprovalLinePreset} orgTree={orgTree} submitLabel="추가" title="새 결재선" />
     </div>
   );
 }

@@ -8,9 +8,10 @@ import { useThemeFeatures } from "@/lib/erp-theme-features";
 export const TOOLBAR_SLOT_ID = "erp-toolbar-slot";
 
 // A형 목록 상단의 도구 줄(시안) — 왼쪽: 조회·신규·수정·삭제 같은 작업 버튼 | 구분선 | 엑셀·열 설정 같은 도구, 오른쪽: "14:32 조회 · 거래처 48곳 | 선택 1곳" 상태.
+// 한 칸짜리 검색(ListSearchForm)은 search 자리로 받아 도구 줄 맨 오른쪽 끝에 한 줄로 둔다(화면마다 따로 배치하지 않는다).
 // 버튼 자체는 화면이 만든다(링크·폼 제출·비활성 상태가 화면마다 다르므로) — 이 부품은 줄의 모양과 자리만 정한다(개발헌법 3번).
 // 모던 틀에서는 시안처럼 화면 본문이 아니라 상단바 바로 아래의 전체 폭 도구 줄 자리로 옮겨 그린다(자리가 없는 좁은 화면은 그 자리에 그대로).
-export function ListToolbar({ actions, tools, status }: { actions?: ReactNode; tools?: ReactNode; status?: ReactNode }) {
+export function ListToolbar({ actions, tools, status, search }: { actions?: ReactNode; tools?: ReactNode; status?: ReactNode; search?: ReactNode }) {
   const { appChrome, listFrameV2 } = useThemeFeatures();
   // undefined = 아직 모름(첫 그리기), null = 자리 없음(제자리에 그림), 요소 = 그 자리로 옮겨 그림
   const [slot, setSlot] = useState<HTMLElement | null | undefined>(undefined);
@@ -29,6 +30,7 @@ export function ListToolbar({ actions, tools, status }: { actions?: ReactNode; t
         </>
       )}
       {status && <div className="erp-listtoolbar-status">{status}</div>}
+      {search && <div className="erp-listtoolbar-search">{search}</div>}
     </div>
   );
   if (appChrome && !listFrameV2 && slot === undefined) return null; // 자리를 찾기 전에는 그리지 않는다(제자리→자리 깜빡임 방지)

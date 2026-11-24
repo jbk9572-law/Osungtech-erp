@@ -3,8 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { ApprovalLinePresetForm } from "@/components/approval-line-preset-form";
 import { updateApprovalLinePreset } from "@/app/(dashboard)/approvals/lines/actions";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
-import { CloseButton } from "@/components/erp/close-button";
-import { ListPageHeader, FormSection } from "@/components/erp/page-header";
+import { ListPageHeader } from "@/components/erp/page-header";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { buildOrgTree } from "@/lib/org-chart";
 
@@ -37,27 +36,21 @@ export default async function EditApprovalLinePresetPage({
   for (const p of profiles) nameById[p.id] = p.full_name || "구성원";
 
   return (
-    <div className="erp-comm-shell">
+    <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/approvals/lines" } }} />
-      <ListPageHeader
-        title="전자결재 > 공유 결재선 > 결재선 수정"
-        actions={<CloseButton href="/approvals/lines">ESC 목록으로</CloseButton>}
+      <ListPageHeader title="전자결재 &gt; 공유 결재선 &gt; 결재선 수정" />
+      <ApprovalLinePresetForm
+        action={updateApprovalLinePreset}
+        orgTree={orgTree}
+        submitLabel="저장"
+        title="결재선 수정"
+        initial={{
+          id: preset.id,
+          name: preset.name,
+          approvers: preset.approver_ids.map((pid) => ({ id: pid, name: nameById[pid] ?? "구성원" })),
+          references: preset.reference_ids.map((pid) => ({ id: pid, name: nameById[pid] ?? "구성원" })),
+        }}
       />
-      <div>
-        <FormSection tabLabel="결재선 수정">
-          <ApprovalLinePresetForm
-            action={updateApprovalLinePreset}
-            orgTree={orgTree}
-            submitLabel="저장"
-            initial={{
-              id: preset.id,
-              name: preset.name,
-              approvers: preset.approver_ids.map((pid) => ({ id: pid, name: nameById[pid] ?? "구성원" })),
-              references: preset.reference_ids.map((pid) => ({ id: pid, name: nameById[pid] ?? "구성원" })),
-            }}
-          />
-        </FormSection>
-      </div>
     </div>
   );
 }

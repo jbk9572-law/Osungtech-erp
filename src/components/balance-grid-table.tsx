@@ -146,7 +146,7 @@ export function BalanceGridTable({
 
   return (
     <>
-      <div className={`erp-field-grid erp-u-mb-s4${listFrameV2 ? " erp-filter-box" : ""}`}>
+      {!listFrameV2 && <div className="erp-field-grid erp-u-mb-s4">
         <div className="erp-field erp-span-6">
           <label htmlFor="balance-search-q">{partyLabel} 검색</label>
           <input
@@ -170,7 +170,7 @@ export function BalanceGridTable({
             </span>
           </div>
         )}
-      </div>
+      </div>}
 
       {showAging && (
         <div className="erp-date-presets erp-u-mb-8">
@@ -192,6 +192,20 @@ export function BalanceGridTable({
           {summaryItems && summaryItems.length > 0 && <ListSummaryBar items={summaryItems} />}
           <ListToolbar
             tools={toolsSlot}
+            search={
+              <div className="erp-party-search">
+                <input
+                  id="balance-search-q"
+                  type="text"
+                  autoComplete="off"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder={`${partyLabel}으로 검색`}
+                  aria-label={`${partyLabel} 검색`}
+                  className="erp-input"
+                />
+              </div>
+            }
             status={
               <>
                 총 <b>{sortedRows.length}건</b>

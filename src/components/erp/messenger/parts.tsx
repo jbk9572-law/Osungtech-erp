@@ -159,3 +159,32 @@ export function ErpRefCard({ erpRef }: { erpRef: MessengerErpRef }) {
 // 것들(거래처 발주/안전재고/할일마감 등)은 전부 "전체" 대화방에
 // 시스템봇(sender_id=null) 메시지로 흡수했다 — 알림함을 따로 열어볼
 // 필요 없이 다들 늘 보는 대화 목록 안에서 바로 확인된다.
+
+// 메신저 목업의 하단 빠른명령 바(/매출전표 /재고조회 /게시판공지
+// /일정마감) — 누르면 입력창에 명령어만 채워주고, 뒤에 전표번호/
+// 품목명 등을 마저 타이핑해서 보내면 actions.ts의 sendMessage가
+// 실제 데이터를 조회해 카드로 바꿔준다.
+const ERP_COMMANDS = [
+  { prefix: "/매출전표", label: "매출전표", hint: "/매출전표 전표번호 (예: /매출전표 1024)" },
+  { prefix: "/재고조회", label: "재고조회", hint: "/재고조회 품목명 (예: /재고조회 A4)" },
+  { prefix: "/게시판공지", label: "게시판공지", hint: "/게시판공지 공지 제목 일부" },
+  { prefix: "/일정마감", label: "일정마감", hint: "/일정마감 거래처명 또는 제목 일부" },
+] as const;
+export const DEFAULT_COMPOSER_HINT = "메시지 입력 또는 명령어(/) 입력 (Enter: 전송)";
+
+export function commandHintFor(prefix: string): string | null {
+  return ERP_COMMANDS.find((c) => c.prefix === prefix)?.hint ?? null;
+}
+
+/** 입력창 위 빠른 명령 줄 — 누르면 입력창에 명령어만 채우고 형식 안내(placeholder)를 바꾼다. */
+export function MessengerCommandBar({ onPick }: { onPick: (prefix: string) => void }) {
+  return (
+    <div className="erp-messenger-command-bar">
+      {ERP_COMMANDS.map((cmd) => (
+        <button key={cmd.prefix} type="button" className="erp-messenger-command-btn" onClick={() => onPick(cmd.prefix)}>
+          {cmd.prefix}
+        </button>
+      ))}
+    </div>
+  );
+}

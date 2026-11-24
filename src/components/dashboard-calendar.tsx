@@ -1,5 +1,6 @@
 "use client";
 
+import { CalendarNav, CalendarWeekdays, CalendarLegend, calDayClass } from "@/components/erp/calendar-parts";
 import { formatKstTime } from "@/lib/kst-date";
 import {
   useActionState,
@@ -293,7 +294,6 @@ function buildPartnerBlocks(
   return blocks;
 }
 
-const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
 const STOCK_PURCHASE_LABEL = "재고용 매입";
 
@@ -959,11 +959,12 @@ export function DashboardCalendar({
   const calendarCard = (
       <div className="erp-cal-panel">
         <div className="erp-cal-main">
-        <div className="relative mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-bold text-[var(--erp-text)]">
-            {year}년 {month}월
-          </h2>
-          <div className="flex items-center gap-1">
+        <CalendarNav
+          year={year}
+          month={month}
+          prevHref={prevMonthHref}
+          nextHref={nextMonthHref}
+          extra={
             <span className="erp-seg" role="group" aria-label="달력 표시 방식">
               <button type="button" className={calMode === "count" ? "active" : ""} aria-pressed={calMode === "count"} onClick={() => setCalMode("count")}>
                 건수
@@ -972,33 +973,12 @@ export function DashboardCalendar({
                 자세히
               </button>
             </span>
-            <Link
-              href={prevMonthHref}
-              className="rounded-sm border border-[var(--erp-border)] px-2 py-1 text-xs text-[var(--erp-text-muted)] hover:bg-[var(--erp-hover)]"
-            >
-              ← 이전달
-            </Link>
-            <Link
-              href={nextMonthHref}
-              className="rounded-sm border border-[var(--erp-border)] px-2 py-1 text-xs text-[var(--erp-text-muted)] hover:bg-[var(--erp-hover)]"
-            >
-              다음달 →
-            </Link>
-          </div>
-        </div>
+          }
+        />
 
-        <div className="grid grid-cols-7 gap-1 text-center text-xs">
-          {WEEKDAYS.map((w, i) => (
-            <div
-              key={w}
-              className={`py-1 ${i === 0 ? "text-[var(--erp-danger)]" : i === 6 ? "text-[var(--erp-primary)]" : "text-[var(--erp-text-muted)]"}`}
-            >
-              {w}
-            </div>
-          ))}
-        </div>
+        <CalendarWeekdays />
 
-        <div className="relative grid grid-cols-7 gap-1">
+        <div className="erp-cal-grid">
           {weeks.map((week, wi) =>
             week.map((cell, di) => {
               if (!cell) {
@@ -1013,17 +993,6 @@ export function DashboardCalendar({
               const isToday = cell.dateStr === todayStr;
               const isSelected = cell.dateStr === selected;
               const holidayName = getHolidayName(cell.dateStr);
-              const isSunday = di === 0;
-              const isSaturday = di === 6;
-              const dayColorClass = isSelected
-                ? "text-white"
-                : holidayName
-                  ? "text-[var(--erp-danger)] font-semibold"
-                  : isSunday
-                    ? "text-[var(--erp-danger)]"
-                    : isSaturday
-                      ? "text-[var(--erp-primary)]"
-                      : "text-[var(--erp-text)]";
               // 칸 안의 띠(매출·매입·할 일·일정·재고 부족·메모·이월) — 넓으면 글자로, 좁은 칸·모바일은 점으로 보인다.
               const bands = buildDayBands(data, { lowStockCount: isToday && lowStockToday ? (lowStock?.length ?? 1) : 0 });
               const counts = buildDayCounts(data, { lowStockCount: isToday && lowStockToday ? (lowStock?.length ?? 1) : 0 });
@@ -1042,7 +1011,7 @@ export function DashboardCalendar({
                   }}
                   className={`erp-cal-cell${isSelected ? " is-selected" : isToday ? " is-today" : ""}`}
                 >
-                  <div className={dayColorClass}>{cell.day}</div>
+                  <div className={calDayClass(di, !!holidayName)}>{cell.day}</div>
                   {holidayName ? <div className="erp-cal-holiday">{holidayName}</div> : null}
                   <div className="erp-cal-rich">
                     {calMode === "count"
@@ -1071,13 +1040,7 @@ export function DashboardCalendar({
           )}
         </div>
 
-        <div className="mt-3 flex flex-wrap gap-4 text-xs text-[var(--erp-text-muted)]">
-          {CAL_LEGEND.map(([kind, label]) => (
-            <span key={kind} className="flex items-center gap-1">
-              <span className={`erp-cal-dot is-${kind}`} /> {label}
-            </span>
-          ))}
-        </div>
+        <CalendarLegend items={CAL_LEGEND} />
         {todoTruncated && <p className="erp-u-muted erp-u-text-caption erp-u-mt-8">이번 달 할 일이 많아 일부만 띠로 표시됩니다. 전체는 할일관리에서 확인하세요.</p>}
 
         </div>

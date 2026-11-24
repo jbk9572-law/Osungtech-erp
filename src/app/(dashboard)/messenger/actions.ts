@@ -158,7 +158,7 @@ async function buildFollowupRef(supabase: Supa, arg: string): Promise<MessengerE
 }
 
 export type SendMessageState =
-  | { error?: string; success?: string; message?: MessengerMessage }
+  | { error?: string; success?: string; notice?: string; message?: MessengerMessage }
   | undefined;
 
 export async function sendMessage(
@@ -234,6 +234,9 @@ export async function sendMessage(
   // 메시지로 보낸다.
   const erpRef = await buildErpRef(supabase, content);
   const storedContent = erpRef ? "" : content;
+  // 명령어로 보냈는데 해당 전표·품목을 못 찾은 경우 — 평문으로 보내되 조용히 넘어가지 않고 알려준다
+  const usedCommand = ERP_COMMANDS.find((c) => content === c || content.startsWith(`${c} `));
+  const notice = usedCommand && !erpRef ? `${usedCommand}에 맞는 항목을 찾지 못해 일반 메시지로 보냈습니다. 입력 형식을 확인하세요.` : undefined;
 
   const { data: inserted, error } = await supabase
     .from("messenger_messages")
@@ -257,7 +260,7 @@ export async function sendMessage(
 
   await notifyChannelMembers(supabase, user.id, channelId, erpRef ? erpRef.title : content, hasFile);
 
-  return { success: "전송했습니다.", message: inserted as unknown as MessengerMessage };
+  return { success: "전송했습니다.", notice, message: inserted as unknown as MessengerMessage };
 }
 
 // DM/그룹방에만 알림을 보낸다 — "전체" 채널은 테넌트 전원이 참여자라

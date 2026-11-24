@@ -21,7 +21,7 @@ import { useConfirmTwice } from "@/lib/use-confirm-twice";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import { ListPageHeader } from "@/components/erp/page-header";
 import { PaperclipIcon, SendIcon } from "@/components/erp/groupware-icons";
-import { ErpRefCard, MessengerAttachmentBlock, highlightText } from "@/components/erp/messenger/parts";
+import { ErpRefCard, MessengerAttachmentBlock, highlightText, MessengerCommandBar, commandHintFor, DEFAULT_COMPOSER_HINT } from "@/components/erp/messenger/parts";
 import { StateView } from "@/components/erp/state-view";
 import { ChannelAvatar, channelLabel } from "@/components/erp/messenger-channel";
 
@@ -29,16 +29,6 @@ export type { MessengerMessage };
 
 const MESSAGE_COLUMNS = "id, channel_id, sender_id, content, file_url, file_path, file_name, file_size, erp_ref, created_at";
 
-// 메신저 목업의 하단 빠른명령 바(/매출전표 /재고조회 /게시판공지
-// /일정마감) — 누르면 입력창에 명령어만 채워주고, 뒤에 전표번호/
-// 품목명 등을 마저 타이핑해서 보내면 actions.ts의 sendMessage가
-// 실제 데이터를 조회해 카드로 바꿔준다.
-const ERP_COMMANDS = [
-  { prefix: "/매출전표", label: "매출전표" },
-  { prefix: "/재고조회", label: "재고조회" },
-  { prefix: "/게시판공지", label: "게시판공지" },
-  { prefix: "/일정마감", label: "일정마감" },
-] as const;
 
 // 채팅방 행의 시각 — 오늘이면 시각, 아니면 월/일
 function formatRowTime(iso: string): string {
@@ -107,6 +97,9 @@ export function MessengerPage({
   const [unseenChannelIds, setUnseenChannelIds] = useState<Set<string>>(new Set());
   const [loadingChannel, setLoadingChannel] = useState(false);
   const [sendError, setSendError] = useState<string | undefined>();
+  const [sendNotice, setSendNotice] = useState<string | undefined>();
+  // 명령 버튼을 누르면 입력창 안내 문구가 그 명령의 입력 형식으로 바뀐다(보낸 뒤엔 원래대로)
+  const [commandHint, setCommandHint] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | undefined>();
   const [channelError, setChannelError] = useState<string | undefined>();
   const confirmDelete = useConfirmTwice<string>();
@@ -289,6 +282,8 @@ export function MessengerPage({
         return;
       }
       setSendError(undefined);
+      setSendNotice(result?.notice);
+      setCommandHint(null);
       formRef.current?.reset();
       setHasAttachment(false);
       setComposerKey((k) => k + 1);
@@ -357,6 +352,7 @@ export function MessengerPage({
     const el = composerRef.current;
     if (!el) return;
     el.value = el.value.trim() ? `${el.value.trim()} ${prefix} ` : `${prefix} `;
+    setCommandHint(commandHintFor(prefix));
     el.focus();
     el.setSelectionRange(el.value.length, el.value.length);
   }
@@ -452,9 +448,11 @@ export function MessengerPage({
     []
   );
 
+  // 필터 칩 "전체"(모든 대화방)와 이름이 겹치지 않게, 전체 공지방은 "전체 대화방"으로 부른다
+  const roomLabel = (c: MessengerChannel) => channelLabel(c, profileNames, currentUserId, "전체 대화방");
   const headerTitle =
     view === "chat" && activeChannel
-      ? `그룹웨어 > 메신저 > ${channelLabel(activeChannel, profileNames, currentUserId)}`
+      ? `그룹웨어 > 메신저 > ${roomLabel(activeChannel)}`
       : "그룹웨어 > 메신저";
   const isDrilledIn = view === "chat" || view === "newGroup";
   // split3-shell 공용 모바일 규칙은 "list"(카테고리+목록)/"detail" 2단만
@@ -559,7 +557,7 @@ export function MessengerPage({
                 </span>
                 <span className="erp-messenger-row-text">
                   <span className="erp-messenger-row-top">
-                    <span className="erp-messenger-row-name">{channelLabel(c, profileNames, currentUserId)}</span>
+                    <span className="erp-messenger-row-name">{roomLabel(c)}</span>
                     {c.lastMessage && <span className="erp-messenger-row-time">{formatRowTime(c.lastMessage.at)}</span>}
                   </span>
                   {c.lastMessage?.text && <span className="erp-messenger-row-preview">{c.lastMessage.text}</span>}
@@ -621,7 +619,7 @@ export function MessengerPage({
                   <div className="erp-messenger-chat-header">
                     <ChannelAvatar channel={activeChannel} profileNames={profileNames} currentUserId={currentUserId} size={36} />
                     <span className="erp-messenger-chat-header-text">
-                      <span className="erp-messenger-chat-header-name">{channelLabel(activeChannel, profileNames, currentUserId)}</span>
+                      <span className="erp-messenger-chat-header-name">{roomLabel(activeChannel)}</span>
                       {activeChannel.type !== "dm" && <span className="erp-messenger-chat-header-sub">멤버 {activeChannel.memberIds.length}명</span>}
                     </span>
                     <button type="button" className="erp-btn erp-btn-sm" aria-pressed={showSearch} onClick={() => setShowSearch((v) => !v)}>
@@ -741,24 +739,13 @@ export function MessengerPage({
                     )}
                   </div>
 
-                  <div className="erp-messenger-command-bar">
-                    {ERP_COMMANDS.map((cmd) => (
-                      <button
-                        key={cmd.prefix}
-                        type="button"
-                        className="erp-messenger-command-btn"
-                        onClick={() => insertCommand(cmd.prefix)}
-                      >
-                        {cmd.prefix}
-                      </button>
-                    ))}
-                  </div>
+                  <MessengerCommandBar onPick={insertCommand} />
 
                   <form ref={formRef} action={handleSend} className="erp-messenger-composer">
                     <textarea
                       ref={composerRef}
                       name="content"
-                      placeholder="메시지 입력 또는 명령어(/) 입력 (Enter: 전송)"
+                      placeholder={commandHint ?? DEFAULT_COMPOSER_HINT}
                       rows={2}
                       className="erp-input erp-u-flex-1 erp-messenger-textarea"
                       style={{ resize: "none" }}
@@ -802,6 +789,11 @@ export function MessengerPage({
                       </button>
                     </div>
                   </form>
+                  {sendNotice && !sendError && (
+                    <p className="erp-u-muted erp-u-text-sm" style={{ padding: "0 12px 8px" }}>
+                      {sendNotice}
+                    </p>
+                  )}
                   {sendError && (
                     <p className="erp-u-danger erp-u-text-sm" style={{ padding: "0 12px 8px" }}>
                       {sendError}

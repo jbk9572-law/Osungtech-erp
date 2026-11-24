@@ -1,3 +1,4 @@
+import { InventorySubTabs } from "@/components/erp/inventory-sub-tabs";
 import { withPageTiming } from "@/lib/page-timing";
 import Link from "next/link";
 import { GuardedLink } from "@/components/erp/guarded-link";
@@ -54,6 +55,7 @@ async function InventoryPage({
           </>
         }
       />
+      <InventorySubTabs />
       <PageGuide>
         재고 수량은 매입(입고) · 매출(출고) · 재고 조정 내역의 합으로 자동 계산됩니다. 직접 수량을
         바꿀 수는 없고, 기초재고를 등록할 때는 아래 재고 조정을, 전체 품목을 한 번에 실사해 맞출

@@ -1,8 +1,10 @@
+import { InventorySubTabs } from "@/components/erp/inventory-sub-tabs";
 import Link from "next/link";
 import { GuardedLink } from "@/components/erp/guarded-link";
 import { createClient } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ListPageHeader, FormSection } from "@/components/erp/page-header";
+import { ToolbarKey } from "@/components/erp/list-toolbar";
 import { PageGuide } from "@/components/erp/page-guide";
 import { InlineConfirmDelete } from "@/components/inline-confirm-delete";
 import { WarehouseForm } from "@/components/warehouse-form";
@@ -68,12 +70,18 @@ export default async function WarehousesPage({
         title="재고관리 > 창고"
         actions={
           listFrameV2 ? (
-            <GuardedLink href="/inventory/warehouses/new" className="erp-btn erp-btn-primary">
-              새 창고
-            </GuardedLink>
+            <>
+              <GuardedLink href="/inventory/warehouses/new" className="erp-btn erp-btn-primary">
+                새 창고
+              </GuardedLink>
+              <GuardedLink href="/inventory/transfers/new" className="erp-btn">
+                창고 이동 등록<ToolbarKey>F2</ToolbarKey>
+              </GuardedLink>
+            </>
           ) : undefined
         }
       />
+      <InventorySubTabs />
 
       <PageGuide>
         창고를 2개 이상 등록해야 창고 간 이동을 등록할 수 있습니다. 창고를
@@ -105,7 +113,7 @@ export default async function WarehousesPage({
                         action={deleteWarehouse}
                         hiddenFields={{ id: w.id }}
                         warningText="이 창고를 삭제하시겠습니까? 재고/전표에서 쓰이고 있으면 삭제가 거부됩니다."
-                        triggerStyle={{ minWidth: 0, height: 22, padding: "0 8px", fontSize: 11 }}
+                        triggerClassName="erp-btn erp-btn-danger erp-btn-xs"
                       />
                     </td>
                   </tr>
@@ -129,7 +137,7 @@ export default async function WarehousesPage({
                     action={deleteWarehouse}
                     hiddenFields={{ id: w.id }}
                     warningText="이 창고를 삭제하시겠습니까? 재고/전표에서 쓰이고 있으면 삭제가 거부됩니다."
-                    triggerStyle={{ minWidth: 0, height: 22, padding: "0 8px", fontSize: 11 }}
+                    triggerClassName="erp-btn erp-btn-danger erp-btn-xs"
                   />
                 </div>
                 <p className="erp-u-muted erp-u-text-sm erp-u-m-0">
@@ -144,11 +152,13 @@ export default async function WarehousesPage({
 
       <div className="erp-u-mt-14">
         <FormSection tabLabel={`창고 이동 이력 (${transfers.length})`}>
-          <div className="erp-u-flex erp-u-mb-10 erp-u-justify-end">
-            <GuardedLink href="/inventory/transfers/new" className="erp-btn erp-btn-primary">
-              창고 이동 등록
-            </GuardedLink>
-          </div>
+          {!listFrameV2 && (
+            <div className="erp-u-flex erp-u-mb-10 erp-u-justify-end">
+              <GuardedLink href="/inventory/transfers/new" className="erp-btn erp-btn-primary">
+                창고 이동 등록
+              </GuardedLink>
+            </div>
+          )}
 
           <DateRangeQuickFilters
             basePath="/inventory/warehouses"

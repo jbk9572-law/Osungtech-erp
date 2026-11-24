@@ -142,7 +142,6 @@
 .erp-u-mb-s4 { margin-bottom: var(--erp-space-4) !important; }
 .erp-u-mb-s5 { margin-bottom: var(--erp-space-5) !important; }
 .erp-u-minw-0 { min-width: 0 !important; }
-.erp-u-ml-16 { margin-left: 16px !important; }
 .erp-u-ml-20 { margin-left: 20px !important; }
 .erp-u-ml-4 { margin-left: 4px !important; }
 .erp-u-ml-6 { margin-left: 6px !important; }
@@ -182,7 +181,6 @@
 .erp-u-pad-2-10 { padding: 2px 10px !important; }
 .erp-u-pad-2-6 { padding: 2px 6px !important; }
 .erp-u-pad-2-8 { padding: 2px 8px !important; }
-.erp-u-pad-3-8 { padding: 3px 8px !important; }
 .erp-u-pad-4-12 { padding: 4px 12px !important; }
 .erp-u-pad-4-2 { padding: 4px 2px !important; }
 .erp-u-pad-4-6 { padding: 4px 6px !important; }
@@ -672,8 +670,8 @@
   --erp-radius-circle: 50%;
   --erp-radius-pill: 999px;
   /* 그룹웨어(할일·메일·공지·게시판) B형 — 시안은 평평한 띠/행(둥근 떠 있는 카드 아님). 말풍선(메신저)은 그대로. */
-  --erp-split3-gap: 0px;
-  --erp-split3-overlap: 1px;
+  --erp-split3-gap: var(--erp-space-4); /* 칸 사이 여백(붙지 않게) */
+  --erp-split3-overlap: 0px;
   --erp-comm-radius: 0;
   --erp-comm-radius-row: 0;
   --erp-comm-radius-pill: var(--erp-radius-md);
@@ -3410,8 +3408,11 @@ form.erp-field-grid {
   color: var(--erp-text);
 }
 
-.erp-richtext-content .ProseMirror {
-  outline: none;
+.erp-richtext-content .ProseMirror,
+.erp-richtext-content.ProseMirror,
+.erp-richtext-content:focus,
+.erp-richtext-content:focus-visible {
+  outline: none; /* 바깥 .erp-richtext가 포커스 링을 그린다 — 안쪽 상자에 또 그리면 박스 안 박스 */
   min-height: inherit;
 }
 
@@ -4699,19 +4700,7 @@ a.erp-detail-tab:hover:not(.active) {
   border-radius: var(--erp-comm-radius-pill);
 }
 
-/* 결재선/기안서 작성폼의 조직도 선택기(org-chart-approver-picker.tsx) —
-   입력칸은 pill인데 트리 선택행·선택된 사람 칩은 인라인 style로 각진
-   테두리를 그대로 쓰고 있어 한 폼 안에서 모서리 톤이 깨져 있었다
-   (사용자 지적 — "선택된상자는 여전히 다 네모네모"). 이 컴포넌트는
-   그리드 화면(지급결의/구매요청 등)에서도 공유해서 쓰므로 전역이 아니라
-   .erp-comm-shell 스코프 안에서만 둥글린다. */
-.erp-comm-shell .org-picker-tree,
-.erp-comm-shell .org-picker-row,
-.erp-comm-shell .org-picker-chip {
-  border-radius: var(--erp-comm-radius-row);
-}
-
-/* 기안 상세의 결재자 순서 칩(1. 홍길동 [대기])도 org-picker-chip과
+/* 기안 상세의 결재자 순서 칩(1. 홍길동 [대기])도 결재자 선택 칩과
    똑같이 rounded-sm(2px)+각진 테두리를 인라인으로 직접 조립하고
    있었다 — 옆에 붙는 상태 뱃지(.erp-badge)는 완전한 필(999px)인데
    칩 자체는 거의 각져 보여서 안 어울렸다(사용자 스크린샷 지적).
@@ -5361,7 +5350,8 @@ a.erp-detail-tab:hover:not(.active) {
 }
 .erp-colmenu-list {
   position: absolute;
-  right: 0;
+  left: 0; /* 버튼 왼쪽 끝에 맞춰 펼친다 — 버튼이 왼쪽에 있어도 화면 밖/옆 요소 위로 밀리지 않게 */
+  max-width: min(320px, calc(100vw - 24px));
   z-index: 20;
   min-width: 160px;
   margin-top: 4px;
@@ -6847,9 +6837,9 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
     min-width: 36px;
   }
 
-  .org-picker-row,
-  .org-picker-toggle {
-    min-height: 40px;
+  .erp-org-picker-person,
+  .erp-org-picker-dept {
+    min-height: 40px; /* 터치 타겟 */
   }
 
   .erp-voucher-chip-input {
@@ -7400,6 +7390,255 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   pointer-events: none;
 }
 
+/* 달력 공용 조각(CalendarNav·CalendarWeekdays·CalendarLegend) — 캘린더 페이지와 대시보드 달력 위젯이 같이 쓴다 */
+.erp-cal-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--erp-space-3);
+  margin-bottom: var(--erp-space-4);
+}
+.erp-cal-title {
+  font-size: var(--erp-font-md);
+  font-weight: 700;
+  color: var(--erp-text);
+}
+.erp-cal-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--erp-space-2);
+}
+.erp-cal-weekdays,
+.erp-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--erp-space-1);
+}
+.erp-cal-weekdays > span {
+  padding: var(--erp-space-1) 0;
+  text-align: center;
+  font-size: var(--erp-font-xs);
+  color: var(--erp-text-muted);
+}
+.erp-cal-weekdays > .is-sun,
+.erp-cal-day.is-sun,
+.erp-cal-day.is-holiday {
+  color: var(--erp-danger);
+}
+.erp-cal-weekdays > .is-sat,
+.erp-cal-day.is-sat {
+  color: var(--erp-primary);
+}
+.erp-cal-day.is-holiday {
+  font-weight: 600;
+}
+.erp-cal-cell.is-selected .erp-cal-day {
+  color: var(--erp-on-primary);
+}
+.erp-cal-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--erp-space-2) var(--erp-space-5);
+  margin-top: var(--erp-space-4);
+  font-size: var(--erp-font-xs);
+  color: var(--erp-text-muted);
+}
+.erp-cal-legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--erp-space-1);
+}
+/* 화면 안 탭 줄(InventorySubTabs) — 같은 업무 묶음의 화면을 탭으로 오간다. 활성 탭은 아래 파란 선 */
+.erp-subtabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--erp-space-1);
+  margin-bottom: var(--erp-space-4);
+  border-bottom: 1px solid var(--erp-border-strong);
+}
+.erp-subtab {
+  padding: var(--erp-space-3) var(--erp-space-5);
+  margin-bottom: -1px;
+  border-bottom: 2px solid transparent;
+  font-size: var(--erp-font-md);
+  color: var(--erp-text-muted);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.erp-subtab:hover {
+  color: var(--erp-text);
+}
+.erp-subtab.active {
+  border-bottom-color: var(--erp-primary);
+  color: var(--erp-primary);
+  font-weight: 700;
+}
+
+/* 결재자·참조자 선택기(OrgChartApproverPicker) — 같은 폭의 두 칸: 조직도 | 선택 결과. 기안서·결재선 등록·수정이 같이 쓴다 */
+.erp-org-picker {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--erp-space-4);
+  width: 100%;
+}
+.erp-org-picker-pane {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid var(--erp-border-strong);
+  border-radius: var(--erp-radius-xl);
+  background: var(--erp-panel);
+  overflow: hidden;
+}
+.erp-org-picker-pane-head {
+  border-radius: 0; /* 바깥 칸(.erp-org-picker-pane)이 둥글기·잘라내기를 가진다 */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--erp-space-3);
+  padding: var(--erp-space-3) var(--erp-space-4);
+  background: var(--erp-bg-subtle);
+  border-bottom: 1px solid var(--erp-border);
+  font-size: var(--erp-font-sm);
+}
+.erp-org-picker-body {
+  height: 280px;
+  padding: var(--erp-space-3);
+  overflow-y: auto;
+}
+.erp-org-picker-sub {
+  margin-left: var(--erp-space-5);
+}
+.erp-org-picker-dept,
+.erp-org-picker-person {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: var(--erp-space-1) var(--erp-space-2);
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--erp-radius-md);
+  font: inherit;
+  font-size: var(--erp-font-sm);
+  color: var(--erp-text);
+  text-align: left;
+  cursor: pointer;
+}
+.erp-org-picker-dept {
+  gap: var(--erp-space-1);
+  font-weight: 700;
+}
+.erp-org-picker-person {
+  justify-content: space-between;
+}
+.erp-org-picker-person:hover {
+  background: var(--erp-hover);
+}
+.erp-org-picker-person.is-selected {
+  background: var(--erp-selected);
+  border-color: var(--erp-primary);
+}
+.erp-org-picker-label {
+  margin: var(--erp-space-2) 0 var(--erp-space-1);
+  font-size: var(--erp-font-xs);
+  font-weight: 700;
+  color: var(--erp-text-muted);
+}
+.erp-org-picker-label:first-child {
+  margin-top: 0;
+}
+.erp-org-picker-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--erp-space-1);
+}
+.erp-org-picker-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--erp-space-2);
+  padding: var(--erp-space-1) var(--erp-space-2);
+  border: 1px solid var(--erp-border);
+  border-radius: var(--erp-radius-md);
+  font-size: var(--erp-font-sm);
+}
+@media (max-width: 768px) {
+  .erp-org-picker {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .erp-org-picker-body {
+    height: 220px;
+  }
+}
+
+/* 캘린더 페이지: 왼쪽 달력 | 오른쪽 선택한 날 목록(G형) — 두 칸 모두 같은 카드 */
+.erp-cal-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: var(--erp-space-4);
+  align-items: start;
+}
+.erp-cal-card {
+  container-type: inline-size; /* 좁은 카드(모바일)에서는 날짜 칸이 일정 이름 대신 점으로 — .erp-cal-cell 컨테이너 규칙 */
+  min-width: 0;
+  padding: var(--erp-space-5);
+  background: var(--erp-panel);
+  border: 1px solid var(--erp-border-strong);
+  border-radius: var(--erp-radius-xl);
+}
+.erp-cal-card > h3 {
+  margin-bottom: var(--erp-space-3);
+  font-size: var(--erp-font-md);
+  font-weight: 700;
+  color: var(--erp-text);
+}
+.erp-cal-side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--erp-space-4);
+  min-width: 0;
+}
+.erp-cal-event-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--erp-space-2);
+}
+.erp-cal-event {
+  border-radius: var(--erp-radius-md, 0);
+  padding: var(--erp-space-3);
+  background: var(--erp-bg-subtle);
+  border-left: 3px solid var(--erp-primary);
+  font-size: var(--erp-font-sm);
+}
+.erp-cal-event.is-leave {
+  border-left-color: var(--erp-warning);
+}
+.erp-cal-event-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--erp-space-2);
+  font-weight: 600;
+  color: var(--erp-text);
+}
+.erp-cal-event-meta {
+  margin-top: var(--erp-space-1);
+  color: var(--erp-text-muted);
+  white-space: pre-wrap;
+}
+@media (max-width: 1023px) {
+  .erp-cal-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 .erp-cal-main {
   position: relative;
   min-width: 0;
@@ -7451,6 +7690,8 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
 .erp-cal-chip.is-purchase { border-left-color: var(--erp-primary); background: var(--erp-info-bg); }
 .erp-cal-chip.is-todo { border-left-color: var(--erp-warning); background: var(--erp-warning-bg); }
 .erp-cal-chip.is-stock { border-left-color: var(--erp-danger); background: var(--erp-danger-bg, var(--erp-hover)); }
+.erp-cal-chip.is-meeting { border-left-color: var(--erp-primary); background: var(--erp-info-bg); }
+.erp-cal-chip.is-leave { border-left-color: var(--erp-warning); background: var(--erp-warning-bg); }
 .erp-cal-chip.is-note { border-left-color: var(--erp-text-muted); background: var(--erp-bg-subtle); }
 .erp-cal-chip.is-carry { border-left-color: var(--erp-text-muted); background: var(--erp-bg-subtle); }
 /* 건수 모드 한 줄 — "매출 ........ 3건" (종류별 색 띠, 업체명 없이 건수만) */
@@ -7483,6 +7724,8 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
 .erp-cal-dot.is-purchase { background: var(--erp-primary); }
 .erp-cal-dot.is-todo { background: var(--erp-warning); }
 .erp-cal-dot.is-stock { background: var(--erp-danger); }
+.erp-cal-dot.is-meeting { background: var(--erp-primary); }
+.erp-cal-dot.is-leave { background: var(--erp-warning); }
 .erp-cal-dot.is-note, .erp-cal-dot.is-carry { background: var(--erp-text-muted); }
 .erp-cal-cell.is-selected .erp-cal-dot { background: var(--erp-on-primary); }
 
@@ -8860,7 +9103,8 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
     margin-left: 0;
   }
 
-  .erp-listtoolbar .erp-colmenu {
+  /* 열 설정(<details>)만 숨긴다 — 같은 클래스를 쓰는 [신규 ▾] 같은 묶음 메뉴(ToolbarMenu)는 모바일에서도 보여야 한다 */
+  .erp-listtoolbar details.erp-colmenu {
     display: none;
   }
 
@@ -9048,14 +9292,15 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
 }
 
 .erp-chrome-modern .erp-tree-group {
-  border-bottom: none;
+  border-bottom: 1px solid var(--erp-border);
+  padding-bottom: var(--erp-space-2);
 }
 
 .erp-chrome-modern .erp-tree-group-label {
   height: auto;
-  padding: 9px 12px 3px;
+  padding: 9px 12px 7px;
   gap: 4px;
-  background: transparent;
+  background: var(--erp-bg-subtle); /* 그룹 머리를 띠로 — 하위 항목과 확실히 구분 */
   font-size: var(--erp-tree-group-size);
   font-weight: 700;
   letter-spacing: 0;
@@ -9071,7 +9316,7 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   border-radius: 0;
   font-size: var(--erp-tree-item-size);
   font-weight: 400;
-  color: var(--erp-text-muted);
+  color: var(--erp-text);
 }
 
 .erp-chrome-modern .erp-tree-item.active {
@@ -9503,18 +9748,31 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   position: sticky;
   top: 0;
   z-index: 5;
-  margin: 0 0 var(--erp-space-2);
-  padding: var(--erp-space-2) 0;
-  background: var(--erp-bg);
-  border-bottom: 0;
-}
-
-/* 새 목록 틀: 표 부품이 직접 그리는 검색 줄(.erp-filter-box)도 검색 박스 한 모양으로 */
-.erp-frame-v2 .erp-filter-box {
-  padding: var(--erp-space-2) var(--erp-space-3);
+  margin: 0 0 var(--erp-space-3);
+  /* 검색 박스와 같은 박스 한 모양(흰 배경·테두리·둥글기) + 위아래·좌우 여유 */
+  padding: var(--erp-space-4) var(--erp-space-4);
   background: var(--erp-panel);
   border: 1px solid var(--erp-border-strong);
   border-radius: var(--erp-radius-xl);
+}
+
+/* 도구 줄 안의 검색 — 상태 문구 오른쪽, 줄의 맨 오른쪽 끝에 한 줄로(박스는 도구 줄이 가지므로 검색 자체 박스는 벗긴다) */
+.erp-listtoolbar-search {
+  flex: 0 1 360px;
+  min-width: 0;
+}
+.erp-listtoolbar-search .erp-party-search {
+  max-width: none;
+  margin-left: 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
+}
+@media (max-width: 768px) {
+  .erp-listtoolbar-search {
+    flex: 1 1 100%;
+  }
 }
 
 /* 모던 틀: 목록 아래 빈 공간 채움 안내의 "새 ○○" 버튼은 도구 줄 [신규]와 겹치므로 그리지 않는다(R-007) — 글만 남긴다 */
@@ -9638,10 +9896,11 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
 }
 
 /* ── 메신저 2열(예외 변형 messenger-split, design/EXCEPTIONS.md): 왼쪽 목록 300px | 오른쪽 대화 ── */
-/* 메신저 2열 틀 — 3분할(.erp-split3-shell)이 아니라 이 변형 전용 틀이다. 열 사이 겹침·간격 없음 */
+/* 메신저 2열 틀 — 3분할(.erp-split3-shell)이 아니라 이 변형 전용 틀이다. 열 사이 간격은 3분할과 같은 토큰 */
 .erp-messenger-shell {
   display: grid;
   grid-template-columns: 300px minmax(0, 1fr);
+  gap: var(--erp-split3-gap);
   align-items: stretch;
   min-height: 0;
   flex: 1;
@@ -9728,21 +9987,6 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   font-family: ui-monospace, "SF Mono", monospace;
 }
 
-/* 안내 박스 접기: "안내" 한 줄 + 펼치면 전문 — 화면마다 길던 안내를 같은 높이로 맞춘다(R-012) */
-.erp-page-guide-fold > summary {
-  cursor: pointer;
-  list-style: none;
-  font-weight: 600;
-}
-.erp-page-guide-fold > summary::-webkit-details-marker {
-  display: none;
-}
-.erp-page-guide-fold > summary::before {
-  content: "ⓘ ";
-}
-.erp-page-guide-fold-body {
-  margin-top: var(--erp-space-1);
-}
 /* 빈 상세 패널은 행을 고르기 전에는 그리지 않는다 — 표가 그 폭만큼 넓어진다 */
 .erp-chrome-modern .erp-detail-side:has(> .erp-detail-side-empty) {
   display: none;

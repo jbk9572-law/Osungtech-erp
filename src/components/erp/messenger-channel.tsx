@@ -2,8 +2,8 @@ import type { MessengerChannel } from "@/lib/messenger-types";
 import { ChatIcon, GroupIcon } from "@/components/erp/groupware-icons";
 
 // 메신저 채널의 이름표·아바타 — 메신저 화면의 큰 파일에서 분리한 표시용 조각.
-export function channelLabel(channel: MessengerChannel, profileNames: Record<string, string>, currentUserId: string): string {
-  if (channel.type === "all") return "전체";
+export function channelLabel(channel: MessengerChannel, profileNames: Record<string, string>, currentUserId: string, allLabel = "전체"): string {
+  if (channel.type === "all") return allLabel;
   if (channel.type === "group") return channel.name ?? "그룹";
   const otherId = channel.memberIds.find((id) => id !== currentUserId);
   return otherId ? (profileNames[otherId] ?? "구성원") : "DM";

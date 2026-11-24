@@ -1,3 +1,4 @@
+import { InventorySubTabs } from "@/components/erp/inventory-sub-tabs";
 import { formatKstDate, formatKstDateTime } from "@/lib/kst-date";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
@@ -233,6 +234,7 @@ export default async function InventoryCountPage({
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/inventory" } }} />
       <ListPageHeader title="재고관리 > 재고 실사" />
+      <InventorySubTabs />
       <PageGuide>
         전산 재고와 실제 수량을 비교해 맞추고, 지금까지의 실사 이력을 함께 확인합니다.
       </PageGuide>

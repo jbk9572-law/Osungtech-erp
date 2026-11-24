@@ -6,6 +6,7 @@ import { getQuickDatePresets, getYearMonthButtons, defaultListRange } from "@/li
 import { DateRangeQuickFilters } from "@/components/erp/date-range-quick-filters";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ListPageHeader } from "@/components/erp/page-header";
+import { ListSearchForm } from "@/components/erp/list-search-form";
 import { PageGuide } from "@/components/erp/page-guide";
 import { InlineConfirmDelete } from "@/components/inline-confirm-delete";
 import { WorkOrderStatusActions } from "@/components/work-order-status-actions";
@@ -108,30 +109,14 @@ export default async function ProductionPage({
         to={effectiveTo}
       />
 
-      <form method="get" className="erp-field-grid">
-        {from && <input type="hidden" name="from" value={from} />}
-        {to && <input type="hidden" name="to" value={to} />}
-        <div className="erp-field erp-span-12">
-          <label htmlFor="production-search-q">완제품 / 창고 / 메모 검색</label>
-          <input
-            id="production-search-q"
-            type="text"
-            name="q"
-            autoComplete="off"
-            defaultValue={q ?? ""}
-            placeholder="상품명, SKU, 창고, 메모"
-            className="erp-input erp-u-w-full"
-          />
-        </div>
-        <button type="submit" className="erp-btn erp-btn-primary">
-          조회
-        </button>
-        {q && (
-          <Link href="/production" className="erp-btn">
-            초기화
-          </Link>
-        )}
-      </form>
+      <ListSearchForm
+        formId="production-search-form"
+        q={q}
+        placeholder="완제품·SKU·창고·메모 검색"
+        ariaLabel="생산지시 검색"
+        resetHref="/production"
+        hidden={{ ...(from ? { from } : {}), ...(to ? { to } : {}) }}
+      />
 
       <div className="erp-grid-wrap has-card-view">
         <table className="erp-grid">

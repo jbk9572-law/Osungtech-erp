@@ -29,6 +29,7 @@ export function ListActionToolbar({
   total,
   selectedCount,
   dataKey,
+  search,
 }: {
   /** 검색 폼의 id — 있으면 [조회]가 이 폼을 제출한다(없으면 [조회] 버튼을 그리지 않는다). */
   searchFormId?: string;
@@ -49,6 +50,8 @@ export function ListActionToolbar({
   selectedCount: number;
   /** 값이 바뀌면 "조회 시각"을 새로 찍는다(보통 행 배열). */
   dataKey: unknown;
+  /** 한 칸짜리 검색 폼(ListSearchForm) — 도구 줄 맨 오른쪽 끝에 한 줄로 그린다. */
+  search?: ReactNode;
 }) {
   const router = useRouter();
   const { listFrameV2 } = useThemeFeatures();
@@ -73,6 +76,7 @@ export function ListActionToolbar({
 
   return (
     <ListToolbar
+      search={search}
       actions={
         <>
           {searchFormId && !listFrameV2 && (

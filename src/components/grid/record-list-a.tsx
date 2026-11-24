@@ -42,6 +42,7 @@ export function RecordListA({
   newHref,
   newLabel,
   excelHref,
+  search,
 }: {
   columns: RecordColumn[];
   rows: RecordRow[];
@@ -56,6 +57,8 @@ export function RecordListA({
   newLabel: string;
   /** 있으면 도구 줄에 [엑셀](전체 목록 내려받기)이 생긴다. */
   excelHref?: string;
+  /** 한 칸짜리 검색 폼 — 도구 줄 오른쪽 끝에 그린다. */
+  search?: ReactNode;
   bulkDelete?: { action: (state: FormState, formData: FormData) => Promise<FormState>; warningText: string };
 }) {
   const sideSplit = useSideSplit();
@@ -100,6 +103,7 @@ export function RecordListA({
         total={rows.length}
         selectedCount={selected.size}
         dataKey={rows}
+        search={search}
       />
       {bulkDelete && bar && <div id={BULK_DELETE_ANCHOR_ID}>{bar}</div>}
       <div className={sideSplit ? "erp-master-detail" : undefined}>

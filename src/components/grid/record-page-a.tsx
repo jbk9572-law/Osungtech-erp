@@ -13,6 +13,7 @@ export function RecordPageA({
   newLabel,
   searchFormId,
   filters,
+  search,
   columns,
   rows,
   panelAriaLabel,
@@ -29,7 +30,10 @@ export function RecordPageA({
   newLabel: string;
   /** 검색 폼이 있으면 그 id — F5(조회) 단축키가 이 폼을 제출한다. */
   searchFormId?: string;
-  filters: ReactNode;
+  /** 검색 줄 위에 놓는 안내·기간 조건 등. 한 칸짜리 검색은 search로 — 도구 줄 오른쪽 끝에 놓인다. */
+  filters?: ReactNode;
+  /** 한 칸짜리 검색 폼(ListSearchForm) — 도구 줄 오른쪽 끝. */
+  search?: ReactNode;
   columns: RecordColumn[];
   rows: RecordRow[];
   panelAriaLabel: string;
@@ -65,6 +69,7 @@ export function RecordPageA({
         newHref={newHref ?? `${basePath}/new`}
         newLabel={newLabel}
         excelHref={excelHref}
+        search={search}
       />
       {hasMore && (
         <div className="erp-u-p-8">

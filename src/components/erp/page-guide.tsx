@@ -1,4 +1,3 @@
-import { PageGuideFold } from "@/components/erp/page-guide-fold";
 export type PageGuideTone = "info" | "warning" | "danger" | "success";
 
 const TONE_STYLE: Record<PageGuideTone, { background: string; color: string; border: string }> = {
@@ -43,8 +42,8 @@ export function PageGuide({
   // 땐 기본 마진을 아예 빼고 className 쪽만 적용한다.
   const hasMarginOverride = /\bm[bty]?-\d/.test(className);
   return (
-    <PageGuideFold tone={tone} className={`${hasMarginOverride ? "" : "mb-4"} erp-page-guide p-2 text-xs ${className}`} style={TONE_STYLE[tone]}>
+    <div className={`${hasMarginOverride ? "" : "mb-4"} erp-page-guide p-2 text-xs ${className}`} style={TONE_STYLE[tone]}>
       {children}
-    </PageGuideFold>
+    </div>
   );
 }
