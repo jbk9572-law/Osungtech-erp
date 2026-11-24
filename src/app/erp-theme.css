@@ -437,6 +437,11 @@
   /* 화면 아래에 붙는 패널(OrderBottomPanel)이 위쪽으로 드리우는 그림자 — 테마 블록에서 같은 이름으로 덮어쓴다 */
   --erp-shadow-up: 0 -4px 12px rgba(32, 28, 43, 0.08);
   --erp-shadow-float: 0 6px 16px rgba(32, 28, 43, 0.16);
+  /* 깊이 3단계(바닥 / 카드 / 떠 있는 것) — 클래식은 지금 모양 그대로(바닥=기존 색, 카드 그림자 없음), 모던은 아래 모던 블록에서 값을 준다 */
+  --erp-page-bg: var(--erp-panel);
+  --erp-chrome-bg: var(--erp-bg-subtle);
+  --erp-chrome-bg-deep: var(--erp-bg-subtle);
+  --erp-card-shadow: none;
   /* 게시판/메신저/메일함("커뮤니케이션 서피스") 전용 토큰 — 그 외
      화면은 전부 각진 모서리(border-radius:0) 그리드 스타일을 그대로
      쓰고, 이 3개 화면만 카드/말풍선에 둥근 모서리+그림자를 쓴다(사용자
@@ -578,13 +583,17 @@
   --erp-carry-next-bg: #efeaff;
   --erp-carry-next-border: #d6c9f0;
   --erp-carry-next-bar: #7c5cd6;
-  --erp-tabbar-bg: #eceff4;
+  --erp-tabbar-bg: #e9edf3;
   --erp-tab-bg: #e1e5ec;
   --erp-tree-badge-border: #d3d8e0;
   --erp-shadow-sm: 0 1px 2px rgba(30, 45, 80, 0.06);
   --erp-shadow-md: 0 4px 14px rgba(30, 45, 80, 0.1);
   --erp-shadow-lg: 0 8px 24px rgba(30, 45, 80, 0.16);
   --erp-shadow-up: 0 -4px 14px rgba(30, 45, 80, 0.1);
+  --erp-page-bg: color-mix(in srgb, #ffffff 97%, #4a6fa5);
+  --erp-chrome-bg: color-mix(in srgb, #ffffff 96%, #4a6fa5);
+  --erp-chrome-bg-deep: color-mix(in srgb, #ffffff 93%, #4a6fa5);
+  --erp-card-shadow: 0 4px 14px rgba(40, 60, 100, 0.07), 0 1px 2px rgba(40, 60, 100, 0.05);
 
   /* 그리드 — 칸이 또렷이 보이되 힘을 뺀 톤(진한 박스·굵은 글씨 없음) */
   --erp-grid-line: #d3d8e0;
@@ -1578,7 +1587,7 @@ html:has(.erp) body {
   width: 240px;
   display: flex;
   flex-direction: column;
-  background: var(--erp-bg-subtle);
+  background: var(--erp-chrome-bg);
   border-right: 1px solid var(--erp-border);
   transition:
     width 0.15s ease,
@@ -1600,7 +1609,7 @@ html:has(.erp) body {
   flex: 0 0 auto;
   padding: 10px 12px;
   border-top: 1px solid var(--erp-border);
-  background: var(--erp-bg-subtle);
+  background: var(--erp-chrome-bg-deep);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -1653,7 +1662,7 @@ html:has(.erp) body {
   justify-content: center;
   border: none;
   border-bottom: 1px solid var(--erp-border);
-  background: var(--erp-bg-subtle);
+  background: var(--erp-chrome-bg-deep);
   color: var(--erp-text-muted);
   font-size: var(--erp-font-base);
 }
@@ -1846,7 +1855,7 @@ html:has(.erp) body {
 .erp-page {
   flex: 1;
   overflow-y: auto;
-  background: var(--erp-panel);
+  background: var(--erp-page-bg);
   padding: var(--erp-page-pad);
   /* 메뉴 이동마다(erp-shell.tsx가 pathname을 key로 줘서 매번 새로
      마운트시킨다) 콘텐츠가 뚝 끊기지 않고 살짝 아래에서 떠오르며 자연스럽게
@@ -3660,8 +3669,6 @@ form.erp-field-grid {
 }
 .erp-master-detail-main > .erp-grid-wrap {
   flex: 1 1 auto; /* 표 박스가 남는 높이를 채운다 */
-  /* 행이 끝난 뒤 남는 자리는 옅은 사선 바탕 — 행이 있는 자리(칸 바탕)와 구분되고 "비어 있다"가 아니라 "여기까지 표 영역"으로 읽힌다 */
-  background: repeating-linear-gradient(135deg, var(--erp-bg-subtle) 0 8px, var(--erp-panel) 8px 16px);
 }
 /* 표 박스 바로 뒤의 마감 줄(GridFootBar)이 있으면 박스 아래 모서리를 줄과 이어 붙인다 */
 .erp-master-detail-main > .erp-grid-wrap:has(+ .erp-grid-foot) {
@@ -4084,6 +4091,7 @@ form.erp-field-grid {
   background: var(--erp-panel);
   border: 1px solid var(--erp-border-strong);
   border-radius: var(--erp-radius-xl, 0);
+  box-shadow: var(--erp-card-shadow);
 }
 
 /* overflow: hidden은 일부러 안 준다 — 상세박스 안에 "입고 불러오기" 같은
@@ -4372,6 +4380,7 @@ a.erp-detail-tab:hover:not(.active) {
   border: 1px solid var(--erp-border-strong);
   background: var(--erp-panel);
   border-radius: var(--erp-radius-xl, 0);
+  box-shadow: var(--erp-card-shadow);
 }
 
 .erp-split-list-head {
@@ -4583,6 +4592,7 @@ a.erp-detail-tab:hover:not(.active) {
   background: var(--erp-panel);
   padding: 14px;
   border-radius: var(--erp-radius-xl, 0);
+  box-shadow: var(--erp-card-shadow);
 }
 
 /* 분할뷰 상세 패널에서 아무것도 선택 안 했을 때의 빈 상태 — 메일함/
@@ -4614,7 +4624,7 @@ a.erp-detail-tab:hover:not(.active) {
    일괄 적용한다 — 미선택/선택 상태 둘 다, 화면마다 따로 손대지
    않아도 자동으로 같이 바뀐다. */
 .erp-comm-shell .erp-split-detail {
-  background: var(--erp-bg-subtle);
+  background: var(--erp-panel); /* 목록 칸·가운데 칸과 같은 흰색 — 오른쪽 패널만 회색이던 불균형 제거 */
 }
 
 .erp-split-detail-empty-icon {
@@ -7650,30 +7660,7 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
 }
 
 /* 화면 안 탭 줄(InventorySubTabs) — 같은 업무 묶음의 화면을 탭으로 오간다. 활성 탭은 아래 파란 선 */
-.erp-subtabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--erp-space-1);
-  margin-bottom: var(--erp-space-4);
-  border-bottom: 1px solid var(--erp-border-strong);
-}
-.erp-subtab {
-  padding: var(--erp-space-3) var(--erp-space-5);
-  margin-bottom: -1px;
-  border-bottom: 2px solid transparent;
-  font-size: var(--erp-font-md);
-  color: var(--erp-text-muted);
-  text-decoration: none;
-  white-space: nowrap;
-}
-.erp-subtab:hover {
-  color: var(--erp-text);
-}
-.erp-subtab.active {
-  border-bottom-color: var(--erp-primary);
-  color: var(--erp-primary);
-  font-weight: 700;
-}
+/* .erp-subtabs / .erp-subtab 모양은 파일 맨 아래 "탭 메뉴 한 모양(밑줄형)" 공용 규칙 한 곳에서 정한다 */
 
 /* 결재자·참조자 선택기(OrgChartApproverPicker) — 같은 폭의 두 칸: 조직도 | 선택 결과. 기안서·결재선 등록·수정이 같이 쓴다 */
 .erp-org-picker {
@@ -10388,5 +10375,97 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
 @media (max-width: 768px) {
   .erp-notes-banner {
     flex-wrap: wrap;
+  }
+}
+
+/* 표 박스가 남는 높이를 채우는 목록(master-detail)은 마지막 행 아래가 빈 자리라, 마지막 행도 자기 아래선으로 닫는다(박스 아래 선까지 거리가 떨어져 있으므로) */
+.erp-master-detail-main > .erp-grid-wrap .erp-grid tbody tr:last-child > td {
+  border-bottom: 1px solid var(--erp-grid-line);
+}
+
+/* 탭 메뉴 한 모양(밑줄형) — 화면 안의 모든 탭(재고 하위 탭, 대시보드 할일·리포트 탭, 채팅방|사원, 전표 유형, 플랫폼 관리자 상단 탭)이 같이 쓴다.
+   파란 글씨 + 아래 밑줄이 현재 탭. 모던에서만 적용(클래식은 동결). 새 탭 컴포넌트도 이 규칙에 클래스만 더한다(개발헌법 3번) */
+.erp-subtabs,
+.erp-chrome-modern .erp-todo-tabs,
+.erp-chrome-modern .erp-comm-tabs,
+.erp-chrome-modern .erp-seg[role="tablist"] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--erp-space-1);
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--erp-border-strong);
+  border-radius: 0;
+  overflow: visible;
+}
+.erp-subtab,
+.erp-chrome-modern .erp-todo-tab,
+.erp-chrome-modern .erp-comm-tab,
+.erp-chrome-modern .erp-seg[role="tablist"] > button {
+  display: inline-flex;
+  align-items: center;
+  height: auto;
+  margin: 0 0 -1px;
+  padding: var(--erp-space-3) var(--erp-space-5);
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  box-shadow: none;
+  color: var(--erp-text-muted);
+  font: inherit;
+  font-size: var(--erp-font-md);
+  font-weight: 400;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.erp-subtab:hover,
+.erp-chrome-modern .erp-todo-tab:hover:not(.active),
+.erp-chrome-modern .erp-comm-tab:hover:not(.active),
+.erp-chrome-modern .erp-seg[role="tablist"] > button:hover:not(.active) {
+  background: none;
+  color: var(--erp-text);
+}
+.erp-subtab.active,
+.erp-chrome-modern .erp-todo-tab.active,
+.erp-chrome-modern .erp-comm-tab.active,
+.erp-chrome-modern .erp-seg[role="tablist"] > button.active {
+  background: none;
+  border-bottom-color: var(--erp-primary);
+  box-shadow: none;
+  color: var(--erp-primary);
+  font-weight: 700;
+}
+.erp-chrome-modern .erp-seg[role="tablist"] > button + button {
+  border-left: 0;
+}
+
+.erp-subtabs {
+  margin-bottom: var(--erp-space-4);
+}
+
+/* 하단 상세 패널이 접혔을 때(또는 품목 1건) 머리줄 가운데에 나오는 금액 요약 — 열어 보지 않아도 공급가·세액·합계가 보인다 */
+.erp-detail-bottom-sum {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--erp-space-1) var(--erp-space-4);
+  margin-left: auto;
+  font-size: var(--erp-font-sm);
+  color: var(--erp-text-muted);
+}
+.erp-detail-bottom-sum b {
+  color: var(--erp-text);
+  font-variant-numeric: tabular-nums;
+}
+.erp-detail-bottom-sum-total b {
+  font-size: var(--erp-font-md);
+}
+@media (max-width: 768px) {
+  .erp-detail-bottom-sum {
+    flex: 1 0 100%;
+    justify-content: space-between;
+    margin-left: 0;
   }
 }

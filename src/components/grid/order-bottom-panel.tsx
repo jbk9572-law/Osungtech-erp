@@ -11,9 +11,31 @@ import type { OrderDetailSelection } from "@/components/grid/order-detail-panel"
 // 패널은 화면 아래에 붙어(sticky, 목록이 길어도 고른 행을 보면서 아래 상세를 같이 본다) 있다가, 표 끝까지 내려가면 표 바로 밑 제자리에 놓인다.
 // 같은 선택(OrderDetailSelection)을 쓰고 데이터는 목록이 이미 가진 값이라 패널을 열 때 따로 불러오지 않는다. 품목 표는 최대 높이를 두고 안에서만 스크롤된다(머리글 고정).
 // 고르지 않았으면 아무것도 그리지 않는다(빈 박스를 두지 않는다). [접기]로 머리줄만 남길 수 있다. 좁은 화면(모바일)은 붙지 않고 표 아래에 펼쳐진다. 매출/매입이 같이 쓴다(개발헌법 12번 보완: 전표형 = 아래 패널).
+// 접힘/펼침은 마지막으로 둔 상태를 이 브라우저에 기억한다(다음 전표를 골라도, 다시 들어와도 그대로).
+const OPEN_KEY = "erp.orderBottomPanel.open";
+function readOpen(): boolean {
+  try {
+    return window.localStorage.getItem(OPEN_KEY) !== "0";
+  } catch {
+    return true;
+  }
+}
+
 export function OrderBottomPanel({ selection, priceLabel }: { selection: OrderDetailSelection | null; priceLabel: string }) {
-  const [open, setOpen] = useState(true);
+  const [openPref, setOpenPref] = useState<boolean>(() => (typeof window === "undefined" ? true : readOpen()));
   if (!selection) return null;
+  // 품목이 1건 이하면 열어 볼 것이 없다 — 머리줄에 품목명과 금액이 다 나오므로 항상 접힌 모양(펼치기 버튼 없음)
+  const single = selection.items.length <= 1;
+  const open = !single && openPref;
+  function toggle() {
+    const next = !openPref;
+    setOpenPref(next);
+    try {
+      window.localStorage.setItem(OPEN_KEY, next ? "1" : "0");
+    } catch {
+      /* 저장 못 해도 이번 화면에서는 동작한다 */
+    }
+  }
 
   const items = selection.items;
   const supply = items.reduce((s, i) => s + i.supplyAmount, 0);
@@ -32,13 +54,29 @@ export function OrderBottomPanel({ selection, priceLabel }: { selection: OrderDe
           ))}
           <b>{selection.label}</b>
           <span className="erp-u-muted">
-            {selection.dateLabel} · 품목 {items.length}건 · 수량 {formatNumber(qty)}
+            {selection.dateLabel} · {items.length > 0 ? <b className="erp-u-text">{items[0].productLabel}</b> : "품목 없음"}
+            {items.length > 1 ? ` 외 ${items.length - 1}건` : ""} · 수량 {formatNumber(qty)}
           </span>
         </div>
+        {!open && (
+          <div className="erp-detail-bottom-sum" aria-label="금액 요약">
+            <span>
+              공급가 <b>{sign}{formatNumber(supply)}</b>
+            </span>
+            <span>
+              세액 <b>{sign}{formatNumber(tax)}</b>
+            </span>
+            <span className="erp-detail-bottom-sum-total">
+              합계 <b>{sign}{formatNumber(supply + tax)}</b>
+            </span>
+          </div>
+        )}
         <div className="erp-detail-bottom-actions">
-          <button type="button" className="erp-btn" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
-            {open ? "접기 ▾" : "펼치기 ▴"}
-          </button>
+          {!single && (
+            <button type="button" className="erp-btn" aria-expanded={open} onClick={toggle}>
+              {open ? "접기 ▾" : "펼치기 ▴"}
+            </button>
+          )}
           {selection.detailHref && (
             <Link href={selection.detailHref} className="erp-btn erp-btn-primary">
               상세 보기
