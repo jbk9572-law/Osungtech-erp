@@ -1,21 +1,18 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { GridBadge } from "@/components/grid/badge";
 import { formatNumOrDash } from "@/lib/format-num-or-dash";
 import { formatNumber } from "@/lib/format-number";
 import type { OrderDetailSelection } from "@/components/grid/order-detail-panel";
 
-// 전표형 목록(매출·매입)의 아래 상세 패널 — 행을 고르면 표 아래에 품목 표 전체가 펼쳐진다(오른쪽 좁은 패널은 품목이 많으면 세로로 길어졌다).
+// 전표형 목록(매출·매입)의 아래 상세 패널 — 행을 고르면 품목 표 전체가 보인다(오른쪽 좁은 패널은 품목이 많으면 세로로 길어졌다).
+// 패널은 화면 아래에 붙어(sticky, 목록이 길어도 고른 행을 보면서 아래 상세를 같이 본다) 있다가, 표 끝까지 내려가면 표 바로 밑 제자리에 놓인다.
 // 같은 선택(OrderDetailSelection)을 쓰고 데이터는 목록이 이미 가진 값이라 패널을 열 때 따로 불러오지 않는다. 품목 표는 최대 높이를 두고 안에서만 스크롤된다(머리글 고정).
-// 고르지 않았으면 아무것도 그리지 않는다(빈 박스를 두지 않는다). 새로 고르면 패널이 화면에 보이게 자동으로 스크롤한다. 매출/매입이 같이 쓴다(개발헌법 12번 보완: 전표형 = 아래 패널).
+// 고르지 않았으면 아무것도 그리지 않는다(빈 박스를 두지 않는다). [접기]로 머리줄만 남길 수 있다. 좁은 화면(모바일)은 붙지 않고 표 아래에 펼쳐진다. 매출/매입이 같이 쓴다(개발헌법 12번 보완: 전표형 = 아래 패널).
 export function OrderBottomPanel({ selection, priceLabel }: { selection: OrderDetailSelection | null; priceLabel: string }) {
-  const ref = useRef<HTMLElement>(null);
-  const key = selection ? `${selection.dateLabel}|${selection.label}` : null;
-  useEffect(() => {
-    if (key) ref.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
-  }, [key]);
+  const [open, setOpen] = useState(true);
   if (!selection) return null;
 
   const items = selection.items;
@@ -25,7 +22,7 @@ export function OrderBottomPanel({ selection, priceLabel }: { selection: OrderDe
   const sign = selection.isReturn ? "-" : "";
 
   return (
-    <section ref={ref} className="erp-detail-bottom" aria-label="선택한 전표 상세" data-tone={selection.accent ?? (selection.isReturn ? "danger" : undefined)}>
+    <section className={`erp-detail-bottom${open ? "" : " is-collapsed"}`} aria-label="선택한 전표 상세" data-tone={selection.accent ?? (selection.isReturn ? "danger" : undefined)}>
       <div className="erp-detail-bottom-head">
         <div className="erp-detail-bottom-title">
           {selection.chips?.map((c) => (
@@ -39,6 +36,9 @@ export function OrderBottomPanel({ selection, priceLabel }: { selection: OrderDe
           </span>
         </div>
         <div className="erp-detail-bottom-actions">
+          <button type="button" className="erp-btn" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
+            {open ? "접기 ▾" : "펼치기 ▴"}
+          </button>
           {selection.detailHref && (
             <Link href={selection.detailHref} className="erp-btn erp-btn-primary">
               상세 보기
@@ -51,7 +51,7 @@ export function OrderBottomPanel({ selection, priceLabel }: { selection: OrderDe
           )}
         </div>
       </div>
-      <div className="erp-detail-bottom-body">
+      {open && <div className="erp-detail-bottom-body">
         <div className="erp-grid-wrap erp-detail-bottom-items">
           <table className="erp-grid">
             <thead>
@@ -138,7 +138,7 @@ export function OrderBottomPanel({ selection, priceLabel }: { selection: OrderDe
             </dl>
           )}
         </div>
-      </div>
+      </div>}
     </section>
   );
 }

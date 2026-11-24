@@ -3638,14 +3638,20 @@ form.erp-field-grid {
    모양: 윗줄 강조색(상태에 따라 파랑/초록/노랑/빨강, data-tone) → 제목+색 칩 → 키값 → 구역(왼쪽 색 막대 제목) → 합계 상자 → 버튼. */
 .erp-master-detail {
   display: flex;
-  align-items: flex-start;
+  align-items: stretch; /* 오른쪽 패널이 더 길면 왼쪽 표 박스도 같은 높이로 — 행이 적어도 왼쪽이 휑하게 비어 보이지 않는다(공용) */
   gap: var(--erp-space-3);
 }
 .erp-master-detail-main {
+  display: flex;
+  flex-direction: column;
   flex: 1 1 auto;
   min-width: 0;
 }
+.erp-master-detail-main > .erp-grid-wrap {
+  flex: 1 1 auto; /* 표 박스가 남는 높이를 채운다 — 빈 자리는 박스 바탕(흰색)으로 보인다 */
+}
 .erp-detail-side {
+  align-self: flex-start; /* 부모가 stretch여도 패널은 자기 높이(스크롤 따라 붙는 sticky 유지) */
   --erp-side-accent: var(--erp-primary);
   display: var(--erp-detail-side-display);
   flex-direction: column;
@@ -5033,6 +5039,14 @@ a.erp-detail-tab:hover:not(.active) {
 
 /* 전표형 목록(매출·매입)의 아래 상세 패널(OrderBottomPanel) — 윗줄 강조색 + 머리줄 + [품목 표 | 합계·부가정보]. 품목 표는 최대 높이를 두고 안에서만 스크롤 */
 .erp-detail-bottom {
+  /* 화면 아래에 붙는다 — 목록이 길어도 고른 행을 보면서 아래 상세를 같이 본다. 표 끝까지 내려가면 제자리(표 바로 밑)에 놓인다 */
+  position: sticky;
+  bottom: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  max-height: 45vh;
+  box-shadow: 0 -6px 14px rgba(15, 23, 42, 0.08);
   margin-top: var(--erp-space-4);
   background: var(--erp-panel);
   border: 1px solid var(--erp-border-strong);
@@ -5074,9 +5088,11 @@ a.erp-detail-tab:hover:not(.active) {
   gap: var(--erp-space-4);
   align-items: start;
   padding: var(--erp-space-3) var(--erp-space-4) var(--erp-space-4);
+  min-height: 0;
+  overflow-y: auto;
 }
 .erp-detail-bottom-items {
-  max-height: 260px;
+  max-height: min(260px, calc(45vh - 150px));
   margin: 0;
   overflow-y: auto;
 }
@@ -5092,6 +5108,11 @@ a.erp-detail-tab:hover:not(.active) {
   min-width: 0;
 }
 @media (max-width: 900px) {
+  .erp-detail-bottom {
+    position: static; /* 좁은 화면은 화면 아래에 붙이면 키보드·주소줄과 겹친다 — 표 아래에 펼친다 */
+    max-height: none;
+    box-shadow: none;
+  }
   .erp-detail-bottom-body {
     grid-template-columns: minmax(0, 1fr);
   }
