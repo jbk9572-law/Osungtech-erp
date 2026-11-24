@@ -429,6 +429,8 @@
      그림자를 하나로 묶었다(육안 차이 없는 톤이었다). */
   --erp-shadow-lg:
     0 8px 24px rgba(32, 28, 43, 0.2), 0 16px 40px -12px rgba(32, 28, 43, 0.28);
+  /* 화면 아래에 붙는 패널(OrderBottomPanel)이 위쪽으로 드리우는 그림자 — 테마 블록에서 같은 이름으로 덮어쓴다 */
+  --erp-shadow-up: 0 -4px 12px rgba(32, 28, 43, 0.08);
   /* 게시판/메신저/메일함("커뮤니케이션 서피스") 전용 토큰 — 그 외
      화면은 전부 각진 모서리(border-radius:0) 그리드 스타일을 그대로
      쓰고, 이 3개 화면만 카드/말풍선에 둥근 모서리+그림자를 쓴다(사용자
@@ -574,6 +576,7 @@
   --erp-shadow-sm: 0 1px 2px rgba(30, 45, 80, 0.06);
   --erp-shadow-md: 0 4px 14px rgba(30, 45, 80, 0.1);
   --erp-shadow-lg: 0 8px 24px rgba(30, 45, 80, 0.16);
+  --erp-shadow-up: 0 -4px 14px rgba(30, 45, 80, 0.1);
 
   /* 그리드 — 칸이 또렷이 보이되 힘을 뺀 톤(진한 박스·굵은 글씨 없음) */
   --erp-grid-line: #d3d8e0;
@@ -5046,16 +5049,20 @@ a.erp-detail-tab:hover:not(.active) {
   display: flex;
   flex-direction: column;
   max-height: 45vh;
-  box-shadow: 0 -6px 14px rgba(15, 23, 42, 0.08);
+  box-shadow: var(--erp-shadow-up);
   margin-top: var(--erp-space-4);
   background: var(--erp-panel);
   border: 1px solid var(--erp-border-strong);
-  border-top: 2px solid var(--erp-primary);
-  border-radius: var(--erp-radius-xl);
+  border-top: 3px solid var(--erp-side-accent);
+  border-radius: var(--erp-radius-2xl, 0);
 }
-.erp-detail-bottom[data-tone="danger"] { border-top-color: var(--erp-danger); }
-.erp-detail-bottom[data-tone="warn"] { border-top-color: var(--erp-warning); }
-.erp-detail-bottom[data-tone="success"] { border-top-color: var(--erp-success); }
+/* 윗줄 강조색은 오른쪽 패널(.erp-detail-side)과 같은 변수(--erp-side-accent)를 쓴다 — 두 패널이 같은 톤 규칙을 공유 */
+.erp-detail-bottom {
+  --erp-side-accent: var(--erp-primary);
+}
+.erp-detail-bottom[data-tone="danger"] { --erp-side-accent: var(--erp-danger); }
+.erp-detail-bottom[data-tone="warn"] { --erp-side-accent: var(--erp-warning); }
+.erp-detail-bottom[data-tone="success"] { --erp-side-accent: var(--erp-success); }
 .erp-detail-bottom-head {
   display: flex;
   flex-wrap: wrap;
@@ -5065,7 +5072,7 @@ a.erp-detail-tab:hover:not(.active) {
   padding: var(--erp-space-3) var(--erp-space-4);
   background: var(--erp-bg-subtle);
   border-bottom: 1px solid var(--erp-border);
-  border-radius: var(--erp-radius-xl) var(--erp-radius-xl) 0 0;
+  border-radius: var(--erp-radius-2xl, 0) var(--erp-radius-2xl, 0) 0 0;
 }
 .erp-detail-bottom-title {
   display: flex;
