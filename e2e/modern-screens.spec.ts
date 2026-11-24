@@ -42,7 +42,8 @@ for (const s of SCREENS) {
       throw new Error(`제목줄(h1.erp-h1)이 70초 안에 안 떴다. url=${page.url()} 화면 글자: ${seen}`);
     }
     await expect(page.getByText("일시적인 오류로 화면을 불러오지 못했습니다")).toHaveCount(0);
-    if (s.table) await expect(page.locator("table.erp-grid, .erp-grid-empty, .erp-row-card-list").first()).toBeVisible();
+    // :visible — 접이식 구역(닫힌 <details>) 안의 표는 숨겨져 있으므로 "보이는" 표·빈 안내·카드 목록만 센다
+    if (s.table) await expect(page.locator("table.erp-grid:visible, .erp-grid-empty:visible, .erp-row-card-list:visible").first()).toBeVisible();
   });
 }
 
@@ -78,7 +79,8 @@ test.describe("거래처 도구 줄(시범)", () => {
     await page.goto("/customers");
     const bar = page.getByRole("toolbar", { name: "목록 작업" });
     test.skip(!(await bar.isVisible({ timeout: 20_000 }).catch(() => false)), "도구 줄이 없음(클래식 또는 좁은 화면)");
-    await expect(bar.getByRole("button", { name: /^조회/ })).toBeVisible();
+    // 새 틀은 검색 폼의 [F5 조회]가 도구 줄 오른쪽 끝에 있다(클래식 도구 줄은 [조회 F5])
+    await expect(bar.getByRole("button", { name: /조회/ })).toBeVisible();
     await expect(bar.getByRole("link", { name: /^신규/ })).toBeVisible();
     await expect(bar.getByRole("button", { name: /^수정/ })).toBeDisabled();
     await expect(bar.getByRole("button", { name: /^삭제/ })).toBeDisabled();
