@@ -3684,6 +3684,20 @@ form.erp-field-grid {
 .erp-grid-foot b {
   color: var(--erp-text);
 }
+
+/* 표 맨 아래 마감(모던 전체 공통, 시안 A) — 표가 어디에 놓여도(목록·상세·모달·전표 입력) 마지막 줄이 같은 방식으로 닫힌다.
+   · 박스(.erp-grid-wrap) 아래 선만 굵게 하나(2px) — 마지막 행 칸이 따로 그리던 옅은 아래선은 없애 두 줄로 겹쳐 보이지 않게
+   · 합계(tfoot) 줄은 표의 마지막 줄 — 세로 격자선을 빼고 옅은 바탕으로 한 덩어리로 보이게 */
+.erp-chrome-modern .erp-grid-wrap {
+  border-bottom-width: 2px;
+}
+.erp-chrome-modern .erp-grid:not(:has(tfoot)) tbody tr:last-child > td {
+  border-bottom: 0;
+}
+.erp-chrome-modern .erp-grid tfoot td {
+  border-right: 0;
+  background: var(--erp-bg-subtle);
+}
 .erp-detail-side {
   align-self: flex-start; /* 부모가 stretch여도 패널은 자기 높이(스크롤 따라 붙는 sticky 유지) */
   --erp-side-accent: var(--erp-primary);
