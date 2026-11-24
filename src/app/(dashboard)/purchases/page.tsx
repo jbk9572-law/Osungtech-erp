@@ -10,7 +10,7 @@ import { DateRangeQuickFilters } from "@/components/erp/date-range-quick-filters
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ListPageHeader } from "@/components/erp/page-header";
 import { PageToolbar } from "@/components/erp/page-toolbar";
-import { ListFilterBar } from "@/components/erp/list-filter-bar";
+import { ListFilterBar, ExtraFilters } from "@/components/erp/list-filter-bar";
 import { ToolbarMenu } from "@/components/erp/toolbar-menu";
 import { ToolbarKey } from "@/components/erp/list-toolbar";
 import { buildListReturnParam } from "@/lib/list-return";
@@ -29,6 +29,7 @@ import {
 import { fetchAllRows, selectInChunks } from "@/lib/fetch-all-rows";
 import { calcVatForTaxType } from "@/lib/tax";
 import { matchesSearch } from "@/lib/search-match";
+import { buildExtraFilter } from "@/lib/extra-filters";
 import { formatNumber } from "@/lib/format-number";
 import { ExcelDownloadLink } from "@/components/erp/excel-download-link";
 
@@ -40,9 +41,9 @@ const LIST_LIMIT_STEP = 300;
 async function PurchasesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ from?: string; to?: string; q?: string; limit?: string }>;
+  searchParams: Promise<{ from?: string; to?: string; q?: string; party?: string; spec?: string; limit?: string }>;
 }) {
-  const { from, to, q, limit: limitParam } = await searchParams;
+  const { from, to, q, party, spec, limit: limitParam } = await searchParams;
   const parsedLimit = limitParam ? parseInt(limitParam, 10) : NaN;
   const limit =
     Number.isFinite(parsedLimit) && parsedLimit > 0 ? parsedLimit : DEFAULT_LIST_LIMIT;
@@ -67,6 +68,9 @@ async function PurchasesPage({
   const carryoverRange = viewedMonth ? getMonthRange(shiftMonth(viewedMonth, -1)) : null;
 
   const keyword = q?.trim().toLowerCase();
+  const extraFilter = buildExtraFilter(party, spec);
+  const byExtra = <T extends { spec?: string | null; products?: { spec?: string | null } | null }>(rows: T[], partyOf: (r: T) => string | null | undefined): T[] =>
+    extraFilter ? rows.filter((r) => extraFilter(partyOf(r), r.spec || r.products?.spec)) : rows;
 
   // 매입일자(업무상 날짜) 기준으로 최신이 위로 오게 정렬한다.
   // `{ foreignTable }` 옵션은 상위 테이블을 하위 임베드 테이블 값으로
@@ -117,18 +121,18 @@ async function PurchasesPage({
   // 없을 때는 기존처럼 DB에서 최근 limit건만 받아 일반 조회 성능을
   // 그대로 유지한다.
   const [rawItems, rawPayments, rawCarryoverItems] = await Promise.all([
-    keyword
+    keyword || extraFilter
       ? fetchAllRows((from, to) => buildItemQuery().range(from, to))
       : buildItemQuery()
           .limit(limit)
           .then((r) => r.data ?? []),
-    keyword
+    keyword || extraFilter
       ? fetchAllRows((from, to) => buildPaymentQuery().range(from, to))
       : buildPaymentQuery()
           .limit(limit)
           .then((r) => r.data ?? []),
     carryoverRange
-      ? keyword
+      ? keyword || extraFilter
         ? fetchAllRows((from, to) => buildCarryoverQuery(carryoverRange).range(from, to))
         : buildCarryoverQuery(carryoverRange)
             .limit(limit)
@@ -136,7 +140,7 @@ async function PurchasesPage({
       : Promise.resolve([]),
   ]);
 
-  const items = keyword
+  const items = byExtra(keyword
     ? rawItems.filter((item) =>
         matchesSearch(
           keyword,
@@ -151,11 +155,11 @@ async function PurchasesPage({
           item.purchase_orders?.delivery_method,
         ),
       )
-    : rawItems;
+    : rawItems, (item) => item.purchase_orders?.suppliers?.name);
   // "더보기"는 검색 중이 아닐 때만 의미가 있다 — sales/page.tsx와 같은
   // 이유.
   const hasMore =
-    !keyword && (rawItems.length >= limit || rawPayments.length >= limit);
+    !keyword && !extraFilter && (rawItems.length >= limit || rawPayments.length >= limit);
 
   const itemRows = (items ?? []).map((item) => {
     const supplyAmount = item.quantity * Number(item.unit_cost);
@@ -278,7 +282,7 @@ async function PurchasesPage({
   // 실적으로 잡히는 건. sales/page.tsx와 같은 이유로 목록에도 보여준다.
   // 모조지 재단 상세(paperCalcSizeLines)까지는 채우지 않는다 — 참고용
   // 구간이고, 필요하면 상세 화면에서 그대로 볼 수 있다.
-  const carryoverKeywordItems = keyword
+  const carryoverKeywordItems = byExtra(keyword
     ? (rawCarryoverItems ?? []).filter((item) =>
         matchesSearch(
           keyword,
@@ -293,7 +297,7 @@ async function PurchasesPage({
           item.purchase_orders?.delivery_method,
         ),
       )
-    : (rawCarryoverItems ?? []);
+    : (rawCarryoverItems ?? []), (item) => item.purchase_orders?.suppliers?.name);
   const carryoverItemRows = carryoverKeywordItems.map((item) => {
     const supplyAmount = item.quantity * Number(item.unit_cost);
     const taxAmount = calcVatForTaxType(supplyAmount, item.purchase_orders?.tax_type);
@@ -412,7 +416,7 @@ async function PurchasesPage({
     totalsQuery = totalsQuery.lte("purchase_orders.purchase_date", effectiveTo);
     return totalsQuery;
   });
-  const filteredTotalsRows = keyword
+  const filteredTotalsRows = byExtra(keyword
     ? totalsRows.filter((item) =>
         matchesSearch(
           keyword,
@@ -427,7 +431,7 @@ async function PurchasesPage({
           item.purchase_orders?.delivery_method,
         ),
       )
-    : totalsRows;
+    : totalsRows, (item) => item.purchase_orders?.suppliers?.name);
 
   const totalQuantity = filteredTotalsRows.reduce((sum, row) => sum + row.quantity, 0);
   const totalSupply = filteredTotalsRows.reduce(
@@ -452,6 +456,8 @@ async function PurchasesPage({
   moreParams.set("from", moreFrom);
   moreParams.set("to", to || effectiveTo);
   if (q) moreParams.set("q", q);
+  if (party) moreParams.set("party", party);
+  if (spec) moreParams.set("spec", spec);
   moreParams.set("limit", String(limit + LIST_LIMIT_STEP));
   const moreHref = `/purchases?${moreParams.toString()}`;
 
@@ -469,6 +475,7 @@ async function PurchasesPage({
 
       <ListFilterBar
         formId="purchases-search-form"
+        extra={<ExtraFilters formId="purchases-search-form" screenKey="purchases" defs={[{ key: "party", label: "공급처", placeholder: "공급처명" }, { key: "spec", label: "규격", placeholder: "규격" }]} values={{ party, spec }} />}
         basePath="/purchases"
         from={effectiveFrom}
         to={effectiveTo}
@@ -476,7 +483,7 @@ async function PurchasesPage({
         searchPlaceholder="공급처, 상품명, 규격 검색…"
         presets={presets}
         monthButtons={monthButtons}
-        showReset={!!(from || to || q || limitParam)}
+        showReset={!!(from || to || q || party || spec || limitParam)}
         actions={
           <NewButton href="/purchases/new" keyHint>신규</NewButton>
         }

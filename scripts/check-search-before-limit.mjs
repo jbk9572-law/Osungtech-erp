@@ -24,6 +24,9 @@
 //     : await buildQuery().limit(limit).then((r) => r.data ?? []);
 
 import ts from "typescript";
+
+const isSearchOn = (t) => t === "keyword" || t === "keyword || extraFilter";
+const isSearchOff = (t) => t === "!keyword" || t === "!keyword && !extraFilter";
 import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -68,13 +71,14 @@ function isGuardedByNotKeyword(node) {
     }
     if (ts.isConditionalExpression(current)) {
       const condText = current.condition.getText().trim();
-      if (condText === "keyword" && child === current.whenFalse) return true;
-      if (condText === "!keyword" && child === current.whenTrue) return true;
+      // 사용자 정의 필터(extraFilter)도 검색과 같다 — 걸려 있으면 조회기간 전체를 받아 거른 뒤라야 limit 밖으로 밀린 거래가 빠지지 않는다.
+      if (isSearchOn(condText) && child === current.whenFalse) return true;
+      if (isSearchOff(condText) && child === current.whenTrue) return true;
     }
     if (ts.isIfStatement(current)) {
       const condText = current.condition.getText().trim();
-      if (condText === "!keyword" && current.thenStatement === child) return true;
-      if (condText === "keyword" && current.elseStatement === child) return true;
+      if (isSearchOff(condText) && current.thenStatement === child) return true;
+      if (isSearchOn(condText) && current.elseStatement === child) return true;
     }
     child = current;
     current = current.parent;

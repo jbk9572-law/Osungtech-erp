@@ -10,7 +10,7 @@ import { DateRangeQuickFilters } from "@/components/erp/date-range-quick-filters
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ListPageHeader } from "@/components/erp/page-header";
 import { PageToolbar } from "@/components/erp/page-toolbar";
-import { ListFilterBar } from "@/components/erp/list-filter-bar";
+import { ListFilterBar, ExtraFilters } from "@/components/erp/list-filter-bar";
 import { ToolbarMenu } from "@/components/erp/toolbar-menu";
 import { ToolbarKey } from "@/components/erp/list-toolbar";
 import { buildListReturnParam } from "@/lib/list-return";
@@ -28,6 +28,7 @@ import {
 import { fetchAllRows, selectInChunks } from "@/lib/fetch-all-rows";
 import { calcVatForTaxType } from "@/lib/tax";
 import { matchesSearch } from "@/lib/search-match";
+import { buildExtraFilter } from "@/lib/extra-filters";
 import { formatNumber } from "@/lib/format-number";
 import { PageGuide } from "@/components/erp/page-guide";
 import { ExcelDownloadLink } from "@/components/erp/excel-download-link";
@@ -43,9 +44,9 @@ const LIST_LIMIT_STEP = 300;
 async function SalesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ from?: string; to?: string; q?: string; limit?: string }>;
+  searchParams: Promise<{ from?: string; to?: string; q?: string; party?: string; spec?: string; limit?: string }>;
 }) {
-  const { from, to, q, limit: limitParam } = await searchParams;
+  const { from, to, q, party, spec, limit: limitParam } = await searchParams;
   const parsedLimit = limitParam ? parseInt(limitParam, 10) : NaN;
   const limit =
     Number.isFinite(parsedLimit) && parsedLimit > 0 ? parsedLimit : DEFAULT_LIST_LIMIT;
@@ -72,6 +73,9 @@ async function SalesPage({
   const carryoverRange = viewedMonth ? getMonthRange(shiftMonth(viewedMonth, -1)) : null;
 
   const keyword = q?.trim().toLowerCase();
+  const extraFilter = buildExtraFilter(party, spec);
+  const byExtra = <T extends { spec?: string | null; products?: { spec?: string | null } | null }>(rows: T[], partyOf: (r: T) => string | null | undefined): T[] =>
+    extraFilter ? rows.filter((r) => extraFilter(partyOf(r), r.spec || r.products?.spec)) : rows;
 
   // 거래일자(업무상 날짜) 기준으로 최신이 위로 오게 정렬한다. 이전에는
   // 품목의 시스템 생성시각(created_at)으로 정렬했는데, 수정 시 품목을
@@ -121,18 +125,18 @@ async function SalesPage({
   // fetchAllRows로 조회기간 전체를 받고, 검색이 없을 때는 기존처럼
   // DB에서 최근 limit건만 받아 일반 조회 성능을 그대로 유지한다.
   const [rawItems, rawPayments, rawCarryoverItems] = await Promise.all([
-    keyword
+    keyword || extraFilter
       ? fetchAllRows((from, to) => buildItemQuery().range(from, to))
       : buildItemQuery()
           .limit(limit)
           .then((r) => r.data ?? []),
-    keyword
+    keyword || extraFilter
       ? fetchAllRows((from, to) => buildPaymentQuery().range(from, to))
       : buildPaymentQuery()
           .limit(limit)
           .then((r) => r.data ?? []),
     carryoverRange
-      ? keyword
+      ? keyword || extraFilter
         ? fetchAllRows((from, to) => buildCarryoverQuery(carryoverRange).range(from, to))
         : buildCarryoverQuery(carryoverRange)
             .limit(limit)
@@ -140,7 +144,7 @@ async function SalesPage({
       : Promise.resolve([]),
   ]);
 
-  const items = keyword
+  const items = byExtra(keyword
     ? rawItems.filter((item) =>
         matchesSearch(
           keyword,
@@ -155,14 +159,14 @@ async function SalesPage({
           item.sales_orders?.delivery_method,
         ),
       )
-    : rawItems;
+    : rawItems, (item) => item.sales_orders?.customers?.name);
   // "더보기"는 검색 중이 아닐 때만 의미가 있다 — 검색 중에는 이미
   // fetchAllRows로 조회기간 전체를 다 받아 걸러낸 뒤라 더 가져올 게
   // 없다(기간을 넓히려면 날짜 필터를 직접 바꿔야 한다). 검색이 없을
   // 때는 DB에서 받아온 양이 상한(limit)에 꽉 찼으면 더 있을 수 있다는
   // 뜻이다.
   const hasMore =
-    !keyword && (rawItems.length >= limit || rawPayments.length >= limit);
+    !keyword && !extraFilter && (rawItems.length >= limit || rawPayments.length >= limit);
 
   const itemRows = (items ?? []).map((item) => {
     const supplyAmount = item.quantity * Number(item.unit_price);
@@ -288,7 +292,7 @@ async function SalesPage({
   // 세금계산서를 발행해야 할 건을 놓치지 않는다(사용자 지적). 메인
   // saleRows와 달리 모조지 재단 상세(paperCalcSizeLines)까지는 채우지
   // 않는다 — 참고용 구간이고, 필요하면 상세 화면에서 그대로 볼 수 있다.
-  const carryoverKeywordItems = keyword
+  const carryoverKeywordItems = byExtra(keyword
     ? (rawCarryoverItems ?? []).filter((item) =>
         matchesSearch(
           keyword,
@@ -303,7 +307,7 @@ async function SalesPage({
           item.sales_orders?.delivery_method,
         ),
       )
-    : (rawCarryoverItems ?? []);
+    : (rawCarryoverItems ?? []), (item) => item.sales_orders?.customers?.name);
   const carryoverItemRows = carryoverKeywordItems.map((item) => {
     const supplyAmount = item.quantity * Number(item.unit_price);
     const taxAmount = calcVatForTaxType(supplyAmount, item.sales_orders?.tax_type);
@@ -433,7 +437,7 @@ async function SalesPage({
     totalsQuery = totalsQuery.lte("sales_orders.order_date", effectiveTo);
     return totalsQuery;
   });
-  const filteredTotalsRows = keyword
+  const filteredTotalsRows = byExtra(keyword
     ? totalsRows.filter((item) =>
         matchesSearch(
           keyword,
@@ -448,7 +452,7 @@ async function SalesPage({
           item.sales_orders?.delivery_method,
         ),
       )
-    : totalsRows;
+    : totalsRows, (item) => item.sales_orders?.customers?.name);
 
   // 반품 건은 매출 합계·세액에서 차감한다(재고는 별도로 늘어나므로
   // totalQuantity는 반품 수량도 그대로 더한다 — "이동한 총 수량"의 의미).
@@ -477,6 +481,8 @@ async function SalesPage({
   moreParams.set("from", moreFrom);
   moreParams.set("to", to || effectiveTo);
   if (q) moreParams.set("q", q);
+  if (party) moreParams.set("party", party);
+  if (spec) moreParams.set("spec", spec);
   moreParams.set("limit", String(limit + LIST_LIMIT_STEP));
   const moreHref = `/sales?${moreParams.toString()}`;
 
@@ -494,6 +500,7 @@ async function SalesPage({
 
       <ListFilterBar
         formId="sales-search-form"
+        extra={<ExtraFilters formId="sales-search-form" screenKey="sales" defs={[{ key: "party", label: "출고처", placeholder: "출고처명" }, { key: "spec", label: "규격", placeholder: "규격" }]} values={{ party, spec }} />}
         basePath="/sales"
         from={effectiveFrom}
         to={effectiveTo}
@@ -501,7 +508,7 @@ async function SalesPage({
         searchPlaceholder="출고처, 상품명, 규격 검색…"
         presets={presets}
         monthButtons={monthButtons}
-        showReset={!!(from || to || q || limitParam)}
+        showReset={!!(from || to || q || party || spec || limitParam)}
         actions={
           <NewButton href="/sales/new" keyHint>신규</NewButton>
         }

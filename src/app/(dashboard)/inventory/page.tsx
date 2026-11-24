@@ -1,3 +1,4 @@
+import { ListFilterBar } from "@/components/erp/list-filter-bar";
 import { InventorySubTabs } from "@/components/erp/inventory-sub-tabs";
 import { withPageTiming } from "@/lib/page-timing";
 import Link from "next/link";
@@ -68,6 +69,12 @@ async function InventoryPage({
         </div>
       )}
 
+      <ListFilterBar
+        formId="inventory-search-form"
+        basePath="/inventory"
+        q={q}
+        searchPlaceholder="상품명, SKU, 규격, 카테고리, 공급처 검색…"
+        legacy={
       <form method="get" className="erp-search-row">
         <div className="erp-field">
           <label htmlFor="search-q">품목 / 규격 검색</label>
@@ -90,6 +97,8 @@ async function InventoryPage({
           </Link>
         )}
       </form>
+        }
+      />
 
       <Suspense fallback={<div className="erp-loading-panel"><div className="erp-loading-gauge" aria-hidden />품목 불러오는 중...</div>}>
         <InventoryGrid q={q} />

@@ -10565,3 +10565,19 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   flex: 0 1 200px;
   min-width: 120px;
 }
+
+/* 사용자 정의 필터: 고른 추가 조건 입력칸 + 조건 고르는 팝업(좁은 폭) */
+.erp-fb-extra {
+  flex: 0 1 160px;
+  min-width: 100px;
+}
+.erp-fb-pop-narrow {
+  width: 260px;
+}
+.erp-fb-check {
+  display: flex;
+  align-items: center;
+  gap: var(--erp-space-2);
+  flex: 0 0 100%;
+  padding: var(--erp-space-1) 0;
+}

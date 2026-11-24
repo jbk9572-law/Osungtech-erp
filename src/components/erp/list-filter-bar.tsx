@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { getGridColumnVisibility, saveGridColumnVisibility } from "@/lib/grid-column-visibility-actions";
 import { ListToolbar, ToolbarKey } from "@/components/erp/list-toolbar";
 import { useThemeFeatures } from "@/lib/erp-theme-features";
 import { currentMonth, getMonthRange, shiftMonth, type DatePreset } from "@/lib/date-presets";
@@ -303,5 +304,75 @@ function PeriodControl({
         </>
       )}
     </span>
+  );
+}
+
+export type ExtraFilterDef = { key: string; label: string; placeholder: string };
+
+/** 사용자 정의 필터 — [필터 ＋]로 이 화면에서 쓸 수 있는 추가 조건(출고처·규격 …)을 골라 도구줄에 붙인다.
+ *  고른 조합은 계정별로 저장된다(기존 화면 설정 저장소 재사용 — grid_key "list-filters:<화면>", 자기 행만 읽고 쓰는 규칙). 화면이 정한 목록(defs) 밖의 조건은 받지 않는다. */
+export function ExtraFilters({ formId, screenKey, defs, values }: { formId: string; screenKey: string; defs: ExtraFilterDef[]; values: Record<string, string | undefined> }) {
+  const allowed = new Set(defs.map((d) => d.key));
+  const [enabled, setEnabled] = useState<string[]>(() => defs.filter((d) => values[d.key]).map((d) => d.key));
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    getGridColumnVisibility(`list-filters:${screenKey}`)
+      .then((saved) => {
+        if (cancelled || !saved) return;
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- 저장된 추가 조건을 마운트 뒤 한 번 불러온다
+        setEnabled((cur) => Array.from(new Set([...cur, ...saved.filter((k) => allowed.has(k))])));
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [screenKey]);
+
+  function toggle(key: string) {
+    const next = enabled.includes(key) ? enabled.filter((k) => k !== key) : [...enabled, key];
+    setEnabled(next);
+    saveGridColumnVisibility(`list-filters:${screenKey}`, next).catch(() => undefined);
+  }
+
+  return (
+    <>
+      {defs
+        .filter((d) => enabled.includes(d.key))
+        .map((d) => (
+          <input
+            key={d.key}
+            type="text"
+            name={d.key}
+            form={formId}
+            className="erp-input erp-fb-extra"
+            autoComplete="off"
+            defaultValue={values[d.key] ?? ""}
+            placeholder={d.placeholder}
+            aria-label={d.label}
+          />
+        ))}
+      <span className="erp-fb-period">
+        <button type="button" className="erp-btn erp-u-nowrap" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
+          필터 ＋
+        </button>
+        {open && (
+          <>
+            <div className="erp-fb-backdrop" onClick={() => setOpen(false)} aria-hidden />
+            <div className="erp-fb-pop erp-fb-pop-narrow" role="dialog" aria-label="추가 조건">
+              <div className="erp-fb-pop-group">
+                <b>추가 조건 (체크하면 도구줄에 생깁니다)</b>
+                {defs.map((d) => (
+                  <label key={d.key} className="erp-fb-check">
+                    <input type="checkbox" checked={enabled.includes(d.key)} onChange={() => toggle(d.key)} /> {d.label}
+                  </label>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+      </span>
+    </>
   );
 }
