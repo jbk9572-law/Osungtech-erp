@@ -42,6 +42,7 @@ const FILES = [
 ];
 
 const EXEMPT_SELECTORS = new Set([
+  ".erp-tabbar", // 화면 가장자리까지 닿는 탭 줄 — 아래쪽 선만 있는 바(사이드바 맨 위 줄과 아래선이 이어진다)
   ".erp-head-stack", // 패널 머리 묶음 — 둥근 패널 안에 flush로 들어가는 머리(아래쪽 선만 있는 칸막이), 모서리는 부모가 자른다
   ".erp-toolbar-slot", // 모던 틀의 화면 도구 줄 자리 — 상단바 아래 화면 가장자리까지 닿는 전체 폭 바(아래쪽 선만 있는 칸막이)
   ".erp-voucher .erp-grid tfoot tr.erp-voucher-totals td", // 전표 표 합계 줄 칸 — 표 셀(위쪽 선만 있는 칸막이)

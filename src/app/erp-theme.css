@@ -442,6 +442,7 @@
   --erp-chrome-bg: var(--erp-bg-subtle);
   --erp-chrome-bg-deep: var(--erp-bg-subtle);
   --erp-card-shadow: none;
+  --erp-chrome-head-h: 34px; /* 사이드바 맨 위 줄(메뉴 접기)과 탭 줄 높이 — 아래선이 한 줄로 이어지게 둘이 같은 값을 쓴다 */
   /* 게시판/메신저/메일함("커뮤니케이션 서피스") 전용 토큰 — 그 외
      화면은 전부 각진 모서리(border-radius:0) 그리드 스타일을 그대로
      쓰고, 이 3개 화면만 카드/말풍선에 둥근 모서리+그림자를 쓴다(사용자
@@ -583,17 +584,17 @@
   --erp-carry-next-bg: #efeaff;
   --erp-carry-next-border: #d6c9f0;
   --erp-carry-next-bar: #7c5cd6;
-  --erp-tabbar-bg: color-mix(in srgb, #ffffff 88%, #1e2d50);
+  --erp-tabbar-bg: color-mix(in srgb, #ffffff 91%, #1e2d50);
   --erp-tab-bg: #e1e5ec;
   --erp-tree-badge-border: #d3d8e0;
   --erp-shadow-sm: 0 1px 2px rgba(30, 45, 80, 0.06);
   --erp-shadow-md: 0 4px 14px rgba(30, 45, 80, 0.1);
   --erp-shadow-lg: 0 8px 24px rgba(30, 45, 80, 0.16);
   --erp-shadow-up: 0 -4px 14px rgba(30, 45, 80, 0.1);
-  --erp-page-bg: color-mix(in srgb, #ffffff 95%, #1e2d50);
-  --erp-chrome-bg: color-mix(in srgb, #ffffff 93%, #1e2d50);
-  --erp-chrome-bg-deep: color-mix(in srgb, #ffffff 88%, #1e2d50);
-  --erp-card-shadow: 0 2px 6px rgba(30, 45, 80, 0.12), 0 1px 2px rgba(30, 45, 80, 0.08);
+  --erp-page-bg: color-mix(in srgb, #ffffff 96%, #1e2d50);
+  --erp-chrome-bg: color-mix(in srgb, #ffffff 94.5%, #1e2d50);
+  --erp-chrome-bg-deep: color-mix(in srgb, #ffffff 91%, #1e2d50);
+  --erp-card-shadow: 0 2px 5px rgba(30, 45, 80, 0.09), 0 1px 2px rgba(30, 45, 80, 0.06);
 
   /* 그리드 — 칸이 또렷이 보이되 힘을 뺀 톤(진한 박스·굵은 글씨 없음) */
   --erp-grid-line: #d3d8e0;
@@ -1472,9 +1473,11 @@ html:has(.erp) body {
    invoice-detail.tsx)을 매번 찾아 손으로 고치는 대신 여기서 한 번에
    잡는다 — .erp-split-detail 쪽과 같은 접근. */
 .erp-modal-body .erp-detail {
-  border: none;
-  background: transparent;
-  margin-top: 20px;
+  border: 1px solid var(--erp-border-strong);
+  border-radius: var(--erp-radius-xl, 0);
+  background: var(--erp-panel);
+  box-shadow: none; /* 모달 자신이 카드라 안쪽 구역은 그림자 없이 옅은 테두리 + 머리 띠로만 구분한다 */
+  margin-top: 16px;
 }
 
 .erp-modal-body .erp-detail:first-child {
@@ -1482,31 +1485,30 @@ html:has(.erp) body {
 }
 
 .erp-modal-body .erp-detail-tabs {
-  background: none;
+  background: var(--erp-bg-subtle);
   border-bottom: 1px solid var(--erp-divider);
-  border-radius: 0;
-  padding: 0 0 7px;
-  margin-bottom: 14px;
+  border-radius: var(--erp-radius-xl, 0) var(--erp-radius-xl, 0) 0 0;
+  padding: 0;
+  margin-bottom: 0;
 }
 
 .erp-modal-body .erp-detail-tab {
   border-right: none;
-  padding: 0;
-  height: auto;
-  font-size: var(--erp-font-xs);
+  padding: 0 var(--erp-space-4);
+  height: 36px;
+  font-size: var(--erp-font-md);
   font-weight: 700;
-  color: var(--erp-text-muted);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  color: var(--erp-text);
 }
 
 .erp-modal-body .erp-detail-tab.active {
   background: none;
-  color: var(--erp-text-muted);
+  color: var(--erp-text);
   font-weight: 700;
 }
 
-.erp-modal-body .erp-detail-body {
+/* 본문 여백은 기본(16px)을 그대로 쓴다 — 카드 안에 표 하나만 꽉 채우는 경우만 여백 0(글자가 테두리에 붙던 문제) */
+.erp-modal-body .erp-detail-body:has(> .erp-grid-wrap:only-child) {
   padding: 0;
 }
 
@@ -1656,7 +1658,8 @@ html:has(.erp) body {
 
 .erp-tree-toggle {
   width: 100%;
-  height: 32px;
+  box-sizing: border-box;
+  height: var(--erp-chrome-head-h);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1793,9 +1796,11 @@ html:has(.erp) body {
   display: flex;
   align-items: flex-end;
   gap: 2px;
-  height: 34px;
-  flex: 0 0 34px;
+  box-sizing: border-box;
+  height: var(--erp-chrome-head-h);
+  flex: 0 0 var(--erp-chrome-head-h);
   background: var(--erp-tabbar-bg);
+  border-bottom: 1px solid var(--erp-border);
   padding: 4px 8px 0;
   overflow-x: auto;
 }
@@ -10556,4 +10561,17 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
     flex: 1 0 100%;
     flex-wrap: wrap;
   }
+}
+
+/* 상세 정보 한 줄(라벨 | 값) — DetailInfoRow가 쓴다. 라벨 열 폭이 일정해 값이 세로로 맞는다 */
+.erp-info-row {
+  display: grid;
+  grid-template-columns: var(--erp-info-label-w, 88px) minmax(0, 1fr);
+  align-items: center;
+  gap: var(--erp-space-2);
+  min-height: 28px;
+  padding: 2px 0;
+}
+.erp-info-row-label {
+  color: var(--erp-text-muted);
 }

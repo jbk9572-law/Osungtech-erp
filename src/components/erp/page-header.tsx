@@ -160,8 +160,8 @@ export function DetailPageHeader({
 // marginBottom:8}}을 복붙하고 있던 패턴(헌법검사에서 발견)을 공용화했다.
 export function DetailInfoRow({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="erp-u-flex erp-u-items-center erp-u-gap-8 erp-u-mb-8" style={{ minHeight: 26 }}>
-      <span className="erp-u-muted" style={{ width: 72 }}>{label}</span>
+    <div className="erp-info-row">
+      <span className="erp-info-row-label">{label}</span>
       <span>{children}</span>
     </div>
   );
