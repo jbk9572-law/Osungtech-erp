@@ -8,6 +8,7 @@ import {
 } from "@/app/(dashboard)/purchases/actions";
 import { ProductSearchSelect } from "@/components/product-search-select";
 import { PartySearchSelect } from "@/components/party-search-select";
+import { NotesBanner, NoteDot, usePartyProductNotes } from "@/components/erp/notes-banner";
 import { QuickAddProductSearch } from "@/components/quick-add-product-search";
 import { FormMessage } from "@/components/form-message";
 import type { FormState } from "@/components/form-message";
@@ -619,6 +620,8 @@ export function NewSaleForm({
     return lookupPartyProductValue(noteMap, forCustomerId, productId) ?? null;
   }
 
+  const noteItems = usePartyProductNotes(rows, noteMap, customerId, products);
+
   // 수정 화면의 product.stock은 이 거래가 이미 출고된 뒤의 재고라, 이 거래의 원래 수량은 되돌려받은 셈 치고 비교해야 한다.
   const originalQtyByProduct = useMemo(() => {
     const map = new Map<string, number>();
@@ -1084,6 +1087,7 @@ export function NewSaleForm({
             <FormMessage state={messageDismissed ? undefined : state} />
           </div>
         )}
+        <NotesBanner partyLabel="거래처" partyNote={customers.find((c) => c.id === customerId)?.notes} items={noteItems} />
         <div className="erp-field-grid">
           <div className="erp-field erp-vf-hide erp-span-2">
             <label htmlFor="sale-docno">No</label>
@@ -1107,6 +1111,7 @@ export function NewSaleForm({
               value={customerId}
               onChange={handleCustomerChange}
               placeholder="출고처명 검색"
+              hideNote
             />
           </div>
           <div className="erp-field erp-vf-date erp-span-2">
@@ -1362,12 +1367,7 @@ export function NewSaleForm({
                               handleProductChange(row.key, productId)
                             }
                           />
-                          {row.productId &&
-                            resolveNote(customerId, row.productId) && (
-                              <PageGuide className="mt-1 whitespace-normal break-words">
-                                품목 특이사항: {resolveNote(customerId, row.productId)}
-                              </PageGuide>
-                            )}
+                          {row.productId && <NoteDot note={resolveNote(customerId, row.productId)} />}
                         </>
                       )}
                       <CustomEntryToggle checked={row.isCustomEntry} onChange={(v) => toggleCustomEntry(row.key, v)} />

@@ -19,6 +19,7 @@ export function PartySearchSelect({
   placeholder = "거래처명 검색",
   name,
   id,
+  hideNote = false,
 }: {
   parties: Party[];
   value: string;
@@ -26,6 +27,8 @@ export function PartySearchSelect({
   placeholder?: string;
   name?: string;
   id?: string;
+  /** 선택한 거래처의 특이사항을 입력칸 아래에 따로 띄우지 않는다 — 화면이 NotesBanner로 모아 보여줄 때 */
+  hideNote?: boolean;
 }) {
   const { voucherLayout } = useThemeFeatures();
   const selected = parties.find((p) => p.id === value) ?? null;
@@ -113,7 +116,7 @@ export function PartySearchSelect({
           변경
         </button>
       )}
-      {!open && selected?.notes && (
+      {!hideNote && !open && selected?.notes && (
         <p className="erp-u-mt-4 erp-u-pad-4-8 erp-u-text-sm erp-u-color-info-text erp-u-bg-info-bg erp-u-border-info-border erp-u-radius-sm"
         >
           특이사항: {selected.notes}

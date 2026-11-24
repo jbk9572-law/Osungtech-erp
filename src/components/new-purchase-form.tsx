@@ -4,6 +4,7 @@ import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { createPurchase } from "@/app/(dashboard)/purchases/actions";
 import { ProductSearchSelect } from "@/components/product-search-select";
 import { PartySearchSelect } from "@/components/party-search-select";
+import { NotesBanner, NoteDot, usePartyProductNotes } from "@/components/erp/notes-banner";
 import { ErpSelect } from "@/components/erp/erp-select";
 import { QuickAddProductSearch } from "@/components/quick-add-product-search";
 import { FormMessage } from "@/components/form-message";
@@ -400,6 +401,8 @@ export function NewPurchaseForm({
         : [makeBlankRow(0)],
     makeBlankRow, { idleUndoShortcut: true },
   );
+
+  const noteItems = usePartyProductNotes(rows, supplierNoteMap, supplierId, products);
   // 이 폼에서 "빈 줄"의 기준 — 검색/가져오기로 채워진 줄(들)을 넣을 때
   // 아직 아무것도 안 고른 첫 줄이면 그 줄을 교체한다(quickAddProduct/
   // importTodoItems 공용).
@@ -1113,6 +1116,7 @@ export function NewPurchaseForm({
             <FormMessage state={messageDismissed ? undefined : state} />
           </div>
         )}
+        <NotesBanner partyLabel="공급처" partyNote={suppliers.find((x) => x.id === supplierId)?.notes} items={noteItems} />
         <div className="erp-field-grid">
           <div className="erp-field erp-vf-hide erp-span-2">
             <label htmlFor="purchase-docno">No</label>
@@ -1136,6 +1140,7 @@ export function NewPurchaseForm({
               value={supplierId}
               onChange={handleSupplierChange}
               placeholder="공급처명 검색"
+            hideNote
             />
           </div>
           <div className="erp-field erp-vf-date erp-span-2">
@@ -1389,12 +1394,7 @@ export function NewPurchaseForm({
                               handleProductChange(row.key, productId)
                             }
                           />
-                          {row.productId &&
-                            resolveSupplierNote(supplierId, row.productId) && (
-                              <PageGuide className="mt-1 whitespace-normal break-words">
-                                품목 특이사항: {resolveSupplierNote(supplierId, row.productId)}
-                              </PageGuide>
-                            )}
+                          {row.productId && <NoteDot note={resolveSupplierNote(supplierId, row.productId)} />}
                         </>
                       )}
                       {!alsoCreateSale && <CustomEntryToggle checked={row.isCustomEntry} onChange={(v) => toggleCustomEntry(row.key, v)} />}

@@ -436,6 +436,7 @@
     0 8px 24px rgba(32, 28, 43, 0.2), 0 16px 40px -12px rgba(32, 28, 43, 0.28);
   /* 화면 아래에 붙는 패널(OrderBottomPanel)이 위쪽으로 드리우는 그림자 — 테마 블록에서 같은 이름으로 덮어쓴다 */
   --erp-shadow-up: 0 -4px 12px rgba(32, 28, 43, 0.08);
+  --erp-shadow-float: 0 6px 16px rgba(32, 28, 43, 0.16);
   /* 게시판/메신저/메일함("커뮤니케이션 서피스") 전용 토큰 — 그 외
      화면은 전부 각진 모서리(border-radius:0) 그리드 스타일을 그대로
      쓰고, 이 3개 화면만 카드/말풍선에 둥근 모서리+그림자를 쓴다(사용자
@@ -5094,7 +5095,7 @@ a.erp-detail-tab:hover:not(.active) {
   display: flex;
   flex-direction: column;
   max-height: 45vh;
-  box-shadow: var(--erp-shadow-up);
+  box-shadow: var(--erp-shadow-float);
   margin-top: var(--erp-space-4);
   background: var(--erp-panel);
   border: 1px solid var(--erp-border-strong);
@@ -5164,9 +5165,6 @@ a.erp-detail-tab:hover:not(.active) {
     position: static; /* 좁은 화면은 화면 아래에 붙이면 키보드·주소줄과 겹친다 — 표 아래에 펼친다 */
     max-height: none;
     box-shadow: none;
-  }
-  .erp-detail-bottom::before {
-    display: none; /* 붙지 않는 상태에서는 블러 띠도 없다(absolute 띠가 부모 전체를 덮는 것 방지) */
   }
   .erp-detail-bottom-body {
     grid-template-columns: minmax(0, 1fr);
@@ -9971,36 +9969,9 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
 }
 
 
-/* 화면 위·아래에 붙는 막대·패널의 "블러 띠" — 카드 모양은 그대로 두고, 그 뒤(스크롤 여백 틈 포함, 화면 가로 전체)만 블러로 덮어 뒤로 지나가는 행이 선명하게 비치지 않게 한다.
-   카드(자기 자신)는 불투명 그대로. backdrop-filter를 못 쓰는 환경은 불투명 바탕으로 대신한다. */
-.erp-frame-v2 .erp-listtoolbar::before,
-.erp-detail-bottom::before {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  left: calc(-1 * var(--erp-page-pad));
-  right: calc(-1 * var(--erp-page-pad));
-  background: var(--erp-panel);
-  pointer-events: none;
-}
-.erp-frame-v2 .erp-listtoolbar::before {
-  top: calc(-1 * var(--erp-page-pad));
-  bottom: calc(-1 * var(--erp-space-3));
-}
-.erp-detail-bottom {
-  isolation: isolate;
-}
-.erp-detail-bottom::before {
-  top: calc(-1 * var(--erp-space-3));
-  bottom: calc(-1 * var(--erp-page-pad));
-}
-@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
-  .erp-frame-v2 .erp-listtoolbar::before,
-  .erp-detail-bottom::before {
-    background: color-mix(in srgb, var(--erp-panel) 55%, transparent);
-    -webkit-backdrop-filter: blur(8px);
-    backdrop-filter: blur(8px);
-  }
+/* 떠 있는 도구 줄(하단 상세 패널은 위쪽 .erp-detail-bottom 규칙) — 카드 자체에 그림자만 준다(뒤 띠·블러 없음). 떠 있다는 경계만 분명히 하고 사각형 띠는 만들지 않는다 */
+.erp-frame-v2 .erp-listtoolbar {
+  box-shadow: var(--erp-shadow-float);
 }
 
 /* 도구 줄 안의 검색 — 상태 문구 오른쪽, 줄의 맨 오른쪽 끝에 한 줄로(박스는 도구 줄이 가지므로 검색 자체 박스는 벗긴다) */
@@ -10364,4 +10335,58 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
 }
 .erp-fold-section > .erp-grid-wrap {
   margin: 0 var(--erp-space-2) var(--erp-space-2);
+}
+
+/* 전표 특이사항 배너(NotesBanner) — 파랑(정보 톤) 박스. 모던에서 안내(info)는 투명하게 두는 규칙과 별개로, 놓치면 안 되는 메모라 박스로 보인다 */
+.erp-notes-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--erp-space-3);
+  margin: var(--erp-space-2) 0;
+  padding: var(--erp-space-2) var(--erp-space-3);
+  background: var(--erp-info-bg);
+  color: var(--erp-info-text);
+  border: 1px solid var(--erp-info-border);
+  border-radius: var(--erp-radius-xl);
+  font-size: var(--erp-font-sm);
+  line-height: 1.5;
+}
+.erp-notes-label {
+  flex: none;
+  font-weight: 800;
+}
+.erp-notes-body {
+  flex: 1;
+  min-width: 0;
+}
+.erp-notes-body.is-clamped {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+.erp-notes-body ul {
+  margin: 2px 0 0;
+  padding-left: 16px;
+}
+.erp-notes-sec {
+  margin-top: var(--erp-space-1);
+}
+.erp-notes-toggle {
+  flex: none;
+}
+.erp-note-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-left: var(--erp-space-2);
+  border-radius: 50%;
+  background: var(--erp-info-text);
+  vertical-align: middle;
+  cursor: help;
+}
+@media (max-width: 768px) {
+  .erp-notes-banner {
+    flex-wrap: wrap;
+  }
 }
