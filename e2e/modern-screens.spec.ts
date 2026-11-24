@@ -106,7 +106,7 @@ for (const s of [
     await page.goto(s.path);
     const bar = page.getByRole("toolbar", { name: "목록 작업" });
     test.skip(!(await bar.isVisible({ timeout: 30_000 }).catch(() => false)), "도구 줄이 없음(기능 꺼짐·클래식·좁은 화면)");
-    await expect(bar.getByRole("link", { name: /F2|^신규|작성|등록/ }).first()).toBeVisible();
+    await expect(bar.getByRole("link", { name: /F2|신규|^새 |작성|등록/ }).first()).toBeVisible();
     await expect(bar.getByRole("button", { name: /^수정/ })).toBeDisabled();
     await expect(bar.getByText("열 설정")).toBeVisible();
   });
