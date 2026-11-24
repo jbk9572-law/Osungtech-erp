@@ -52,3 +52,14 @@ export function LotLookupSearchForm({
     </form>
   );
 }
+
+/** 조회 도구줄(ListFilterBar)용 품목 찾기 칸 — 선택한 품목 id가 formId 폼으로 제출된다(관리번호는 도구줄 검색 칸). */
+export function LotLookupProductPicker({ products, productId, formId }: { products: Product[]; productId: string; formId: string }) {
+  const [selectedProductId, setSelectedProductId] = useState(productId);
+  return (
+    <div className="erp-fb-select erp-fb-select-wide">
+      <ProductSearchSelect id="lot-product-bar" products={products} value={selectedProductId} onChange={setSelectedProductId} placeholder="또는 품목으로 찾기 (코드, 품명, 규격)" />
+      <input type="hidden" name="productId" value={selectedProductId} form={formId} />
+    </div>
+  );
+}

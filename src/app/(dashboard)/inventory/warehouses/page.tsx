@@ -1,4 +1,5 @@
 import { NewButton } from "@/components/erp/list-toolbar";
+import { ListFilterBar } from "@/components/erp/list-filter-bar";
 import { InventorySubTabs } from "@/components/erp/inventory-sub-tabs";
 import Link from "next/link";
 import { GuardedLink } from "@/components/erp/guarded-link";
@@ -158,6 +159,15 @@ export default async function WarehousesPage({
             </div>
           )}
 
+          <ListFilterBar
+            formId="transfer-search-form"
+            basePath="/inventory/warehouses"
+            from={effectiveFrom}
+            to={effectiveTo}
+            presets={getQuickDatePresets()}
+            monthButtons={getYearMonthButtons()}
+            legacy={
+              <>
           <DateRangeQuickFilters
             basePath="/inventory/warehouses"
             presets={getQuickDatePresets()}
@@ -179,6 +189,9 @@ export default async function WarehousesPage({
               조회
             </button>
           </form>
+              </>
+            }
+          />
 
           <div className="erp-grid-wrap has-card-view">
             <table className="erp-grid">

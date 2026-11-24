@@ -1,4 +1,5 @@
 import { formatKstDate } from "@/lib/kst-date";
+import { ListFilterBar } from "@/components/erp/list-filter-bar";
 import Link from "next/link";
 import { GridBadgeLink } from "@/components/grid/badge";
 import { notFound } from "next/navigation";
@@ -259,6 +260,17 @@ export default async function InventoryProductHistoryPage({
         </div>
       )}
 
+      <ListFilterBar
+        formId="item-search-form"
+        basePath={`/inventory/item/${productId}`}
+        from={from}
+        to={to}
+        presets={presets}
+        monthButtons={monthButtons}
+        showReset={!!(fromParam || toParam)}
+        actions={<CloseButton href="/inventory">ESC 목록으로</CloseButton>}
+        legacy={
+          <>
       <div className="erp-toolbar">
         <CloseButton href="/inventory">ESC 목록으로</CloseButton>
       </div>
@@ -299,6 +311,9 @@ export default async function InventoryProductHistoryPage({
           </Link>
         )}
       </form>
+          </>
+        }
+      />
       <PageGuide>
         {fromParam ? "" : `날짜를 지정하지 않으면 이번달(${from} ~ ${to})만 표시됩니다. `}
         재고 잔량은 조회기간 시작 시점의 누적 재고(이월)부터 정확히 반영됩니다.

@@ -5,7 +5,8 @@ import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ListPageHeader } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
 import { GridBadge } from "@/components/grid/badge";
-import { LotLookupSearchForm } from "@/components/lot-lookup-search-form";
+import { LotLookupSearchForm, LotLookupProductPicker } from "@/components/lot-lookup-search-form";
+import { ListFilterBar } from "@/components/erp/list-filter-bar";
 import { fetchAllRows, fetchAllRowsIn } from "@/lib/fetch-all-rows";
 import { normalizeLotNumber } from "@/lib/lot-number";
 import { formatNumber } from "@/lib/format-number";
@@ -162,7 +163,14 @@ export default async function LotLookupPage({
         불량/리콜 발생 시 관리번호(로트)나 품목으로 매입·매출·생산지시 내역을 한 화면에서 함께 추적합니다.
       </PageGuide>
 
-      <LotLookupSearchForm products={products} q={q ?? ""} productId={productId} />
+      <ListFilterBar
+        formId="lot-search-form"
+        basePath="/inventory/lot-lookup"
+        q={q ?? ""}
+        searchPlaceholder="관리번호(LOT) 예: LOT1024"
+        extra={<LotLookupProductPicker products={products} productId={productId} formId="lot-search-form" />}
+        legacy={<LotLookupSearchForm products={products} q={q ?? ""} productId={productId} />}
+      />
 
       {!hasQuery && (
         <p className="erp-grid-empty erp-u-mt-12">

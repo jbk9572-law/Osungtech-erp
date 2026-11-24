@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { PageToolbar } from "@/components/erp/page-toolbar";
 import { BalanceGridTable } from "@/components/balance-grid-table";
 import { getAllSubcontractorBalances, sumOutstandingBalance } from "@/lib/ar-ap";
 import { formatNumber } from "@/lib/format-number";
@@ -60,10 +61,8 @@ export default async function SubcontractorPayablesPage() {
     <div>
       <div className="mb-3 flex items-center justify-between">
         <h1 className="erp-h1">생산관리 &gt; 외주비정산</h1>
-        <div className="erp-toolbar erp-u-mb-0">
-          <ExcelDownloadLink href="/api/subcontractor-payables/export" />
-        </div>
       </div>
+      <PageToolbar tools={<ExcelDownloadLink href="/api/subcontractor-payables/export" />} />
 
       <PageGuide>
         업체별 가공비 누계(공정 배정 시 입력한 단가 × 지시수량, 반품 수량은

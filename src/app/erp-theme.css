@@ -1942,6 +1942,7 @@ html:has(.erp) body {
   .erp-tree,
   .erp-tree-backdrop,
   .erp-tabbar,
+  .erp-listtoolbar,
   .erp-statusbar,
   .erp-nav-overlay,
   .erp-toast-stack,
@@ -10580,4 +10581,15 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   gap: var(--erp-space-2);
   flex: 0 0 100%;
   padding: var(--erp-space-1) 0;
+}
+
+/* 조회 도구줄 안의 체크 한 칸(0건 제외 같은 켜고 끄는 조건) */
+.erp-fb-check-inline {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+/* 조회 도구줄 안의 넓은 선택 칸(품목 찾기 등) */
+.erp-fb-select-wide {
+  flex: 1 1 260px;
 }

@@ -1,4 +1,5 @@
 import { NewButton } from "@/components/erp/list-toolbar";
+import { ListFilterBar } from "@/components/erp/list-filter-bar";
 import Link from "next/link";
 import { GridBadgeLink } from "@/components/grid/badge";
 import { GuardedLink } from "@/components/erp/guarded-link";
@@ -100,6 +101,18 @@ export default async function ProductionPage({
         각 단계는 담당자가 직접 눌러 처리합니다.
       </PageGuide>
 
+      <ListFilterBar
+        formId="production-search-form"
+        basePath="/production"
+        from={effectiveFrom}
+        to={effectiveTo}
+        q={q}
+        searchPlaceholder="완제품·SKU·창고·메모 검색…"
+        presets={getQuickDatePresets()}
+        monthButtons={getYearMonthButtons()}
+        showReset={!!(from || to || q)}
+        legacy={
+          <>
       <DateRangeQuickFilters
         basePath="/production"
         presets={getQuickDatePresets()}
@@ -115,6 +128,9 @@ export default async function ProductionPage({
         ariaLabel="생산지시 검색"
         resetHref="/production"
         hidden={{ ...(from ? { from } : {}), ...(to ? { to } : {}) }}
+      />
+          </>
+        }
       />
 
       <div className="erp-grid-wrap has-card-view">

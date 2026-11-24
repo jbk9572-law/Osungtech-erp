@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ListFilterBar } from "@/components/erp/list-filter-bar";
 import { createClient } from "@/lib/supabase/server";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { matchesSearch } from "@/lib/search-match";
@@ -69,6 +70,30 @@ export default async function InventoryQrLabelsPage({
         아래 라벨을 인쇄해서 품목/박스에 붙이면, QR 자동실사 화면에서 스캔으로 바로 인식됩니다.
       </PageGuide>
 
+      <ListFilterBar
+        formId="qr-search-form"
+        basePath="/inventory/qr-labels"
+        q={q}
+        searchPlaceholder="상품명, SKU, 규격, 카테고리 검색…"
+        showReset={!!(q || hideZero)}
+        extra={
+          <label className="erp-fb-check erp-fb-check-inline">
+            <input type="checkbox" name="hideZero" value="1" form="qr-search-form" defaultChecked={hideZero} /> 0건인 품목 제외
+          </label>
+        }
+        actions={
+          <>
+            <PrintButton autoPrint={false} />
+            <Link href="/inventory/count/scan" className="erp-btn">
+              QR 자동실사 화면으로
+            </Link>
+            <Link href="/inventory" className="erp-btn erp-btn-dark">
+              ESC 목록으로
+            </Link>
+          </>
+        }
+        legacy={
+          <>
       <form method="get" className="erp-field-grid print:hidden">
         <div className="erp-field erp-span-6">
           <label htmlFor="search-q">품목 검색 (비워두면 전체 품목)</label>
@@ -109,6 +134,9 @@ export default async function InventoryQrLabelsPage({
           ESC 목록으로
         </Link>
       </div>
+          </>
+        }
+      />
 
       {!labels.length && (
         <p className="erp-grid-empty erp-u-mt-12">

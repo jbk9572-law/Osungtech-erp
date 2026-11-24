@@ -1,4 +1,5 @@
 import { InventorySubTabs } from "@/components/erp/inventory-sub-tabs";
+import { ListFilterBar } from "@/components/erp/list-filter-bar";
 import Link from "next/link";
 import { GuardedLink } from "@/components/erp/guarded-link";
 import { createClient } from "@/lib/supabase/server";
@@ -65,7 +66,16 @@ export default async function StockLoansPage({ searchParams }: { searchParams: P
         <Link href="/inventory/loans?view=all" className={`erp-subtab${history ? " active" : ""}`} aria-current={history ? "page" : undefined}>전체 이력</Link>
       </nav>
       {history && (
-        <DateRangeQuickFilters basePath="/inventory/loans" presets={getQuickDatePresets()} monthButtons={getYearMonthButtons()} from={effectiveFrom} to={effectiveTo} extraParams={{ view: "all" }} />
+        <ListFilterBar
+          formId="loans-search-form"
+          basePath="/inventory/loans"
+          from={effectiveFrom}
+          to={effectiveTo}
+          presets={getQuickDatePresets()}
+          monthButtons={getYearMonthButtons()}
+          hidden={{ view: "all" }}
+          legacy={<DateRangeQuickFilters basePath="/inventory/loans" presets={getQuickDatePresets()} monthButtons={getYearMonthButtons()} from={effectiveFrom} to={effectiveTo} extraParams={{ view: "all" }} />}
+        />
       )}
 
       <div className="erp-grid-wrap">

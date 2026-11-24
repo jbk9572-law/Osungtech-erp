@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { ListFilterBar } from "@/components/erp/list-filter-bar";
+import { getQuickDatePresets } from "@/lib/date-presets";
 import { createClient } from "@/lib/supabase/server";
 import { ListPageHeader } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
@@ -72,6 +74,27 @@ export default async function TaxInvoiceExportPage({
         (여기서 국세청으로 바로 전송하지는 않습니다).
       </PageGuide>
 
+      <ListFilterBar
+        formId="export-search-form"
+        basePath="/sales/tax-invoices/export"
+        from={from}
+        to={to}
+        presets={getQuickDatePresets()}
+        monthButtons={[]}
+        hidden={{ summarize: summarize ? "1" : "0" }}
+        actions={
+          <Link href={`?${toggleParams.toString()}`} className="erp-btn">
+          {summarize ? "✓ 품목 5개 이상 건 자동 요약 (켜짐)" : "품목 5개 이상 건 자동 요약 (꺼짐)"}
+        </Link>
+        }
+        tools={
+          <>
+            <ExcelDownloadLink href={downloadHref} label={`엑셀 다운로드 (${formatNumber(rows.length)}건)`} primary />
+        <MarkHometaxUploadedButton taxInvoiceIds={uploadableInvoices.map((inv) => inv.id)} />
+          </>
+        }
+        legacy={
+          <>
       <form method="get" className="erp-field-grid">
         <div className="erp-field erp-span-2">
           <label htmlFor="export-from">시작일</label>
@@ -94,6 +117,9 @@ export default async function TaxInvoiceExportPage({
         <ExcelDownloadLink href={downloadHref} label={`엑셀 다운로드 (${formatNumber(rows.length)}건)`} primary />
         <MarkHometaxUploadedButton taxInvoiceIds={uploadableInvoices.map((inv) => inv.id)} />
       </div>
+          </>
+        }
+      />
 
       {alreadyUploadedCount != null && alreadyUploadedCount > 0 && (
         <PageGuide>
