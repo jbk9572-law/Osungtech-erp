@@ -1,4 +1,5 @@
 // 모던 테마(grid-modern) 전용 B형 화면 — 클래식은 classic.tsx(동결본).
+import { NewButton } from "@/components/erp/list-toolbar";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { TodoCheckbox } from "@/components/todo-checkbox";
@@ -197,9 +198,9 @@ export default async function TodosPage({
         title={<>할일관리</>}
         actions={
           <>
-          <GuardedLink href="/todos/new" className="erp-btn erp-btn-primary">
+          <NewButton href="/todos/new" keyHint>
             새 할일
-          </GuardedLink>
+          </NewButton>
           {selectedId && (
             <Link href={newHref} className="erp-btn">
               목록
@@ -226,17 +227,11 @@ export default async function TodosPage({
           </div>
           <ListSearchForm
             formId="todos-search-form"
-            className="erp-u-p-8"
             q={q}
             placeholder="제목·거래처·품목 검색"
             ariaLabel="할일 검색"
             hideSubmit
             hidden={{ ...(status !== "all" ? { status } : {}), ...(type !== "all" ? { type } : {}), ...(owner !== "all" ? { owner } : {}) }}
-            leading={
-              <GuardedLink href="/todos/new" className="erp-btn erp-btn-primary erp-u-nowrap">
-                + 새 할일
-              </GuardedLink>
-            }
           />
           <div className="erp-split-list-body">
             {rows.map((row) => {

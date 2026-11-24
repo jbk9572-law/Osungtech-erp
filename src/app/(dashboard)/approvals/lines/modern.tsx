@@ -1,3 +1,4 @@
+import { NewButton } from "@/components/erp/list-toolbar";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentActor } from "@/lib/current-actor";
@@ -72,9 +73,7 @@ export default async function ApprovalLinesPage({
       actions={
         <>
           {activeTab === "lines" && (
-            <GuardedLink href="/approvals/lines/new" className="erp-btn erp-btn-primary">
-              새 결재선
-            </GuardedLink>
+            <NewButton href="/approvals/lines/new">새 결재선</NewButton>
           )}
           <CloseButton href="/approvals">ESC 기안함으로</CloseButton>
         </>

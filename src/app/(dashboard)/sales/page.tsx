@@ -1,3 +1,4 @@
+import { NewButton } from "@/components/erp/list-toolbar";
 import { withPageTiming } from "@/lib/page-timing";
 import { GuardedLink } from "@/components/erp/guarded-link";
 import Link from "next/link";
@@ -547,9 +548,7 @@ async function SalesPage({
 
       <PageToolbar
         actions={
-          <GuardedLink href="/sales/new" className="erp-btn erp-btn-primary">
-            신규<ToolbarKey>Ctrl+Enter</ToolbarKey>
-          </GuardedLink>
+          <NewButton href="/sales/new" keyHint>신규</NewButton>
         }
         tools={
           <>

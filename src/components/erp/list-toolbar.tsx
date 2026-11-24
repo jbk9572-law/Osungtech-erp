@@ -3,6 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useThemeFeatures } from "@/lib/erp-theme-features";
+import { GuardedLink } from "@/components/erp/guarded-link";
 
 /** 모던 틀의 "화면 도구 줄 자리"(상단바 바로 아래 전체 폭) — ErpShell이 이 id로 한 칸을 만들어 둔다. */
 export const TOOLBAR_SLOT_ID = "erp-toolbar-slot";
@@ -40,4 +41,15 @@ export function ListToolbar({ actions, tools, status, search }: { actions?: Reac
 /** 버튼 안에 쓰는 단축키 표시(F5·F2 …) — 눌러서 되는 키만 적는다. */
 export function ToolbarKey({ children }: { children: ReactNode }) {
   return <kbd className="erp-listtoolbar-key">{children}</kbd>;
+}
+
+/** "신규·새 ○○" 버튼 — 모든 목록·도구 줄에서 같은 모양(파란 기본 버튼). 화면이 `erp-btn`만 쓰거나 파란색을 따로 지정하던 것이 갈라져 있었다(개발헌법 3번).
+ *  keyHint: 그 화면이 F2/Ctrl+Enter를 이 주소로 걸어 둔 경우에만 단축키 표시를 붙인다(안 걸린 키를 표시하면 거짓말이 된다). */
+export function NewButton({ href, children, keyHint = false }: { href: string; children: ReactNode; keyHint?: boolean }) {
+  return (
+    <GuardedLink href={href} className="erp-btn erp-btn-primary erp-u-nowrap">
+      {children}
+      {keyHint && <ToolbarKey>Ctrl+Enter</ToolbarKey>}
+    </GuardedLink>
+  );
 }

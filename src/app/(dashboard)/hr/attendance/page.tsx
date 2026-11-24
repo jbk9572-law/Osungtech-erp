@@ -1,3 +1,4 @@
+import { NewButton } from "@/components/erp/list-toolbar";
 import Link from "next/link";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { getCurrentActor } from "@/lib/current-actor";
@@ -186,9 +187,8 @@ export default async function AttendancePage() {
         actions={
           sidePanel ? (
             <>
-              <GuardedLink href="/hr/attendance/leave/new" className="erp-btn erp-btn-primary">
-                휴가 신청
-              </GuardedLink>
+              <NewButton href="/hr/attendance/leave/new">휴가 신청</NewButton>
+              {/* check-new-button:ignore 보조 신청 버튼(휴가 신청이 기본) */}
               <GuardedLink href="/hr/attendance/correction/new" className="erp-btn">
                 근태 정정 신청
               </GuardedLink>

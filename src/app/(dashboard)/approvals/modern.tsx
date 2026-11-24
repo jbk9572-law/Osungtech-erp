@@ -1,3 +1,4 @@
+import { NewButton } from "@/components/erp/list-toolbar";
 import Link from "next/link";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { formatKstDate, formatKstDateTime, todayKstStr } from "@/lib/kst-date";
@@ -85,9 +86,7 @@ export default async function ApprovalsPage({
           title="전자결재 > 기안함"
           actions={
             <>
-              <GuardedLink href="/approvals/new" className="erp-btn erp-btn-primary">
-                기안
-              </GuardedLink>
+              <NewButton href="/approvals/new">기안</NewButton>
               <Link href="/approvals/lines" className="erp-btn">
                 결재선 설정
               </Link>

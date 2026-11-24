@@ -1,3 +1,4 @@
+import { NewButton } from "@/components/erp/list-toolbar";
 import { GuardedLink } from "@/components/erp/guarded-link";
 import { headers } from "next/headers";
 import { createClient, getUser } from "@/lib/supabase/server";
@@ -101,9 +102,7 @@ export default async function CalendarPage({
       <ListPageHeader
         title="캘린더"
         actions={
-          <GuardedLink href="/calendar/new" className="erp-btn erp-btn-primary">
-            새 일정
-          </GuardedLink>
+          <NewButton href="/calendar/new">새 일정</NewButton>
         }
       />
       <PageGuide>

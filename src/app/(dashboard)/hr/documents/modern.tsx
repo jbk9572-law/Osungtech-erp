@@ -1,3 +1,4 @@
+import { NewButton } from "@/components/erp/list-toolbar";
 import { formatKstDate } from "@/lib/kst-date";
 import { createClient } from "@/lib/supabase/server";
 import { GuardedLink } from "@/components/erp/guarded-link";
@@ -80,9 +81,7 @@ export default async function DocumentsPage({ searchParams }: { searchParams: Pr
         title={<>그룹웨어 &gt; 문서함</>}
         actions={
           <>
-          <GuardedLink href="/hr/documents/new" className="erp-btn erp-btn-primary">
-            새 문서
-          </GuardedLink>
+          <NewButton href="/hr/documents/new">새 문서</NewButton>
           <Link href="/hr/documents/templates" className="erp-btn">
             양식 관리
           </Link>

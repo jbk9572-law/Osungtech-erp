@@ -579,9 +579,7 @@
   --erp-grid-line: #d3d8e0;
   --erp-grid-header-bg: #e9edf3;
   --erp-grid-head-fg: #252d3b;
-  --erp-grid-head-h: 28px;
   --erp-grid-head-weight: 700;
-  --erp-grid-row-h: 28px;
   --erp-grid-cell-px: 8px;
   --erp-grid-zebra-bg: #f8f9fc;
   --erp-grid-body-bg: var(--erp-panel);
@@ -694,8 +692,8 @@
   --erp-control-h-md: 28px;
   --erp-control-h-sm: 24px;
   --erp-control-h-xs: 24px;
-  --erp-grid-head-h: 26px;
-  --erp-grid-row-h: 26px;
+  --erp-grid-head-h: 28px; /* 표 머리글·행 높이 — 모던 두 테마 공통(클래식 30px보다 조금 촘촘) */
+  --erp-grid-row-h: 28px;
   --erp-grid-cell-py: 0px;
   --erp-grid-cell-valign: middle;
   --erp-sidebar-w: 208px;
@@ -9304,15 +9302,18 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
 }
 
 .erp-chrome-modern .erp-tree-group {
-  border-bottom: 1px solid var(--erp-border);
+  border-bottom: 1px solid var(--erp-border-strong);
   padding-bottom: var(--erp-space-2);
+}
+.erp-chrome-modern .erp-tree-group + .erp-tree-group {
+  padding-top: var(--erp-space-2);
 }
 
 .erp-chrome-modern .erp-tree-group-label {
   height: auto;
   padding: 9px 12px 7px;
   gap: 4px;
-  background: var(--erp-bg-subtle); /* 그룹 머리를 띠로 — 하위 항목과 확실히 구분 */
+  background: transparent; /* 음영 띠 없음 — 글자 굵기·선·여백으로만 구분 */
   font-size: var(--erp-tree-group-size);
   font-weight: 700;
   letter-spacing: 0;
@@ -9447,12 +9448,20 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   margin-left: 0;
 }
 
+.erp-chrome-modern .erp-split-list .erp-party-search {
+  /* 목록 칸(세로) 안의 검색 줄 — 칸 폭을 다 쓰고 오른쪽으로 밀지 않는다 */
+  width: auto;
+  margin: var(--erp-space-2) var(--erp-space-3);
+}
 .erp-chrome-modern .erp-party-toolbar {
   gap: var(--erp-space-2) var(--erp-space-3);
 }
 
 .erp-chrome-modern .erp-party-search {
-  flex: 0 1 280px;
+  /* flex-basis 대신 폭으로 — 세로(column) 칸 안에 놓이면 flex-basis가 높이가 되어 박스가 늘어나는 구멍이 있었다 */
+  width: 280px;
+  max-width: 100%;
+  flex: 0 0 auto;
   margin-left: auto;
 }
 
@@ -9487,7 +9496,7 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
 
 @media (max-width: 768px) {
   .erp-chrome-modern .erp-party-search {
-    flex: 1 1 100%;
+    width: 100%;
     max-width: none;
     margin-left: 0;
   }

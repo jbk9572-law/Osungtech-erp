@@ -1,3 +1,4 @@
+import { NewButton } from "@/components/erp/list-toolbar";
 import { createClient } from "@/lib/supabase/server";
 import { GridBadge } from "@/components/grid/badge";
 import { getCurrentActor } from "@/lib/current-actor";
@@ -48,9 +49,7 @@ export default async function ApprovalDelegationsPage() {
         title="환경설정 > 전결권 관리"
         actions={
           listFrameV2 ? (
-            <GuardedLink href="/settings/delegations/new" className="erp-btn erp-btn-primary">
-              신규<ToolbarKey>Ctrl+Enter</ToolbarKey>
-            </GuardedLink>
+            <NewButton href="/settings/delegations/new" keyHint>신규</NewButton>
           ) : undefined
         }
       />

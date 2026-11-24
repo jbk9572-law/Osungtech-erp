@@ -1,3 +1,4 @@
+import { NewButton } from "@/components/erp/list-toolbar";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { getCurrentActor } from "@/lib/current-actor";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
@@ -54,9 +55,7 @@ export default async function SupportPage() {
         title="환경설정 > 운영자 문의"
         actions={
           listFrameV2 ? (
-            <GuardedLink href="/settings/support/new" className="erp-btn erp-btn-primary">
-              신규<ToolbarKey>Ctrl+Enter</ToolbarKey>
-            </GuardedLink>
+            <NewButton href="/settings/support/new" keyHint>신규</NewButton>
           ) : undefined
         }
       />

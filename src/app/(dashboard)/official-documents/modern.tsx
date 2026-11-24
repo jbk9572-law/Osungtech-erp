@@ -1,3 +1,4 @@
+import { NewButton } from "@/components/erp/list-toolbar";
 import { formatKstDate } from "@/lib/kst-date";
 import Link from "next/link";
 import { createClient, getUser } from "@/lib/supabase/server";
@@ -103,9 +104,7 @@ export async function OfficialDocumentsList({ box, id, status: statusParam }: { 
         title={<>공문관리 &gt; {TABS.find((t) => t.key === box)?.label}</>}
         actions={
           <>
-          <GuardedLink href="/official-documents/new" className="erp-btn erp-btn-primary">
-            새 공문
-          </GuardedLink>
+          <NewButton href="/official-documents/new">새 공문</NewButton>
           {selectedId && (
             <Link href={listHref} className="erp-btn">
               목록

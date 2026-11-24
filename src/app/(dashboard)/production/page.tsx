@@ -1,3 +1,4 @@
+import { NewButton } from "@/components/erp/list-toolbar";
 import Link from "next/link";
 import { GridBadgeLink } from "@/components/grid/badge";
 import { GuardedLink } from "@/components/erp/guarded-link";
@@ -85,9 +86,7 @@ export default async function ProductionPage({
         title="생산관리 > 생산지시 내역"
         actions={
           <>
-            <GuardedLink href="/production/new" className="erp-btn erp-btn-primary">
-              생산지시 등록
-            </GuardedLink>
+            <NewButton href="/production/new">생산지시 등록</NewButton>
             <Link href="/inventory/lot-lookup" className="erp-btn">
               품목·관리번호 통합조회
             </Link>

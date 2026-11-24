@@ -1,3 +1,4 @@
+import { NewButton } from "@/components/erp/list-toolbar";
 import { InventorySubTabs } from "@/components/erp/inventory-sub-tabs";
 import Link from "next/link";
 import { GuardedLink } from "@/components/erp/guarded-link";
@@ -71,9 +72,8 @@ export default async function WarehousesPage({
         actions={
           listFrameV2 ? (
             <>
-              <GuardedLink href="/inventory/warehouses/new" className="erp-btn erp-btn-primary">
-                새 창고
-              </GuardedLink>
+              <NewButton href="/inventory/warehouses/new">새 창고</NewButton>
+              {/* check-new-button:ignore 보조 등록 버튼(새 창고가 기본) */}
               <GuardedLink href="/inventory/transfers/new" className="erp-btn">
                 창고 이동 등록<ToolbarKey>F2</ToolbarKey>
               </GuardedLink>
@@ -154,9 +154,7 @@ export default async function WarehousesPage({
         <FormSection tabLabel={`창고 이동 이력 (${transfers.length})`}>
           {!listFrameV2 && (
             <div className="erp-u-flex erp-u-mb-10 erp-u-justify-end">
-              <GuardedLink href="/inventory/transfers/new" className="erp-btn erp-btn-primary">
-                창고 이동 등록
-              </GuardedLink>
+              <NewButton href="/inventory/transfers/new">창고 이동 등록</NewButton>
             </div>
           )}
 

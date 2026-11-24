@@ -1,3 +1,4 @@
+import { NewButton } from "@/components/erp/list-toolbar";
 import Link from "next/link";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { AnnouncementListBody, type AnnouncementRow } from "@/components/announcement-list-body";
@@ -105,9 +106,7 @@ export default async function AnnouncementsPage({
         actions={
           <>
           {isManagerOrAdmin && (
-            <Link href={listFrameV2 ? "/announcements/new" : newHref} className="erp-btn erp-btn-primary">
-              글쓰기
-            </Link>
+            <NewButton href={listFrameV2 ? "/announcements/new" : newHref}>글쓰기</NewButton>
           )}
           {selectedId && (
             <Link href={newHref} className="erp-btn">

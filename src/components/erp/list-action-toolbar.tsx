@@ -4,7 +4,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { GuardedLink } from "@/components/erp/guarded-link";
-import { ListToolbar, ToolbarKey } from "@/components/erp/list-toolbar";
+import { ListToolbar, NewButton, ToolbarKey } from "@/components/erp/list-toolbar";
 import { useThemeFeatures } from "@/lib/erp-theme-features";
 import { formatKstTime } from "@/lib/kst-date";
 import { formatNumber } from "@/lib/format-number";
@@ -84,10 +84,9 @@ export function ListActionToolbar({
               조회<ToolbarKey>F5</ToolbarKey>
             </button>
           )}
-          <GuardedLink href={newHref} className="erp-btn">
+          <NewButton href={newHref} keyHint>
             {newLabel}
-            <ToolbarKey>Ctrl+Enter</ToolbarKey>
-          </GuardedLink>
+          </NewButton>
           {editHref ? (
             <Link href={editHref} className="erp-btn erp-listtoolbar-wide">
               수정<ToolbarKey>F4</ToolbarKey>
