@@ -32,37 +32,41 @@ export function ModalFormSheet({
 }) {
   const sheetClass = useFormSheetClass();
   const close = useModalClose();
+  // 모달 밖(목록 화면 안에 인라인으로 놓은 경우)에서는 모달 전용 띠(제목줄·하단 바)를 달지 않는다 — 카드 머리 + 카드 안 저장 버튼 줄만.
+  const inModal = close !== null;
   // 제목줄(VoucherTypeBar)이 이미 화면 이름을 보여주는 테마는 카드 머리 줄을 또 그리지 않는다 — 같은 말이 연달아 두 줄 나오지 않게
   const { voucherLayout } = useThemeFeatures();
   useEffect(() => {
     if (state?.success) close?.();
   }, [state, close]);
 
+  const actions = (
+    <div className="erp-form-actions">
+      <FormMessage state={state} />
+      <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary">
+        {pending ? (
+          <>
+            <span className="erp-spinner" aria-hidden /> 저장 중...
+          </>
+        ) : (
+          submitLabel
+        )}
+      </button>
+    </div>
+  );
+
   return (
-    <form ref={formRef} action={formAction} className={sheetClass}>
-      <VoucherTypeBar title={title}>{null}</VoucherTypeBar>
+    <form ref={formRef} action={formAction} className={inModal ? sheetClass : undefined}>
+      {inModal && <VoucherTypeBar title={title}>{null}</VoucherTypeBar>}
       <div className="erp-detail erp-u-mt-0">
-        {!voucherLayout && (
+        {(!voucherLayout || !inModal) && (
           <div className="erp-detail-tabs">
             <span className="erp-detail-tab active">{tabLabel}</span>
           </div>
         )}
         <div className="erp-detail-body erp-field-grid erp-u-border-none erp-u-p-14 erp-u-m-0">{children}</div>
       </div>
-      <DocSubmitBar>
-        <div className="erp-form-actions">
-          <FormMessage state={state} />
-          <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary">
-            {pending ? (
-              <>
-                <span className="erp-spinner" aria-hidden /> 저장 중...
-              </>
-            ) : (
-              submitLabel
-            )}
-          </button>
-        </div>
-      </DocSubmitBar>
+      {inModal ? <DocSubmitBar>{actions}</DocSubmitBar> : actions}
     </form>
   );
 }

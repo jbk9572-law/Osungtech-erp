@@ -5,7 +5,7 @@ import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { InventoryAdjustForm } from "@/components/inventory-adjust-form";
 import { ProductGridTable, type ProductGridRow } from "@/components/product-grid-table";
-import { DetailPageHeader } from "@/components/erp/page-header";
+import { ListPageHeader } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { getThemeFeatures } from "@/lib/erp-theme-config";
@@ -33,7 +33,7 @@ async function InventoryPage({
 
   return (
     <div>
-      <DetailPageHeader
+      <ListPageHeader
         title="재고관리 > 재고현황"
         actions={
           <>

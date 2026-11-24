@@ -172,6 +172,16 @@ export function DetailInfoRow({ label, children }: { label: string; children: Re
 // 여러 개인 화면(예: 기안 상세의 "기안 내용"/"결재선")은 이 컴포넌트
 // 대신 erp-detail을 여러 번 직접 써서 탭 여러 개를 표현한다.
 export function FormSection({ tabLabel, children }: { tabLabel: string; children: ReactNode }) {
+  // 새 틀(모던)의 입력 모달 안에서는 탭 하나짜리 카드(클래식 모양)를 그리지 않는다 — 모달 자체가 카드이므로 박스 안에 박스가 되지 않게 안쪽만 그린다.
+  const { listFrameV2 } = useThemeFeatures();
+  const inModal = useModalClose() !== null;
+  if (listFrameV2 && inModal) {
+    return (
+      <section className="erp-modal-section" aria-label={tabLabel}>
+        {children}
+      </section>
+    );
+  }
   return (
     <div className="erp-detail erp-u-mt-0">
       <div className="erp-detail-tabs">

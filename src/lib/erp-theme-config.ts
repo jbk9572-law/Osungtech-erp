@@ -39,7 +39,7 @@ export const CLASSIC_FEATURES: ThemeFeatures = { defaultInvoiceForm: "B", rowNum
 
 export const THEME_FEATURES: Record<string, ThemeFeatures> = {
   "classic-light": CLASSIC_FEATURES,
-  "grid-modern": { defaultInvoiceForm: "N", rowNumbers: true, groupedHeader: true, stockNear: true, partnerPaymentTerms: true, gridSelectionStats: true, paymentStatusColumn: true, voucherLayout: true, kpiStrip: true, stockInsights: true, listSidePanel: true, denseLists: true, appChrome: true, listFrameV2: false },
+  "grid-modern": { defaultInvoiceForm: "N", rowNumbers: true, groupedHeader: true, stockNear: true, partnerPaymentTerms: true, gridSelectionStats: true, paymentStatusColumn: true, voucherLayout: true, kpiStrip: true, stockInsights: true, listSidePanel: true, denseLists: true, appChrome: true, listFrameV2: true },
 };
 
 // 모던 2(미리보기): 구조 플래그는 모던과 같고 새 목록 틀(listFrameV2)만 더 켠다. 값(토큰)은 모던과 같은 규칙표(design/SPEC.md).

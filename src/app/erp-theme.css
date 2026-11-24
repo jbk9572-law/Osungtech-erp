@@ -703,8 +703,8 @@
   --erp-sidebar-w: 208px;
   --erp-side-panel-w: 320px;
   --erp-tree-item-h: 32px;
-  --erp-tree-item-size: 13px;
-  --erp-tree-group-size: 11.5px;
+  --erp-tree-item-size: 12.5px;
+  --erp-tree-group-size: 13px;
   /* 하위 항목 글자가 그룹 이름 글자(12px 여백 + 화살표 10px + 간격 4px)와 같은 줄에서 시작한다 — 계층이 거꾸로 보이지 않게(R-004) */
   --erp-tree-indent: 26px;
   --erp-radius-xs: 3px;
@@ -1866,6 +1866,7 @@ html:has(.erp) body {
    화면(block 레이아웃에 의존)에는 전혀 영향이 없게 한다. */
 .erp-page:has(> div > .erp-split-shell),
 .erp-page:has(> div > .erp-split3-shell),
+.erp-page:has(> div > .erp-messenger-shell),
 .erp-page:has(> div > .erp-card-feed:not(.erp-card-feed-compact)) {
   display: flex;
   flex-direction: column;
@@ -1873,6 +1874,7 @@ html:has(.erp) body {
 
 .erp-page:has(> div > .erp-split-shell) > div,
 .erp-page:has(> div > .erp-split3-shell) > div,
+.erp-page:has(> div > .erp-messenger-shell) > div,
 .erp-page:has(> div > .erp-card-feed:not(.erp-card-feed-compact)) > div {
   display: flex;
   flex-direction: column;
@@ -9056,8 +9058,9 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   background: transparent;
   font-size: var(--erp-tree-group-size);
   font-weight: 700;
-  letter-spacing: 0.04em;
-  color: var(--erp-text-muted);
+  letter-spacing: 0;
+  /* 그룹 이름이 하위 항목보다 크고 진해야 위계가 맞다 — 항목은 보통 굵기·약간 연한 색 */
+  color: var(--erp-text);
 }
 
 .erp-chrome-modern .erp-tree-item {
@@ -9068,7 +9071,7 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   border-radius: 0;
   font-size: var(--erp-tree-item-size);
   font-weight: 400;
-  color: var(--erp-text);
+  color: var(--erp-text-muted);
 }
 
 .erp-chrome-modern .erp-tree-item.active {
@@ -9723,4 +9726,45 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   align-items: center;
   height: var(--erp-control-h-md);
   font-family: ui-monospace, "SF Mono", monospace;
+}
+
+/* 안내 박스 접기: "안내" 한 줄 + 펼치면 전문 — 화면마다 길던 안내를 같은 높이로 맞춘다(R-012) */
+.erp-page-guide-fold > summary {
+  cursor: pointer;
+  list-style: none;
+  font-weight: 600;
+}
+.erp-page-guide-fold > summary::-webkit-details-marker {
+  display: none;
+}
+.erp-page-guide-fold > summary::before {
+  content: "ⓘ ";
+}
+.erp-page-guide-fold-body {
+  margin-top: var(--erp-space-1);
+}
+/* 빈 상세 패널은 행을 고르기 전에는 그리지 않는다 — 표가 그 폭만큼 넓어진다 */
+.erp-chrome-modern .erp-detail-side:has(> .erp-detail-side-empty) {
+  display: none;
+}
+
+/* 모달 안 입력 구역: 카드 테두리 없이 안쪽 여백만 — 모달 자체가 카드(R-011 후속, 입력 모달 통일) */
+.erp-modal-section {
+  padding: var(--erp-space-3) 0 0;
+}
+
+/* 접이식 구역 한 줄 — 목록 위 보조 정보(팔로우업 예정 등)를 박스 안 박스 없이 "요약 한 줄 + 펼치면 표"로 */
+.erp-fold-section {
+  margin-bottom: var(--erp-space-3);
+  border: 1px solid var(--erp-border);
+  border-radius: var(--erp-radius-xl);
+  background: var(--erp-panel);
+}
+.erp-fold-section > summary {
+  cursor: pointer;
+  padding: var(--erp-space-2) var(--erp-space-3);
+  font-size: var(--erp-font-base);
+}
+.erp-fold-section > .erp-grid-wrap {
+  margin: 0 var(--erp-space-2) var(--erp-space-2);
 }

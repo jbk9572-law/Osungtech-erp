@@ -1,5 +1,6 @@
 import { selectInChunks } from "@/lib/fetch-all-rows";
 import { createClient, getUser } from "@/lib/supabase/server";
+import { getCurrentActor } from "@/lib/current-actor";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ListPageHeader, SplitDetailEmpty } from "@/components/erp/page-header";
 import Link from "next/link";
@@ -59,6 +60,7 @@ export default async function BoardPage({
   searchParams: Promise<{ id?: string; type?: string }>;
 }) {
   const supabase = await createClient();
+  const { isManagerOrAdmin } = await getCurrentActor(supabase);
   const user = await getUser();
   const { id, type } = await searchParams;
 
@@ -195,10 +197,11 @@ export default async function BoardPage({
   // 화면 자체에 있음, F2/새 글쓰기 버튼)으로 가는 길이 없어진다. 꺼진
   // 기능은 바로가기도 넣지 않는다 — 꺼진 화면으로 안내하면 안 되므로.
   const writeLinks: BoardWriteLink[] = [
-    { category: "notice", label: "새 공지", href: "/announcements" },
-    ...(hrEnabled ? [{ category: "hr_doc" as const, label: "새 인사문서", href: "/hr/documents" }] : []),
-    ...(officialEnabled ? [{ category: "official" as const, label: "새 공문", href: "/official-documents" }] : []),
-    ...(approvalsEnabled ? [{ category: "approval" as const, label: "새 기안", href: "/approvals" }] : []),
+    // 공지 작성은 관리자/매니저만 — 권한 없는 사람에게는 메뉴 항목을 보여주지 않는다(눌러도 막힘 화면만 나오므로)
+    ...(isManagerOrAdmin ? [{ category: "notice" as const, label: "새 공지", href: "/announcements/new" }] : []),
+    ...(hrEnabled ? [{ category: "hr_doc" as const, label: "새 인사문서", href: "/hr/documents/new" }] : []),
+    ...(officialEnabled ? [{ category: "official" as const, label: "새 공문", href: "/official-documents/new" }] : []),
+    ...(approvalsEnabled ? [{ category: "approval" as const, label: "새 기안", href: "/approvals/new" }] : []),
   ];
 
   const listHref = "/board";
@@ -210,6 +213,7 @@ export default async function BoardPage({
       <KeyboardShortcuts shortcuts={{ Escape: { href: selectedId ? listHref : "/dashboard" } }} />
       <ListPageHeader title="게시판" />
       {/* 새로 쓰기는 도구 줄의 [신규 ▾] 하나로 — 글 종류별 버튼을 목록 안에 늘어놓지 않는다(R-005·R-007) */}
+      {writeLinks.length > 0 && (
       <PageToolbar
         actions={
           <ToolbarMenu label="신규">
@@ -221,6 +225,7 @@ export default async function BoardPage({
           </ToolbarMenu>
         }
       />
+      )}
       <PageGuide>
         공지사항 / 인사문서함 / 공문함 / 결재·기안함의 최근 항목을 한 화면에 모아 보여줍니다. 각 항목은 이 화면 안에서
         바로 확인할 수 있고, 수정·삭제 같은 세부 처리는 원래 메뉴와 완전히 같은 화면을 그대로 씁니다.

@@ -121,12 +121,12 @@ export default async function SalesActivitiesPage({
       </PageGuide>
 
       {upcoming.length > 0 && (
-        <div className="erp-detail erp-u-mb-12">
-          <div className="erp-detail-tabs">
-            <span className="erp-detail-tab active">팔로우업 예정 ({upcoming.length}건)</span>
-          </div>
-          <div className="erp-detail-body">
-            <div className="erp-grid-wrap">
+        <details className="erp-fold-section">
+          <summary>
+            팔로우업 예정 <b>{upcoming.length}건</b>
+            {upcoming.some((a) => a.next_action_date! < today) && <span className="erp-u-danger"> · 지남 {upcoming.filter((a) => a.next_action_date! < today).length}건</span>}
+          </summary>
+          <div className="erp-grid-wrap">
               <table className="erp-grid">
                 <thead>
                   <tr>
@@ -141,7 +141,7 @@ export default async function SalesActivitiesPage({
                     const overdue = a.next_action_date! < today;
                     return (
                       <tr key={a.id}>
-                        <td style={{ color: overdue ? "var(--erp-danger)" : "var(--erp-text)", fontWeight: overdue ? 700 : 400 }}>
+                        <td className={overdue ? "erp-u-danger erp-u-bold" : undefined}>
                           {a.next_action_date!.replaceAll("-", ".")}
                           {overdue && " (지남)"}
                         </td>
@@ -156,8 +156,7 @@ export default async function SalesActivitiesPage({
                 </tbody>
               </table>
             </div>
-          </div>
-        </div>
+        </details>
       )}
 
       <DateRangeQuickFilters basePath="/sales-activities" presets={presets} monthButtons={monthButtons} from={from} to={to} />

@@ -30,7 +30,7 @@ function measureInPage() {
 
   check("좌측 메뉴 폭", "208", q(".erp-tree:not(.collapsed)"), w, (n) => n === 208);
   check("메뉴 항목 높이", "32", q(".erp-tree-item"), h, (n) => n === 32);
-  check("메뉴 항목 글자", "13", q(".erp-tree-item"), fs, (n) => n === 13);
+  check("메뉴 항목 글자", "12.5", q(".erp-tree-item"), fs, (n) => n === 12.5);
   check("버튼 높이(일반)", "28", q(".erp-btn:not(.erp-btn-sm):not(.erp-btn-xs)"), h, (n) => n === 28);
   check("버튼 높이(작은)", "24", q(".erp-btn-sm, .erp-btn-xs"), h, (n) => n === 24);
   check("입력칸 높이", "28", q("input.erp-input:not([type=checkbox]):not([type=radio]), select.erp-input"), h, (n) => n === 28);
