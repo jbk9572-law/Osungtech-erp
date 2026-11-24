@@ -10004,21 +10004,6 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   color: var(--erp-text-muted) !important;
   font-size: var(--erp-font-sm);
 }
-/* 조회 조건 묶음(ListFilterCard) — 칩 줄 + 기간·검색 폼을 박스 하나로 */
-.erp-filter-card {
-  display: flex;
-  flex-direction: column;
-  gap: var(--erp-space-3);
-  margin-bottom: var(--erp-space-3);
-  padding: var(--erp-space-3) var(--erp-space-4);
-  background: var(--erp-panel);
-  border: 1px solid var(--erp-border-strong);
-  border-radius: var(--erp-radius-xl);
-}
-.erp-filter-card .erp-field-grid {
-  margin: 0;
-}
-
 /* 패널 머리 묶음(PanelHeadStack) — 첫 줄 + 보조 줄을 한 덩어리로. 줄 높이는 내용이 정하고(고정 높이 없음), 구분선은 묶음 아래 하나뿐 */
 .erp-head-stack {
   flex: 0 0 auto;
@@ -10573,4 +10558,10 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
 }
 .erp-info-row-label {
   color: var(--erp-text-muted);
+}
+
+/* 조회 도구줄 안의 선택 칸(품목·창고 등 ErpSelect) — 한 줄에서 폭을 나눠 쓴다 */
+.erp-fb-select {
+  flex: 0 1 200px;
+  min-width: 120px;
 }

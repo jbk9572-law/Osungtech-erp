@@ -4,6 +4,7 @@ import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ListPageHeader } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
 import { MonthNavigator } from "@/components/erp/month-navigator";
+import { ListFilterBar } from "@/components/erp/list-filter-bar";
 import { currentMonth, getMonthRange } from "@/lib/date-presets";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { formatNumber } from "@/lib/format-number";
@@ -78,6 +79,28 @@ export default async function InventoryLedgerPage({
         합산 기준입니다.
       </PageGuide>
 
+      <ListFilterBar
+        formId="ledger-search-form"
+        basePath="/reports/ledger"
+        month={month}
+        extra={
+          <LedgerFilterSelects
+            formId="ledger-search-form"
+            products={products}
+            warehouses={warehouses.data ?? []}
+            defaultProductId={productId ?? ""}
+            defaultWarehouseId={warehouseId ?? ""}
+          />
+        }
+        tools={
+          selectedProduct ? (
+            <ExcelDownloadLink
+              href={`/api/reports/ledger/export?product_id=${selectedProduct.id}&month=${month}${warehouseId ? `&warehouse_id=${warehouseId}` : ""}`}
+            />
+          ) : undefined
+        }
+        legacy={
+          <>
       <form method="get" className="erp-field-grid">
         <LedgerFilterSelects
           products={products}
@@ -100,6 +123,10 @@ export default async function InventoryLedgerPage({
           />
         </div>
       )}
+
+          </>
+        }
+      />
 
       {!selectedProduct ? (
         <p className="text-sm erp-u-muted">

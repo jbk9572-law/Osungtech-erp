@@ -1,12 +1,9 @@
-import { ListFilterCard } from "@/components/erp/list-filter-card";
 import { createClient } from "@/lib/supabase/server";
 import { RecordPageA } from "@/components/grid/record-page-a";
 import type { RecordRow } from "@/components/grid/record-list-a";
 import { PageGuide } from "@/components/erp/page-guide";
 import { GridBadge } from "@/components/grid/badge";
 import { NextActionCheckbox } from "@/components/next-action-checkbox";
-import { DateRangeSearchForm } from "@/components/erp/date-range-search-form";
-import { DateRangeQuickFilters } from "@/components/erp/date-range-quick-filters";
 import { getQuickDatePresets, getYearMonthButtons } from "@/lib/date-presets";
 import { matchesSearch } from "@/lib/search-match";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
@@ -115,6 +112,7 @@ export default async function SalesActivitiesPage({
     };
   });
 
+
   const filters = (
     <>
       <PageGuide>
@@ -122,10 +120,6 @@ export default async function SalesActivitiesPage({
       </PageGuide>
 
 
-      <ListFilterCard>
-        <DateRangeQuickFilters basePath="/sales-activities" presets={presets} monthButtons={monthButtons} from={from} to={to} />
-        <DateRangeSearchForm formId="sales-activities-search-form" idPrefix="sa" from={from} to={to} q={q} qLabel="거래처 / 제목 / 내용 검색" qPlaceholder="거래처명, 제목, 내용" resetHref="/sales-activities" showReset={!!(from || to || q || limitParam)} hideSubmit />
-      </ListFilterCard>
 
       {upcoming.length > 0 && (
         <details className="erp-fold-section">
@@ -175,6 +169,7 @@ export default async function SalesActivitiesPage({
       newLabel="새 활동 기록"
       searchFormId="sales-activities-search-form"
       filters={filters}
+      filterBar={{ from, to, q, searchPlaceholder: "거래처명, 제목, 내용", presets, monthButtons, showReset: !!(from || to || q || limitParam) }}
       columns={[{ label: "활동일" }, { label: "거래처" }, { label: "유형" }, { label: "제목" }, { label: "다음 일정" }]}
       rows={rows}
       panelAriaLabel="선택한 영업활동 상세"

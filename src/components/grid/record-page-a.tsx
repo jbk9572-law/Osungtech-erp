@@ -2,6 +2,8 @@ import { ListTitleBar } from "@/components/erp/page-header";
 import type { ComponentProps, ReactNode } from "react";
 import Link from "next/link";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { FilterBarForm, FilterControls } from "@/components/erp/list-filter-bar";
+import type { DatePreset } from "@/lib/date-presets";
 import { RecordListA, type RecordColumn, type RecordRow } from "@/components/grid/record-list-a";
 import { formatNumber } from "@/lib/format-number";
 
@@ -13,6 +15,7 @@ export function RecordPageA({
   newLabel,
   searchFormId,
   filters,
+  filterBar,
   search,
   columns,
   rows,
@@ -32,6 +35,8 @@ export function RecordPageA({
   searchFormId?: string;
   /** 검색 줄 위에 놓는 안내·기간 조건 등. 한 칸짜리 검색은 search로 — 도구 줄 오른쪽 끝에 놓인다. */
   filters?: ReactNode;
+  /** 조회 조건을 도구줄 한 줄(조회·기간·검색)에 모아 그린다 — searchFormId를 폼 id로 쓴다. filters(예전 조건 카드)와 같이 쓰지 않는다. */
+  filterBar?: { from?: string; to?: string; q?: string; searchPlaceholder: string; presets: DatePreset[]; monthButtons: DatePreset[]; showReset: boolean };
   /** 한 칸짜리 검색 폼(ListSearchForm) — 도구 줄 오른쪽 끝. */
   search?: ReactNode;
   columns: RecordColumn[];
@@ -58,6 +63,7 @@ export function RecordPageA({
       />
       <ListTitleBar title={<>{title}</>} />
       {filters}
+      {filterBar && searchFormId && <FilterBarForm formId={searchFormId} basePath={basePath} />}
       <RecordListA
         columns={columns}
         rows={rows}
@@ -70,6 +76,11 @@ export function RecordPageA({
         newLabel={newLabel}
         excelHref={excelHref}
         search={search}
+        filters={
+          filterBar && searchFormId ? (
+            <FilterControls formId={searchFormId} basePath={basePath} from={filterBar.from} to={filterBar.to} q={filterBar.q} searchPlaceholder={filterBar.searchPlaceholder} presets={filterBar.presets} monthButtons={filterBar.monthButtons} showReset={filterBar.showReset} />
+          ) : undefined
+        }
         partial={hasMore}
       />
       {hasMore && (

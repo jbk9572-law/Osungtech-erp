@@ -30,6 +30,7 @@ export function ListActionToolbar({
   selectedCount,
   dataKey,
   search,
+  filters,
 }: {
   /** 검색 폼의 id — 있으면 [조회]가 이 폼을 제출한다(없으면 [조회] 버튼을 그리지 않는다). */
   searchFormId?: string;
@@ -52,6 +53,8 @@ export function ListActionToolbar({
   dataKey: unknown;
   /** 한 칸짜리 검색 폼(ListSearchForm) — 도구 줄 맨 오른쪽 끝에 한 줄로 그린다. */
   search?: ReactNode;
+  /** 조회 조건 칸들(FilterControls) — 도구줄 가운데. 주면 [조회]도 이 줄에 그린다. */
+  filters?: ReactNode;
 }) {
   const router = useRouter();
   const { listFrameV2 } = useThemeFeatures();
@@ -77,9 +80,10 @@ export function ListActionToolbar({
   return (
     <ListToolbar
       search={search}
+      filters={filters}
       actions={
         <>
-          {searchFormId && !listFrameV2 && (
+          {searchFormId && (!listFrameV2 || !!filters) && (
             <button type="button" className="erp-btn erp-btn-primary" onClick={() => (document.getElementById(searchFormId) as HTMLFormElement | null)?.requestSubmit()}>
               조회<ToolbarKey>F5</ToolbarKey>
             </button>

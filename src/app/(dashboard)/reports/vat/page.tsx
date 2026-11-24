@@ -10,6 +10,7 @@ import { shiftMonth } from "@/lib/date-presets";
 import { effectiveMonth } from "@/lib/carryover";
 import { formatNumber } from "@/lib/format-number";
 import { ExcelDownloadLink } from "@/components/erp/excel-download-link";
+import { ListFilterBar } from "@/components/erp/list-filter-bar";
 
 // [from, to] 구간에 걸쳐 있는 "YYYY-MM" 월 목록 — 이월(carryover) 건을
 // effectiveMonth 기준으로 걸러낼 때 쓴다. 분기 버튼은 항상 월 경계에
@@ -133,6 +134,16 @@ export default async function VatReportPage({
         실제 신고는 담당 세무사/홈택스를 통해 별도로 진행해주세요 — 이 화면은 신고 전 참고 자료입니다.
       </PageGuide>
 
+      <ListFilterBar
+        formId="vat-search-form"
+        basePath="/reports/vat"
+        from={from}
+        to={to}
+        presets={quarterLinks.map((q) => ({ label: q.label, from: q.from, to: q.to }))}
+        monthButtons={[]}
+        tools={<ExcelDownloadLink href={`/api/reports/vat/export?from=${from}&to=${to}`} />}
+        legacy={
+          <>
       <div className="erp-date-presets erp-u-mb-8">
         {quarterLinks.map((q) => (
           <Link
@@ -154,6 +165,9 @@ export default async function VatReportPage({
         </button>
         <ExcelDownloadLink href={`/api/reports/vat/export?from=${from}&to=${to}`} pushRight />
       </form>
+          </>
+        }
+      />
 
       <p className="mb-3 text-xs erp-u-muted">
         조회기간: {from.replaceAll("-", ".")} ~ {to.replaceAll("-", ".")}

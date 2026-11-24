@@ -44,6 +44,7 @@ export function RecordListA({
   newLabel,
   excelHref,
   search,
+  filters,
   partial,
 }: {
   columns: RecordColumn[];
@@ -61,6 +62,8 @@ export function RecordListA({
   excelHref?: string;
   /** 한 칸짜리 검색 폼 — 도구 줄 오른쪽 끝에 그린다. */
   search?: ReactNode;
+  /** 조회 조건 칸들(FilterControls) — 주면 도구줄 가운데에 그린다. */
+  filters?: ReactNode;
   /** "더보기"로 일부만 불러온 목록인지 — 마감 줄이 "불러온 N건"으로 적는다 */
   partial?: boolean;
   bulkDelete?: { action: (state: FormState, formData: FormData) => Promise<FormState>; warningText: string };
@@ -108,6 +111,7 @@ export function RecordListA({
         selectedCount={selected.size}
         dataKey={rows}
         search={search}
+        filters={filters}
       />
       {bulkDelete && bar && <div id={BULK_DELETE_ANCHOR_ID}>{bar}</div>}
       <div className={sideSplit ? "erp-master-detail" : undefined}>

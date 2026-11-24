@@ -1,10 +1,7 @@
-import { ListFilterCard } from "@/components/erp/list-filter-card";
 import { createClient } from "@/lib/supabase/server";
 import { RecordPageA } from "@/components/grid/record-page-a";
 import type { RecordRow } from "@/components/grid/record-list-a";
 import { GridBadge } from "@/components/grid/badge";
-import { DateRangeSearchForm } from "@/components/erp/date-range-search-form";
-import { DateRangeQuickFilters } from "@/components/erp/date-range-quick-filters";
 import { getQuickDatePresets, getYearMonthButtons } from "@/lib/date-presets";
 import { matchesSearch } from "@/lib/search-match";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
@@ -68,14 +65,6 @@ export default async function PurchaseQuoteRequestsPage({
   moreParams.set("limit", String(limit + LIST_LIMIT_STEP));
   const moreHref = `/purchase-quote-requests?${moreParams.toString()}`;
 
-  const filters = (
-    <>
-      <ListFilterCard>
-        <DateRangeQuickFilters basePath="/purchase-quote-requests" presets={presets} monthButtons={monthButtons} from={from} to={to} />
-        <DateRangeSearchForm formId="purchase-quote-requests-search-form" idPrefix="pqr" from={from} to={to} q={q} qLabel="매입처 / 메모 검색" qPlaceholder="매입처명, 메모" resetHref="/purchase-quote-requests" showReset={!!(from || to || q || limitParam)} hideSubmit />
-      </ListFilterCard>
-    </>
-  );
 
   // 모던 테마(grid-modern) 전용 A형 화면 — 클래식은 classic.tsx(동결본).
   const recordRows: RecordRow[] = rows.map((r) => {
@@ -118,7 +107,7 @@ export default async function PurchaseQuoteRequestsPage({
       basePath="/purchase-quote-requests"
       newLabel="견적요청 작성"
       searchFormId="purchase-quote-requests-search-form"
-      filters={filters}
+      filterBar={{ from, to, q, searchPlaceholder: "매입처명, 메모", presets, monthButtons, showReset: !!(from || to || q || limitParam) }}
       columns={[{ label: "요청일" }, { label: "대상 매입처" }, { label: "품목" }, { label: "확정 매입처" }, { label: "상태" }]}
       rows={recordRows}
       panelAriaLabel="선택한 견적요청 상세"

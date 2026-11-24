@@ -17,14 +17,48 @@ export function LedgerFilterSelects({
   warehouses,
   defaultProductId,
   defaultWarehouseId,
+  formId,
 }: {
   products: Product[];
   warehouses: Warehouse[];
   defaultProductId: string;
   defaultWarehouseId: string;
+  /** 주면 도구줄용 한 줄 모양(라벨·칸 래퍼 없이) — 선택값은 이 id의 폼(조회 도구줄)으로 제출된다 */
+  formId?: string;
 }) {
   const [productId, setProductId] = useState(defaultProductId);
   const [warehouseId, setWarehouseId] = useState(defaultWarehouseId);
+
+  if (formId) {
+    return (
+      <>
+        <div className="erp-fb-select">
+          <ErpSelect
+            id="ledger-product-bar"
+            ariaLabel="품목"
+            name="product_id"
+            form={formId}
+            required
+            placeholder="품목 선택"
+            value={productId}
+            onChange={setProductId}
+            options={products.map((p) => ({ value: p.id, label: productOptionLabel(p) }))}
+          />
+        </div>
+        <div className="erp-fb-select">
+          <ErpSelect
+            id="ledger-warehouse-bar"
+            ariaLabel="창고"
+            name="warehouse_id"
+            form={formId}
+            value={warehouseId}
+            onChange={setWarehouseId}
+            options={[{ value: "", label: "전체 창고" }, ...warehouses.map((w) => ({ value: w.id, label: w.name }))]}
+          />
+        </div>
+      </>
+    );
+  }
 
   return (
     <>

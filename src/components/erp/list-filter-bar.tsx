@@ -25,6 +25,7 @@ export function ListFilterBar({
   hidden,
   legacy,
   after,
+  extra,
   showReset,
 }: {
   formId: string;
@@ -46,47 +47,93 @@ export function ListFilterBar({
   legacy: ReactNode;
   /** 모던에서만 도구줄 바로 아래에 그리는 내용(보기 전환 탭 등) — 클래식은 legacy 안에 이미 들어 있다 */
   after?: ReactNode;
+  /** 추가 선택 칸(창고·품목 같은 드롭다운) — 기간과 검색 사이. 입력칸에는 form={formId}를 달아야 조회에 같이 실린다 */
+  extra?: ReactNode;
   showReset?: boolean;
 }) {
   const { appChrome } = useThemeFeatures();
   if (!appChrome) return <>{legacy}</>;
   return (
     <>
-      <form id={formId} method="get" action={basePath}>
-        {Object.entries(hidden ?? {}).map(([k, v]) => (
-          <input key={k} type="hidden" name={k} value={v} />
-        ))}
-      </form>
+      <FilterBarForm formId={formId} basePath={basePath} hidden={hidden} />
       <ListToolbar
         actions={
           <>
-            <button type="submit" form={formId} className="erp-btn erp-btn-primary erp-u-nowrap">
-              조회 <ToolbarKey>F5</ToolbarKey>
-            </button>
+            <QueryButton formId={formId} />
             {actions}
           </>
         }
         tools={tools}
-        filters={
-          <>
-            {from && to && <PeriodControl formId={formId} basePath={basePath} from={from} to={to} presets={presets} monthButtons={monthButtons} showReset={!!showReset} />}
-            {month && <MonthControl formId={formId} month={month} />}
-            {searchPlaceholder && (
-              <input
-                type="text"
-                name="q"
-                form={formId}
-                className="erp-input erp-fb-search"
-                autoComplete="off"
-                defaultValue={q ?? ""}
-                placeholder={searchPlaceholder}
-                aria-label="검색"
-              />
-            )}
-          </>
-        }
+        filters={<FilterControls formId={formId} basePath={basePath} from={from} to={to} month={month} q={q} searchPlaceholder={searchPlaceholder} presets={presets} monthButtons={monthButtons} showReset={showReset} extra={extra} />}
       />
       {after}
+    </>
+  );
+}
+
+/** 조회 조건을 보내는 빈 GET 폼 — 입력칸은 form="id" 속성으로 붙는다(도구줄이 화면 위쪽 자리에 그려져도 제출되게). */
+export function FilterBarForm({ formId, basePath, hidden }: { formId: string; basePath: string; hidden?: Record<string, string> }) {
+  return (
+    <form id={formId} method="get" action={basePath}>
+      {Object.entries(hidden ?? {}).map(([k, v]) => (
+        <input key={k} type="hidden" name={k} value={v} />
+      ))}
+    </form>
+  );
+}
+
+/** 도구줄 맨 앞 [조회 F5] — 폼(formId)을 제출한다. */
+export function QueryButton({ formId }: { formId: string }) {
+  return (
+    <button type="submit" form={formId} className="erp-btn erp-btn-primary erp-u-nowrap">
+      조회 <ToolbarKey>F5</ToolbarKey>
+    </button>
+  );
+}
+
+/** 도구줄의 조건 칸들: [기간 또는 기준월] [추가 선택 칸(extra)] 검색 — 해당 없는 칸은 그리지 않는다. */
+export function FilterControls({
+  formId,
+  basePath,
+  from,
+  to,
+  month,
+  q,
+  searchPlaceholder,
+  presets = [],
+  monthButtons = [],
+  showReset,
+  extra,
+}: {
+  formId: string;
+  basePath: string;
+  from?: string;
+  to?: string;
+  month?: string;
+  q?: string;
+  searchPlaceholder?: string;
+  presets?: DatePreset[];
+  monthButtons?: DatePreset[];
+  showReset?: boolean;
+  extra?: ReactNode;
+}) {
+  return (
+    <>
+      {((from && to) || presets.length > 0) && <PeriodControl formId={formId} basePath={basePath} from={from ?? ""} to={to ?? ""} presets={presets} monthButtons={monthButtons} showReset={!!showReset} />}
+      {month && <MonthControl formId={formId} month={month} />}
+      {extra}
+      {searchPlaceholder && (
+        <input
+          type="text"
+          name="q"
+          form={formId}
+          className="erp-input erp-fb-search"
+          autoComplete="off"
+          defaultValue={q ?? ""}
+          placeholder={searchPlaceholder}
+          aria-label="검색"
+        />
+      )}
     </>
   );
 }
@@ -184,7 +231,7 @@ function PeriodControl({
   const toRef = useRef<HTMLInputElement>(null);
   const [customFrom, setCustomFrom] = useState(from);
   const [customTo, setCustomTo] = useState(to);
-  const month = monthOf(from, to);
+  const month = from && to ? monthOf(from, to) : null;
 
   function go(f: string, t: string) {
     if (fromRef.current) fromRef.current.value = f;
@@ -193,10 +240,10 @@ function PeriodControl({
     (document.getElementById(formId) as HTMLFormElement | null)?.requestSubmit();
   }
   function shift(delta: number) {
-    const r = getMonthRange(shiftMonth(month ?? from.slice(0, 7), delta));
+    const r = getMonthRange(shiftMonth(month ?? (from ? from.slice(0, 7) : currentMonth()), delta));
     go(r.from, r.to);
   }
-  const label = month ? `${month.slice(0, 4)}년 ${Number(month.slice(5))}월` : `${from.slice(5)} ~ ${to.slice(5)}`;
+  const label = month ? `${month.slice(0, 4)}년 ${Number(month.slice(5))}월` : from && to ? `${from.slice(5)} ~ ${to.slice(5)}` : "전체";
 
   return (
     <span className="erp-fb-period">
