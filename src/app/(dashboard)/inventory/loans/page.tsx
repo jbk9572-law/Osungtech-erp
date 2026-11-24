@@ -60,10 +60,10 @@ export default async function StockLoansPage({ searchParams }: { searchParams: P
         새 반출은 <GuardedLink href="/sales/new" className="underline">매출 전표 등록</GuardedLink>의 &quot;일시반출&quot; 탭에서 등록하세요.
       </PageGuide>
 
-      <div className="erp-seg erp-u-mb-12">
-        <Link href="/inventory/loans" className={`erp-seg-btn${history ? "" : " active"}`}>반출 중</Link>
-        <Link href="/inventory/loans?view=all" className={`erp-seg-btn${history ? " active" : ""}`}>전체 이력</Link>
-      </div>
+      <nav className="erp-subtabs" aria-label="반출 보기">
+        <Link href="/inventory/loans" className={`erp-subtab${history ? "" : " active"}`} aria-current={history ? undefined : "page"}>반출 중</Link>
+        <Link href="/inventory/loans?view=all" className={`erp-subtab${history ? " active" : ""}`} aria-current={history ? "page" : undefined}>전체 이력</Link>
+      </nav>
       {history && (
         <DateRangeQuickFilters basePath="/inventory/loans" presets={getQuickDatePresets()} monthButtons={getYearMonthButtons()} from={effectiveFrom} to={effectiveTo} extraParams={{ view: "all" }} />
       )}

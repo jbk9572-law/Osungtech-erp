@@ -10,6 +10,7 @@ import { DateRangeQuickFilters } from "@/components/erp/date-range-quick-filters
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ListPageHeader } from "@/components/erp/page-header";
 import { PageToolbar } from "@/components/erp/page-toolbar";
+import { ListFilterBar } from "@/components/erp/list-filter-bar";
 import { ToolbarMenu } from "@/components/erp/toolbar-menu";
 import { ToolbarKey } from "@/components/erp/list-toolbar";
 import { buildListReturnParam } from "@/lib/list-return";
@@ -491,6 +492,38 @@ async function SalesPage({
       />
       <ListPageHeader title="매출관리" />
 
+      <ListFilterBar
+        formId="sales-search-form"
+        basePath="/sales"
+        from={effectiveFrom}
+        to={effectiveTo}
+        q={q}
+        searchPlaceholder="출고처, 상품명, 규격 검색…"
+        presets={presets}
+        monthButtons={monthButtons}
+        showReset={!!(from || to || q || limitParam)}
+        actions={
+          <NewButton href="/sales/new" keyHint>신규</NewButton>
+        }
+        tools={
+          <>
+            <ExcelDownloadLink
+              href={exportHref}
+              title={q ? `이번달 "${q}" 검색 결과를 엑셀로 다운로드` : "이번달(1일~말일) 전체 내역을 엑셀로 다운로드"}
+            />
+            <ToolbarMenu label="일괄 작업">
+              <UnifiedSaleModalTrigger asMenuItem loadData={loadQuickSaleData} today={todayKstStr()} />
+              <Link href="/sales/tax-invoices/export" className="erp-colmenu-item" title="발행된 세금계산서를 홈택스 일괄발급용 엑셀로 다운로드">
+                홈택스 일괄발급 엑셀
+              </Link>
+              <Link href="/sales/tax-invoices/bulk-create" className="erp-colmenu-item" title="세금계산서가 없는 매출 건을 여러 개 골라 한 번에 작성">
+                세금계산서 일괄 작성
+              </Link>
+            </ToolbarMenu>
+          </>
+        }
+        legacy={
+          <>
       <DateRangeQuickFilters
         basePath="/sales"
         presets={presets}
@@ -541,10 +574,6 @@ async function SalesPage({
           </Link>
         )}
       </form>
-      <PageGuide>
-        {from ? "" : `날짜를 지정하지 않으면 이번달(${effectiveFrom} ~ ${effectiveTo})만 표시됩니다. `}
-        최근 {formatNumber(limit)}줄까지 표시 중{hasMore ? " — 더 있을 수 있습니다." : "."}
-      </PageGuide>
 
       <PageToolbar
         actions={
@@ -565,6 +594,13 @@ async function SalesPage({
                 세금계산서 일괄 작성
               </Link>
             </ToolbarMenu>
+          </>
+        }
+      />
+      <PageGuide>
+        {from ? "" : `날짜를 지정하지 않으면 이번달(${effectiveFrom} ~ ${effectiveTo})만 표시됩니다. `}
+        최근 {formatNumber(limit)}줄까지 표시 중{hasMore ? " — 더 있을 수 있습니다." : "."}
+      </PageGuide>
           </>
         }
       />

@@ -583,17 +583,17 @@
   --erp-carry-next-bg: #efeaff;
   --erp-carry-next-border: #d6c9f0;
   --erp-carry-next-bar: #7c5cd6;
-  --erp-tabbar-bg: #e9edf3;
+  --erp-tabbar-bg: color-mix(in srgb, #ffffff 88%, #1e2d50);
   --erp-tab-bg: #e1e5ec;
   --erp-tree-badge-border: #d3d8e0;
   --erp-shadow-sm: 0 1px 2px rgba(30, 45, 80, 0.06);
   --erp-shadow-md: 0 4px 14px rgba(30, 45, 80, 0.1);
   --erp-shadow-lg: 0 8px 24px rgba(30, 45, 80, 0.16);
   --erp-shadow-up: 0 -4px 14px rgba(30, 45, 80, 0.1);
-  --erp-page-bg: color-mix(in srgb, #ffffff 97%, #4a6fa5);
-  --erp-chrome-bg: color-mix(in srgb, #ffffff 96%, #4a6fa5);
-  --erp-chrome-bg-deep: color-mix(in srgb, #ffffff 93%, #4a6fa5);
-  --erp-card-shadow: 0 4px 14px rgba(40, 60, 100, 0.07), 0 1px 2px rgba(40, 60, 100, 0.05);
+  --erp-page-bg: color-mix(in srgb, #ffffff 95%, #1e2d50);
+  --erp-chrome-bg: color-mix(in srgb, #ffffff 93%, #1e2d50);
+  --erp-chrome-bg-deep: color-mix(in srgb, #ffffff 88%, #1e2d50);
+  --erp-card-shadow: 0 2px 6px rgba(30, 45, 80, 0.12), 0 1px 2px rgba(30, 45, 80, 0.08);
 
   /* 그리드 — 칸이 또렷이 보이되 힘을 뺀 톤(진한 박스·굵은 글씨 없음) */
   --erp-grid-line: #d3d8e0;
@@ -10467,5 +10467,93 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
     flex: 1 0 100%;
     justify-content: space-between;
     margin-left: 0;
+  }
+}
+
+/* 조회 도구줄(ListFilterBar)의 조건 칸 — [◀ 기간 ▶] + 검색. 도구줄 안에서 남는 폭을 검색이 차지한다 */
+.erp-listtoolbar-filters {
+  display: flex;
+  flex: 1 1 320px;
+  align-items: center;
+  gap: var(--erp-space-2);
+  min-width: 0;
+}
+.erp-fb-search {
+  flex: 1 1 160px;
+  min-width: 0;
+}
+.erp-fb-period {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+}
+.erp-fb-period-main {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--erp-space-2);
+  white-space: nowrap;
+}
+.erp-fb-label {
+  color: var(--erp-text-muted);
+  font-size: var(--erp-font-xs);
+}
+.erp-fb-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+}
+.erp-fb-pop {
+  position: absolute;
+  top: calc(100% + var(--erp-space-2));
+  left: 0;
+  z-index: 41;
+  display: flex;
+  flex-direction: column;
+  gap: var(--erp-space-1);
+  width: 360px;
+  max-width: calc(100vw - 2 * var(--erp-space-4));
+  padding: var(--erp-space-3);
+  background: var(--erp-panel);
+  border: 1px solid var(--erp-border-strong);
+  border-radius: var(--erp-radius-xl);
+  box-shadow: var(--erp-shadow-lg);
+}
+.erp-fb-pop-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--erp-space-1);
+  padding: var(--erp-space-2) 0;
+  border-bottom: 1px solid var(--erp-divider);
+}
+.erp-fb-pop-group:last-child {
+  border-bottom: 0;
+}
+.erp-fb-pop-group > b {
+  flex: 0 0 100%;
+  color: var(--erp-text-muted);
+  font-size: var(--erp-font-xs);
+}
+.erp-fb-pop-months {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: var(--erp-space-1);
+  width: 100%;
+}
+.erp-fb-pop-range {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--erp-space-1);
+}
+.erp-fb-pop-range .erp-input {
+  width: 140px;
+}
+@media (max-width: 768px) {
+  .erp-listtoolbar-filters {
+    flex: 1 0 100%;
+    flex-wrap: wrap;
   }
 }

@@ -73,26 +73,26 @@ export default async function MonthlyReportPage({
         <ExcelDownloadLink href={`/api/reports/monthly/export?month=${month}${suffix}`} pushRight />
       </div>
 
-      <div className="erp-date-presets erp-u-mb-8">
+      <nav className="erp-subtabs" aria-label="보기 방식">
         <Link
           href={`/reports/monthly?month=${month}${qSuffix}`}
-          className={`erp-date-preset-btn${view === "product" ? " active" : ""}`}
+          className={`erp-subtab${view === "product" ? " active" : ""}`}
         >
           품목별
         </Link>
         <Link
           href={`/reports/monthly?month=${month}${qSuffix}&view=supplier`}
-          className={`erp-date-preset-btn${view === "supplier" ? " active" : ""}`}
+          className={`erp-subtab${view === "supplier" ? " active" : ""}`}
         >
           매입처별
         </Link>
         <Link
           href={`/reports/monthly?month=${month}${qSuffix}&view=customer`}
-          className={`erp-date-preset-btn${view === "customer" ? " active" : ""}`}
+          className={`erp-subtab${view === "customer" ? " active" : ""}`}
         >
           매출처별
         </Link>
-      </div>
+      </nav>
 
       <form method="get" id="monthly-report-search-form" className="erp-field-grid">
         <input type="hidden" name="view" value={view} />

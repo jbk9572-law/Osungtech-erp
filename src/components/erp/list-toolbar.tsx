@@ -12,7 +12,7 @@ export const TOOLBAR_SLOT_ID = "erp-toolbar-slot";
 // 한 칸짜리 검색(ListSearchForm)은 search 자리로 받아 도구 줄 맨 오른쪽 끝에 한 줄로 둔다(화면마다 따로 배치하지 않는다).
 // 버튼 자체는 화면이 만든다(링크·폼 제출·비활성 상태가 화면마다 다르므로) — 이 부품은 줄의 모양과 자리만 정한다(개발헌법 3번).
 // 모던 틀에서는 시안처럼 화면 본문이 아니라 상단바 바로 아래의 전체 폭 도구 줄 자리로 옮겨 그린다(자리가 없는 좁은 화면은 그 자리에 그대로).
-export function ListToolbar({ actions, tools, status, search }: { actions?: ReactNode; tools?: ReactNode; status?: ReactNode; search?: ReactNode }) {
+export function ListToolbar({ actions, tools, filters, status, search }: { actions?: ReactNode; tools?: ReactNode; filters?: ReactNode; status?: ReactNode; search?: ReactNode }) {
   const { appChrome, listFrameV2 } = useThemeFeatures();
   // undefined = 아직 모름(첫 그리기), null = 자리 없음(제자리에 그림), 요소 = 그 자리로 옮겨 그림
   const [slot, setSlot] = useState<HTMLElement | null | undefined>(undefined);
@@ -28,6 +28,12 @@ export function ListToolbar({ actions, tools, status, search }: { actions?: Reac
         <>
           {actions && <span className="erp-listtoolbar-sep" aria-hidden />}
           <div className="erp-listtoolbar-actions">{tools}</div>
+        </>
+      )}
+      {filters && (
+        <>
+          {(actions || tools) && <span className="erp-listtoolbar-sep" aria-hidden />}
+          <div className="erp-listtoolbar-filters">{filters}</div>
         </>
       )}
       {status && <div className="erp-listtoolbar-status">{status}</div>}
