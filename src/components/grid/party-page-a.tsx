@@ -80,6 +80,7 @@ export function PartyPageA({
         newHref={`${basePath}/new`}
         excelHref={excelHref}
         hideSummary={!!summarySlot}
+        partial={!q && hasMore}
         bulkDeleteAction={bulkDeleteAction}
         warningText={warningText}
         emptyMessage={emptyMessage}

@@ -70,6 +70,7 @@ export function RecordPageA({
         newLabel={newLabel}
         excelHref={excelHref}
         search={search}
+        partial={hasMore}
       />
       {hasMore && (
         <div className="erp-u-p-8">

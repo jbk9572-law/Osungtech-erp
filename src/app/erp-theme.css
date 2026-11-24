@@ -274,6 +274,11 @@
   /* 단가예약/할일-품목 이월/용지계산 안내 배지에서 공통으로 쓰는
      인디고 톤 — 여러 컴포넌트에 같은 값이 흩어져 있던 것을 변수로 묶었다. */
   --erp-info-bg: #eef2ff;
+  /* 목록에서 행을 눌러 고른(master-active) 행의 배경 — 클래식은 기존(info-bg) 그대로, 모던은 진한 파랑으로 테마 블록에서 덮어쓴다 */
+  --erp-row-active-bg: var(--erp-info-bg);
+  --erp-row-active-bar-w: 3px;
+  /* 본문 스크롤 영역(.erp-page)의 안쪽 여백 — 화면 위·아래에 붙는 막대·패널이 이 틈까지 덮을 때 같은 값을 쓴다(블러 띠) */
+  --erp-page-pad: 18px;
   --erp-info-border: #c7d2fe;
   /* 보라/인디고 톤 글자색이 정보 배너뿐 아니라 여기저기서 가독성을
      해친다는 지적(사용자: "보라색글씨 다 검정색으로 바꿔 글씨 가독성도
@@ -566,6 +571,8 @@
   --erp-danger-bg: #fdeaea;
   --erp-danger-border: #f3c6c6;
   --erp-info-bg: #eaf0fd;
+  --erp-row-active-bg: #c9dbfa; /* 고른 행이 잘 보이게 — 글자 굵기는 바꾸지 않는다(칸 폭이 변해 열이 출렁이므로) */
+  --erp-row-active-bar-w: 4px;
   --erp-info-border: #c5d6f7;
   --erp-carry-next-bg: #efeaff;
   --erp-carry-next-border: #d6c9f0;
@@ -1839,7 +1846,7 @@ html:has(.erp) body {
   flex: 1;
   overflow-y: auto;
   background: var(--erp-panel);
-  padding: 18px;
+  padding: var(--erp-page-pad);
   /* 메뉴 이동마다(erp-shell.tsx가 pathname을 key로 줘서 매번 새로
      마운트시킨다) 콘텐츠가 뚝 끊기지 않고 살짝 아래에서 떠오르며 자연스럽게
      자리 잡는다. "이동 중..." 오버레이(route-progress-bar.tsx)는 200ms
@@ -2845,9 +2852,9 @@ form.erp-field-grid {
    펼쳐진 명세표(마스터 행)를 강조한다 — 체크박스 일괄선택(.selected)
    과는 별개 상태라 다른 톤을 쓴다. */
 .erp-grid tbody tr.master-active {
-  background: var(--erp-info-bg);
-  --erp-row-bg: var(--erp-info-bg);
-  box-shadow: inset 3px 0 0 var(--erp-primary);
+  background: var(--erp-row-active-bg);
+  --erp-row-bg: var(--erp-row-active-bg);
+  box-shadow: inset var(--erp-row-active-bar-w) 0 0 var(--erp-primary);
 }
 
 /* 전월 이월건 행 — 호박(앰버) 계열로 통째로 칠해서 오늘(초록)/선택(파랑)과
@@ -3651,7 +3658,31 @@ form.erp-field-grid {
   min-width: 0;
 }
 .erp-master-detail-main > .erp-grid-wrap {
-  flex: 1 1 auto; /* 표 박스가 남는 높이를 채운다 — 빈 자리는 박스 바탕(흰색)으로 보인다 */
+  flex: 1 1 auto; /* 표 박스가 남는 높이를 채운다 */
+  /* 행이 끝난 뒤 남는 자리는 옅은 사선 바탕 — 행이 있는 자리(칸 바탕)와 구분되고 "비어 있다"가 아니라 "여기까지 표 영역"으로 읽힌다 */
+  background: repeating-linear-gradient(135deg, var(--erp-bg-subtle) 0 8px, var(--erp-panel) 8px 16px);
+}
+/* 표 박스 바로 뒤의 마감 줄(GridFootBar)이 있으면 박스 아래 모서리를 줄과 이어 붙인다 */
+.erp-master-detail-main > .erp-grid-wrap:has(+ .erp-grid-foot) {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-bottom-width: 0;
+}
+.erp-grid-foot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--erp-space-1) var(--erp-space-4);
+  padding: var(--erp-space-2) var(--erp-space-4);
+  background: var(--erp-bg-subtle);
+  border: 1px solid var(--erp-border-strong);
+  border-top-width: 2px;
+  border-radius: 0 0 var(--erp-radius-2xl, 0) var(--erp-radius-2xl, 0);
+  font-size: var(--erp-font-sm);
+  color: var(--erp-text-muted);
+}
+.erp-grid-foot b {
+  color: var(--erp-text);
 }
 .erp-detail-side {
   align-self: flex-start; /* 부모가 stretch여도 패널은 자기 높이(스크롤 따라 붙는 sticky 유지) */
@@ -5119,6 +5150,9 @@ a.erp-detail-tab:hover:not(.active) {
     position: static; /* 좁은 화면은 화면 아래에 붙이면 키보드·주소줄과 겹친다 — 표 아래에 펼친다 */
     max-height: none;
     box-shadow: none;
+  }
+  .erp-detail-bottom::before {
+    display: none; /* 붙지 않는 상태에서는 블러 띠도 없다(absolute 띠가 부모 전체를 덮는 것 방지) */
   }
   .erp-detail-bottom-body {
     grid-template-columns: minmax(0, 1fr);
@@ -9913,12 +9947,46 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   position: sticky;
   top: 0;
   z-index: 5;
+  isolation: isolate;
   margin: 0 0 var(--erp-space-3);
   /* 검색 박스와 같은 박스 한 모양(흰 배경·테두리·둥글기) + 위아래·좌우 여유 */
   padding: var(--erp-space-4) var(--erp-space-4);
   background: var(--erp-panel);
   border: 1px solid var(--erp-border-strong);
   border-radius: var(--erp-radius-xl);
+}
+
+
+/* 화면 위·아래에 붙는 막대·패널의 "블러 띠" — 카드 모양은 그대로 두고, 그 뒤(스크롤 여백 틈 포함, 화면 가로 전체)만 블러로 덮어 뒤로 지나가는 행이 선명하게 비치지 않게 한다.
+   카드(자기 자신)는 불투명 그대로. backdrop-filter를 못 쓰는 환경은 불투명 바탕으로 대신한다. */
+.erp-frame-v2 .erp-listtoolbar::before,
+.erp-detail-bottom::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: calc(-1 * var(--erp-page-pad));
+  right: calc(-1 * var(--erp-page-pad));
+  background: var(--erp-panel);
+  pointer-events: none;
+}
+.erp-frame-v2 .erp-listtoolbar::before {
+  top: calc(-1 * var(--erp-page-pad));
+  bottom: calc(-1 * var(--erp-space-3));
+}
+.erp-detail-bottom {
+  isolation: isolate;
+}
+.erp-detail-bottom::before {
+  top: calc(-1 * var(--erp-space-3));
+  bottom: calc(-1 * var(--erp-page-pad));
+}
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .erp-frame-v2 .erp-listtoolbar::before,
+  .erp-detail-bottom::before {
+    background: color-mix(in srgb, var(--erp-panel) 55%, transparent);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+  }
 }
 
 /* 도구 줄 안의 검색 — 상태 문구 오른쪽, 줄의 맨 오른쪽 끝에 한 줄로(박스는 도구 줄이 가지므로 검색 자체 박스는 벗긴다) */
@@ -9972,6 +10040,32 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   border-radius: var(--erp-radius-xl);
 }
 .erp-filter-card .erp-field-grid {
+  margin: 0;
+}
+
+/* 패널 머리 묶음(PanelHeadStack) — 첫 줄 + 보조 줄을 한 덩어리로. 줄 높이는 내용이 정하고(고정 높이 없음), 구분선은 묶음 아래 하나뿐 */
+.erp-head-stack {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  background: var(--erp-bg-subtle);
+  border-bottom: 1px solid var(--erp-border);
+}
+.erp-head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--erp-space-2) var(--erp-space-3);
+  padding: var(--erp-space-3) var(--erp-space-4);
+}
+.erp-head-row.is-sub {
+  justify-content: flex-start;
+  padding-top: 0;
+}
+.erp-head-row.is-sub > .erp-party-search {
+  width: 100%;
+  max-width: none;
   margin: 0;
 }
 

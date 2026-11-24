@@ -1,5 +1,6 @@
 "use client";
 
+import { GridFootBar } from "@/components/grid/grid-foot-bar";
 import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -43,6 +44,7 @@ export function RecordListA({
   newLabel,
   excelHref,
   search,
+  partial,
 }: {
   columns: RecordColumn[];
   rows: RecordRow[];
@@ -59,6 +61,8 @@ export function RecordListA({
   excelHref?: string;
   /** 한 칸짜리 검색 폼 — 도구 줄 오른쪽 끝에 그린다. */
   search?: ReactNode;
+  /** "더보기"로 일부만 불러온 목록인지 — 마감 줄이 "불러온 N건"으로 적는다 */
+  partial?: boolean;
   bulkDelete?: { action: (state: FormState, formData: FormData) => Promise<FormState>; warningText: string };
 }) {
   const sideSplit = useSideSplit();
@@ -155,6 +159,7 @@ export function RecordListA({
               </tbody>
             </table>
           </div>
+          {sideSplit && <GridFootBar count={rows.length} selected={selected.size} partial={partial} />}
         </div>
         {sideSplit && <DetailSideShell ariaLabel={panelAriaLabel} emptyText={panelEmptyText} content={active?.panel ?? null} />}
       </div>

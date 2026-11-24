@@ -1,5 +1,6 @@
 "use client";
 
+import { GridFootBar } from "@/components/grid/grid-foot-bar";
 import { useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -66,6 +67,7 @@ export function PartyListA({
   newHref,
   excelHref,
   hideSummary,
+  partial,
   bulkDeleteAction,
   warningText,
   emptyMessage,
@@ -89,6 +91,8 @@ export function PartyListA({
   excelHref?: string;
   /** 위에 더 자세한 요약(연체 분포 등)이 있을 때 이 얇은 요약 줄은 숨긴다(같은 숫자 중복 방지). */
   hideSummary?: boolean;
+  /** "더보기"로 일부만 불러온 목록인지 — 마감 줄이 "불러온 N곳"·불러온 건 합계로 적는다 */
+  partial?: boolean;
   bulkDeleteAction: (state: FormState, formData: FormData) => Promise<FormState>;
   warningText: string;
   emptyMessage: string;
@@ -258,6 +262,7 @@ export function PartyListA({
               </tbody>
             </table>
           </div>
+          {sideSplit && <GridFootBar count={rows.length} selected={selected.size} unit="곳" partial={partial} sumLabel={`${balanceLabel} 합계`} sumValue={balanceSum} />}
         </div>
         {sideSplit && (
           <BalanceSidePanel

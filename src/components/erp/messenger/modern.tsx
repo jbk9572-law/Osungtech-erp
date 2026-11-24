@@ -1,6 +1,6 @@
 "use client";
 
-import { formatKstDate, formatKstTime } from "@/lib/kst-date";
+import { formatKstTime } from "@/lib/kst-date";
 import { Fragment, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -22,6 +22,8 @@ import { useConfirmTwice } from "@/lib/use-confirm-twice";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import { ListPageHeader } from "@/components/erp/page-header";
 import { PaperclipIcon, SendIcon } from "@/components/erp/groupware-icons";
+import { formatRowTime, dateKey, formatDateLabel } from "@/components/erp/messenger/format";
+import { PanelHeadStack } from "@/components/erp/panel-head-stack";
 import { ComposerCommands } from "@/components/erp/messenger/command-picker";
 import { ErpRefCard, MessengerAttachmentBlock, highlightText, commandHintFor, DEFAULT_COMPOSER_HINT } from "@/components/erp/messenger/parts";
 import { StateView } from "@/components/erp/state-view";
@@ -30,34 +32,6 @@ import { ChannelAvatar, channelLabel } from "@/components/erp/messenger-channel"
 export type { MessengerMessage };
 
 const MESSAGE_COLUMNS = "id, channel_id, sender_id, content, file_url, file_path, file_name, file_size, erp_ref, created_at";
-
-
-// 채팅방 행의 시각 — 오늘이면 시각, 아니면 월/일
-function formatRowTime(iso: string): string {
-  const todayKey = new Date().toLocaleDateString("sv-SE");
-  if (dateKey(iso) === todayKey) return formatKstTime(iso, { hour: "numeric", minute: "2-digit" });
-  const d = new Date(iso);
-  return `${d.getMonth() + 1}/${d.getDate()}`;
-}
-
-function dateKey(iso: string): string {
-  return new Date(iso).toLocaleDateString("sv-SE");
-}
-
-function formatDateLabel(key: string): string {
-  const todayKey = new Date().toLocaleDateString("sv-SE");
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayKey = yesterday.toLocaleDateString("sv-SE");
-  if (key === todayKey) return "오늘";
-  if (key === yesterdayKey) return "어제";
-  return formatKstDate(key, {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    weekday: "short",
-  });
-}
 
 
 // 사원목록(roster)/채팅방목록(rooms)/대화창(chat)/그룹만들기(newGroup) —
@@ -494,7 +468,9 @@ export function MessengerPage({
           하나만 보이게 CSS로 전환한다(erp-theme.css의 @media 참고). */}
       <div className="erp-messenger-shell erp-messenger-split3 erp-messenger-2col" data-mobile-view={mobileView}>
         <section className="erp-split-list erp-messenger-sidebar">
-          <div className="erp-split-list-head">
+          <PanelHeadStack
+            head={
+              <>
             <div className="erp-seg" role="tablist" aria-label="목록 종류">
               <button type="button" role="tab" aria-selected={view !== "roster"} className={view !== "roster" ? "active" : ""} onClick={() => setView("rooms")}>
                 채팅방
@@ -506,7 +482,21 @@ export function MessengerPage({
             <button type="button" className="erp-btn" onClick={() => setView("newGroup")}>
               그룹 만들기
             </button>
-          </div>
+              </>
+            }
+            sub={
+              view === "roster" ? undefined : (
+                <>
+            {chatFilters.filter(([key, , count]) => key !== "muted" || count > 0 || chatFilter === "muted").map(([key, label, count]) => (
+              <button key={key} type="button" onClick={() => setChatFilter(key)} className={`erp-date-preset-btn${chatFilter === key ? " active" : ""}`}>
+                {label}
+                {count > 0 && key !== "all" ? ` (${count})` : ""}
+              </button>
+            ))}
+                </>
+              )
+            }
+          />
           {view === "roster" ? (
             <>
               <div className="erp-messenger-list-search">
@@ -536,14 +526,6 @@ export function MessengerPage({
             </>
           ) : (
           <>
-          <div className="erp-messenger-mobile-filter erp-date-presets">
-            {chatFilters.filter(([key, , count]) => key !== "muted" || count > 0 || chatFilter === "muted").map(([key, label, count]) => (
-              <button key={key} type="button" onClick={() => setChatFilter(key)} className={`erp-date-preset-btn${chatFilter === key ? " active" : ""}`}>
-                {label}
-                {count > 0 && key !== "all" ? ` (${count})` : ""}
-              </button>
-            ))}
-          </div>
           {channelError && (
             <p className="erp-u-danger erp-u-text-sm" style={{ padding: "8px 12px 0" }}>{channelError}</p>
           )}

@@ -1,5 +1,6 @@
 "use client";
 
+import { GridFootBar } from "@/components/grid/grid-foot-bar";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { ClickableRow } from "@/components/clickable-row";
@@ -270,6 +271,7 @@ export function BalanceGridTable({
           </tbody>
         </table>
       </div>
+      {sideSplit && <GridFootBar count={sortedRows.length} selected={activeRow ? 1 : 0} unit="곳" />}
       </div>
       {sideSplit && detailKind && (
         <BalanceSidePanel

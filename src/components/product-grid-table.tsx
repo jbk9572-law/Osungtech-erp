@@ -1,5 +1,6 @@
 "use client";
 
+import { GridFootBar } from "@/components/grid/grid-foot-bar";
 import { packageUnitLabel } from "@/lib/package-qty";
 import { useActionState, useState, type CSSProperties } from "react";
 import Link from "next/link";
@@ -360,6 +361,7 @@ export function ProductGridTable({
         </tbody>
       </table>
       </div>
+      {sideSplit && <GridFootBar count={sortedRows.length} selected={selected.size} />}
       </div>
       {sideSplit && <InventorySidePanel row={activeRow} status={activeRow ? statusOf(activeRow) : "ok"} />}
       </div>
