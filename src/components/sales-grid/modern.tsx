@@ -1,6 +1,6 @@
 "use client";
 
-import { QuantityStack } from "@/components/grid/quantity-stack";
+import { QuantityChips, QuantityStack, QuantityTotal } from "@/components/grid/quantity-stack";
 import { buildShareItemsAttr } from "@/lib/share-items";
 import { formatKstDate } from "@/lib/kst-date";
 import { rowDay, rowDayClass } from "@/lib/row-day";
@@ -427,6 +427,7 @@ export function SalesGridTable({
         <td
           className="num"
           style={row.isReturn ? { color: "var(--erp-danger)" } : undefined}
+          data-copy-text={isCollection ? undefined : `${row.isReturn ? "+" : ""}${row.quantityLabel ?? `${formatNumber(row.quantity)} ${row.unit ?? ""}`}`}
         >
           {isCollection ? (
             "-"
@@ -636,6 +637,7 @@ export function SalesGridTable({
       >
         <ColumnVisibilityMenu options={SALES_HIDEABLE_COLUMNS} isHidden={isHidden} onToggle={toggleColumn} />
       </GridToolbar>
+      <QuantityChips text={totalQuantityLabel} />
       <GridRowLegend />
 
       <div className="erp-grid-wrap has-card-view erp-range-copy">
@@ -692,7 +694,7 @@ export function SalesGridTable({
                   전월 이월 소계 ({carryoverRows.length}건)
                 </td>
                 <td className="num erp-u-muted erp-u-text-xs">
-                  <QuantityStack text={carryoverQuantityLabel ?? formatNumber(carryoverQuantity ?? 0)} />
+                  <QuantityTotal text={carryoverQuantityLabel ?? formatNumber(carryoverQuantity ?? 0)} />
                 </td>
                 <td style={colStyle("unitPrice")} />
                 <td className="num erp-u-muted erp-u-text-xs">
@@ -733,7 +735,7 @@ export function SalesGridTable({
                   {sortedRows.filter((r) => r.kind === "sale").length}건)
                 </td>
                 <td className="num">
-                  <QuantityStack text={totalQuantityLabel ?? formatNumber(totalQuantity)} />
+                  <QuantityTotal text={totalQuantityLabel ?? formatNumber(totalQuantity)} />
                 </td>
                 <td style={colStyle("unitPrice")} />
                 <td className="num">{formatNumber(totalSupply)}</td>

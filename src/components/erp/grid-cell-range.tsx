@@ -6,7 +6,7 @@ import { formatNumber } from "@/lib/format-number";
 import { copyRange } from "@/lib/grid-range-copy";
 import { ShareImagePreview } from "@/components/erp/share-image-preview";
 import type { ShareModel } from "@/lib/share-model";
-import { cellRefAt, cellsInRange, type CellRef } from "@/lib/grid-range-select";
+import { cellRefAt, cellsInRange, cellText, type CellRef } from "@/lib/grid-range-select";
 import { summarizeCells, type GridSelectionSummary } from "@/lib/grid-selection-sum";
 
 // 전표 표의 엑셀식 "칸 범위 선택" — 칸을 누른 채 끌면 사각형 범위가 파랗게 칠해지고, 그 안의 숫자 칸 합계·평균이 아래에 뜬다.
@@ -29,10 +29,7 @@ function clearMarks(scope: Scope) {
   document.querySelectorAll(`${SCOPE_CELL[scope]}.${SELECTED}, ${SCOPE_CELL[scope]}.${EXCLUDED}`).forEach((el) => el.classList.remove(SELECTED, EXCLUDED));
 }
 
-function textOf(td: HTMLTableCellElement): string {
-  const input = td.querySelector("input");
-  return input ? input.value : (td.textContent ?? "");
-}
+const textOf = cellText;
 
 export function GridCellRangeStats({ scope = "voucher" }: { scope?: Scope }) {
   const [summary, setSummary] = useState<GridSelectionSummary | null>(null);

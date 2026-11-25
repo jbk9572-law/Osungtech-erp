@@ -4,19 +4,11 @@
 //   · image/png   표 그림 — 카카오톡·슬랙·문서 등 그림을 붙여넣는 곳
 // 표의 칸은 입력칸(input)이라 화면에 보이는 값(input.value)을 읽는다. 그림은 선택 범위 위에 해당 열의 머리글 줄을 붙여 그린다.
 
-import { cellCenterX, headerCellAtX } from "@/lib/grid-range-select";
+import { cellCenterX, cellText, headerCellAtX } from "@/lib/grid-range-select";
 import { buildShareModel, type ShareModel } from "@/lib/share-model";
 import { renderSharePages } from "@/lib/share-render";
 
 export type RangeMatrix = { header: string[]; rows: string[][] };
-
-function cellText(td: HTMLTableCellElement): string {
-  const input = td.querySelector('input:not([type="checkbox"]):not([type="hidden"])') as HTMLInputElement | null;
-  if (input) return input.value;
-  const clone = td.cloneNode(true) as HTMLElement;
-  clone.querySelectorAll("button").forEach((el) => el.remove());
-  return (clone.textContent ?? "").replace(/\s+/g, " ").trim();
-}
 
 /** 고른 칸들(줄마다 한 묶음)을 머리글과 함께 읽는다. 머리글은 첫 줄의 칸 위치에 맞는 머리글 칸에서 가져온다. */
 export function readCells(table: HTMLTableElement, rows: HTMLTableCellElement[][]): RangeMatrix {

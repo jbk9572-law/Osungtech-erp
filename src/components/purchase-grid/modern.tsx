@@ -1,6 +1,6 @@
 "use client";
 
-import { QuantityStack } from "@/components/grid/quantity-stack";
+import { QuantityChips, QuantityStack, QuantityTotal } from "@/components/grid/quantity-stack";
 import { buildShareItemsAttr } from "@/lib/share-items";
 import { formatKstDate } from "@/lib/kst-date";
 import { rowDay, rowDayClass } from "@/lib/row-day";
@@ -408,7 +408,7 @@ export function PurchaseGridTable({
         <td style={colStyle("lotNumber", { color: "var(--erp-text-muted)" })}>
           {row.lotNumber || "-"}
         </td>
-        <td className="num">
+        <td className="num" data-copy-text={isPayment ? undefined : (row.quantityLabel ?? `${formatNumber(row.quantity)} ${row.unit ?? ""}`)}>
           {isPayment ? "-" : <QuantityStack text={row.quantityLabel ?? `${formatNumber(row.quantity)} ${row.unit ?? ""}`} />}
         </td>
         <td
@@ -561,6 +561,7 @@ export function PurchaseGridTable({
       >
         <ColumnVisibilityMenu options={PURCHASE_HIDEABLE_COLUMNS} isHidden={isHidden} onToggle={toggleColumn} />
       </GridToolbar>
+      <QuantityChips text={totalQuantityLabel} />
       <GridRowLegend />
 
       <div className="erp-grid-wrap has-card-view erp-range-copy">
@@ -617,7 +618,7 @@ export function PurchaseGridTable({
                   전월 이월 소계 ({carryoverRows.length}건)
                 </td>
                 <td className="num erp-u-muted erp-u-text-xs">
-                  <QuantityStack text={carryoverQuantityLabel ?? formatNumber(carryoverQuantity ?? 0)} />
+                  <QuantityTotal text={carryoverQuantityLabel ?? formatNumber(carryoverQuantity ?? 0)} />
                 </td>
                 <td style={colStyle("unitCost")} />
                 <td className="num erp-u-muted erp-u-text-xs">
@@ -658,7 +659,7 @@ export function PurchaseGridTable({
                   {sortedRows.filter((r) => r.kind === "purchase").length}건)
                 </td>
                 <td className="num">
-                  <QuantityStack text={totalQuantityLabel ?? formatNumber(totalQuantity)} />
+                  <QuantityTotal text={totalQuantityLabel ?? formatNumber(totalQuantity)} />
                 </td>
                 <td style={colStyle("unitCost")} />
                 <td className="num">{formatNumber(totalSupply)}</td>

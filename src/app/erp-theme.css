@@ -10731,15 +10731,62 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   padding: var(--erp-space-1) 0;
 }
 
-/* 단위별 수량(quantity-stack.tsx) — 단위마다 한 줄씩 쌓는다. 한 줄로 이으면 합계 줄의 단위 수만큼 수량 칸이 넓어져 표가 가로로 밀린다. */
+/* 단위별 수량(quantity-stack.tsx) — 단위가 섞인 수량을 한 줄로 이으면 합계 줄의 단위 수만큼 수량 칸이 넓어져 표가 가로로 밀린다. 줄 안은 두 줄 쌓기·"외 N종", 합계 줄은 "단위 N종" 단추 + 위쪽 요약 칩. */
 .erp-qty-stack {
   display: inline-flex;
   flex-direction: column;
   align-items: flex-end;
   white-space: nowrap;
 }
-.erp-qty-sep {
-  display: none;
+.erp-qty-total {
+  position: relative;
+  display: inline-block;
+}
+.erp-qty-total-btn {
+  border: 1px solid var(--erp-border-strong);
+  border-radius: var(--erp-radius-md, 0);
+  background: var(--erp-panel);
+  color: var(--erp-primary);
+  font: inherit;
+  font-weight: 700;
+  padding: 0 var(--erp-space-2);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.erp-qty-pop {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 4px);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  padding: var(--erp-space-2) var(--erp-space-3);
+  background: var(--erp-text);
+  color: var(--erp-on-primary);
+  border-radius: var(--erp-radius-md, 0);
+  box-shadow: var(--erp-shadow-float);
+  white-space: nowrap;
+  font-weight: 400;
+}
+.erp-qty-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--erp-space-1) var(--erp-space-2);
+  margin-bottom: var(--erp-space-2);
+  font-size: var(--erp-font-sm);
+}
+.erp-qty-chips-label {
+  color: var(--erp-text-muted);
+}
+.erp-qty-chip {
+  padding: 0 var(--erp-space-3);
+  border-radius: var(--erp-radius-pill, 999px);
+  background: var(--erp-selected);
+  color: var(--erp-text);
+  font-variant-numeric: tabular-nums;
 }
 
 /* 명세표 인쇄 화면(InvoicePrintView)의 바깥 틀 — 화면에서는 가운데 정렬 최대 1024px, 인쇄에서는 종이 폭을 다 쓴다 */

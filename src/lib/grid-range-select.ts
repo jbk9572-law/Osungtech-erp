@@ -71,3 +71,14 @@ export function cellAtX(row: HTMLTableRowElement, x: number): HTMLTableCellEleme
 }
 
 export const cellCenterX = centerX;
+
+/** 칸의 복사용 글자 — 입력칸이면 값, data-copy-text 가 있으면 그것(화면에는 줄여 보여도 복사에는 전부 담는다), 아니면 보이는 글자(버튼 제외). */
+export function cellText(td: HTMLTableCellElement | null | undefined): string {
+  if (!td) return "";
+  const input = td.querySelector('input:not([type="checkbox"]):not([type="hidden"])') as HTMLInputElement | null;
+  if (input) return input.value;
+  if (td.dataset.copyText) return td.dataset.copyText;
+  const clone = td.cloneNode(true) as HTMLElement;
+  clone.querySelectorAll("button").forEach((el) => el.remove());
+  return (clone.textContent ?? "").replace(/\s+/g, " ").trim();
+}

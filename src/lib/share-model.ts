@@ -1,6 +1,6 @@
 import { parseShareItems } from "@/lib/share-items";
 import { quantityLabelByUnit } from "@/lib/quantity-by-unit";
-import { cellAtX, cellCenterX } from "@/lib/grid-range-select";
+import { cellAtX, cellCenterX, cellText } from "@/lib/grid-range-select";
 
 // "공유 이미지"의 재료 — 목록에서 끌어 고른 줄을 (날짜 → 전표 → 품목) 구조로 바꾼다.
 //  · 날짜는 파란 띠, 출고처(거래처)는 전표 줄 — 드래그하지 않았어도 항상 넣는다. 품명도 항상 넣는다(품목을 구분하려면 이름이 있어야 한다).
@@ -56,14 +56,7 @@ export function dateBandLabel(raw: string): string {
 }
 
 type Cells = HTMLTableCellElement[];
-const textOf = (td: HTMLTableCellElement | null | undefined): string => {
-  if (!td) return "";
-  const input = td.querySelector('input:not([type="checkbox"]):not([type="hidden"])') as HTMLInputElement | null;
-  if (input) return input.value;
-  const clone = td.cloneNode(true) as HTMLElement;
-  clone.querySelectorAll("button").forEach((el) => el.remove());
-  return (clone.textContent ?? "").replace(/\s+/g, " ").trim();
-};
+const textOf = cellText;
 const blank = (v: string) => !v || v === "-";
 
 /** 고른 줄들(줄마다 칸 묶음)로 공유 이미지 재료를 만든다. 칸 위치는 화면 좌표로 머리글과 맞춘다. */
