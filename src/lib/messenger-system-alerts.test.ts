@@ -19,7 +19,11 @@ function fakeAdmin(tables: Record<string, unknown[]>): ReturnType<typeof createA
     const self = {
       is: () => self,
       select: () => self,
-      range: (from: number, to: number) => Promise.resolve({ data: rows.slice(from, to + 1), error: null }),
+      // 실제 빌더처럼 .range() 뒤에 .order()를 이을 수 있다(fetchAllRows는 페이지를 넘길 때 id 정렬을 붙인다)
+      range: (from: number, to: number) => {
+        const result = Promise.resolve({ data: rows.slice(from, to + 1), error: null });
+        return Object.assign(result, { order: () => result });
+      },
     };
     return self;
   }

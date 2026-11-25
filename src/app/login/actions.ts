@@ -27,13 +27,15 @@ export async function login(_prevState: { error: string } | undefined, formData:
   }
 
   const ip = clientIpFromHeaders(await headers());
-  const waitSeconds = throttleRemainingSeconds(ip, `${companyCode}/${loginId}`);
+  // 이메일로 로그인하면 회사코드는 인증에 쓰이지 않는다 — 그런데 회사코드를 키에 넣으면 공격자가 회사코드만 바꿔 가며 계정별 제한을 계속 초기화할 수 있다.
+  // 그래서 이메일 로그인은 회사코드를 뺀 이메일로만 센다.
+  const throttleId = loginId.includes("@") ? loginId.toLowerCase() : `${companyCode}/${loginId}`;
+  const waitSeconds = throttleRemainingSeconds(ip, throttleId);
   if (waitSeconds > 0) {
     return {
       error: `로그인 시도가 너무 많습니다. ${Math.ceil(waitSeconds / 60)}분 뒤에 다시 시도해주세요.`,
     };
   }
-  const throttleId = `${companyCode}/${loginId}`;
   let blockReason: string | null = null;
 
   const supabase = await createClient();

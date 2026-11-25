@@ -1,3 +1,4 @@
+import { UNSAFE_MAIL_SERVER_MESSAGE, isSafeMailHost, isSafeMailPort } from "@/lib/mail/host-guard";
 import PostalMime from "postal-mime";
 import type { Email, Address } from "postal-mime";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -60,6 +61,8 @@ export async function syncMailAccount(
 ): Promise<SyncResult> {
   let client: ImapClient | null = null;
   try {
+    // 설정 화면에서만 검사하면 DB를 직접 고쳐 우회할 수 있다 — 접속 직전에 한 번 더 검사한다(SSRF).
+    if (!isSafeMailHost(account.imap_host) || !isSafeMailPort(account.imap_port)) throw new Error(UNSAFE_MAIL_SERVER_MESSAGE);
     const password = await decryptSecret(account.encrypted_app_password);
     client = await ImapClient.connect(account.imap_host, account.imap_port);
     await client.login(account.username, password);

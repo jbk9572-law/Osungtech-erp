@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+export { useDraftKey } from "@/lib/use-draft-scope";
+
 // 매출/매입 등록처럼 여러 줄을 입력하는 "전표" 폼에서, 저장하기 전에
 // 실수로 뒤로가기/새로고침/다른 메뉴 클릭으로 이탈하면 입력한 내용이
 // 전부 날아가던 문제를 막는다. 서버가 아니라 이 브라우저의 localStorage에

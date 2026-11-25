@@ -41,16 +41,28 @@ export default async function InventoryLedgerPage({
   // DB 안에서 계산해 돌려준다 — 그대로 쓴다(JS에서 다시 누적하지 않는다).
   // created_at(시스템 입력시각) 기준으로 계산하면 전표를 늦게/일찍
   // 입력했을 때 중간 잔량이 틀어지는 버그가 있었다.
-  const rawLedgerRows = selectedProduct
-    ? (
-        await supabase.rpc("get_product_ledger_rows", {
-          p_product_id: selectedProduct.id,
-          p_warehouse_id: warehouseId || null,
-          p_from: from,
-          p_to: to,
-        })
-      ).data ?? []
-    : [];
+  const ledgerRes = selectedProduct
+    ? await supabase.rpc("get_product_ledger_rows", {
+        p_product_id: selectedProduct.id,
+        p_warehouse_id: warehouseId || null,
+        p_from: from,
+        p_to: to,
+      })
+    : null;
+  const rawLedgerRows = ledgerRes?.data ?? [];
+  // 그 달에 거래가 없으면 첫 행에서 이월을 거꾸로 구할 수 없다 — DB의 이월 계산 함수로 구한다(0으로 두면 재고가 있는데도 이월·마감이 0으로 나온다).
+  const emptyMonthOpening =
+    selectedProduct && !ledgerRes?.error && rawLedgerRows.length === 0
+      ? Number(
+          (
+            await supabase.rpc("get_ledger_opening_balance", {
+              p_product_id: selectedProduct.id,
+              p_warehouse_id: warehouseId || null,
+              p_before: from,
+            })
+          ).data ?? 0,
+        )
+      : 0;
 
   // 참조는 시스템 문자열("purchase_order:uuid") 대신 "매입 #12 · 거래처"로 보여 준다
   const refInfo = await resolveInventoryReferences(supabase, rawLedgerRows.map((r) => r.reference));
@@ -68,7 +80,7 @@ export default async function InventoryLedgerPage({
       balance: r.balance_after,
     };
   });
-  const openingBalance = ledgerRows.length > 0 ? ledgerRows[0].balance - ledgerRows[0].delta : 0;
+  const openingBalance = ledgerRows.length > 0 ? ledgerRows[0].balance - ledgerRows[0].delta : emptyMonthOpening;
   const inTotal = rawLedgerRows.filter((r) => r.type !== "out").reduce((sum, r) => sum + Number(r.quantity), 0);
   const outTotal = rawLedgerRows.filter((r) => r.type === "out").reduce((sum, r) => sum + Math.abs(Number(r.quantity)), 0);
   const closingBalance = ledgerRows.length > 0 ? ledgerRows[ledgerRows.length - 1].balance : openingBalance;
@@ -133,7 +145,9 @@ export default async function InventoryLedgerPage({
         }
       />
 
-      {!selectedProduct ? (
+      {ledgerRes?.error ? (
+        <p className="erp-u-text-sm erp-u-danger">수불부를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</p>
+      ) : !selectedProduct ? (
         <p className="text-sm erp-u-muted">
           품목을 선택하면 이 달의 수불 내역이 표시됩니다.
         </p>

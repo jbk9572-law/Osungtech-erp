@@ -227,7 +227,7 @@ export function InvoiceCopyA({
                   <div className="flex items-baseline justify-between">
                     <span className="font-bold">￦{formatNumber(totals.grandTotal)}원정</span>
                     <span style={{ fontSize: A_FONT.label }}>
-                      (수량 : {formatNumber(totals.totalQuantity)}, 공급가 : {formatNumber(totals.supplyTotal)}, 세액 :{" "}
+                      (수량 : {totals.quantityLabel}, 공급가 : {formatNumber(totals.supplyTotal)}, 세액 :{" "}
                       {formatNumber(totals.taxTotal)})
                     </span>
                   </div>

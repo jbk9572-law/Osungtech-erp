@@ -115,11 +115,21 @@ export async function copyRange(table: HTMLTableElement, rows: HTMLTableCellElem
   const html = new Blob([toHtml(m)], { type: "text/html" });
   let pngPromise: Promise<Blob | null>;
   if (mode === "share") {
-    // 공유 이미지: 한 장이면 바로 복사, 넘치면 미리보기 창(여러 장·품목 체크)으로 넘긴다
-    const model = buildShareModel(table, rows);
-    const pages = await renderSharePages(model);
-    if (pages.length > 1) return { ok: true, image: true, preview: model };
-    pngPromise = Promise.resolve(pages[0] ?? null);
+    // 공유 이미지: 한 장이면 바로 복사, 넘치면 미리보기 창(여러 장·품목 체크)으로 넘긴다.
+    // 날짜·거래처·품명 열을 못 찾는 표(거래처·재고 목록 등)는 전표 카드가 의미 없으니 예전처럼 표 그림으로 복사한다.
+    // 그림을 못 그리는 브라우저(예외)여도 글자·표 복사는 계속되게 한다.
+    try {
+      const model = buildShareModel(table, rows);
+      if (model.recognized) {
+        const pages = await renderSharePages(model);
+        if (pages.length > 1) return { ok: true, image: true, preview: model };
+        pngPromise = Promise.resolve(pages[0] ?? null);
+      } else {
+        pngPromise = renderRangePng(table, rows);
+      }
+    } catch {
+      pngPromise = Promise.resolve(null);
+    }
   } else {
     pngPromise = renderRangePng(table, rows);
   }

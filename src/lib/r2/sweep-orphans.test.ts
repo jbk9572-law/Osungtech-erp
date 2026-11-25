@@ -9,11 +9,14 @@ function fakeSupabaseReturning(paths: string[]): SupabaseClient<Database> {
     from: () => ({
       select: () => ({
         like: () => ({
-          range: (from: number) =>
-            Promise.resolve({
+          // 실제 쿼리 빌더처럼 .range() 뒤에 .order()를 이을 수 있다(fetchAllRows는 페이지를 넘길 때 id 정렬을 붙인다)
+          range: (from: number) => {
+            const result = Promise.resolve({
               data: from === 0 ? paths.map((storage_path) => ({ storage_path })) : [],
               error: null,
-            }),
+            });
+            return Object.assign(result, { order: () => result });
+          },
         }),
       }),
     }),

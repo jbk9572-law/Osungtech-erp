@@ -1,13 +1,14 @@
 "use server";
 
 import { createClient, getUser } from "@/lib/supabase/server";
+import { isSafePushEndpoint } from "@/lib/push-endpoint";
 
 // 브라우저 알림 종에서 "브라우저 알림 켜기"를 누르면 pushManager.subscribe()
 // 로 받은 구독 정보(endpoint/키 두 개)를 저장한다. endpoint가 unique라
 // 같은 브라우저에서 다시 켜도(구독이 만료돼 새로 받은 경우 포함) 그대로
 // upsert된다.
 export async function subscribePush(endpoint: string, p256dh: string, auth: string): Promise<{ error?: string }> {
-  if (!endpoint || !p256dh || !auth) return { error: "잘못된 구독 정보입니다." };
+  if (!endpoint || !p256dh || !auth || !isSafePushEndpoint(endpoint)) return { error: "잘못된 구독 정보입니다." };
 
   const supabase = await createClient();
   const user = await getUser();

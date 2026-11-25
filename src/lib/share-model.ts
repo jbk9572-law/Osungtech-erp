@@ -11,7 +11,14 @@ export const ITEM_ROLES: readonly ItemRole[] = ["name", "spec", "lot", "qty", "p
 
 export type ShareItem = Record<ItemRole, string> & { include: boolean };
 export type ShareEntry = { date: string; party: string; docNo: string; extras: string[]; items: ShareItem[]; include: boolean };
-export type ShareModel = { title: string; today: string; roles: ItemRole[]; entries: ShareEntry[] };
+export type ShareModel = {
+  title: string;
+  today: string;
+  roles: ItemRole[];
+  entries: ShareEntry[];
+  /** 이 표에 날짜·거래처·품명 열이 하나라도 있는가 — 없으면(거래처·재고 목록 등) 전표 카드가 의미 없으니 표 그림으로 복사한다. */
+  recognized: boolean;
+};
 
 const ROLE_PATTERNS: [ItemRole, RegExp][] = [
   ["name", /^(품목명|품명)/],
@@ -27,8 +34,9 @@ export function roleOfLabel(label: string): ItemRole | null {
   const l = label.trim();
   return ROLE_PATTERNS.find(([, re]) => re.test(l))?.[0] ?? null;
 }
-const DATE_HEAD = /^(거래일자|일자|날짜|작성일|발행일|기준일)/;
-const PARTY_HEAD = /^(출고처|공급처|거래처|고객|납품처)/;
+// 매출은 "거래일자", 매입은 "매입일자"; "거래처코드"·"공급처코드"는 이름 열이 아니므로 거래처로 보지 않는다.
+const DATE_HEAD = /^(거래일자|매출일자|매입일자|입고일자|출고일자|일자|날짜|작성일|발행일|기준일)/;
+const PARTY_HEAD = /^(출고처|공급처|거래처|고객|납품처)(?!코드|번호)/;
 const DOC_HEAD = /^전표번호/;
 export const isDateHead = (h: string) => DATE_HEAD.test(h.trim());
 export const isPartyHead = (h: string) => PARTY_HEAD.test(h.trim());
@@ -110,7 +118,7 @@ export function buildShareModel(table: HTMLTableElement, picked: Cells[]): Share
 
   const title = (document.querySelector(".erp-h1")?.textContent ?? document.title ?? "목록").trim() || "목록";
   const today = new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Seoul" }).format(new Date()).replace(/-/g, ".");
-  return { title, today, roles, entries };
+  return { title, today, roles, entries, recognized: !!(dateTh || partyTh || thByRole.get("name")) };
 }
 
 /** 포함된 전표·품목만 — 이미지와 합계가 이것을 쓴다. */
@@ -129,10 +137,13 @@ export function shareTotals(model: ShareModel): ShareTotals {
   const qtyLabel = model.roles.includes("qty")
     ? quantityLabelByUnit(
         entries.flatMap((e) =>
-          e.items.map((i) => {
-            const m = i.qty.replace(/,/g, "").match(/^\s*([-+]?\d+(?:\.\d+)?)\s*(.*)$/);
-            return m ? { quantity: Number(m[1]), unit: m[2] } : { quantity: 0, unit: "" };
-          }),
+          // 이월 줄처럼 한 칸에 "225 ROLL · 532 KG"가 들어 있어도 단위별로 나눠 읽는다
+          e.items.flatMap((i) =>
+            i.qty.split("·").map((part) => {
+              const m = part.replace(/,/g, "").match(/^\s*([-+]?\d+(?:\.\d+)?)\s*(.*)$/);
+              return m ? { quantity: Number(m[1]), unit: m[2].trim() } : { quantity: 0, unit: "" };
+            }),
+          ),
         ),
       )
     : null;

@@ -34,11 +34,18 @@ export async function GET(request: Request) {
     p_to: to,
   });
   const periodRows = ledgerRowsRaw ?? [];
+  // 거래가 없는 달은 DB의 이월 계산 함수로 구한다(0으로 두면 재고가 있는데도 이월이 0으로 나온다)
+  const emptyMonthOpening =
+    periodRows.length === 0
+      ? Number(
+          (await supabase.rpc("get_ledger_opening_balance", { p_product_id: productId, p_warehouse_id: warehouseId || null, p_before: from })).data ?? 0,
+        )
+      : 0;
   const refInfo = await resolveInventoryReferences(supabase, periodRows.map((r) => r.reference));
 
   const openingBalance = periodRows.length > 0
     ? periodRows[0].balance_after - (periodRows[0].type === "out" ? -Math.abs(periodRows[0].quantity) : periodRows[0].quantity)
-    : 0;
+    : emptyMonthOpening;
   const rows = periodRows.map((r) => {
     const delta = r.type === "out" ? -Math.abs(Number(r.quantity)) : Number(r.quantity);
     return {

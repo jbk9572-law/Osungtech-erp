@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dateBandLabel, parseAmount, roleOfLabel, shareTotals, type ShareModel } from "./share-model";
+import { dateBandLabel, isDateHead, isPartyHead, parseAmount, roleOfLabel, shareTotals, type ShareModel } from "./share-model";
 
 describe("공유 이미지 재료", () => {
   it("날짜 띠: 요일을 붙이고, 읽을 수 없는 형식은 그대로", () => {
@@ -23,6 +23,7 @@ describe("공유 이미지 재료", () => {
       title: "t",
       today: "2026.11.25",
       roles: ["name", "qty", "amount"],
+      recognized: true,
       entries: [
         { date: "", party: "A", docNo: "", extras: [], include: true, items: [item("225 ROLL", "6,367,500"), item("532 KG", "1,223,600"), item("9 KG", "100", false)] },
         { date: "", party: "B", docNo: "", extras: [], include: false, items: [item("1 EA", "1,000")] },
@@ -35,7 +36,25 @@ describe("공유 이미지 재료", () => {
     expect(t.qtyLabel).toBe("225 ROLL · 632 KG");
   });
   it("금액 열을 고르지 않았으면 합계 금액을 만들지 않는다", () => {
-    const m: ShareModel = { title: "t", today: "", roles: ["name", "qty"], entries: [] };
+    const m: ShareModel = { title: "t", today: "", roles: ["name", "qty"], entries: [], recognized: true };
     expect(shareTotals(m).amount).toBeNull();
+  });
+  it("매입 목록의 '매입일자'도 날짜 열로, '거래처코드'·'공급처코드'는 거래처 열이 아니다", () => {
+    expect(isDateHead("거래일자")).toBe(true);
+    expect(isDateHead("매입일자")).toBe(true);
+    expect(isPartyHead("출고처")).toBe(true);
+    expect(isPartyHead("공급처")).toBe(true);
+    expect(isPartyHead("거래처코드")).toBe(false);
+    expect(isPartyHead("공급처코드")).toBe(false);
+  });
+  it("한 칸에 단위가 섞여 있어도(이월 줄 '225 ROLL · 532 KG') 단위별로 합친다", () => {
+    const item = (q: string) => ({ name: "x", spec: "", lot: "", qty: q, price: "", amount: "", tax: "", remark: "", include: true });
+    const m: ShareModel = { title: "t", today: "", roles: ["name", "qty"], recognized: true, entries: [{ date: "", party: "A", docNo: "", extras: [], include: true, items: [item("225 ROLL · 532 KG"), item("100 KG")] }] };
+    expect(shareTotals(m).qtyLabel).toBe("225 ROLL · 632 KG");
+  });
+  it("반품(−금액)은 합계에서 빠진다", () => {
+    const item = (a: string) => ({ name: "x", spec: "", lot: "", qty: "", price: "", amount: a, tax: "", remark: "", include: true });
+    const m: ShareModel = { title: "t", today: "", roles: ["name", "amount"], recognized: true, entries: [{ date: "", party: "A", docNo: "", extras: [], include: true, items: [item("1,000"), item("-300")] }] };
+    expect(shareTotals(m).amount).toBe(700);
   });
 });

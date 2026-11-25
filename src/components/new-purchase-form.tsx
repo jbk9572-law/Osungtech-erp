@@ -41,7 +41,7 @@ import { buildPartyProductMap,
   lookupPartyProductValue,
   getMostRecentLotNumber, refillDraftPrices } from "@/lib/party-price-lookup";
 import { useKeyedRows } from "@/lib/use-keyed-rows";
-import { useDraftAutosave } from "@/lib/use-draft-autosave";
+import { useDraftAutosave, useDraftKey } from "@/lib/use-draft-autosave";
 import { DraftResumeBanner } from "@/components/draft-resume-banner";
 import { ManualPriceToggle } from "@/components/order-manual-price-toggle";
 import { useThemeFeatures } from "@/lib/erp-theme-features";
@@ -416,7 +416,7 @@ export function NewPurchaseForm({
   // 제안처럼 이미 채워진 채로 시작하는 경우도 아닐 때만(그런 경우는
   // "이어서 작성" 대상이 될 임시저장이 애초에 없다) 이 브라우저에
   // 임시저장한다.
-  const draftKey = initial?.id || prefillItems?.length ? null : "erp-draft:purchase:new";
+  const draftKey = useDraftKey(initial?.id || prefillItems?.length ? null : "erp-draft:purchase:new");
   const { draft, draftLoaded, save: saveDraft, clear: clearDraft, savedAt } = useDraftAutosave<PurchaseDraft>(draftKey);
   const [draftChoiceMade, setDraftChoiceMade] = useState(false);
   const showDraftBanner = !!draftKey && draftLoaded && !!draft && draftHasContent(draft) && !draftChoiceMade;

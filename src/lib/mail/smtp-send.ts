@@ -1,3 +1,4 @@
+import { UNSAFE_MAIL_SERVER_MESSAGE, isSafeMailHost, isSafeMailPort } from "@/lib/mail/host-guard";
 import nodemailer from "nodemailer";
 
 export type SendMailAttachment = {
@@ -28,6 +29,8 @@ export type SendMailParams = {
 // 서버(Docker 셀프호스팅)로 옮기면서 표준 nodemailer로 되돌렸다 —
 // 호출부(이 함수의 시그니처)는 그대로라 다른 파일은 손댈 필요 없다.
 export async function sendMail(params: SendMailParams): Promise<void> {
+  // 설정 화면에서만 검사하면 DB를 직접 고쳐 우회할 수 있다 — 발송 직전에 한 번 더 검사한다(SSRF).
+  if (!isSafeMailHost(params.smtpHost) || !isSafeMailPort(params.smtpPort)) throw new Error(UNSAFE_MAIL_SERVER_MESSAGE);
   const transporter = nodemailer.createTransport({
     host: params.smtpHost,
     port: params.smtpPort,

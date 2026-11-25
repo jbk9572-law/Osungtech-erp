@@ -17,7 +17,7 @@ export function SummarySection({
   memo?: string | null;
   balance?: number;
 }) {
-  const { totalQuantity, supplyTotal, taxTotal, grandTotal, priorBalance } = computeInvoiceTotals(items, balance);
+  const { quantityLabel, supplyTotal, taxTotal, grandTotal, priorBalance } = computeInvoiceTotals(items, balance);
 
   return (
     <>
@@ -39,7 +39,7 @@ export function SummarySection({
               className="text-right erp-u-relative"
               style={{ left: SUMMARY.breakdownOffsetX, fontSize: SUMMARY.breakdownFontSize }}
             >
-              (수량 : {formatNumber(totalQuantity)}, 공급가 : {formatNumber(supplyTotal)},
+              (수량 : {quantityLabel}, 공급가 : {formatNumber(supplyTotal)},
               세액 : {formatNumber(taxTotal)})
             </span>
           </div>

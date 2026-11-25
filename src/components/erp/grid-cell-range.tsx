@@ -24,8 +24,9 @@ const SCOPE_CELL: Record<Scope, string> = {
   list: ".erp-range-copy table.erp-grid tbody td",
 };
 
-function clearMarks() {
-  document.querySelectorAll(`.${SELECTED}, .${EXCLUDED}`).forEach((el) => el.classList.remove(SELECTED, EXCLUDED));
+// 자기 표(scope)의 표시만 지운다 — 목록 위에 전표 모달이 떠서 인스턴스가 둘일 때 서로의 선택을 지우지 않게.
+function clearMarks(scope: Scope) {
+  document.querySelectorAll(`${SCOPE_CELL[scope]}.${SELECTED}, ${SCOPE_CELL[scope]}.${EXCLUDED}`).forEach((el) => el.classList.remove(SELECTED, EXCLUDED));
 }
 
 function textOf(td: HTMLTableCellElement): string {
@@ -72,7 +73,7 @@ export function GridCellRangeStats({ scope = "voucher" }: { scope?: Scope }) {
     // 범위는 칸 번호가 아니라 화면 좌표로 정한다(lib/grid-range-select.ts) — tbody가 여러 개거나 칸이 합쳐진 줄이 있어도 마우스가 올라간 칸이 그대로 선택된다.
     const paint = (to: CellRef) => {
       if (!anchor || anchor.table !== to.table) return;
-      clearMarks();
+      clearMarks(scope);
       const rows = cellsInRange(anchor, to);
       const total = rows.reduce((n, r) => n + r.length, 0);
       range = total < 2 ? null : { table: anchor.table, rows };
@@ -107,7 +108,7 @@ export function GridCellRangeStats({ scope = "voucher" }: { scope?: Scope }) {
           return;
         }
       }
-      clearMarks();
+      clearMarks(scope);
       excluded.clear();
       range = null;
       setSummary(null);
@@ -119,7 +120,7 @@ export function GridCellRangeStats({ scope = "voucher" }: { scope?: Scope }) {
     const onMove = (e: MouseEvent) => {
       if (!dragging || !anchor || e.buttons !== 1) return;
       const to = cellRefAt(e.target, selector);
-      if (!to || (to.cell === anchor.cell && !document.querySelector(`.${SELECTED}`))) return;
+      if (!to || (to.cell === anchor.cell && !document.querySelector(`${selector}.${SELECTED}`))) return;
       // 범위가 시작되면 입력칸 안 글자 드래그 선택이 같이 일어나지 않게 막는다
       window.getSelection()?.removeAllRanges();
       swallowClick = true;
@@ -135,8 +136,10 @@ export function GridCellRangeStats({ scope = "voucher" }: { scope?: Scope }) {
       e.preventDefault();
     };
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && document.querySelector(`.${SELECTED}, .${EXCLUDED}`)) {
-        clearMarks();
+      if (e.key === "Escape" && range) {
+        // 선택만 풀고, 같은 Esc가 모달까지 닫지 않게 한다
+        e.stopPropagation();
+        clearMarks(scope);
         excluded.clear();
         range = null;
         setSummary(null);
@@ -156,6 +159,9 @@ export function GridCellRangeStats({ scope = "voucher" }: { scope?: Scope }) {
           }
           setToast(!res.ok ? "복사하지 못했습니다(브라우저 권한 확인)" : res.image && scope === "list" ? "공유 이미지로 복사했습니다 — 엑셀엔 표로, 메신저엔 이미지로 붙여넣으세요" : res.image ? "복사했습니다 — 엑셀엔 표로, 메신저·문서엔 그림으로 붙여넣을 수 있어요" : "복사했습니다(그림 복사는 이 브라우저에서 지원되지 않아 표·글자로 복사)");
           window.setTimeout(() => setToast(null), 2600);
+        }).catch(() => {
+          setToast("복사하지 못했습니다");
+          window.setTimeout(() => setToast(null), 2600);
         });
       }
     };
@@ -170,7 +176,7 @@ export function GridCellRangeStats({ scope = "voucher" }: { scope?: Scope }) {
       document.removeEventListener("mouseup", onUp);
       document.removeEventListener("click", onClickCapture, true);
       document.removeEventListener("keydown", onKey);
-      clearMarks();
+      clearMarks(scope);
     };
   }, [scope]);
 

@@ -44,7 +44,7 @@ import { buildPartyProductMap,
   lookupPartyProductValue,
   getMostRecentLotNumber, refillDraftPrices } from "@/lib/party-price-lookup";
 import { useKeyedRows } from "@/lib/use-keyed-rows";
-import { useDraftAutosave } from "@/lib/use-draft-autosave";
+import { useDraftAutosave, useDraftKey } from "@/lib/use-draft-autosave";
 import { DraftResumeBanner } from "@/components/draft-resume-banner";
 import { OrderRowStockCell, OrderRowStockHint, rowStockRemaining } from "@/components/order-row-stock-hint";
 import { useThemeFeatures } from "@/lib/erp-theme-features";
@@ -334,7 +334,7 @@ export function NewSaleForm({
   // 전표 입력 중 이탈(뒤로가기/새로고침/다른 메뉴 클릭) 시 입력 내용이
   // 날아가지 않게, 신규 등록일 때만(수정 화면은 "임시저장 값 vs 실제
   // 저장된 값"이 헷갈릴 수 있어 제외) 이 브라우저에 임시저장한다.
-  const draftKey = initial?.id ? null : "erp-draft:sale:new";
+  const draftKey = useDraftKey(initial?.id ? null : "erp-draft:sale:new");
   const { draft, draftLoaded, save: saveDraft, clear: clearDraft, savedAt } = useDraftAutosave<SaleDraft>(draftKey);
   const [draftChoiceMade, setDraftChoiceMade] = useState(false);
   const showDraftBanner = !initial?.id && draftLoaded && !!draft && draftHasContent(draft) && !draftChoiceMade;

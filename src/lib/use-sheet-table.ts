@@ -74,8 +74,6 @@ export function useRowKeyboard(
   return (e: KeyboardEvent<HTMLElement>) => {
     const t = e.target as HTMLElement;
     if (t.closest("input, textarea, select, button, a")) return;
-    // 끌어서 칸 범위를 골랐다면 Ctrl+C는 범위 복사(grid-cell-range)가 맡는다 — 행 복사가 덮어쓰지 않게 비킨다.
-    if (document.querySelector(".erp-cell-selected")) return;
     const i = activeId ? orderedIds.indexOf(activeId) : -1;
     if (e.key === "ArrowDown" || e.key === "ArrowUp") {
       e.preventDefault();
@@ -84,7 +82,8 @@ export function useRowKeyboard(
     } else if (e.key === "Enter" && activeId) {
       e.preventDefault();
       onOpen(activeId);
-    } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "c" && activeId && !window.getSelection()?.toString()) {
+    } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "c" && activeId && !window.getSelection()?.toString() && !document.querySelector(".erp-cell-selected")) {
+      // 끌어서 칸 범위를 골랐다면 Ctrl+C는 범위 복사(grid-cell-range)가 맡는다 — 행 복사가 덮어쓰지 않게 비킨다(방향키·Enter는 그대로 동작).
       e.preventDefault();
       void navigator.clipboard?.writeText(copyTextOf(activeId));
     }

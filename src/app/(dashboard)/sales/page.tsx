@@ -317,10 +317,26 @@ async function SalesPage({
     return { ...item, supplyAmount, taxAmount };
   });
   const carryoverQtyByOrder = new Map<string, QtyItem[]>();
+  // 이월 전표도 품목을 들고 있어야 공유 이미지에서 "외 N건"을 품목별로 펼칠 수 있다
+  const carryoverItemsByOrder = new Map<string, SalesRowItem[]>();
   const carryoverRows: DisplayRow[] = Object.values(
     carryoverItemRows.reduce<Record<string, DisplayRow & { itemCount: number }>>((acc, item) => {
       const orderId = item.sales_orders?.id ?? item.id;
       carryoverQtyByOrder.set(orderId, [...(carryoverQtyByOrder.get(orderId) ?? []), { quantity: item.quantity, unit: item.products?.unit }]);
+      carryoverItemsByOrder.set(orderId, [
+        ...(carryoverItemsByOrder.get(orderId) ?? []),
+        {
+          productLabel: item.products?.name ?? item.custom_name ?? "-",
+          spec: item.spec || item.products?.spec || "-",
+          lotNumber: item.lot_number,
+          remark: item.remark,
+          quantity: item.quantity,
+          unit: item.products?.unit,
+          unitPrice: Number(item.unit_price),
+          supplyAmount: item.supplyAmount,
+          taxAmount: item.taxAmount,
+        },
+      ]);
       if (!acc[orderId]) {
         acc[orderId] = {
           key: orderId,
@@ -365,6 +381,7 @@ async function SalesPage({
     ...row,
     productLabel: row.itemCount > 1 ? `${row.productLabel} 외 ${row.itemCount - 1}건` : row.productLabel,
     quantityLabel: quantityLabelByUnit(carryoverQtyByOrder.get(row.key) ?? []),
+    items: carryoverItemsByOrder.get(row.key),
   }));
   const carryoverQuantityTotal = carryoverRows.reduce((sum, r) => sum + r.quantity, 0);
   const carryoverSupplyTotal = carryoverRows.reduce(

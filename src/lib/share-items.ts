@@ -18,7 +18,8 @@ export type ShareItemInput = {
 export type ShareItem = { p: string; s: string; l: string; r: string; q: string; u: string; a: string; t: string };
 
 /** 품목이 2건 이상일 때만 값을 돌려준다(한 건이면 펼칠 게 없다). */
-export function buildShareItemsAttr(items: readonly ShareItemInput[] | undefined): string | undefined {
+/** isReturn이면 화면 줄과 똑같이 수량 앞에 +, 금액·세액 앞에 −를 붙인다(합계가 반품을 더하지 않고 빼도록). */
+export function buildShareItemsAttr(items: readonly ShareItemInput[] | undefined, isReturn = false): string | undefined {
   if (!items || items.length < 2) return undefined;
   const out: ShareItem[] = items.map((i) => {
     const price = i.unitPrice ?? i.unitCost;
@@ -27,10 +28,10 @@ export function buildShareItemsAttr(items: readonly ShareItemInput[] | undefined
       s: i.spec && i.spec !== "-" ? i.spec : "",
       l: i.lotNumber ?? "",
       r: i.remark ?? "",
-      q: `${formatNumber(i.quantity)}${i.unit ? ` ${i.unit}` : ""}`,
+      q: `${isReturn ? "+" : ""}${formatNumber(i.quantity)}${i.unit ? ` ${i.unit}` : ""}`,
       u: price == null ? "" : formatNumber(price),
-      a: formatNumber(i.supplyAmount),
-      t: formatNumber(i.taxAmount),
+      a: `${isReturn ? "-" : ""}${formatNumber(i.supplyAmount)}`,
+      t: `${isReturn ? "-" : ""}${formatNumber(i.taxAmount)}`,
     };
   });
   return JSON.stringify(out);

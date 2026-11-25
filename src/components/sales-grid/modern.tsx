@@ -366,7 +366,7 @@ export function SalesGridTable({
       <tr
         key={row.key}
         className={`cursor-pointer${isRowSelected ? " selected" : isActive ? " master-active" : ""}${rowDayClass(rowDay(row.date))}${carryoverRowClass(row.isCarryover, !!opts.compactDate)}`}
-        data-share-items={buildShareItemsAttr(row.items)}
+        data-share-items={buildShareItemsAttr(row.items, row.isReturn)}
         onClick={() => opts.selectable && !hasTextSelection() && openRow(row.key, detailHref)}
       >
         <td style={opts.compactDate ? tdSticky1Carryover : tdSticky1}>
