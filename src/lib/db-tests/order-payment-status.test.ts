@@ -157,3 +157,31 @@ describe("get_*_last_order_dates", () => {
     expect(s.rows.length).toBe(0);
   });
 });
+
+describe("부가세 포함 금액(마이그레이션 285)", () => {
+  it("과세 전표는 공급가액의 10%를 더한 금액으로 수금 상태를 계산한다", async () => {
+    const id = await addSale("2026-11-01", 1000);
+    await h.db.query(`update public.sales_orders set tax_type = '과세' where id = $1`, [id]);
+    // 공급가액만(1000) 받았으면 부가세 100이 남아 일부 수금이다.
+    await pay(1000);
+    expect((await status([id]))[id]).toEqual({ s: "partial", o: 100 });
+    // 부가세까지 받으면 완료.
+    await pay(100);
+    expect((await status([id]))[id]).toEqual({ s: "paid", o: 0 });
+  });
+
+  it("면세·영세 전표는 부가세를 더하지 않는다", async () => {
+    const id = await addSale("2026-11-01", 1000);
+    await h.db.query(`update public.sales_orders set tax_type = '면세' where id = $1`, [id]);
+    await pay(1000);
+    expect((await status([id]))[id]).toEqual({ s: "paid", o: 0 });
+  });
+
+  it("과세 반품은 부가세 포함 금액만큼 먼저 상계한다", async () => {
+    const sale = await addSale("2026-11-01", 1000);
+    const ret = await addSale("2026-11-02", 500, { isReturn: true });
+    await h.db.query(`update public.sales_orders set tax_type = '과세' where id in ($1, $2)`, [sale, ret]);
+    // 1100 중 반품 550을 먼저 상계 → 남은 550
+    expect((await status([sale]))[sale]).toEqual({ s: "partial", o: 550 });
+  });
+});

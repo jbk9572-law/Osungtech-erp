@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { todayKstStr } from "@/lib/kst-date";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { calcVatForTaxType } from "@/lib/tax";
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 
@@ -37,6 +38,11 @@ type PartyPaymentRow = { id: string; paid_at: string; amount: string | number; m
 // processName/workOrderId 같은 호출부별 추가 필드가 그대로 보존된다.
 // 금액 합계의 부동소수 잡음(1.1 × 3000 = 3300.0000000000005 등)을 소수 둘째 자리에서 정리한다. DB(numeric)는 정확한 값이라
 // 잡음을 그대로 두면 "정확히 수금했는데 5e-13원 미수"로 남아 DB 집계(get_customer_balances)와 화면이 어긋난다.
+// 미수금·미지급금에 잡히는 전표 한 장의 금액 = 공급가액 + 부가세(과세만). DB 함수(마이그레이션 285)와 같은 규칙이다 — 화면마다 숫자가 다르면 안 된다.
+export function orderTotalWithVat(supplyAmount: number, taxType: string | null | undefined): number {
+  return roundMoney(supplyAmount + calcVatForTaxType(supplyAmount, taxType));
+}
+
 export function roundMoney(value: number): number {
   return Math.round(value * 100) / 100;
 }
@@ -61,11 +67,12 @@ export async function getCustomerBalance(supabase: SupabaseServerClient, custome
       order_date: string;
       payment_method: string | null;
       is_return: boolean;
+      tax_type: string | null;
       sales_order_items: { quantity: number; unit_price: string | number }[];
     }>((from, to) =>
       supabase
         .from("sales_orders")
-        .select("id, doc_no, order_date, payment_method, is_return, sales_order_items(quantity, unit_price)")
+        .select("id, doc_no, order_date, payment_method, is_return, tax_type, sales_order_items(quantity, unit_price)")
         .eq("customer_id", customerId)
         .order("order_date", { ascending: true })
         .order("id", { ascending: true })
@@ -94,7 +101,7 @@ export async function getCustomerBalance(supabase: SupabaseServerClient, custome
       docNo: o.doc_no,
       date: o.order_date,
       total:
-        roundMoney((o.sales_order_items ?? []).reduce((sum, i) => sum + i.quantity * Number(i.unit_price), 0)) *
+        orderTotalWithVat((o.sales_order_items ?? []).reduce((sum, i) => sum + i.quantity * Number(i.unit_price), 0), o.tax_type) *
         (o.is_return ? -1 : 1),
     }));
 
@@ -118,11 +125,12 @@ export async function getSupplierBalance(supabase: SupabaseServerClient, supplie
       doc_no: number | null;
       purchase_date: string;
       payment_method: string | null;
+      tax_type: string | null;
       purchase_order_items: { quantity: number; unit_cost: string | number }[];
     }>((from, to) =>
       supabase
         .from("purchase_orders")
-        .select("id, doc_no, purchase_date, payment_method, purchase_order_items(quantity, unit_cost)")
+        .select("id, doc_no, purchase_date, payment_method, tax_type, purchase_order_items(quantity, unit_cost)")
         .eq("supplier_id", supplierId)
         .order("purchase_date", { ascending: true })
         .order("id", { ascending: true })
@@ -145,7 +153,7 @@ export async function getSupplierBalance(supabase: SupabaseServerClient, supplie
       id: o.id,
       docNo: o.doc_no,
       date: o.purchase_date,
-      total: roundMoney((o.purchase_order_items ?? []).reduce((sum, i) => sum + i.quantity * Number(i.unit_cost), 0)),
+      total: orderTotalWithVat((o.purchase_order_items ?? []).reduce((sum, i) => sum + i.quantity * Number(i.unit_cost), 0), o.tax_type),
     }));
 
   const { totalAmount: totalPurchases, totalPaid, balance, unpaidOrders } = computePartyBalance(

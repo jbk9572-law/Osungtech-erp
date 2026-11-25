@@ -1,7 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { toKstDateStr } from "@/lib/kst-date";
-import { computePartyBalance, RECEIVABLE_OVERDUE_DAYS } from "@/lib/ar-ap";
+import { computePartyBalance, orderTotalWithVat, RECEIVABLE_OVERDUE_DAYS } from "@/lib/ar-ap";
 import { formatNumber } from "@/lib/format-number";
 
 export type AlertSyncResult = { posted: number; cleared: number };
@@ -215,11 +215,12 @@ export async function findOverdueCustomers(admin: ReturnType<typeof createAdminC
       customer_id: string;
       order_date: string;
       is_return: boolean;
+      tax_type: string | null;
       sales_order_items: { quantity: number; unit_price: string | number }[];
     }>((from, to) =>
       admin
         .from("sales_orders")
-        .select("customer_id, order_date, is_return, sales_order_items(quantity, unit_price)")
+        .select("customer_id, order_date, is_return, tax_type, sales_order_items(quantity, unit_price)")
         .is("payment_method", null)
         .range(from, to).order("id", { ascending: true }),
     ),
@@ -234,7 +235,7 @@ export async function findOverdueCustomers(admin: ReturnType<typeof createAdminC
   const ordersByCustomer = new Map<string, { total: number; date: string }[]>();
   for (const o of orders) {
     const total =
-      (o.sales_order_items ?? []).reduce((sum, i) => sum + i.quantity * Number(i.unit_price), 0) *
+      orderTotalWithVat((o.sales_order_items ?? []).reduce((sum, i) => sum + i.quantity * Number(i.unit_price), 0), o.tax_type) *
       (o.is_return ? -1 : 1);
     const list = ordersByCustomer.get(o.customer_id) ?? [];
     list.push({ total, date: o.order_date });

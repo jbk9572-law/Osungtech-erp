@@ -1,5 +1,6 @@
 "use server";
 
+import { orderTotalWithVat } from "@/lib/ar-ap";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient, getUser } from "@/lib/supabase/server";
@@ -515,11 +516,12 @@ export async function getCustomerTransactionHistory(
       order_date: string;
       payment_method: string | null;
       is_return: boolean;
+      tax_type: string | null;
       sales_order_items: { quantity: number; unit_price: string | number; products: { name: string } | null }[];
     }>((from, to) =>
       supabase
         .from("sales_orders")
-        .select("id, order_date, payment_method, is_return, sales_order_items(quantity, unit_price, products(name))")
+        .select("id, order_date, payment_method, is_return, tax_type, sales_order_items(quantity, unit_price, products(name))")
         .eq("customer_id", customerId)
         .order("order_date", { ascending: true })
         .range(from, to),
@@ -541,7 +543,7 @@ export async function getCustomerTransactionHistory(
     if (o.payment_method) continue;
     const items = o.sales_order_items ?? [];
     const sign = o.is_return ? -1 : 1;
-    const total = items.reduce((sum, i) => sum + i.quantity * Number(i.unit_price), 0) * sign;
+    const total = orderTotalWithVat(items.reduce((sum, i) => sum + i.quantity * Number(i.unit_price), 0), o.tax_type) * sign;
     const namePart = items.length
       ? `${items[0].products?.name ?? "-"}${items.length > 1 ? ` 외 ${items.length - 1}건` : ""}`
       : "매출";

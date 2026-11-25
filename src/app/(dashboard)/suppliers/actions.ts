@@ -1,5 +1,6 @@
 "use server";
 
+import { orderTotalWithVat } from "@/lib/ar-ap";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient, getUser } from "@/lib/supabase/server";
@@ -485,11 +486,12 @@ export async function getSupplierTransactionHistory(
       id: string;
       purchase_date: string;
       payment_method: string | null;
+      tax_type: string | null;
       purchase_order_items: { quantity: number; unit_cost: string | number; products: { name: string } | null }[];
     }>((from, to) =>
       supabase
         .from("purchase_orders")
-        .select("id, purchase_date, payment_method, purchase_order_items(quantity, unit_cost, products(name))")
+        .select("id, purchase_date, payment_method, tax_type, purchase_order_items(quantity, unit_cost, products(name))")
         .eq("supplier_id", supplierId)
         .order("purchase_date", { ascending: true })
         .range(from, to),
@@ -510,7 +512,7 @@ export async function getSupplierTransactionHistory(
   for (const o of orders ?? []) {
     if (o.payment_method) continue;
     const items = o.purchase_order_items ?? [];
-    const total = items.reduce((sum, i) => sum + i.quantity * Number(i.unit_cost), 0);
+    const total = orderTotalWithVat(items.reduce((sum, i) => sum + i.quantity * Number(i.unit_cost), 0), o.tax_type);
     const label = items.length
       ? `${items[0].products?.name ?? "-"}${items.length > 1 ? ` 외 ${items.length - 1}건` : ""}`
       : "매입";
