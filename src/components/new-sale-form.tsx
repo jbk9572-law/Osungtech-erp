@@ -1,6 +1,5 @@
 "use client";
 
-import { quantityLabelByUnit } from "@/lib/quantity-by-unit";
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { createSale } from "@/app/(dashboard)/sales/actions";
 import {
@@ -1444,7 +1443,7 @@ export function NewSaleForm({
               <VoucherAddRow colSpan={11} onAdd={addRow} />
             </tbody>
             <tfoot>
-              <OrderTotalsRow count={rows.filter((r) => r.productId || r.customName).length} quantity={rows.reduce((n, r) => n + r.quantity, 0)} quantityLabel={quantityLabelByUnit(rows.filter((r) => r.productId).map((r) => ({ quantity: r.quantity, unit: products.find((p) => p.id === r.productId)?.unit })))} supply={supplyAmount} tax={taxAmount} total={total} classicSpans={[6, 5]} voucherLeadSpan={4} voucherTrailSpan={2} />
+              <OrderTotalsRow count={rows.filter((r) => r.productId || r.customName).length} quantity={rows.reduce((n, r) => n + r.quantity, 0)} qtyLines={rows.filter((r) => r.productId).map((r) => ({ quantity: r.quantity, unit: products.find((p) => p.id === r.productId)?.unit }))} supply={supplyAmount} tax={taxAmount} total={total} classicSpans={[6, 5]} voucherLeadSpan={4} voucherTrailSpan={2} />
             </tfoot>
           </table>
         </div>

@@ -1,6 +1,5 @@
 "use client";
 
-import { quantityLabelByUnit } from "@/lib/quantity-by-unit";
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { createPurchase } from "@/app/(dashboard)/purchases/actions";
 import { ProductSearchSelect } from "@/components/product-search-select";
@@ -1511,7 +1510,7 @@ export function NewPurchaseForm({
               <VoucherAddRow colSpan={alsoCreateSale ? 12 : 10} onAdd={addRow} />
             </tbody>
             <tfoot>
-              <OrderTotalsRow count={rows.filter((r) => r.productId || r.customName).length} quantity={rows.reduce((n, r) => n + r.quantity, 0)} quantityLabel={quantityLabelByUnit(rows.filter((r) => r.productId).map((r) => ({ quantity: r.quantity, unit: products.find((p) => p.id === r.productId)?.unit })))} supply={supplyAmount} tax={taxAmount} total={total} label="매입 합계" classicSpans={[alsoCreateSale ? 8 : 6, voucherLayout ? 4 : 5]} voucherLeadSpan={4} voucherTrailSpan={1} classicOnly={alsoCreateSale} />
+              <OrderTotalsRow count={rows.filter((r) => r.productId || r.customName).length} quantity={rows.reduce((n, r) => n + r.quantity, 0)} qtyLines={rows.filter((r) => r.productId).map((r) => ({ quantity: r.quantity, unit: products.find((p) => p.id === r.productId)?.unit }))} supply={supplyAmount} tax={taxAmount} total={total} label="매입 합계" classicSpans={[alsoCreateSale ? 8 : 6, voucherLayout ? 4 : 5]} voucherLeadSpan={4} voucherTrailSpan={1} classicOnly={alsoCreateSale} />
             </tfoot>
           </table>
         </div>
