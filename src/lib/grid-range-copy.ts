@@ -4,6 +4,8 @@
 //   · image/png   표 그림 — 카카오톡·슬랙·문서 등 그림을 붙여넣는 곳
 // 표의 칸은 입력칸(input)이라 화면에 보이는 값(input.value)을 읽는다. 그림은 선택 범위 위에 해당 열의 머리글 줄을 붙여 그린다.
 
+import { findTotalLabel, isDateHead, isPartyHead, parseAmount, renderSharePng, SHARE_MAX_ROWS, type ShareData } from "@/lib/range-share-image";
+
 export type RangeMatrix = { header: string[]; rows: string[][] };
 
 function cellText(td: HTMLTableCellElement): string {
@@ -114,12 +116,48 @@ export function renderRangePng(table: HTMLTableElement, r1: number, r2: number, 
   }
 }
 
+/** 목록용 "공유 이미지" 재료 — 날짜·거래처 열은 고르지 않았어도 항상 넣고, 나머지 고른 칸은 이름표와 함께 둔다. */
+export function readShareData(table: HTMLTableElement, r1: number, r2: number, c1: number, c2: number): ShareData {
+  const body = table.tBodies[0];
+  const headRow = table.tHead?.rows[table.tHead.rows.length - 1];
+  const headOf = (c: number) => (headRow?.cells[c]?.textContent ?? "").trim();
+  const colCount = headRow?.cells.length ?? 0;
+  let dateCol = -1;
+  let partyCol = -1;
+  for (let c = 0; c < colCount; c++) {
+    if (dateCol < 0 && isDateHead(headOf(c))) dateCol = c;
+    if (partyCol < 0 && isPartyHead(headOf(c))) partyCol = c;
+  }
+  const cols: number[] = [];
+  for (let c = c1; c <= c2; c++) {
+    if (c === dateCol || c === partyCol) continue;
+    if (body?.rows[r1]?.cells[c]?.offsetParent) cols.push(c);
+  }
+  const labels = cols.map(headOf);
+  const rows: ShareData["rows"] = [];
+  for (let r = r1; r <= r2; r++) {
+    const tr = body?.rows[r];
+    if (!tr) continue;
+    const at = (c: number) => (c >= 0 && tr.cells[c] ? cellText(tr.cells[c]) : "");
+    rows.push({ date: at(dateCol).replace(/\s+/g, ""), party: at(partyCol), values: cols.map((c) => at(c)) });
+  }
+  const ti = findTotalLabel(labels);
+  let total: ShareData["total"] = null;
+  if (ti >= 0) {
+    total = { label: labels[ti], value: rows.reduce((sum, row) => sum + (parseAmount(row.values[ti]) ?? 0), 0) };
+  }
+  const title = (document.querySelector(".erp-h1")?.textContent ?? document.title ?? "목록").trim() || "목록";
+  const today = new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Seoul" }).format(new Date()).replace(/-/g, ".");
+  const hiddenRows = Math.max(0, rows.length - SHARE_MAX_ROWS);
+  return { title, sub: `${today} 기준 · ${rows.length}건`, labels, rows: rows.slice(0, SHARE_MAX_ROWS), total, hiddenRows };
+}
+
 /** 세 형식으로 클립보드에 쓴다. 그림이 안 되는 브라우저면 글자·표만, 그것도 안 되면 글자만. 성공 여부를 돌려준다. */
-export async function copyRange(table: HTMLTableElement, r1: number, r2: number, c1: number, c2: number): Promise<{ ok: boolean; image: boolean }> {
+export async function copyRange(table: HTMLTableElement, r1: number, r2: number, c1: number, c2: number, mode: "table" | "share" = "table"): Promise<{ ok: boolean; image: boolean }> {
   const m = readRange(table, r1, r2, c1, c2);
   const text = new Blob([toTsv(m)], { type: "text/plain" });
   const html = new Blob([toHtml(m)], { type: "text/html" });
-  const png = renderRangePng(table, r1, r2, c1, c2);
+  const png = mode === "share" ? renderSharePng(readShareData(table, r1, r2, c1, c2)) : renderRangePng(table, r1, r2, c1, c2);
   try {
     const pngBlob = await png;
     const items: Record<string, Blob> = { "text/plain": text, "text/html": html };

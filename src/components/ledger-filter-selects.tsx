@@ -32,7 +32,7 @@ export function LedgerFilterSelects({
   if (formId) {
     return (
       <>
-        <div className="erp-fb-select">
+        <div className="erp-fb-select erp-fb-select-wide">
           <ErpSelect
             id="ledger-product-bar"
             ariaLabel="품목"

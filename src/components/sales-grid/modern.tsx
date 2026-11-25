@@ -623,7 +623,7 @@ export function SalesGridTable({
       </GridToolbar>
       <GridRowLegend />
 
-      <div className="erp-grid-wrap has-card-view">
+      <div className="erp-grid-wrap has-card-view erp-range-copy">
         <table className="erp-grid">
           <thead>
             <GridGroupHeaderRow before={spanOf(0, supplyIdx)} span={2} after={spanOf(supplyIdx + 2)} label="금액(원)" />

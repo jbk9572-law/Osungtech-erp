@@ -209,7 +209,7 @@ export function PartyListA({
       {bar && <div id={BULK_DELETE_ANCHOR_ID}>{bar}</div>}
       <div className={sideSplit ? "erp-master-detail" : undefined}>
         <div className={sideSplit ? "erp-master-detail-main" : undefined}>
-          <div className="erp-grid-wrap has-card-view erp-sheet" tabIndex={0} onKeyDown={onKeyDown} aria-label="목록 — 위아래 방향키로 행 이동, Enter로 열기, Ctrl+C로 행 복사">
+          <div className="erp-grid-wrap has-card-view erp-sheet erp-range-copy" tabIndex={0} onKeyDown={onKeyDown} aria-label="목록 — 위아래 방향키로 행 이동, Enter로 열기, Ctrl+C로 행 복사">
             <table className="erp-grid">
               <thead>
                 <GridGroupHeaderRow

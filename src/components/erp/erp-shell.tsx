@@ -13,6 +13,7 @@ import { StatusBar } from "@/components/erp/status-bar";
 import { RouteProgressBar } from "@/components/erp/route-progress-bar";
 import { NavTimingReporter } from "@/components/erp/nav-timing-reporter";
 import { MidnightRefresh } from "@/components/erp/midnight-refresh";
+import { GridCellRangeStats } from "@/components/erp/grid-cell-range";
 import { NotificationToaster } from "@/components/erp/notification-toaster";
 import { findMenuItem } from "@/lib/erp-menu";
 import { pushRecentMenu } from "@/lib/erp-menu-history";
@@ -169,6 +170,7 @@ export function ErpShell({
         </div>
       ))}
       <NotificationToaster />
+      <GridCellRangeStats scope="list" />
       <RecentMenuTracker />
       <MidnightRefresh />
       {/* 모던 틀(넓은 화면): 리본 버튼은 상단바 오른쪽 아이콘으로, 화면 도구 줄은 상단바 바로 아래 전체 폭 한 줄로 둔다(시안은 두 줄). */}
