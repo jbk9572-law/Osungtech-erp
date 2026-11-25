@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { formatNumber } from "@/lib/format-number";
 import { copyRange } from "@/lib/grid-range-copy";
+import { ShareImagePreview } from "@/components/erp/share-image-preview";
+import type { ShareModel } from "@/lib/share-model";
 import { cellRefAt, cellsInRange, type CellRef } from "@/lib/grid-range-select";
 import { summarizeCells, type GridSelectionSummary } from "@/lib/grid-selection-sum";
 
@@ -12,6 +14,8 @@ import { summarizeCells, type GridSelectionSummary } from "@/lib/grid-selection-
 // 두 칸 이상 끌었을 때만 범위로 보고(한 칸 클릭은 평소처럼 입력), 다른 곳을 누르거나 Esc를 누르면 풀린다.
 // 문서 전체에서 .erp-voucher 안 표(.erp-grid)만 대상으로 하므로 화면마다 따로 연결하지 않는다.
 const SELECTED = "erp-cell-selected";
+// Ctrl+클릭으로 선택에서 뺀 줄 — 줄무늬·흐림으로 보이고 복사·합계에서 빠진다(엑셀의 Ctrl+클릭과 같다).
+const EXCLUDED = "erp-cell-excluded";
 
 // voucher = 전표 입력 표(.erp-voucher), list = 목록 표(.erp-range-copy) — 목록은 "공유 이미지"로 복사한다.
 type Scope = "voucher" | "list";
@@ -21,7 +25,7 @@ const SCOPE_CELL: Record<Scope, string> = {
 };
 
 function clearMarks() {
-  document.querySelectorAll(`.${SELECTED}`).forEach((el) => el.classList.remove(SELECTED));
+  document.querySelectorAll(`.${SELECTED}, .${EXCLUDED}`).forEach((el) => el.classList.remove(SELECTED, EXCLUDED));
 }
 
 function textOf(td: HTMLTableCellElement): string {
@@ -34,6 +38,7 @@ export function GridCellRangeStats({ scope = "voucher" }: { scope?: Scope }) {
   // 고른 범위 바로 옆에 띄울 말풍선 위치(범위 오른쪽 아래) — 하단 바가 시선에서 멀 때를 위해 같이 보여준다.
   const [toast, setToast] = useState<string | null>(null);
   const [bubble, setBubble] = useState<{ x: number; y: number } | null>(null);
+  const [preview, setPreview] = useState<ShareModel | null>(null);
 
   useEffect(() => {
     let anchor: CellRef | null = null;
@@ -43,6 +48,26 @@ export function GridCellRangeStats({ scope = "voucher" }: { scope?: Scope }) {
     const selector = SCOPE_CELL[scope];
     // 현재 고른 범위(복사용) — 줄마다 칸 묶음. 한 칸 클릭은 범위가 아니다.
     let range: { table: HTMLTableElement; rows: HTMLTableCellElement[][] } | null = null;
+    // Ctrl+클릭으로 뺀 줄
+    const excluded = new Set<HTMLTableRowElement>();
+    const rowOf = (cells: HTMLTableCellElement[]) => cells[0].parentElement as HTMLTableRowElement;
+    const effectiveRows = () => (range ? range.rows.filter((r) => !excluded.has(rowOf(r))) : []);
+    const refreshSummary = () => {
+      const rows = effectiveRows();
+      const texts: string[] = [];
+      let right = 0;
+      let bottom = 0;
+      for (const r of rows) {
+        for (const td of r) {
+          texts.push(textOf(td));
+          const box = td.getBoundingClientRect();
+          right = Math.max(right, box.right);
+          bottom = Math.max(bottom, box.bottom);
+        }
+      }
+      setSummary(summarizeCells(texts));
+      setBubble(texts.length ? { x: right, y: bottom } : null);
+    };
 
     // 범위는 칸 번호가 아니라 화면 좌표로 정한다(lib/grid-range-select.ts) — tbody가 여러 개거나 칸이 합쳐진 줄이 있어도 마우스가 올라간 칸이 그대로 선택된다.
     const paint = (to: CellRef) => {
@@ -56,25 +81,34 @@ export function GridCellRangeStats({ scope = "voucher" }: { scope?: Scope }) {
         setBubble(null);
         return;
       }
-      const texts: string[] = [];
-      let right = 0;
-      let bottom = 0;
-      for (const r of rows) {
-        for (const td of r) {
-          td.classList.add(SELECTED);
-          texts.push(textOf(td));
-          const box = td.getBoundingClientRect();
-          right = Math.max(right, box.right);
-          bottom = Math.max(bottom, box.bottom);
-        }
-      }
-      setSummary(summarizeCells(texts));
-      setBubble({ x: right, y: bottom });
+      excluded.clear();
+      for (const r of rows) for (const td of r) td.classList.add(SELECTED);
+      refreshSummary();
     };
 
     const onDown = (e: MouseEvent) => {
       if (e.button !== 0) return;
+      // 고른 범위 안의 줄을 Ctrl(또는 Cmd)+클릭하면 그 줄만 선택에서 빼거나 다시 넣는다.
+      if ((e.ctrlKey || e.metaKey) && range) {
+        const hit = cellRefAt(e.target, selector);
+        const row = hit && range.rows.find((r) => rowOf(r) === hit.row);
+        if (hit && row) {
+          const out = !excluded.has(hit.row);
+          if (out) excluded.add(hit.row);
+          else excluded.delete(hit.row);
+          for (const td of row) {
+            td.classList.toggle(EXCLUDED, out);
+            td.classList.toggle(SELECTED, !out);
+          }
+          window.getSelection()?.removeAllRanges();
+          e.preventDefault();
+          swallowClick = true;
+          refreshSummary();
+          return;
+        }
+      }
       clearMarks();
+      excluded.clear();
       range = null;
       setSummary(null);
       setBubble(null);
@@ -101,8 +135,9 @@ export function GridCellRangeStats({ scope = "voucher" }: { scope?: Scope }) {
       e.preventDefault();
     };
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && document.querySelector(`.${SELECTED}`)) {
+      if (e.key === "Escape" && document.querySelector(`.${SELECTED}, .${EXCLUDED}`)) {
         clearMarks();
+        excluded.clear();
         range = null;
         setSummary(null);
         setBubble(null);
@@ -112,7 +147,13 @@ export function GridCellRangeStats({ scope = "voucher" }: { scope?: Scope }) {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "c" && range) {
         e.preventDefault();
         const r = range;
-        copyRange(r.table, r.rows, scope === "list" ? "share" : "table").then((res) => {
+        const rows = effectiveRows();
+        if (rows.length === 0) return;
+        copyRange(r.table, rows, scope === "list" ? "share" : "table").then((res) => {
+          if (res.preview) {
+            setPreview(res.preview);
+            return;
+          }
           setToast(!res.ok ? "복사하지 못했습니다(브라우저 권한 확인)" : res.image && scope === "list" ? "공유 이미지로 복사했습니다 — 엑셀엔 표로, 메신저엔 이미지로 붙여넣으세요" : res.image ? "복사했습니다 — 엑셀엔 표로, 메신저·문서엔 그림으로 붙여넣을 수 있어요" : "복사했습니다(그림 복사는 이 브라우저에서 지원되지 않아 표·글자로 복사)");
           window.setTimeout(() => setToast(null), 2600);
         });
@@ -133,9 +174,17 @@ export function GridCellRangeStats({ scope = "voucher" }: { scope?: Scope }) {
     };
   }, [scope]);
 
-  if (!summary) return toast ? <ToastView text={toast} /> : null;
+  const previewView = preview ? <ShareImagePreview model={preview} onClose={() => setPreview(null)} /> : null;
+  if (!summary)
+    return (
+      <>
+        {toast && <ToastView text={toast} />}
+        {previewView}
+      </>
+    );
   return (
     <>
+      {previewView}
       {toast && <ToastView text={toast} />}
       {scope === "voucher" && (
         <span className="erp-voucher-rangestats" role="status">

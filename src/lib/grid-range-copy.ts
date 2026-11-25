@@ -4,9 +4,9 @@
 //   · image/png   표 그림 — 카카오톡·슬랙·문서 등 그림을 붙여넣는 곳
 // 표의 칸은 입력칸(input)이라 화면에 보이는 값(input.value)을 읽는다. 그림은 선택 범위 위에 해당 열의 머리글 줄을 붙여 그린다.
 
-import { parseShareItems, shareItemValue } from "@/lib/share-items";
-import { cellAtX, cellCenterX, headerCellAtX } from "@/lib/grid-range-select";
-import { findTotalLabel, isDateHead, isPartyHead, parseAmount, renderSharePng, SHARE_MAX_ROWS, type ShareData } from "@/lib/range-share-image";
+import { cellCenterX, headerCellAtX } from "@/lib/grid-range-select";
+import { buildShareModel, type ShareModel } from "@/lib/share-model";
+import { renderSharePages } from "@/lib/share-render";
 
 export type RangeMatrix = { header: string[]; rows: string[][] };
 
@@ -105,53 +105,26 @@ export function renderRangePng(table: HTMLTableElement, rows: HTMLTableCellEleme
   }
 }
 
-/** 목록용 "공유 이미지" 재료 — 날짜·거래처 열은 고르지 않았어도 항상 넣고, 나머지 고른 칸은 이름표와 함께 둔다. */
-export function readShareData(table: HTMLTableElement, picked: HTMLTableCellElement[][]): ShareData {
-  const headRow = table.tHead?.rows[table.tHead.rows.length - 1];
-  const headCells = Array.from(headRow?.cells ?? []);
-  const textOf = (th: HTMLTableCellElement) => (th.textContent ?? "").trim();
-  const dateTh = headCells.find((th) => isDateHead(textOf(th))) ?? null;
-  const partyTh = headCells.find((th) => isPartyHead(textOf(th))) ?? null;
-  const first = picked[0] ?? [];
-  const keepIdx: number[] = [];
-  first.forEach((td, i) => {
-    const th = headerCellAtX(table, cellCenterX(td));
-    if (th && (th === dateTh || th === partyTh)) return;
-    keepIdx.push(i);
-  });
-  const labels = keepIdx.map((i) => (headerCellAtX(table, cellCenterX(first[i]))?.textContent ?? "").trim());
-  const itemLevel = labels.map((l) => shareItemValue(l, { p: "", s: "", l: "", r: "", q: "", u: "", a: "", t: "" }) !== null);
-  const rows: ShareData["rows"] = picked.map((cells) => {
-    const tr = cells[0].parentElement as HTMLTableRowElement;
-    const at = (th: HTMLTableCellElement | null) => {
-      const td = th ? cellAtX(tr, cellCenterX(th)) : null;
-      return td ? cellText(td) : "";
-    };
-    const values = keepIdx.map((i) => (cells[i] ? cellText(cells[i]) : ""));
-    // "외 N건" 전표: 드래그한 열 가운데 품목 단위 열(품명·규격·수량·단가·금액…)은 품목마다 펼친다. 고르지 않은 열은 품목 줄에도 나오지 않는다.
-    const items = parseShareItems(tr.dataset.shareItems);
-    const expanded = items && itemLevel.some(Boolean) ? items.map((it) => ({ values: labels.map((l) => shareItemValue(l, it) ?? "") })) : undefined;
-    return { date: at(dateTh).replace(/\s+/g, ""), party: at(partyTh), values, items: expanded };
-  });
-  const ti = findTotalLabel(labels);
-  let total: ShareData["total"] = null;
-  if (ti >= 0) {
-    total = { label: labels[ti], value: rows.reduce((sum, row) => sum + (parseAmount(row.values[ti]) ?? 0), 0) };
-  }
-  const title = (document.querySelector(".erp-h1")?.textContent ?? document.title ?? "목록").trim() || "목록";
-  const today = new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Seoul" }).format(new Date()).replace(/-/g, ".");
-  const hiddenRows = Math.max(0, rows.length - SHARE_MAX_ROWS);
-  return { title, sub: `${today} 기준 · ${rows.length}건`, labels, itemLevel, rows: rows.slice(0, SHARE_MAX_ROWS), total, hiddenRows };
-}
-
 /** 세 형식으로 클립보드에 쓴다. 그림이 안 되는 브라우저면 글자·표만, 그것도 안 되면 글자만. 성공 여부를 돌려준다. */
-export async function copyRange(table: HTMLTableElement, rows: HTMLTableCellElement[][], mode: "table" | "share" = "table"): Promise<{ ok: boolean; image: boolean }> {
+export type CopyResult = { ok: boolean; image: boolean; /** 공유 이미지가 한 장을 넘어 미리보기 창이 필요한 경우 */ preview?: ShareModel };
+
+/** 표 형식(전표 입력 표) — 글자·표·그림 세 형식으로 바로 복사. */
+export async function copyRange(table: HTMLTableElement, rows: HTMLTableCellElement[][], mode: "table" | "share" = "table"): Promise<CopyResult> {
   const m = readCells(table, rows);
   const text = new Blob([toTsv(m)], { type: "text/plain" });
   const html = new Blob([toHtml(m)], { type: "text/html" });
-  const png = mode === "share" ? renderSharePng(readShareData(table, rows)) : renderRangePng(table, rows);
+  let pngPromise: Promise<Blob | null>;
+  if (mode === "share") {
+    // 공유 이미지: 한 장이면 바로 복사, 넘치면 미리보기 창(여러 장·품목 체크)으로 넘긴다
+    const model = buildShareModel(table, rows);
+    const pages = await renderSharePages(model);
+    if (pages.length > 1) return { ok: true, image: true, preview: model };
+    pngPromise = Promise.resolve(pages[0] ?? null);
+  } else {
+    pngPromise = renderRangePng(table, rows);
+  }
   try {
-    const pngBlob = await png;
+    const pngBlob = await pngPromise;
     const items: Record<string, Blob> = { "text/plain": text, "text/html": html };
     if (pngBlob) items["image/png"] = pngBlob;
     await navigator.clipboard.write([new ClipboardItem(items)]);
