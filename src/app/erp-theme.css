@@ -1398,6 +1398,20 @@ html:has(.erp) body {
   box-shadow: var(--erp-modal-close-shadow);
 }
 
+/* 손가락으로 누르는 화면(모바일)에서는 ✕를 28px 원이 아니라 44px 터치 영역으로 키우고, ✕ 자리(띠)도 넓혀 바로 아래 첫 줄의 삭제·저장 버튼과 떨어뜨린다
+   (✕를 누르려다 아래 삭제 버튼을 잘못 누르는 사고 방지). 제목줄이 따로 있는 모달은 자기 제목줄이 ✕ 자리를 비우므로 띠 규칙에서 제외돼 있다. */
+@media (pointer: coarse), (max-width: 768px) {
+  .erp-modal {
+    --erp-modal-close-band: 60px;
+    --erp-modal-close-top: 6px;
+    --erp-modal-close-right: 6px;
+  }
+  .erp-modal-window-close {
+    width: 44px;
+    height: 44px;
+  }
+}
+
 .erp-modal-window-close:hover {
   background: var(--erp-modal-close-hover-bg);
   color: var(--erp-modal-close-hover-fg);
@@ -5890,21 +5904,6 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   font-size: var(--erp-font-base);
 }
 
-/* (dashboard)/loading.tsx 전용 — iOS Safari 노치/다이나믹 아일랜드
-   색상 고정용 최소 요소(.erp-titlebar의 position:sticky 주석과 같은
-   이유). 가짜 헤더를 흉내 내지 않고, 노치 색 감지 조건(불투명·고정·
-   폭 80%+·높이 3px+)만 만족하는 얇은 바 하나로 최대한 티 안 나게
-   둔다 — 실제 타이틀바 색과 같아서 "헤더가 평소보다 살짝 먼저 뜨는"
-   정도로만 보인다. */
-.erp-notch-guard {
-  height: calc(4px + env(safe-area-inset-top, 0px));
-  flex: 0 0 auto;
-  background: var(--erp-primary);
-  position: sticky;
-  top: 0;
-  z-index: 20;
-}
-
 @keyframes erp-loading-gauge-fill {
   0% {
     width: 0%;
@@ -9560,14 +9559,17 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
 /* ── 짧은 값(날짜·시간·월·숫자) 입력은 칸이 넓어도 늘어나지 않는다 ─────────────────
    배치 점검이 일정·하청업체·지급결의 입력에서 날짜/시간 칸이 420~520px로 늘어난 것을 잡았다 — 이런 값은 길어야 약 14자라
    넓은 칸 안에서도 왼쪽에 적당한 폭으로 둔다. 표 안(.erp-grid)은 이 규칙의 대상이 아니다(.erp-field·문서 머리표 값 칸 안의 입력만). */
-.erp-field input[type="date"],
-.erp-field input[type="time"],
-.erp-field input[type="month"],
-.erp-field input[type="number"],
-.erp-doc-header-value input[type="date"],
-.erp-doc-header-value input[type="time"],
-.erp-doc-header-value input[type="month"] {
-  max-width: 14rem;
+/* 좁은 화면(모바일)에서는 한 줄에 칸 하나씩 꽉 차게 쌓이므로, 날짜·금액 칸만 좁으면 칸마다 크기가 달라 보인다 — 넓은 화면에서만 제한한다. */
+@media (min-width: 769px) {
+  .erp-field input[type="date"],
+  .erp-field input[type="time"],
+  .erp-field input[type="month"],
+  .erp-field input[type="number"],
+  .erp-doc-header-value input[type="date"],
+  .erp-doc-header-value input[type="time"],
+  .erp-doc-header-value input[type="month"] {
+    max-width: 14rem;
+  }
 }
 
 /* ── 모던 틀의 화면 머리(박스 없는 제목 줄) ──────────────────────────────────
