@@ -1,5 +1,6 @@
 "use client";
 
+import { buildShareItemsAttr } from "@/lib/share-items";
 import { formatKstDate } from "@/lib/kst-date";
 import { rowDay, rowDayClass } from "@/lib/row-day";
 import { Fragment, useActionState, useMemo, useState, type CSSProperties } from "react";
@@ -105,6 +106,8 @@ export type SalesRow = {
   lotNumber?: string | null;
   remark?: string | null;
   quantity: number;
+  /** 목록에 보여줄 수량 글자 — 단위가 다른 품목은 "225 ROLL · 532 KG"처럼 따로. 없으면 quantity+unit. */
+  quantityLabel?: string;
   unit: string | null | undefined;
   unitPrice: number | null;
   supplyAmount: number;
@@ -130,16 +133,20 @@ const STICKY_2_WIDTH = 92;
 export function SalesGridTable({
   rows,
   totalQuantity,
+  totalQuantityLabel,
   totalSupply,
   totalTax,
   backParam,
   carryoverRows,
   carryoverQuantity,
+  carryoverQuantityLabel,
   carryoverSupply,
   carryoverTax,
 }: {
   rows: SalesRow[];
   totalQuantity: number;
+  /** 단위별 합계 글자("1,000 ROLL · 1,437 KG") — 단위가 섞인 합계를 한 숫자로 더하지 않는다. */
+  totalQuantityLabel?: string;
   totalSupply: number;
   totalTax: number;
   backParam: string;
@@ -149,6 +156,7 @@ export function SalesGridTable({
   // 별도 구간·별도 소계로 보여주고 서로 합산되지 않는다.
   carryoverRows?: SalesRow[];
   carryoverQuantity?: number;
+  carryoverQuantityLabel?: string;
   carryoverSupply?: number;
   carryoverTax?: number;
 }) {
@@ -358,6 +366,7 @@ export function SalesGridTable({
       <tr
         key={row.key}
         className={`cursor-pointer${isRowSelected ? " selected" : isActive ? " master-active" : ""}${rowDayClass(rowDay(row.date))}${carryoverRowClass(row.isCarryover, !!opts.compactDate)}`}
+        data-share-items={buildShareItemsAttr(row.items)}
         onClick={() => opts.selectable && !hasTextSelection() && openRow(row.key, detailHref)}
       >
         <td style={opts.compactDate ? tdSticky1Carryover : tdSticky1}>
@@ -420,7 +429,7 @@ export function SalesGridTable({
         >
           {isCollection
             ? "-"
-            : `${row.isReturn ? "+" : ""}${formatNumber(row.quantity)} ${row.unit ?? ""}`}
+            : `${row.isReturn ? "+" : ""}${row.quantityLabel ?? `${formatNumber(row.quantity)} ${row.unit ?? ""}`}`}
         </td>
         <td
           className="num"
@@ -557,7 +566,7 @@ export function SalesGridTable({
         </div>
         <div className="erp-row-card-foot">
           <span className="erp-row-card-qty">
-            {isCollection ? "-" : `${row.isReturn ? "+" : ""}${formatNumber(row.quantity)} ${row.unit ?? ""}`}
+            {isCollection ? "-" : `${row.isReturn ? "+" : ""}${row.quantityLabel ?? `${formatNumber(row.quantity)} ${row.unit ?? ""}`}`}
           </span>
           <span
             className="erp-row-card-amount"
@@ -677,7 +686,7 @@ export function SalesGridTable({
                   전월 이월 소계 ({carryoverRows.length}건)
                 </td>
                 <td className="num erp-u-muted erp-u-text-xs">
-                  {formatNumber(carryoverQuantity ?? 0)}
+                  {carryoverQuantityLabel ?? formatNumber(carryoverQuantity ?? 0)}
                 </td>
                 <td style={colStyle("unitPrice")} />
                 <td className="num erp-u-muted erp-u-text-xs">
@@ -717,7 +726,7 @@ export function SalesGridTable({
                   매출 합계 (
                   {sortedRows.filter((r) => r.kind === "sale").length}건)
                 </td>
-                <td className="num">{formatNumber(totalQuantity)}</td>
+                <td className="num">{totalQuantityLabel ?? formatNumber(totalQuantity)}</td>
                 <td style={colStyle("unitPrice")} />
                 <td className="num">{formatNumber(totalSupply)}</td>
                 <td className="num">{formatNumber(totalTax)}</td>

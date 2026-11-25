@@ -1,5 +1,6 @@
 "use client";
 
+import { quantityLabelByUnit } from "@/lib/quantity-by-unit";
 import { useState } from "react";
 import Link from "next/link";
 import { GridBadge } from "@/components/grid/badge";
@@ -40,7 +41,6 @@ export function OrderBottomPanel({ selection, priceLabel }: { selection: OrderDe
   const items = selection.items;
   const supply = items.reduce((s, i) => s + i.supplyAmount, 0);
   const tax = items.reduce((s, i) => s + i.taxAmount, 0);
-  const qty = items.reduce((s, i) => s + i.quantity, 0);
   const sign = selection.isReturn ? "-" : "";
 
   return (
@@ -55,7 +55,7 @@ export function OrderBottomPanel({ selection, priceLabel }: { selection: OrderDe
           <b>{selection.label}</b>
           <span className="erp-u-muted">
             {selection.dateLabel} · {items.length > 0 ? <b className="erp-u-text">{items[0].productLabel}</b> : "품목 없음"}
-            {items.length > 1 ? ` 외 ${items.length - 1}건` : ""} · 수량 {formatNumber(qty)}
+            {items.length > 1 ? ` 외 ${items.length - 1}건` : ""} · 수량 {quantityLabelByUnit(items)}
           </span>
         </div>
         {!open && (

@@ -1,5 +1,6 @@
 "use client";
 
+import { buildShareItemsAttr } from "@/lib/share-items";
 import { formatKstDate } from "@/lib/kst-date";
 import { rowDay, rowDayClass } from "@/lib/row-day";
 import {
@@ -102,6 +103,8 @@ export type PurchaseRow = {
   lotNumber?: string | null;
   remark?: string | null;
   quantity: number;
+  /** 목록에 보여줄 수량 글자 — 단위가 다른 품목은 "225 ROLL · 532 KG"처럼 따로. 없으면 quantity+unit. */
+  quantityLabel?: string;
   unit: string | null | undefined;
   unitCost: number | null;
   supplyAmount: number;
@@ -130,16 +133,20 @@ const STICKY_2_WIDTH = 92;
 export function PurchaseGridTable({
   rows,
   totalQuantity,
+  totalQuantityLabel,
   totalSupply,
   totalTax,
   backParam,
   carryoverRows,
   carryoverQuantity,
+  carryoverQuantityLabel,
   carryoverSupply,
   carryoverTax,
 }: {
   rows: PurchaseRow[];
   totalQuantity: number;
+  /** 단위별 합계 글자 — 단위가 섞인 합계를 한 숫자로 더하지 않는다. */
+  totalQuantityLabel?: string;
   totalSupply: number;
   totalTax: number;
   backParam: string;
@@ -148,6 +155,7 @@ export function PurchaseGridTable({
   // 보여준다(아래 "매입 합계"와 합산되지 않음).
   carryoverRows?: PurchaseRow[];
   carryoverQuantity?: number;
+  carryoverQuantityLabel?: string;
   carryoverSupply?: number;
   carryoverTax?: number;
 }) {
@@ -345,6 +353,7 @@ export function PurchaseGridTable({
       <tr
         key={row.key}
         className={`cursor-pointer${isRowSelected ? " selected" : isActive ? " master-active" : ""}${rowDayClass(rowDay(row.date))}${carryoverRowClass(row.isCarryover, !!opts.compactDate)}`}
+        data-share-items={buildShareItemsAttr(row.items)}
         onClick={() => opts.selectable && !hasTextSelection() && openRow(row.key, detailHref)}
       >
         <td style={opts.compactDate ? tdSticky1Carryover : tdSticky1}>
@@ -401,7 +410,7 @@ export function PurchaseGridTable({
         <td className="num">
           {isPayment
             ? "-"
-            : `${formatNumber(row.quantity)} ${row.unit ?? ""}`}
+            : (row.quantityLabel ?? `${formatNumber(row.quantity)} ${row.unit ?? ""}`)}
         </td>
         <td
           className="num"
@@ -497,7 +506,7 @@ export function PurchaseGridTable({
         </div>
         <div className="erp-row-card-foot">
           <span className="erp-row-card-qty">
-            {isPayment ? "-" : `${formatNumber(row.quantity)} ${row.unit ?? ""}`}
+            {isPayment ? "-" : (row.quantityLabel ?? `${formatNumber(row.quantity)} ${row.unit ?? ""}`)}
           </span>
           <span className="erp-row-card-amount">{formatNumber(row.supplyAmount)}원</span>
         </div>
@@ -609,7 +618,7 @@ export function PurchaseGridTable({
                   전월 이월 소계 ({carryoverRows.length}건)
                 </td>
                 <td className="num erp-u-muted erp-u-text-xs">
-                  {formatNumber(carryoverQuantity ?? 0)}
+                  {carryoverQuantityLabel ?? formatNumber(carryoverQuantity ?? 0)}
                 </td>
                 <td style={colStyle("unitCost")} />
                 <td className="num erp-u-muted erp-u-text-xs">
@@ -649,7 +658,7 @@ export function PurchaseGridTable({
                   매입 합계 (
                   {sortedRows.filter((r) => r.kind === "purchase").length}건)
                 </td>
-                <td className="num">{formatNumber(totalQuantity)}</td>
+                <td className="num">{totalQuantityLabel ?? formatNumber(totalQuantity)}</td>
                 <td style={colStyle("unitCost")} />
                 <td className="num">{formatNumber(totalSupply)}</td>
                 <td className="num">{formatNumber(totalTax)}</td>

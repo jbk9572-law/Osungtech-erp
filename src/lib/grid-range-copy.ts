@@ -4,6 +4,7 @@
 //   · image/png   표 그림 — 카카오톡·슬랙·문서 등 그림을 붙여넣는 곳
 // 표의 칸은 입력칸(input)이라 화면에 보이는 값(input.value)을 읽는다. 그림은 선택 범위 위에 해당 열의 머리글 줄을 붙여 그린다.
 
+import { parseShareItems, shareItemValue } from "@/lib/share-items";
 import { cellAtX, cellCenterX, headerCellAtX } from "@/lib/grid-range-select";
 import { findTotalLabel, isDateHead, isPartyHead, parseAmount, renderSharePng, SHARE_MAX_ROWS, type ShareData } from "@/lib/range-share-image";
 
@@ -119,13 +120,18 @@ export function readShareData(table: HTMLTableElement, picked: HTMLTableCellElem
     keepIdx.push(i);
   });
   const labels = keepIdx.map((i) => (headerCellAtX(table, cellCenterX(first[i]))?.textContent ?? "").trim());
+  const itemLevel = labels.map((l) => shareItemValue(l, { p: "", s: "", l: "", r: "", q: "", u: "", a: "", t: "" }) !== null);
   const rows: ShareData["rows"] = picked.map((cells) => {
     const tr = cells[0].parentElement as HTMLTableRowElement;
     const at = (th: HTMLTableCellElement | null) => {
       const td = th ? cellAtX(tr, cellCenterX(th)) : null;
       return td ? cellText(td) : "";
     };
-    return { date: at(dateTh).replace(/\s+/g, ""), party: at(partyTh), values: keepIdx.map((i) => (cells[i] ? cellText(cells[i]) : "")) };
+    const values = keepIdx.map((i) => (cells[i] ? cellText(cells[i]) : ""));
+    // "외 N건" 전표: 드래그한 열 가운데 품목 단위 열(품명·규격·수량·단가·금액…)은 품목마다 펼친다. 고르지 않은 열은 품목 줄에도 나오지 않는다.
+    const items = parseShareItems(tr.dataset.shareItems);
+    const expanded = items && itemLevel.some(Boolean) ? items.map((it) => ({ values: labels.map((l) => shareItemValue(l, it) ?? "") })) : undefined;
+    return { date: at(dateTh).replace(/\s+/g, ""), party: at(partyTh), values, items: expanded };
   });
   const ti = findTotalLabel(labels);
   let total: ShareData["total"] = null;
@@ -135,7 +141,7 @@ export function readShareData(table: HTMLTableElement, picked: HTMLTableCellElem
   const title = (document.querySelector(".erp-h1")?.textContent ?? document.title ?? "목록").trim() || "목록";
   const today = new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Seoul" }).format(new Date()).replace(/-/g, ".");
   const hiddenRows = Math.max(0, rows.length - SHARE_MAX_ROWS);
-  return { title, sub: `${today} 기준 · ${rows.length}건`, labels, rows: rows.slice(0, SHARE_MAX_ROWS), total, hiddenRows };
+  return { title, sub: `${today} 기준 · ${rows.length}건`, labels, itemLevel, rows: rows.slice(0, SHARE_MAX_ROWS), total, hiddenRows };
 }
 
 /** 세 형식으로 클립보드에 쓴다. 그림이 안 되는 브라우저면 글자·표만, 그것도 안 되면 글자만. 성공 여부를 돌려준다. */

@@ -31,6 +31,7 @@ import { calcVatForTaxType } from "@/lib/tax";
 import { matchesSearch } from "@/lib/search-match";
 import { buildExtraFilter } from "@/lib/extra-filters";
 import { formatNumber } from "@/lib/format-number";
+import { quantityLabelByUnit, type QtyItem } from "@/lib/quantity-by-unit";
 import { ExcelDownloadLink } from "@/components/erp/excel-download-link";
 
 type DisplayRow = PurchaseRow;
@@ -276,6 +277,8 @@ async function PurchasesPage({
       row.itemCount > 1
         ? `${row.productLabel} 외 ${row.itemCount - 1}건`
         : row.productLabel,
+    // 단위가 다른 품목은 합치지 않고 단위별로 — "225 ROLL · 532 KG"(lib/quantity-by-unit.ts)
+    quantityLabel: quantityLabelByUnit(row.items ?? []),
   }));
 
   // 전월 이월분 — 작업일(매입일자)은 전월이지만 다음 달(지금 보고 있는 달)
@@ -303,9 +306,11 @@ async function PurchasesPage({
     const taxAmount = calcVatForTaxType(supplyAmount, item.purchase_orders?.tax_type);
     return { ...item, supplyAmount, taxAmount };
   });
+  const carryoverQtyByOrder = new Map<string, QtyItem[]>();
   const carryoverRows: DisplayRow[] = Object.values(
     carryoverItemRows.reduce<Record<string, DisplayRow & { itemCount: number }>>((acc, item) => {
       const orderId = item.purchase_orders?.id ?? item.id;
+      carryoverQtyByOrder.set(orderId, [...(carryoverQtyByOrder.get(orderId) ?? []), { quantity: item.quantity, unit: item.products?.unit }]);
       if (!acc[orderId]) {
         acc[orderId] = {
           key: orderId,
@@ -347,6 +352,7 @@ async function PurchasesPage({
   ).map((row) => ({
     ...row,
     productLabel: row.itemCount > 1 ? `${row.productLabel} 외 ${row.itemCount - 1}건` : row.productLabel,
+    quantityLabel: quantityLabelByUnit(carryoverQtyByOrder.get(row.key) ?? []),
   }));
   const carryoverQuantityTotal = carryoverRows.reduce((sum, r) => sum + r.quantity, 0);
   const carryoverSupplyTotal = carryoverRows.reduce((sum, r) => sum + r.supplyAmount, 0);
@@ -404,12 +410,12 @@ async function PurchasesPage({
       tax_type: "과세" | "면세" | "영세";
       suppliers: { name: string | null } | null;
     } | null;
-    products: { name: string | null; sku: string | null; spec: string | null } | null;
+    products: { name: string | null; sku: string | null; spec: string | null; unit: string | null } | null;
   }>((rangeFrom, rangeTo) => {
     let totalsQuery = supabase
       .from("purchase_order_items")
       .select(
-        "quantity, unit_cost, spec, lot_number, remark, custom_name, purchase_orders!inner(memo, delivery_method, tax_type, suppliers(name)), products(name, sku, spec)",
+        "quantity, unit_cost, spec, lot_number, remark, custom_name, purchase_orders!inner(memo, delivery_method, tax_type, suppliers(name)), products(name, sku, spec, unit)",
       )
       .gte("purchase_orders.purchase_date", effectiveFrom)
       .range(rangeFrom, rangeTo);
@@ -434,6 +440,8 @@ async function PurchasesPage({
     : totalsRows, (item) => item.purchase_orders?.suppliers?.name);
 
   const totalQuantity = filteredTotalsRows.reduce((sum, row) => sum + row.quantity, 0);
+  const totalQuantityLabel = quantityLabelByUnit(filteredTotalsRows.map((row) => ({ quantity: row.quantity, unit: row.products?.unit })));
+  const carryoverQuantityLabel = quantityLabelByUnit([...carryoverQtyByOrder.values()].flat());
   const totalSupply = filteredTotalsRows.reduce(
     (sum, row) => sum + row.quantity * Number(row.unit_cost),
     0,
@@ -590,6 +598,8 @@ async function PurchasesPage({
       <PurchaseGridTable
         rows={rows}
         totalQuantity={totalQuantity}
+        totalQuantityLabel={totalQuantityLabel}
+        carryoverQuantityLabel={carryoverQuantityLabel}
         totalSupply={totalSupply}
         totalTax={totalTax}
         backParam={backParam ?? ""}

@@ -2,8 +2,9 @@
 // 한 줄 = 카드 한 장: 맨 위에 거래일자·거래처(출고처/공급처)를 항상 넣고, 고른 칸은 이름표와 함께 한 줄씩 보여준다.
 // 엑셀에 붙일 표·글자는 grid-range-copy.ts가 따로 담는다 — 여기는 그림만 만든다.
 
-export type ShareRow = { date: string; party: string; values: string[] };
-export type ShareData = { title: string; sub: string; labels: string[]; rows: ShareRow[]; total: { label: string; value: number } | null; hiddenRows: number };
+/** items가 있으면 "외 N건" 전표 — 품목별로 펼친다. values는 전표 단위 열 값(itemLevel 열은 비어 있음), items[i].values는 품목 단위 열 값. */
+export type ShareRow = { date: string; party: string; values: string[]; items?: { values: string[] }[] };
+export type ShareData = { title: string; sub: string; labels: string[]; /** labels와 같은 순서 — 품목 단위로 펼칠 수 있는 열인가 */ itemLevel: boolean[]; rows: ShareRow[]; total: { label: string; value: number } | null; hiddenRows: number };
 
 const WIDTH = 360;
 const PAD = 16;
@@ -30,7 +31,7 @@ export function parseAmount(v: string): number | null {
 }
 
 // 수량·금액 같은 숫자 항목만 오른쪽 정렬한다(규격 '39'처럼 이름 대신 쓰는 숫자는 왼쪽)
-const RIGHT_LABEL = /수량|단가|금액|가액|세액|합계|중량|잔액|잔량|매수/;
+const RIGHT_LABEL = /수량|단가|금액|가액|공급가|세액|합계|중량|잔액|잔량|매수/;
 const looksNumeric = (v: string) => /^[-+]?[\d,]+(\.\d+)?(\s?[A-Za-z가-힣]{1,4})?$/.test(v.trim());
 
 function fit(ctx: CanvasRenderingContext2D, text: string, max: number): string {
@@ -48,9 +49,14 @@ export function renderSharePng(d: ShareData): Promise<Blob | null> {
     const family = getComputedStyle(document.body).fontFamily || "sans-serif";
     const fieldCount = d.labels.length;
     const headH = 58;
-    const rowH = 12 + 26 + fieldCount * 22 + 8;
+    const rowHeight = (row: ShareRow) => {
+      if (!row.items) return 12 + 26 + fieldCount * 22 + 8;
+      const orderLines = d.itemLevel.filter((v) => !v).length;
+      const itemLines = d.itemLevel.filter(Boolean).length;
+      return 12 + 26 + orderLines * 22 + row.items.length * (itemLines * 22 + 12) + 8;
+    };
     const footH = d.total ? 48 : 34;
-    const height = headH + d.rows.length * rowH + (d.hiddenRows ? 26 : 0) + footH;
+    const height = headH + d.rows.reduce((sum, r) => sum + rowHeight(r), 0) + (d.hiddenRows ? 26 : 0) + footH;
     const scale = 2;
     const canvas = document.createElement("canvas");
     canvas.width = WIDTH * scale;
@@ -75,6 +81,7 @@ export function renderSharePng(d: ShareData): Promise<Blob | null> {
 
     let y = headH;
     for (const row of d.rows) {
+      const rowH = rowHeight(row);
       ctx.strokeStyle = "#e3e7ee";
       ctx.lineWidth = 1;
       ctx.beginPath();
@@ -90,20 +97,34 @@ export function renderSharePng(d: ShareData): Promise<Blob | null> {
       ctx.fillStyle = text;
       ctx.font = `700 14px ${family}`;
       ctx.fillText(fit(ctx, row.party, WIDTH - PAD * 2 - 96), WIDTH - PAD, top);
-      row.values.forEach((v, i) => {
-        const ly = y + 12 + 26 + i * 22 + 11;
+      let ly = y + 12 + 26 + 11;
+      const line = (label: string, v: string, indent = 0) => {
         ctx.textAlign = "left";
         ctx.fillStyle = "#8590a0";
         ctx.font = `400 12px ${family}`;
-        ctx.fillText(fit(ctx, d.labels[i], LABEL_W - 6), PAD, ly);
+        ctx.fillText(fit(ctx, label, LABEL_W - 6), PAD + indent, ly);
         ctx.fillStyle = text;
         ctx.font = `600 13px ${family}`;
-        if (RIGHT_LABEL.test(d.labels[i]) && looksNumeric(v)) {
+        if (RIGHT_LABEL.test(label) && looksNumeric(v)) {
           ctx.textAlign = "right";
           ctx.fillText(v, WIDTH - PAD, ly);
         } else {
-          ctx.fillText(fit(ctx, v || "-", WIDTH - PAD * 2 - LABEL_W), PAD + LABEL_W, ly);
+          ctx.fillText(fit(ctx, v || "-", WIDTH - PAD * 2 - LABEL_W - indent), PAD + LABEL_W + indent, ly);
         }
+        ly += 22;
+      };
+      // 전표 단위 열(전표번호·배송방법 등)은 한 번만, 품목 단위 열은 품목마다
+      d.labels.forEach((label, i) => {
+        if (!row.items || !d.itemLevel[i]) line(label, row.values[i] ?? "");
+      });
+      row.items?.forEach((item) => {
+        ctx.fillStyle = "#f3f5f8";
+        ctx.fillRect(PAD, ly - 11, WIDTH - PAD * 2, d.itemLevel.filter(Boolean).length * 22 + 6);
+        ly += 3;
+        d.labels.forEach((label, i) => {
+          if (d.itemLevel[i]) line(label, item.values[i] ?? "", 6);
+        });
+        ly += 9;
       });
       y += rowH;
     }
