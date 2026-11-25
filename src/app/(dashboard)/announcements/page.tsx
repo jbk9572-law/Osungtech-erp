@@ -68,7 +68,7 @@ export default async function AnnouncementsPage({
             .from("announcement_reads")
             .select("announcement_id")
             .eq("user_id", user.id)
-            .range(from, to).order("id", { ascending: true }),
+            .range(from, to).order("announcement_id", { ascending: true }), // 이 테이블은 id 칸이 없다(키 = 공지+사용자)
         )
       : Promise.resolve([] as { announcement_id: string }[]),
     getCurrentActor(supabase),

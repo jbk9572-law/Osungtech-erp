@@ -1,6 +1,6 @@
 import { createClient, getUser } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
-import { ListPageHeader, FormSection } from "@/components/erp/page-header";
+import { ListPageHeader } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
 import { MailAccountForm } from "@/components/mail-account-form";
 
@@ -31,9 +31,7 @@ export default async function MailSettingsPage() {
         서버에 그대로 남아있습니다.
       </PageGuide>
 
-      <FormSection tabLabel="메일 계정">
-        <MailAccountForm account={account} />
-      </FormSection>
+      <MailAccountForm account={account} />
     </div>
   );
 }

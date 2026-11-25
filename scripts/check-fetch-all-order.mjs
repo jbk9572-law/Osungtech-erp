@@ -32,6 +32,36 @@ function callBodies(src) {
   return out;
 }
 
+// id 칸이 없는 테이블(키가 여러 칸 조합인 테이블)에서 .order("id")를 쓰면 DB 오류가 난다 — 실제로 공지 읽음(announcement_reads)에서
+// 공지사항 화면 전체가 열리지 않은 전례가 있다. 마이그레이션에서 id 칸이 없는 테이블을 찾아 그 테이블 조회에 order("id")가 있으면 막는다.
+function tablesWithoutId() {
+  const dir = join(ROOT, "supabase/migrations");
+  const has = new Map();
+  for (const f of readdirSync(dir).filter((n) => n.endsWith(".sql")).sort()) {
+    const sql = readFileSync(join(dir, f), "utf8");
+    for (const m of sql.matchAll(/create table (?:if not exists )?public\.(\w+)\s*\(([\s\S]*?)\n\);/g)) has.set(m[1], /^\s*id\s/m.test(m[2]));
+    for (const m of sql.matchAll(/alter table (?:if exists )?public\.(\w+)\s+add column (?:if not exists )?id\b/g)) has.set(m[1], true);
+  }
+  return [...has].filter(([, h]) => !h).map(([t]) => t);
+}
+const noId = tablesWithoutId();
+const idOrderProblems = [];
+for (const f of walk(join(ROOT, "src"))) {
+  const src = readFileSync(f, "utf8");
+  for (const t of noId) {
+    const re = new RegExp(`\\.from\\("${t}"\\)`, "g");
+    let m;
+    while ((m = re.exec(src))) {
+      const chain = src.slice(m.index, m.index + 900).split(/;\s*\n/)[0];
+      if (/\.order\("id"/.test(chain)) idOrderProblems.push(`  - ${relative(ROOT, f)}:${src.slice(0, m.index).split("\n").length} — ${t} 에는 id 칸이 없습니다`);
+    }
+  }
+}
+if (idOrderProblems.length) {
+  console.error('id 칸이 없는 테이블에 .order("id")를 썼습니다(화면이 오류로 열리지 않습니다) — 그 테이블의 실제 키 칸으로 정렬하세요:\n' + idOrderProblems.join("\n"));
+  process.exit(1);
+}
+
 const found = {};
 for (const f of walk(join(ROOT, "src"))) {
   if (f.endsWith("lib/fetch-all-rows.ts")) continue;
