@@ -333,7 +333,7 @@ export async function TodoDetailPanel({ id, mode = "edit" }: { id: string; mode?
             {mode === "view" && allowManage ? (
               <div className="erp-toolbar erp-u-mt-12">
                 <TodoCompleteButton id={row.id} done={row.done} />
-                <Link href={`/todos/${row.id}`} className="erp-btn">
+                <Link href={`/todos/${row.id}`} className="erp-btn erp-act-edit">
                   수정
                 </Link>
                 <DeleteButton action={deleteTodo} id={row.id} confirmMessage="이 할 일을 삭제하시겠습니까?" />

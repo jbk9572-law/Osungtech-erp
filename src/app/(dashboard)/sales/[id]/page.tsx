@@ -147,11 +147,11 @@ export default async function SaleDetailPage({
         meta={`${formatKstDate(order.order_date)} 출고`}
         actions={
           <>
-            <Link href={printHref} className="erp-btn">
+            <Link href={printHref} className="erp-btn erp-act-print">
               F9 명세표
             </Link>
             {allowManage && (
-              <Link href={editHref} className="erp-btn">
+              <Link href={editHref} className="erp-btn erp-act-edit">
                 F4 수정
               </Link>
             )}

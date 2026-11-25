@@ -37,7 +37,7 @@ export function DeleteButton({
           regenerate();
           setConfirming(true);
         }}
-        className="erp-btn erp-btn-danger"
+        className="erp-btn erp-btn-danger erp-act-remove"
       >
         {`F6 ${label}`}
       </button>
@@ -47,7 +47,7 @@ export function DeleteButton({
   return (
     <form
       action={formAction}
-      className="flex flex-wrap items-center gap-2 rounded-sm border p-2 text-sm erp-u-bc-border erp-u-bg-selected"
+      className="flex flex-wrap items-center gap-2 rounded-sm border p-2 text-sm erp-u-bc-border erp-u-bg-selected erp-act-remove"
     >
       <input type="hidden" name="id" value={id} />
       <span className="erp-u-danger">{confirmMessage}</span>

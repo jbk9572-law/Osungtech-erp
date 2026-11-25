@@ -55,7 +55,7 @@ export async function QuoteDetailPanel({ id, closeHref }: { id: string; closeHre
         }
         actions={
           <>
-            <Link href={`/quotes/${quote.id}/print?back=${buildBackHref(closeHref)}`} className="erp-btn">
+            <Link href={`/quotes/${quote.id}/print?back=${buildBackHref(closeHref)}`} className="erp-btn erp-act-print">
               인쇄 / PDF
             </Link>
             {!quote.converted_sales_order_id && (

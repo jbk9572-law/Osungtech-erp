@@ -81,7 +81,7 @@ export async function AnnouncementDetailPanel({ id, closeHref }: { id: string; c
         actions={
           <>
             {allowManage && readOnlyPanel && (
-              <Link href={`/announcements/${row.id}/edit`} className="erp-btn">
+              <Link href={`/announcements/${row.id}/edit`} className="erp-btn erp-act-edit">
                 수정
               </Link>
             )}

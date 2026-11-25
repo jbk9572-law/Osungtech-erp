@@ -2353,6 +2353,24 @@ form.erp-field-grid {
   margin-bottom: 10px;
 }
 
+/* 상세 화면 버튼 자리 고정(모던) — 화면마다 수정·인쇄·삭제 버튼 순서와 위치가 제각각이었다(30곳 조사: 순서 9가지).
+   정해진 순서: [수정 F4] → [인쇄·명세표 F9] → [그 밖의 기능 · 목록 등] ……… [삭제 F6](맨 오른쪽, 따로 떨어뜨림).
+   버튼 부품이 자기 자리 클래스를 가진다 — 삭제(DeleteButton)·인쇄(PrintInPlaceButton)는 부품이 알아서, 수정은 링크에 erp-act-edit를 붙인다.
+   안 쓰는 화면은 그 버튼만 빠지고 나머지는 같은 순서를 지킨다. 삭제는 margin-left:auto라 줄이 바뀌어도 오른쪽 끝에 남아 ✕·다른 버튼과 떨어진다. */
+.erp-chrome-modern .erp-toolbar > * {
+  order: 50;
+}
+.erp-chrome-modern .erp-toolbar > .erp-act-edit {
+  order: 10;
+}
+.erp-chrome-modern .erp-toolbar > .erp-act-print {
+  order: 20;
+}
+.erp-chrome-modern .erp-toolbar > .erp-act-remove {
+  order: 90;
+  margin-left: auto;
+}
+
 /* 목록+상세 분할 화면(거래처/품목/공급처 등) 맨 위 제목+액션바 줄에만
    얹는 "도구 단상" 느낌의 배경/밑줄 — .erp-toolbar/.erp-detail-header-row
    자체는 다른 화면 11곳 이상에서 액션바 아닌 용도로도 쓰여서, 그 두

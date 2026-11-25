@@ -132,7 +132,7 @@ export async function PaymentRequestDetailPanel({
 
       <div className="erp-toolbar">
         {allowManage && row.status === "draft" && (
-          <Link href={`/reports/payment-requests/${row.id}/edit`} className="erp-btn">
+          <Link href={`/reports/payment-requests/${row.id}/edit`} className="erp-btn erp-act-edit">
             F4 수정
           </Link>
         )}
@@ -146,7 +146,7 @@ export async function PaymentRequestDetailPanel({
             hiddenFields={{ id: row.id }}
             warningText="제출을 회수하시겠습니까? 다시 작성 상태로 돌아갑니다."
             triggerLabel="회수"
-            triggerClassName="erp-btn erp-btn-danger"
+            triggerClassName="erp-btn erp-btn-danger erp-act-remove"
           />
         )}
         {allowManage && <DeleteButton action={deletePaymentRequest} id={row.id} confirmMessage="이 지급결의서를 삭제하시겠습니까?" />}
