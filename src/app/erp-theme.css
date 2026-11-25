@@ -3151,6 +3151,25 @@ form.erp-field-grid {
   font-variant-numeric: tabular-nums;
 }
 
+/* 모바일 카드 구분(모던) — 승인한 Y안: 흰 카드 + 은은한 그림자 + 왼쪽 굵은 파란 세로선, 제목은 굵게, 항목 값은 이름보다 또렷하게.
+   이월·오늘·예약처럼 상태를 이미 왼쪽 색 띠로 알리는 카드(.row-carryover 등)와 선택 카드(.selected)는 자기 색을 지키도록 제외한다. */
+.erp-chrome-modern .erp-row-card:not(.selected):not(.row-carryover):not(.row-carryover-next):not(.day-today):not(.day-future) {
+  box-shadow:
+    inset 4px 0 0 var(--erp-primary),
+    var(--erp-shadow-sm);
+}
+.erp-chrome-modern .erp-row-card-partner {
+  font-size: var(--erp-font-lg);
+  font-weight: 800;
+}
+.erp-chrome-modern .erp-order-item-fields dd {
+  font-size: var(--erp-font-md);
+  font-weight: 600;
+}
+.erp-chrome-modern .erp-order-item-fields dd.erp-u-bold {
+  font-weight: 800;
+}
+
 .erp-row-card-item {
   font-size: var(--erp-font-sm);
   color: var(--erp-text-muted);
