@@ -146,7 +146,7 @@ export function PlatformPlanRow({
             className="erp-input w-full"
           />
         </div>
-        <div className="erp-field erp-span-3">
+        <div className="erp-field erp-span-4">
           <label htmlFor={`${formId}-fax`}>월 팩스 발송(건)</label>
           <input
             id={`${formId}-fax`}
@@ -158,7 +158,7 @@ export function PlatformPlanRow({
             className="erp-input w-full"
           />
         </div>
-        <div className="erp-field erp-span-3">
+        <div className="erp-field erp-span-4">
           <label htmlFor={`${formId}-invoice`}>월 계산서 발행(건)</label>
           <input
             id={`${formId}-invoice`}
@@ -170,7 +170,7 @@ export function PlatformPlanRow({
             className="erp-input w-full"
           />
         </div>
-        <div className="erp-field erp-span-3">
+        <div className="erp-field erp-span-4">
           <label htmlFor={`${formId}-alimtalk`}>월 알림톡/문자 발송(건)</label>
           <input
             id={`${formId}-alimtalk`}

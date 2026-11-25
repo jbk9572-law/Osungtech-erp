@@ -302,7 +302,7 @@ export function TodoForm({
           </div>
         </div>
         {todoType !== "sale" && (
-          <div className="erp-field erp-span-4">
+          <div className={`erp-field ${todoType === "both" ? "erp-span-4" : "erp-span-8"}`}>
             <label htmlFor="todo-supplier">공급처</label>
             <PartySearchSelect
               id="todo-supplier"
@@ -315,7 +315,7 @@ export function TodoForm({
           </div>
         )}
         {todoType !== "purchase" && (
-          <div className="erp-field erp-span-4">
+          <div className={`erp-field ${todoType === "both" ? "erp-span-4" : "erp-span-8"}`}>
             <label htmlFor="todo-customer">출고처</label>
             <PartySearchSelect
               id="todo-customer"
@@ -328,7 +328,7 @@ export function TodoForm({
           </div>
         )}
         {todoType === "both" && (
-          <div className="erp-field erp-span-6">
+          <div className="erp-field erp-span-12">
             <label htmlFor="todo-ship-date">출고예정일 (비우면 마감일 당일출고)</label>
             <input id="todo-ship-date" name="ship_date" type="date" defaultValue={initial?.shipDate ?? ""} className="erp-input" />
           </div>

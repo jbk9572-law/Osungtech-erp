@@ -115,7 +115,7 @@ export function AnnouncementListBody({
         </div>
 
         <div className="erp-field-grid erp-u-gap-6 erp-u-p-8 erp-u-m-8">
-          <div className="erp-field erp-span-3" style={{ minWidth: 90 }}>
+          <div className="erp-field erp-span-4" style={{ minWidth: 90 }}>
             <label htmlFor="ann-sort">정렬</label>
             <ErpSelect
               id="ann-sort"
@@ -129,7 +129,7 @@ export function AnnouncementListBody({
               ]}
             />
           </div>
-          <div className="erp-field erp-span-12">
+          <div className="erp-field erp-span-8">
             <label htmlFor="ann-search-q">제목 검색</label>
             <input
               id="ann-search-q"

@@ -1,0 +1,19 @@
+[
+  "src/app/(dashboard)/hr/payroll/page.tsx#1",
+  "src/app/(dashboard)/inventory/item/[productId]/page.tsx#1",
+  "src/app/(dashboard)/inventory/qr-labels/page.tsx#1",
+  "src/app/(dashboard)/inventory/warehouses/page.tsx#1",
+  "src/app/(dashboard)/purchase-quote-requests/classic.tsx#1",
+  "src/app/(dashboard)/purchase-requests/classic.tsx#1",
+  "src/app/(dashboard)/purchases/page.tsx#1",
+  "src/app/(dashboard)/quotes/classic.tsx#1",
+  "src/app/(dashboard)/reports/monthly/page.tsx#1",
+  "src/app/(dashboard)/sales-activities/classic.tsx#1",
+  "src/app/(dashboard)/sales/page.tsx#1",
+  "src/app/(dashboard)/sales/tax-invoices/bulk-create/page.tsx#1",
+  "src/app/(dashboard)/sales/tax-invoices/export/page.tsx#1",
+  "src/app/portal/(app)/assignments/page.tsx#1",
+  "src/app/portal/(app)/orders/page.tsx#1",
+  "src/components/bulk-tax-invoice-form.tsx#1",
+  "src/components/lot-lookup-search-form.tsx#1"
+]
