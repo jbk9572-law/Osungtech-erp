@@ -36,12 +36,10 @@ import { nextMonthLabel } from "@/lib/carryover";
 import { calcVat } from "@/lib/tax";
 import { findMultiLocationItems, type LocationOption } from "@/lib/location-stock-sync";
 import { LocationAllocationModal, type MultiLocationItem } from "@/components/location-allocation-modal";
-import {
-  buildPartyProductMap,
+import { buildPartyProductMap,
   buildPartyProductNoteMap,
   lookupPartyProductValue,
-  getMostRecentLotNumber,
-} from "@/lib/party-price-lookup";
+  getMostRecentLotNumber, refillDraftPrices } from "@/lib/party-price-lookup";
 import { useKeyedRows } from "@/lib/use-keyed-rows";
 import { useDraftAutosave } from "@/lib/use-draft-autosave";
 import { DraftResumeBanner } from "@/components/draft-resume-banner";
@@ -438,7 +436,7 @@ export function NewPurchaseForm({
     setSaleCustomerId(draft.saleCustomerId);
     setSaleDate(draft.saleDate);
     setSaleDeliveryMethod(draft.saleDeliveryMethod);
-    addFilledRows((startKey) => draft.rows.map((r, i) => ({ ...r, key: startKey + i })), () => true);
+    addFilledRows((startKey) => refillDraftPrices(draft.rows, "unitCost", (id) => resolveCost(draft.supplierId, id)).map((r, i) => ({ ...r, key: startKey + i })), () => true); // 단가 빠진 줄 다시 채움
     setDraftChoiceMade(true);
   }
 

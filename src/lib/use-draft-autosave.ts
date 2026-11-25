@@ -23,6 +23,8 @@ export function useDraftAutosave<T>(key: string | null) {
   // 미리 계산한 뒤 setState를 한 번만 부르는 방식으로 피한다.
   const [state, setState] = useState<{ loaded: boolean; value: T | null }>({ loaded: false, value: null });
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // 아직 localStorage에 못 쓴 마지막 입력 — 화면이 닫힐 때(ESC·이동·새로고침) 디바운스를 기다리지 않고 바로 쓰기 위해 들고 있는다.
+  const pendingRef = useRef<T | null>(null);
   // 마지막으로 임시저장이 실제로 기록된 시각 — 화면의 "임시저장 14:31" 표시용(DraftSavedIndicator).
   const [savedAt, setSavedAt] = useState<number | null>(null);
 
@@ -48,26 +50,51 @@ export function useDraftAutosave<T>(key: string | null) {
   }, [key]);
   const { loaded: draftLoaded, value: draft } = state;
 
+  const flush = useCallback(() => {
+    if (!key || pendingRef.current === null) return;
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = null;
+    const data = pendingRef.current;
+    pendingRef.current = null;
+    try {
+      localStorage.setItem(key, JSON.stringify(data));
+    } catch {
+      // 저장 공간 부족, 프라이빗 브라우징 모드 등 — 임시저장은 편의 기능일 뿐이라 조용히 포기한다(실제 저장/제출과는 무관).
+    }
+  }, [key]);
+
   const save = useCallback(
     (data: T) => {
       if (!key) return;
       if (timerRef.current) clearTimeout(timerRef.current);
+      pendingRef.current = data;
       timerRef.current = setTimeout(() => {
-        try {
-          localStorage.setItem(key, JSON.stringify(data));
-          setSavedAt(Date.now());
-        } catch {
-          // 저장 공간 부족, 프라이빗 브라우징 모드 등 — 임시저장은 편의
-          // 기능일 뿐이라 조용히 포기한다(실제 저장/제출과는 무관).
-        }
+        flush();
+        setSavedAt(Date.now());
       }, DEBOUNCE_MS);
     },
-    [key]
+    [key, flush]
   );
+
+  // 화면을 닫을 때(ESC로 모달 닫기·다른 메뉴·새로고침·탭 닫기) 아직 기다리던 마지막 입력을 바로 저장한다.
+  // 예전엔 이때 대기 중이던 저장이 그냥 사라져서, 단가처럼 방금 입력한 값이 임시저장본에서 빠졌다.
+  useEffect(() => {
+    function onHide() {
+      flush();
+    }
+    window.addEventListener("pagehide", onHide);
+    document.addEventListener("visibilitychange", onHide);
+    return () => {
+      window.removeEventListener("pagehide", onHide);
+      document.removeEventListener("visibilitychange", onHide);
+      flush();
+    };
+  }, [flush]);
 
   const clear = useCallback(() => {
     if (!key) return;
     if (timerRef.current) clearTimeout(timerRef.current);
+    pendingRef.current = null; // 지운 뒤 닫힐 때 다시 저장되지 않게
     try {
       localStorage.removeItem(key);
       setSavedAt(null);

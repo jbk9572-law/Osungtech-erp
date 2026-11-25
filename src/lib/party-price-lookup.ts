@@ -53,3 +53,19 @@ export function getMostRecentLotNumber<T>(
     .sort((a, b) => (dateOf(a) < dateOf(b) ? 1 : -1));
   return entries.length ? (lotOf(entries[0]) ?? null) : null;
 }
+
+// 임시저장본을 불러올 때, 단가가 0으로 빠진 줄(저장이 끊긴 경우)을 거래처·공급처별 단가/품목 기본가로 다시 채운다 — 매출·매입 전표 공용.
+// 이미 단가가 있거나 품목이 없는 줄, 알려진 단가가 없는(0) 줄은 그대로 둔다. skip이 true면(샘플 등) 아무것도 바꾸지 않는다.
+export function refillDraftPrices<R extends { productId: string; manualPrice: boolean }>(
+  rows: R[],
+  field: "unitPrice" | "unitCost",
+  lookup: (productId: string) => number,
+  skip = false,
+): R[] {
+  if (skip) return rows;
+  return rows.map((r) => {
+    if (!r.productId || (r as unknown as Record<string, number>)[field] !== 0) return r;
+    const price = lookup(r.productId);
+    return price > 0 ? { ...r, [field]: price, manualPrice: false } : r;
+  });
+}

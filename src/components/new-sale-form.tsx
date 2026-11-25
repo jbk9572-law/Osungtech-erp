@@ -39,12 +39,10 @@ import { TAX_TYPES, EVIDENCE_TYPES } from "@/lib/tax-evidence-type";
 import { RETURN_REASONS } from "@/lib/return-reason";
 import { nextMonthLabel } from "@/lib/carryover";
 import { calcVat } from "@/lib/tax";
-import {
-  buildPartyProductMap,
+import { buildPartyProductMap,
   buildPartyProductNoteMap,
   lookupPartyProductValue,
-  getMostRecentLotNumber,
-} from "@/lib/party-price-lookup";
+  getMostRecentLotNumber, refillDraftPrices } from "@/lib/party-price-lookup";
 import { useKeyedRows } from "@/lib/use-keyed-rows";
 import { useDraftAutosave } from "@/lib/use-draft-autosave";
 import { DraftResumeBanner } from "@/components/draft-resume-banner";
@@ -354,7 +352,7 @@ export function NewSaleForm({
     setReturnReason(draft.returnReason);
     setTaxType(draft.taxType);
     setEvidenceType(draft.evidenceType);
-    addFilledRows((startKey) => draft.rows.map((r, i) => ({ ...r, key: startKey + i })), () => true);
+    addFilledRows((startKey) => refillDraftPrices(draft.rows, "unitPrice", (id) => resolvePrice(draft.customerId, id), draft.isSample).map((r, i) => ({ ...r, key: startKey + i })), () => true);
     setDraftChoiceMade(true);
   }
 
