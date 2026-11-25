@@ -53,7 +53,7 @@ export function ToolbarKey({ children }: { children: ReactNode }) {
  *  keyHint: 그 화면이 F2/Ctrl+Enter를 이 주소로 걸어 둔 경우에만 단축키 표시를 붙인다(안 걸린 키를 표시하면 거짓말이 된다). */
 export function NewButton({ href, children, keyHint = false }: { href: string; children: ReactNode; keyHint?: boolean }) {
   return (
-    <GuardedLink href={href} className="erp-btn erp-btn-primary erp-u-nowrap">
+    <GuardedLink href={href} className="erp-btn erp-btn-primary erp-u-nowrap erp-tb-new">
       {children}
       {keyHint && <ToolbarKey>Ctrl+Enter</ToolbarKey>}
     </GuardedLink>

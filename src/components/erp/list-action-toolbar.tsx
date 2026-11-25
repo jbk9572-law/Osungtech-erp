@@ -86,7 +86,7 @@ export function ListActionToolbar({
       actions={
         <>
           {searchFormId && (!listFrameV2 || !!filters) && (
-            <button type="button" className="erp-btn erp-btn-primary" onClick={() => (document.getElementById(searchFormId) as HTMLFormElement | null)?.requestSubmit()}>
+            <button type="button" className="erp-btn erp-btn-primary erp-tb-query" onClick={() => (document.getElementById(searchFormId) as HTMLFormElement | null)?.requestSubmit()}>
               조회<ToolbarKey>F5</ToolbarKey>
             </button>
           )}
@@ -118,7 +118,7 @@ export function ListActionToolbar({
       tools={
         <>
           {excelHref && (
-            <a href={excelHref} className="erp-btn" title="목록을 엑셀 파일로 내려받기">
+            <a href={excelHref} className="erp-btn erp-tb-export" title="목록을 엑셀 파일로 내려받기">
               엑셀
             </a>
           )}

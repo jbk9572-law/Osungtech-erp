@@ -550,7 +550,7 @@ async function SalesPage({
               href={exportHref}
               title={q ? `이번달 "${q}" 검색 결과를 엑셀로 다운로드` : "이번달(1일~말일) 전체 내역을 엑셀로 다운로드"}
             />
-            <ToolbarMenu label="일괄 작업">
+            <ToolbarMenu label="일괄 작업" iconOnly>
               <UnifiedSaleModalTrigger asMenuItem loadData={loadQuickSaleData} today={todayKstStr()} />
               <Link href="/sales/tax-invoices/export" className="erp-colmenu-item" title="발행된 세금계산서를 홈택스 일괄발급용 엑셀로 다운로드">
                 홈택스 일괄발급 엑셀
@@ -624,7 +624,7 @@ async function SalesPage({
               href={exportHref}
               title={q ? `이번달 "${q}" 검색 결과를 엑셀로 다운로드` : "이번달(1일~말일) 전체 내역을 엑셀로 다운로드"}
             />
-            <ToolbarMenu label="일괄 작업">
+            <ToolbarMenu label="일괄 작업" iconOnly>
               <UnifiedSaleModalTrigger asMenuItem loadData={loadQuickSaleData} today={todayKstStr()} />
               <Link href="/sales/tax-invoices/export" className="erp-colmenu-item" title="발행된 세금계산서를 홈택스 일괄발급용 엑셀로 다운로드">
                 홈택스 일괄발급 엑셀

@@ -524,7 +524,7 @@ async function PurchasesPage({
               href={exportHref}
               title={q ? `이번달 "${q}" 검색 결과를 엑셀로 다운로드` : "이번달(1일~말일) 전체 내역을 엑셀로 다운로드"}
             />
-            <ToolbarMenu label="일괄 작업">
+            <ToolbarMenu label="일괄 작업" iconOnly>
               <Link href="/purchases/tax-invoices/import" className="erp-colmenu-item" title="홈택스 매입내역 엑셀을 업로드해 세금계산서 수취 여부를 매칭">
                 매입세금계산서 수취 관리
               </Link>
@@ -594,7 +594,7 @@ async function PurchasesPage({
               href={exportHref}
               title={q ? `이번달 "${q}" 검색 결과를 엑셀로 다운로드` : "이번달(1일~말일) 전체 내역을 엑셀로 다운로드"}
             />
-            <ToolbarMenu label="일괄 작업">
+            <ToolbarMenu label="일괄 작업" iconOnly>
               <Link href="/purchases/tax-invoices/import" className="erp-colmenu-item" title="홈택스 매입내역 엑셀을 업로드해 세금계산서 수취 여부를 매칭">
                 매입세금계산서 수취 관리
               </Link>

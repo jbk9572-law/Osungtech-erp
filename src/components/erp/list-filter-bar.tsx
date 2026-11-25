@@ -86,7 +86,7 @@ export function FilterBarForm({ formId, basePath, hidden }: { formId: string; ba
 /** 도구줄 맨 앞 [조회 F5] — 폼(formId)을 제출한다. */
 export function QueryButton({ formId }: { formId: string }) {
   return (
-    <button type="submit" form={formId} className="erp-btn erp-btn-primary erp-u-nowrap">
+    <button type="submit" form={formId} className="erp-btn erp-btn-primary erp-u-nowrap erp-tb-query">
       조회 <ToolbarKey>F5</ToolbarKey>
     </button>
   );

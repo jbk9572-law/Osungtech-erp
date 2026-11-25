@@ -21,7 +21,7 @@ export function ExcelDownloadLink({
   return (
     <a
       href={href}
-      className={`erp-btn${primary ? " erp-btn-primary" : ""}`}
+      className={`erp-btn erp-tb-export${primary ? " erp-btn-primary" : ""}`}
       title={title}
       style={pushRight ? { marginLeft: "auto" } : undefined}
     >
