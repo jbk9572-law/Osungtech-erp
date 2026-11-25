@@ -98,7 +98,7 @@ export async function OfficialDocumentDetailPanel({
       .from("official_document_recipients")
       .select("id, kind, name, email, status, bounce_reason, sent_at")
       .eq("official_document_id", id)
-      .range(from, to),
+      .range(from, to).order("id", { ascending: true }),
   );
 
   const allowManage = canManage(doc.created_by, userId, isAdmin);

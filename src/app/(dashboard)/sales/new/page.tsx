@@ -60,7 +60,7 @@ async function NewSalePage({
     logSlowSupabaseCall("sales/new.prices", () =>
       fetchAllRows<{ customer_id: string; product_id: string; unit_price: number; notes: string | null }>(
         (from, to) =>
-          supabase.from("customer_product_prices").select("customer_id, product_id, unit_price, notes").range(from, to),
+          supabase.from("customer_product_prices").select("customer_id, product_id, unit_price, notes").range(from, to).order("id", { ascending: true }),
       ),
     ),
     logSlowSupabaseCall("sales/new.history", () =>
@@ -82,7 +82,7 @@ async function NewSalePage({
         quantity: number;
         locations: { code: string; tier: number; position: number } | null;
       }>((from, to) =>
-        supabase.from("inventory_locations").select("product_id, location_id, quantity, locations(code, tier, position)").range(from, to),
+        supabase.from("inventory_locations").select("product_id, location_id, quantity, locations(code, tier, position)").range(from, to).order("id", { ascending: true }),
       ),
     ),
     logSlowSupabaseCall("sales/new.gridColWidths", () => getGridColumnWidths("erp-item-grid-columns")),

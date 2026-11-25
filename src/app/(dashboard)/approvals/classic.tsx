@@ -335,7 +335,7 @@ export default async function ApprovalsPage({
         supabase.from("approval_line_presets").select("id, name, approver_ids, reference_ids").order("name").range(from, to),
       ),
       fetchAllRows<{ template_id: string; preset_id: string }>((from, to) =>
-        supabase.from("approval_matrix_rules").select("template_id, preset_id").range(from, to),
+        supabase.from("approval_matrix_rules").select("template_id, preset_id").range(from, to).order("id", { ascending: true }),
       ),
     ]);
     const orgTree = buildOrgTree(

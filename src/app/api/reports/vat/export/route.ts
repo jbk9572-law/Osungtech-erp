@@ -61,7 +61,7 @@ export async function GET(request: Request) {
         .select("is_return, tax_type, order_date, is_carryover, sales_order_items(quantity, unit_price)")
         .gte("order_date", lookbackFrom)
         .lte("order_date", to)
-        .range(f, t)
+        .range(f, t).order("id", { ascending: true })
     ),
     fetchAllRows<{
       tax_type: TaxType;
@@ -74,7 +74,7 @@ export async function GET(request: Request) {
         .select("tax_type, purchase_date, is_carryover, purchase_order_items(quantity, unit_cost)")
         .gte("purchase_date", lookbackFrom)
         .lte("purchase_date", to)
-        .range(f, t)
+        .range(f, t).order("id", { ascending: true })
     ),
   ]);
 

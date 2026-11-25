@@ -29,7 +29,7 @@ export async function GET(request: Request) {
 
   if (q) {
     const customers = await fetchAllRows<{ id: string; name: string; sales_export_template: string }>((from, to) =>
-      supabase.from("customers").select("id, name, sales_export_template").range(from, to),
+      supabase.from("customers").select("id, name, sales_export_template").range(from, to).order("id", { ascending: true }),
     );
     const matches = customers.filter((c) => c.name.toLowerCase().includes(q));
     if (matches.length === 1 && matches[0].sales_export_template !== "generic") {

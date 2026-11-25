@@ -588,7 +588,7 @@ export async function generatePayroll(_prevState: FormState, formData: FormData)
           .eq("status", "approved")
           .gte("start_date", `${rateYear}-01-01`)
           .lte("start_date", `${rateYear}-12-31`)
-          .range(from, to),
+          .range(from, to).order("id", { ascending: true }),
       ),
       fetchAllRows<WithholdingTaxBracket>((from, to) =>
         supabase.from("withholding_tax_brackets").select("*").order("salary_from").range(from, to),

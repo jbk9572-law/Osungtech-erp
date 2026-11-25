@@ -380,7 +380,7 @@ export async function importCustomersExcel(_prevState: FormState, formData: Form
       .select(
         "id, name, business_number, representative_name, contact_name, email, phone, address, notes, document_type",
       )
-      .range(from, to),
+      .range(from, to).order("id", { ascending: true }),
   );
   const byBusinessNumber = new Map(
     existing.filter((c) => c.business_number).map((c) => [c.business_number as string, c.id])

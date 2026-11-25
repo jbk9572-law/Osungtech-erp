@@ -22,7 +22,7 @@ export async function syncAllMailAccounts(): Promise<SyncAllResult> {
       .from("mail_accounts")
       .select("id, tenant_id, user_id, imap_host, imap_port, username, encrypted_app_password, last_synced_uid")
       .eq("is_active", true)
-      .range(from, to),
+      .range(from, to).order("id", { ascending: true }),
   );
 
   if (!accounts.length) return { accountsChecked: 0, accountsFailed: 0, newTotal: 0 };

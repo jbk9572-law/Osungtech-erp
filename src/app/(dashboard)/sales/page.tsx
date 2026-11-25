@@ -127,18 +127,18 @@ async function SalesPage({
   // DB에서 최근 limit건만 받아 일반 조회 성능을 그대로 유지한다.
   const [rawItems, rawPayments, rawCarryoverItems] = await Promise.all([
     keyword || extraFilter
-      ? fetchAllRows((from, to) => buildItemQuery().range(from, to))
+      ? fetchAllRows((from, to) => buildItemQuery().range(from, to).order("id", { ascending: true }))
       : buildItemQuery()
           .limit(limit)
           .then((r) => r.data ?? []),
     keyword || extraFilter
-      ? fetchAllRows((from, to) => buildPaymentQuery().range(from, to))
+      ? fetchAllRows((from, to) => buildPaymentQuery().range(from, to).order("id", { ascending: true }))
       : buildPaymentQuery()
           .limit(limit)
           .then((r) => r.data ?? []),
     carryoverRange
       ? keyword || extraFilter
-        ? fetchAllRows((from, to) => buildCarryoverQuery(carryoverRange).range(from, to))
+        ? fetchAllRows((from, to) => buildCarryoverQuery(carryoverRange).range(from, to).order("id", { ascending: true }))
         : buildCarryoverQuery(carryoverRange)
             .limit(limit)
             .then((r) => r.data ?? [])
@@ -439,7 +439,7 @@ async function SalesPage({
         "quantity, unit_price, spec, lot_number, remark, custom_name, sales_orders!inner(is_return, memo, delivery_method, tax_type, customers(name)), products(name, sku, spec, unit)",
       )
       .gte("sales_orders.order_date", effectiveFrom)
-      .range(rangeFrom, rangeTo);
+      .range(rangeFrom, rangeTo).order("id", { ascending: true });
     totalsQuery = totalsQuery.lte("sales_orders.order_date", effectiveTo);
     return totalsQuery;
   });

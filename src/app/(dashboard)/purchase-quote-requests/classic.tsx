@@ -47,7 +47,7 @@ export default async function PurchaseQuoteRequestsPage({
   // 있었다(사용자 지적 — "작성자가 다른 건은 조회가 안 된다").
   const [rawRequests, { data: suppliers }] = await Promise.all([
     keyword
-      ? fetchAllRows((from, to) => buildQuery().range(from, to))
+      ? fetchAllRows((from, to) => buildQuery().range(from, to).order("id", { ascending: true }))
       : buildQuery()
           .limit(limit)
           .then((r) => r.data ?? []),

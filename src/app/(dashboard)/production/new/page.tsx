@@ -22,7 +22,7 @@ export default async function NewWorkOrderPage() {
       supabase
         .from("bom_items")
         .select("parent_product_id, component_product_id, quantity_per_unit")
-        .range(from, to),
+        .range(from, to).order("id", { ascending: true }),
     ),
     fetchAllRows<{ id: string; sku: string; name: string; spec: string | null; unit: string }>((from, to) =>
       supabase.from("products").select("id, sku, name, spec, unit").order("name").range(from, to),

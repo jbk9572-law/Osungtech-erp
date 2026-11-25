@@ -93,7 +93,7 @@ export default async function ApprovalLinesPage({
         supabase.from("approval_line_presets").select("id, name").order("name").range(from, to),
       ),
       fetchAllRows<{ template_id: string; preset_id: string }>((from, to) =>
-        supabase.from("approval_matrix_rules").select("template_id, preset_id").range(from, to),
+        supabase.from("approval_matrix_rules").select("template_id, preset_id").range(from, to).order("id", { ascending: true }),
       ),
     ]);
 
@@ -167,7 +167,7 @@ export default async function ApprovalLinesPage({
     // 필요한 position_title/department_id도 같이 담아 같은 조회를
     // 재사용한다 — 별도 쿼리를 또 만들지 않는다.
     fetchAllRows<{ id: string; full_name: string | null; position_title: string | null; department_id: string | null }>(
-      (from, to) => supabase.from("profiles").select("id, full_name, position_title, department_id").range(from, to),
+      (from, to) => supabase.from("profiles").select("id, full_name, position_title, department_id").range(from, to).order("id", { ascending: true }),
     ),
   ]);
 

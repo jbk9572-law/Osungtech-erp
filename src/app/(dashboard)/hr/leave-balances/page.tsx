@@ -38,10 +38,10 @@ export default async function LeaveBalancesPage() {
         .eq("status", "approved")
         .gte("start_date", `${year}-01-01`)
         .lte("start_date", `${year}-12-31`)
-        .range(from, to),
+        .range(from, to).order("id", { ascending: true }),
     ),
     fetchAllRows<{ user_id: string; stage: number; sent_at: string }>((from, to) =>
-      supabase.from("leave_promotion_notices").select("user_id, stage, sent_at").eq("year", year).range(from, to),
+      supabase.from("leave_promotion_notices").select("user_id, stage, sent_at").eq("year", year).range(from, to).order("id", { ascending: true }),
     ),
   ]);
 

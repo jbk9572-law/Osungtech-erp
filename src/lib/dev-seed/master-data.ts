@@ -15,7 +15,7 @@ export async function ensureAndGrowCustomers(
   dailyAdd: number,
 ): Promise<{ id: string; name: string }[]> {
   const rows = await fetchAllRows<{ id: string; name: string }>((from, to) =>
-    actingClient.from("customers").select("id, name").range(from, to),
+    actingClient.from("customers").select("id, name").range(from, to).order("id", { ascending: true }),
   );
   const addCount = rows.length < minFloor ? minFloor - rows.length : dailyAdd;
 
@@ -34,7 +34,7 @@ export async function ensureAndGrowSuppliers(
   dailyAdd: number,
 ): Promise<{ id: string; name: string }[]> {
   const rows = await fetchAllRows<{ id: string; name: string }>((from, to) =>
-    actingClient.from("suppliers").select("id, name").range(from, to),
+    actingClient.from("suppliers").select("id, name").range(from, to).order("id", { ascending: true }),
   );
   const addCount = rows.length < minFloor ? minFloor - rows.length : dailyAdd;
 

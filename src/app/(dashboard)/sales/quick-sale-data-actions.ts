@@ -22,7 +22,7 @@ export async function loadQuickSaleData(): Promise<QuickSaleData | null> {
       supabase.from("warehouses").select("id, name").order("created_at", { ascending: true }).range(from, to),
     ),
     fetchAllRows<{ customer_id: string; product_id: string; unit_price: number }>((from, to) =>
-      supabase.from("customer_product_prices").select("customer_id, product_id, unit_price").range(from, to),
+      supabase.from("customer_product_prices").select("customer_id, product_id, unit_price").range(from, to).order("id", { ascending: true }),
     ),
     // 정식 등록 폼(new-sale-form)의 단가 힌트와 같은 데이터 — 최근 500줄이면 충분하다.
     supabase

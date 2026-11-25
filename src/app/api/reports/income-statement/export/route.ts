@@ -28,7 +28,7 @@ export async function GET(request: Request) {
         .select("quantity, unit_price, unit_cost, sales_orders!inner(is_return, order_date, is_carryover)")
         .gte("sales_orders.order_date", lookbackFrom)
         .lte("sales_orders.order_date", to)
-        .range(f, t)
+        .range(f, t).order("id", { ascending: true })
     ),
     fetchAllRows<{ amount: number; used_at: string; payment_requests: { status: string } | null }>((f, t) =>
       supabase
@@ -37,7 +37,7 @@ export async function GET(request: Request) {
         .eq("payment_requests.status", "approved")
         .gte("used_at", from)
         .lte("used_at", to)
-        .range(f, t)
+        .range(f, t).order("id", { ascending: true })
     ),
   ]);
 

@@ -49,7 +49,7 @@ export default async function BulkTaxInvoicePage({
           .select("sales_order_id")
           .in("sales_order_id", idChunk)
           .is("original_invoice_id", null)
-          .range(pageFrom, pageTo),
+          .range(pageFrom, pageTo).order("id", { ascending: true }),
       )
     : [];
   const issuedSet = new Set(issuedRows.map((r) => r.sales_order_id));
@@ -66,7 +66,7 @@ export default async function BulkTaxInvoicePage({
           .from("sales_order_items")
           .select("sales_order_id, quantity, unit_price")
           .in("sales_order_id", idChunk)
-          .range(pageFrom, pageTo),
+          .range(pageFrom, pageTo).order("id", { ascending: true }),
       )
     : [];
   const supplyByOrder = new Map<string, number>();

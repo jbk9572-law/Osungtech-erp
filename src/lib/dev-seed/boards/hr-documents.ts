@@ -11,7 +11,7 @@ export async function seedHrDocuments(
   count: number,
 ): Promise<BoardSeedResult> {
   const templates = await fetchAllRows<{ id: string; category: string; name: string; body: string }>((from, to) =>
-    actors[0].client.from("document_templates").select("id, category, name, body").eq("is_active", true).range(from, to),
+    actors[0].client.from("document_templates").select("id, category, name, body").eq("is_active", true).range(from, to).order("id", { ascending: true }),
   );
   if (templates.length === 0) {
     return { board: "문서함(hr-documents)", created: 0 };

@@ -101,7 +101,7 @@ export default async function AttendancePage() {
           .eq("user_id", user!.id)
           .gte("work_date", week.start)
           .lte("work_date", week.end)
-          .range(from, to),
+          .range(from, to).order("id", { ascending: true }),
       ),
     ]);
 
@@ -116,7 +116,7 @@ export default async function AttendancePage() {
           .select("user_id, clock_in_at, clock_out_at")
           .gte("work_date", week.start)
           .lte("work_date", week.end)
-          .range(from, to),
+          .range(from, to).order("id", { ascending: true }),
       )
     : [];
 

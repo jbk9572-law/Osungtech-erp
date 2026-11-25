@@ -86,7 +86,7 @@ export async function getNotificationSummary(
           .gt("reorder_point", 0)
           // 파생 SKU(모품목과 재고를 공유)는 자기 재고가 늘 비어 있어 항상 "부족"으로 뜨므로 제외한다 — 재고 부족은 모품목 기준으로 본다.
           .is("parent_product_id", null)
-          .range(from, to),
+          .range(from, to).order("id", { ascending: true }),
     ),
   ]);
 

@@ -27,7 +27,7 @@ function usernameFor(n: number): string {
 // 테넌트의 department_id가 더미 직원에게 잘못 배정될 수 있다.
 export async function ensureDepartments(admin: Db, tenantId: string): Promise<{ id: string; name: string }[]> {
   const existing = await fetchAllRows<{ id: string; name: string }>((from, to) =>
-    admin.from("departments").select("id, name").eq("tenant_id", tenantId).range(from, to),
+    admin.from("departments").select("id, name").eq("tenant_id", tenantId).range(from, to).order("id", { ascending: true }),
   );
   const existingNames = new Set(existing.map((d) => d.name));
   const missing = DEPARTMENTS.filter((name) => !existingNames.has(name));
@@ -40,7 +40,7 @@ export async function ensureDepartments(admin: Db, tenantId: string): Promise<{ 
   }
 
   return fetchAllRows<{ id: string; name: string }>((from, to) =>
-    admin.from("departments").select("id, name").eq("tenant_id", tenantId).range(from, to),
+    admin.from("departments").select("id, name").eq("tenant_id", tenantId).range(from, to).order("id", { ascending: true }),
   );
 }
 
@@ -177,7 +177,7 @@ export async function ensurePortalAccounts(
   customers: { id: string; name: string }[],
 ): Promise<{ customerId: string; email: string; password: string }[]> {
   const existing = await fetchAllRows<{ customer_id: string | null }>((from, to) =>
-    admin.from("customer_portal_accounts").select("customer_id").eq("kind", "customer").range(from, to),
+    admin.from("customer_portal_accounts").select("customer_id").eq("kind", "customer").range(from, to).order("id", { ascending: true }),
   );
   const covered = new Set(existing.map((r) => r.customer_id).filter((id): id is string => id !== null));
 

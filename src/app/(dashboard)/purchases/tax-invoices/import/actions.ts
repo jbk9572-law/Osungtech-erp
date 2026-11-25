@@ -69,7 +69,7 @@ export async function importHometaxReceivedInvoices(_prevState: ImportResult, fo
       .from("purchase_received_invoices")
       .select("hometax_approval_number")
       .in("hometax_approval_number", numberChunk)
-      .range(from, to),
+      .range(from, to).order("id", { ascending: true }),
   );
   const existingApprovalNumbers = new Set(existingRows.map((r) => r.hometax_approval_number));
 
@@ -111,7 +111,7 @@ export async function importHometaxReceivedInvoices(_prevState: ImportResult, fo
       .from("purchase_received_invoices")
       .select("purchase_order_id")
       .not("purchase_order_id", "is", null)
-      .range(from, to),
+      .range(from, to).order("id", { ascending: true }),
   );
   const matchedPurchaseOrderIds = new Set(alreadyMatched.map((r) => r.purchase_order_id));
 

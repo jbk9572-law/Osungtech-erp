@@ -111,7 +111,7 @@ async function PurchasesPage({
       .from("purchase_received_invoices")
       .select("purchase_order_id")
       .not("purchase_order_id", "is", null)
-      .range(from, to),
+      .range(from, to).order("id", { ascending: true }),
   );
   const receivedPurchaseOrderIds = new Set(receivedInvoiceRows.map((r) => r.purchase_order_id));
 
@@ -123,18 +123,18 @@ async function PurchasesPage({
   // 그대로 유지한다.
   const [rawItems, rawPayments, rawCarryoverItems] = await Promise.all([
     keyword || extraFilter
-      ? fetchAllRows((from, to) => buildItemQuery().range(from, to))
+      ? fetchAllRows((from, to) => buildItemQuery().range(from, to).order("id", { ascending: true }))
       : buildItemQuery()
           .limit(limit)
           .then((r) => r.data ?? []),
     keyword || extraFilter
-      ? fetchAllRows((from, to) => buildPaymentQuery().range(from, to))
+      ? fetchAllRows((from, to) => buildPaymentQuery().range(from, to).order("id", { ascending: true }))
       : buildPaymentQuery()
           .limit(limit)
           .then((r) => r.data ?? []),
     carryoverRange
       ? keyword || extraFilter
-        ? fetchAllRows((from, to) => buildCarryoverQuery(carryoverRange).range(from, to))
+        ? fetchAllRows((from, to) => buildCarryoverQuery(carryoverRange).range(from, to).order("id", { ascending: true }))
         : buildCarryoverQuery(carryoverRange)
             .limit(limit)
             .then((r) => r.data ?? [])
@@ -418,7 +418,7 @@ async function PurchasesPage({
         "quantity, unit_cost, spec, lot_number, remark, custom_name, purchase_orders!inner(memo, delivery_method, tax_type, suppliers(name)), products(name, sku, spec, unit)",
       )
       .gte("purchase_orders.purchase_date", effectiveFrom)
-      .range(rangeFrom, rangeTo);
+      .range(rangeFrom, rangeTo).order("id", { ascending: true });
     totalsQuery = totalsQuery.lte("purchase_orders.purchase_date", effectiveTo);
     return totalsQuery;
   });

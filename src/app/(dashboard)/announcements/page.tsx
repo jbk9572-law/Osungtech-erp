@@ -55,7 +55,7 @@ export default async function AnnouncementsPage({
     // 기준으로 보여준다 — todos 목록의 summaryRows와 같은 이유("최근 N건만
     // 보이는데 전체 건수가 줄어보인다" 같은 혼란을 피하기 위함).
     fetchAllRows<{ id: string; pinned: boolean; created_at: string }>((from, to) =>
-      supabase.from("announcements").select("id, pinned, created_at").range(from, to),
+      supabase.from("announcements").select("id, pinned, created_at").range(from, to).order("id", { ascending: true }),
     ),
     // 이 사용자가 읽은 공지 전체 — 이 개수는 이 사용자가 실제로 읽은
     // 공지 수를 넘을 수 없어 announcements 테이블 자체와 비슷하게
@@ -68,7 +68,7 @@ export default async function AnnouncementsPage({
             .from("announcement_reads")
             .select("announcement_id")
             .eq("user_id", user.id)
-            .range(from, to),
+            .range(from, to).order("id", { ascending: true }),
         )
       : Promise.resolve([] as { announcement_id: string }[]),
     getCurrentActor(supabase),

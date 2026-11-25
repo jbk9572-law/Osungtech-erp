@@ -95,7 +95,7 @@ export default async function TodosPage({
       // 요약카드(전체/진행중/기한초과/완료)는 화면에 보이는 목록이 limit으로
       // 잘려도 항상 실제 전체 건수를 반영해야 한다.
       fetchAllRows<{ done: boolean; due_date: string | null }>((from, to) =>
-        supabase.from("todos").select("done, due_date").range(from, to),
+        supabase.from("todos").select("done, due_date").range(from, to).order("id", { ascending: true }),
       ),
       fetchAllRows<{ id: string; name: string }>((from, to) =>
         supabase.from("suppliers").select("id, name").order("name").range(from, to),

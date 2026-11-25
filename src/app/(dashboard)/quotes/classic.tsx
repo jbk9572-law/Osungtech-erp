@@ -49,7 +49,7 @@ export default async function QuotesPage({
   // 전체에서 찾는다 — sales/purchases 목록과 같은 이유로 같은 버그가
   // 있었다(사용자 지적 — "작성자가 다른 건은 조회가 안 된다").
   const rawQuotes = keyword
-    ? await fetchAllRows((from, to) => buildQuery().range(from, to))
+    ? await fetchAllRows((from, to) => buildQuery().range(from, to).order("id", { ascending: true }))
     : await buildQuery()
         .limit(limit)
         .then((r) => r.data ?? []);

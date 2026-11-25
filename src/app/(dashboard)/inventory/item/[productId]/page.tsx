@@ -89,7 +89,7 @@ export default async function InventoryProductHistoryPage({
             .select("sales_order_id, lot_number")
             .eq("product_id", productId)
             .in("sales_order_id", idChunk)
-            .range(f, t),
+            .range(f, t).order("id", { ascending: true }),
         )
       : Promise.resolve([]),
     purchaseOrderIds.length
@@ -99,22 +99,22 @@ export default async function InventoryProductHistoryPage({
             .select("purchase_order_id, lot_number")
             .eq("product_id", productId)
             .in("purchase_order_id", idChunk)
-            .range(f, t),
+            .range(f, t).order("id", { ascending: true }),
         )
       : Promise.resolve([]),
     saleOrderIds.length
       ? fetchAllRowsIn<{ id: string; customers: { name: string | null } | null }, string>(saleOrderIds, (idChunk, f, t) =>
-          supabase.from("sales_orders").select("id, customers(name)").in("id", idChunk).range(f, t),
+          supabase.from("sales_orders").select("id, customers(name)").in("id", idChunk).range(f, t).order("id", { ascending: true }),
         )
       : Promise.resolve([]),
     purchaseOrderIds.length
       ? fetchAllRowsIn<{ id: string; suppliers: { name: string | null } | null }, string>(purchaseOrderIds, (idChunk, f, t) =>
-          supabase.from("purchase_orders").select("id, suppliers(name)").in("id", idChunk).range(f, t),
+          supabase.from("purchase_orders").select("id, suppliers(name)").in("id", idChunk).range(f, t).order("id", { ascending: true }),
         )
       : Promise.resolve([]),
     authorIds.length
       ? fetchAllRowsIn<{ id: string; full_name: string | null }, string>(authorIds, (idChunk, f, t) =>
-          supabase.from("profiles").select("id, full_name").in("id", idChunk).range(f, t),
+          supabase.from("profiles").select("id, full_name").in("id", idChunk).range(f, t).order("id", { ascending: true }),
         )
       : Promise.resolve([]),
   ]);

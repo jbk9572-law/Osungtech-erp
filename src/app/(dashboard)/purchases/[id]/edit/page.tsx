@@ -81,7 +81,7 @@ export default async function EditPurchasePage({
       quantity: number;
       locations: { code: string; tier: number; position: number } | null;
     }>((from, to) =>
-      supabase.from("inventory_locations").select("product_id, location_id, quantity, locations(code, tier, position)").range(from, to),
+      supabase.from("inventory_locations").select("product_id, location_id, quantity, locations(code, tier, position)").range(from, to).order("id", { ascending: true }),
     ),
     getGridColumnWidths("erp-item-grid-columns"),
   ]);

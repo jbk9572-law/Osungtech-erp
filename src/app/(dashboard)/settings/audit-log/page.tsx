@@ -399,19 +399,19 @@ export default async function AuditLogPage({
           return query;
         }, limit),
         fetchAllRows<{ id: string; name: string }>((from, to) =>
-          supabase.from("customers").select("id, name").range(from, to),
+          supabase.from("customers").select("id, name").range(from, to).order("id", { ascending: true }),
         ),
         fetchAllRows<{ id: string; name: string }>((from, to) =>
-          supabase.from("suppliers").select("id, name").range(from, to),
+          supabase.from("suppliers").select("id, name").range(from, to).order("id", { ascending: true }),
         ),
         fetchAllRows<{ id: string; name: string }>((from, to) =>
-          supabase.from("categories").select("id, name").range(from, to),
+          supabase.from("categories").select("id, name").range(from, to).order("id", { ascending: true }),
         ),
         fetchAllRows<{ id: string; full_name: string | null }>((from, to) =>
-          supabase.from("profiles").select("id, full_name").range(from, to),
+          supabase.from("profiles").select("id, full_name").range(from, to).order("id", { ascending: true }),
         ),
         fetchAllRows<{ id: string; name: string; spec: string | null }>((from, to) =>
-          supabase.from("products").select("id, name, spec").range(from, to),
+          supabase.from("products").select("id, name, spec").range(from, to).order("id", { ascending: true }),
         ),
       ]);
     const lookups: Lookups = {

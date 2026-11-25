@@ -141,7 +141,7 @@ async function DashboardPage({
         )
         .gte("sales_orders.order_date", monthStart)
         .lte("sales_orders.order_date", monthEnd)
-        .range(from, to),
+        .range(from, to).order("id", { ascending: true }),
     ),
     fetchAllRows((from, to) =>
       supabase
@@ -151,7 +151,7 @@ async function DashboardPage({
         )
         .gte("purchase_orders.purchase_date", monthStart)
         .lte("purchase_orders.purchase_date", monthEnd)
-        .range(from, to),
+        .range(from, to).order("id", { ascending: true }),
     ),
     // 이월 건은 전표날짜가 이번 달 밖(예: 9/30 작업 -> 10/1 전표)일 수도
     // 있어, 위 order_date 기준 조회로는 아예 안 잡힌다 — 실제 작업일
@@ -166,7 +166,7 @@ async function DashboardPage({
         .eq("sales_orders.is_carryover", true)
         .gte("sales_orders.created_at", workDateRange.start)
         .lt("sales_orders.created_at", workDateRange.end)
-        .range(from, to),
+        .range(from, to).order("id", { ascending: true }),
     ),
     fetchAllRows((from, to) =>
       supabase
@@ -177,7 +177,7 @@ async function DashboardPage({
         .eq("purchase_orders.is_carryover", true)
         .gte("purchase_orders.created_at", workDateRange.start)
         .lt("purchase_orders.created_at", workDateRange.end)
-        .range(from, to),
+        .range(from, to).order("id", { ascending: true }),
     ),
     paperCalcEnabled
       ? fetchAllRows((from, to) =>
@@ -186,7 +186,7 @@ async function DashboardPage({
             .select("input_items, sales_orders!inner(order_date, customers(name))")
             .gte("sales_orders.order_date", monthStart)
             .lte("sales_orders.order_date", monthEnd)
-            .range(from, to),
+            .range(from, to).order("id", { ascending: true }),
         )
       : Promise.resolve([] as { input_items: unknown; sales_orders: { order_date: string; customers: { name: string } | null } }[]),
     paperCalcEnabled
@@ -196,7 +196,7 @@ async function DashboardPage({
             .select("input_items, purchase_orders!inner(purchase_date, suppliers(name))")
             .gte("purchase_orders.purchase_date", monthStart)
             .lte("purchase_orders.purchase_date", monthEnd)
-            .range(from, to),
+            .range(from, to).order("id", { ascending: true }),
         )
       : Promise.resolve([] as { input_items: unknown; purchase_orders: { purchase_date: string; suppliers: { name: string } | null } }[]),
     paperCalcEnabled
@@ -223,7 +223,7 @@ async function DashboardPage({
         .eq("sales_orders.is_carryover", true)
         .gte("sales_orders.order_date", prevMonthStart)
         .lte("sales_orders.order_date", prevMonthEnd)
-        .range(from, to),
+        .range(from, to).order("id", { ascending: true }),
     ),
     fetchAllRows((from, to) =>
       supabase
@@ -232,7 +232,7 @@ async function DashboardPage({
         .eq("purchase_orders.is_carryover", true)
         .gte("purchase_orders.purchase_date", prevMonthStart)
         .lte("purchase_orders.purchase_date", prevMonthEnd)
-        .range(from, to),
+        .range(from, to).order("id", { ascending: true }),
     ),
     user
       ? supabase.from("profiles").select("tenant_id, is_demo").eq("id", user.id).maybeSingle()
@@ -526,7 +526,7 @@ async function DashboardPage({
             )
             .eq("consumed_by_type", "sale")
             .in("purchase_order_item_id", idChunk)
-            .range(from, to),
+            .range(from, to).order("id", { ascending: true }),
         )
       : Promise.resolve(
           [] as {
@@ -543,7 +543,7 @@ async function DashboardPage({
             .select("purchase_order_item_id, sales_order_item_id, consumed_quantity")
             .eq("consumed_by_type", "sale")
             .in("sales_order_item_id", idChunk)
-            .range(from, to),
+            .range(from, to).order("id", { ascending: true }),
         )
       : Promise.resolve(
           [] as { purchase_order_item_id: string; sales_order_item_id: string; consumed_quantity: number }[]

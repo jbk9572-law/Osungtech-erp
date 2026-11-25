@@ -39,7 +39,7 @@ export default async function IncomeStatementPage({
         .select("quantity, unit_price, unit_cost, sales_orders!inner(is_return, order_date, is_carryover)")
         .gte("sales_orders.order_date", lookbackFrom)
         .lte("sales_orders.order_date", to)
-        .range(f, t)
+        .range(f, t).order("id", { ascending: true })
     ),
     fetchAllRows<{ amount: number; used_at: string; payment_requests: { status: string } | null }>((f, t) =>
       supabase
@@ -48,7 +48,7 @@ export default async function IncomeStatementPage({
         .eq("payment_requests.status", "approved")
         .gte("used_at", from)
         .lte("used_at", to)
-        .range(f, t)
+        .range(f, t).order("id", { ascending: true })
     ),
   ]);
 

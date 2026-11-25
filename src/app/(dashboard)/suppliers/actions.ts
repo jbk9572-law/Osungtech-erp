@@ -369,7 +369,7 @@ export async function importSuppliersExcel(_prevState: FormState, formData: Form
     supabase
       .from("suppliers")
       .select("id, name, business_number, representative_name, contact_name, email, phone, address, notes")
-      .range(from, to),
+      .range(from, to).order("id", { ascending: true }),
   );
   const byBusinessNumber = new Map(
     existing.filter((s) => s.business_number).map((s) => [s.business_number as string, s.id])

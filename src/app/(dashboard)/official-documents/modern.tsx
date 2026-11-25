@@ -66,7 +66,7 @@ export async function OfficialDocumentsList({ box, id, status: statusParam }: { 
         .from("official_document_recipients")
         .select("official_document_id")
         .eq("user_id", user!.id)
-        .range(from, to),
+        .range(from, to).order("id", { ascending: true }),
     );
     const ids = Array.from(new Set(recipientRows.map((r) => r.official_document_id)));
     rows = ids.length

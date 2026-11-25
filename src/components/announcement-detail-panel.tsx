@@ -64,7 +64,7 @@ export async function AnnouncementDetailPanel({ id, closeHref }: { id: string; c
   const [readRows, allProfiles] = actor.isAdmin
     ? await Promise.all([
         fetchAllRows<{ user_id: string; read_at: string }>((from, to) =>
-          supabase.from("announcement_reads").select("user_id, read_at").eq("announcement_id", id).range(from, to),
+          supabase.from("announcement_reads").select("user_id, read_at").eq("announcement_id", id).range(from, to).order("id", { ascending: true }),
         ),
         fetchAllRows<{ id: string; full_name: string | null }>((from, to) =>
           supabase.from("profiles").select("id, full_name").order("full_name").range(from, to),

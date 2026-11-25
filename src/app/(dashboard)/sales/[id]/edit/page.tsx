@@ -72,7 +72,7 @@ export default async function EditSalePage({
     ),
     fetchAllRows<{ customer_id: string; product_id: string; unit_price: number; notes: string | null }>(
       (from, to) =>
-        supabase.from("customer_product_prices").select("customer_id, product_id, unit_price, notes").range(from, to),
+        supabase.from("customer_product_prices").select("customer_id, product_id, unit_price, notes").range(from, to).order("id", { ascending: true }),
     ),
     supabase
       .from("sales_order_items")
@@ -88,7 +88,7 @@ export default async function EditSalePage({
       quantity: number;
       locations: { code: string; tier: number; position: number } | null;
     }>((from, to) =>
-      supabase.from("inventory_locations").select("product_id, location_id, quantity, locations(code, tier, position)").range(from, to),
+      supabase.from("inventory_locations").select("product_id, location_id, quantity, locations(code, tier, position)").range(from, to).order("id", { ascending: true }),
     ),
     getGridColumnWidths("erp-item-grid-columns"),
   ]);

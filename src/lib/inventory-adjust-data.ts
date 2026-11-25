@@ -21,7 +21,7 @@ export async function loadInventoryAdjustData(supabase: Supabase) {
         .range(from, to),
     ),
     fetchAllRows<{ product_id: string; warehouse_id: string; quantity: number }>((from, to) =>
-      supabase.from("inventory").select("product_id, warehouse_id, quantity").range(from, to),
+      supabase.from("inventory").select("product_id, warehouse_id, quantity").range(from, to).order("id", { ascending: true }),
     ),
     fetchAllRows<{ id: string; name: string }>((from, to) =>
       supabase.from("warehouses").select("id, name").order("created_at", { ascending: true }).range(from, to),

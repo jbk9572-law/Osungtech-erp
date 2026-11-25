@@ -92,7 +92,7 @@ export default async function LotLookupPage({
         let query = supabase
           .from("purchase_order_items")
           .select("id, product_id, quantity, products(sku, name), purchase_orders(id, purchase_date, suppliers(name))")
-          .range(from, to);
+          .range(from, to).order("id", { ascending: true });
         if (lotNumber) query = query.eq("lot_number", lotNumber);
         if (productId) query = query.eq("product_id", productId);
         return query;
@@ -101,7 +101,7 @@ export default async function LotLookupPage({
         let query = supabase
           .from("sales_order_items")
           .select("id, product_id, quantity, products(sku, name), sales_orders(id, order_date, customers(name))")
-          .range(from, to);
+          .range(from, to).order("id", { ascending: true });
         if (lotNumber) query = query.eq("lot_number", lotNumber);
         if (productId) query = query.eq("product_id", productId);
         return query;

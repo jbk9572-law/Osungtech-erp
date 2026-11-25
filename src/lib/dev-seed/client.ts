@@ -32,7 +32,7 @@ export async function signInAsEmployee(url: string, anonKey: string, email: stri
 export async function resolveTenant(admin: Db, slugOrName: string): Promise<{ id: string; slug: string; name: string }> {
   const needle = slugOrName.trim().toLowerCase();
   const tenants = await fetchAllRows<{ id: string; slug: string; name: string }>((from, to) =>
-    admin.from("tenants").select("id, slug, name").range(from, to),
+    admin.from("tenants").select("id, slug, name").range(from, to).order("id", { ascending: true }),
   );
 
   const matches = tenants.filter(

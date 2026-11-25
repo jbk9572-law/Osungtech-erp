@@ -216,12 +216,12 @@ export async function importProductsExcel(_prevState: FormState, formData: FormD
   const supabase = await createClient();
 
   const existingSuppliers = await fetchAllRows<{ id: string; name: string }>((from, to) =>
-    supabase.from("suppliers").select("id, name").range(from, to),
+    supabase.from("suppliers").select("id, name").range(from, to).order("id", { ascending: true }),
   );
   const supplierByName = new Map(existingSuppliers.map((s) => [s.name.trim(), s.id]));
 
   const existingCategories = await fetchAllRows<{ id: string; name: string }>((from, to) =>
-    supabase.from("categories").select("id, name").range(from, to),
+    supabase.from("categories").select("id, name").range(from, to).order("id", { ascending: true }),
   );
   const categoryByName = new Map(existingCategories.map((c) => [c.name.trim(), c.id]));
 
@@ -305,7 +305,7 @@ export async function importProductsExcel(_prevState: FormState, formData: FormD
           .from("products")
           .select("sku, spec, unit, cost, price, base_package_qty, supplier_id, category_id, label_direction")
           .in("sku", skuChunk)
-          .range(from, to),
+          .range(from, to).order("id", { ascending: true }),
       )
     : [];
   const user = await getUser();

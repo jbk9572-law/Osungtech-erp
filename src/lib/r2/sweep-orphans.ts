@@ -25,7 +25,7 @@ const KNOWN_R2_REFERENCE_COLUMNS: Array<{
     label: "mail_attachments.storage_path",
     fetch: async (supabase) => {
       const rows = await fetchAllRows<{ storage_path: string }>((from, to) =>
-        supabase.from("mail_attachments").select("storage_path").like("storage_path", "r2/%").range(from, to),
+        supabase.from("mail_attachments").select("storage_path").like("storage_path", "r2/%").range(from, to).order("id", { ascending: true }),
       );
       return rows.map((r) => r.storage_path);
     },

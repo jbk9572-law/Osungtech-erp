@@ -142,10 +142,10 @@ export async function importEmployeesExcel(_prevState: FormState, formData: Form
 
   const [departments, existingProfiles] = await Promise.all([
     fetchAllRows<{ id: string; name: string }>((from, to) =>
-      supabase.from("departments").select("id, name").range(from, to),
+      supabase.from("departments").select("id, name").range(from, to).order("id", { ascending: true }),
     ),
     fetchAllRows<{ id: string; username: string | null }>((from, to) =>
-      supabase.from("profiles").select("id, username").range(from, to),
+      supabase.from("profiles").select("id, username").range(from, to).order("id", { ascending: true }),
     ),
   ]);
   const departmentIdByName = new Map(departments.map((d) => [d.name.trim(), d.id]));

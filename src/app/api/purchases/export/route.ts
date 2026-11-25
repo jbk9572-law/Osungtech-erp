@@ -41,7 +41,7 @@ export async function GET(request: Request) {
       supabase
         .from("suppliers")
         .select("id, name, purchase_export_template, purchase_price_basis")
-        .range(from, to),
+        .range(from, to).order("id", { ascending: true }),
     );
     const matches = suppliers.filter((s) => s.name.toLowerCase().includes(q));
     if (matches.length === 1 && matches[0].purchase_export_template !== "generic") {

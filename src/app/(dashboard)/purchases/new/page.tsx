@@ -86,11 +86,11 @@ async function NewPurchasePage({
       ),
       fetchAllRows<{ customer_id: string; product_id: string; unit_price: number; notes: string | null }>(
         (from, to) =>
-          supabase.from("customer_product_prices").select("customer_id, product_id, unit_price, notes").range(from, to),
+          supabase.from("customer_product_prices").select("customer_id, product_id, unit_price, notes").range(from, to).order("id", { ascending: true }),
       ),
       fetchAllRows<{ supplier_id: string; product_id: string; unit_cost: number; notes: string | null }>(
         (from, to) =>
-          supabase.from("supplier_product_prices").select("supplier_id, product_id, unit_cost, notes").range(from, to),
+          supabase.from("supplier_product_prices").select("supplier_id, product_id, unit_cost, notes").range(from, to).order("id", { ascending: true }),
       ),
       supabase
         .from("purchase_order_items")
@@ -105,7 +105,7 @@ async function NewPurchasePage({
         quantity: number;
         locations: { code: string; tier: number; position: number } | null;
       }>((from, to) =>
-        supabase.from("inventory_locations").select("product_id, location_id, quantity, locations(code, tier, position)").range(from, to),
+        supabase.from("inventory_locations").select("product_id, location_id, quantity, locations(code, tier, position)").range(from, to).order("id", { ascending: true }),
       ),
       getGridColumnWidths("erp-item-grid-columns"),
       getGridColumnWidths("erp-purchase-item-grid-columns-dual-split"),

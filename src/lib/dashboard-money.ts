@@ -24,12 +24,12 @@ export async function loadDashboardMoney(supabase: SupabaseClient<Database>, mon
   const [collectedRows, paidRows, customerBalances, supplierBalances] = await Promise.all([
     canSeeReceivables
       ? fetchAllRows<{ paid_at: string; amount: string | number }>((from, to) =>
-          supabase.from("customer_payments").select("paid_at, amount").gte("paid_at", monthStart).lte("paid_at", monthEnd).range(from, to),
+          supabase.from("customer_payments").select("paid_at, amount").gte("paid_at", monthStart).lte("paid_at", monthEnd).range(from, to).order("id", { ascending: true }),
         )
       : Promise.resolve(null),
     canSeePayables
       ? fetchAllRows<{ paid_at: string; amount: string | number }>((from, to) =>
-          supabase.from("supplier_payments").select("paid_at, amount").gte("paid_at", monthStart).lte("paid_at", monthEnd).range(from, to),
+          supabase.from("supplier_payments").select("paid_at, amount").gte("paid_at", monthStart).lte("paid_at", monthEnd).range(from, to).order("id", { ascending: true }),
         )
       : Promise.resolve(null),
     canSeeReceivables ? getAllCustomerBalances(supabase) : Promise.resolve(null),

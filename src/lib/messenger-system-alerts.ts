@@ -43,7 +43,7 @@ export async function syncMessengerSystemAlerts(): Promise<AlertSyncResult> {
         .from("products")
         .select("id, name, reorder_point, tenant_id, is_demo, inventory(quantity)")
         .gt("reorder_point", 0)
-        .range(from, to),
+        .range(from, to).order("id", { ascending: true }),
     ),
     fetchAllRows<{
       id: string;
@@ -57,10 +57,10 @@ export async function syncMessengerSystemAlerts(): Promise<AlertSyncResult> {
         .select("id, title, due_date, tenant_id, is_demo")
         .eq("done", false)
         .lte("due_date", soonStr)
-        .range(from, to),
+        .range(from, to).order("id", { ascending: true }),
     ),
     fetchAllRows<{ tenant_id: string; is_demo: boolean; alert_type: AlertType; source_id: string }>(
-      (from, to) => admin.from("messenger_system_alert_state").select("tenant_id, is_demo, alert_type, source_id").range(from, to),
+      (from, to) => admin.from("messenger_system_alert_state").select("tenant_id, is_demo, alert_type, source_id").range(from, to).order("id", { ascending: true }),
     ),
   ]);
 
@@ -221,13 +221,13 @@ export async function findOverdueCustomers(admin: ReturnType<typeof createAdminC
         .from("sales_orders")
         .select("customer_id, order_date, is_return, sales_order_items(quantity, unit_price)")
         .is("payment_method", null)
-        .range(from, to),
+        .range(from, to).order("id", { ascending: true }),
     ),
     fetchAllRows<{ customer_id: string; paid_at: string; amount: string | number }>((from, to) =>
-      admin.from("customer_payments").select("customer_id, paid_at, amount").range(from, to),
+      admin.from("customer_payments").select("customer_id, paid_at, amount").range(from, to).order("id", { ascending: true }),
     ),
     fetchAllRows<{ id: string; name: string; tenant_id: string; is_demo: boolean }>((from, to) =>
-      admin.from("customers").select("id, name, tenant_id, is_demo").range(from, to),
+      admin.from("customers").select("id, name, tenant_id, is_demo").range(from, to).order("id", { ascending: true }),
     ),
   ]);
 
