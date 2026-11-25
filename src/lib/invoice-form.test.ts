@@ -64,3 +64,21 @@ describe("invoiceFormOptionGroup", () => {
     expect(invoiceFormOptionGroup("B", OSUNG_CLASSIC)?.options.map((o) => o.label)).toEqual(["엔택스 B형", "엔택스 A형"]);
   });
 });
+
+describe("플랫폼 관리자가 지정한 서식(allowedForms)", () => {
+  it("지정하면 그 목록만(선택지 순서로) — 테마·회사와 무관", () => {
+    expect(availableInvoiceForms({ ...OTHER_CLASSIC, allowedForms: ["A", "N"] })).toEqual(["N", "A"]);
+    expect(availableInvoiceForms({ ...OSUNG_MODERN, allowedForms: ["B"] })).toEqual(["B"]);
+  });
+  it("미지정(null)·빈 목록·알 수 없는 값뿐이면 기존 규칙", () => {
+    expect(availableInvoiceForms({ ...OTHER_MODERN, allowedForms: null })).toEqual(["N", "NB"]);
+    expect(availableInvoiceForms({ ...OTHER_MODERN, allowedForms: [] })).toEqual(["N", "NB"]);
+    expect(availableInvoiceForms({ ...OSUNG_CLASSIC, allowedForms: ["zzz"] })).toEqual(["B", "A"]);
+  });
+  it("하나만 지정하면 선택 줄이 숨고, 주소로 다른 서식을 쳐도 따라가지 않는다", () => {
+    const scope = { ...OSUNG_MODERN, allowedForms: ["B"] };
+    expect(invoiceFormOptionGroup("B", scope)).toBeNull();
+    expect(resolveInvoiceForm("n", scope)).toBe("B");
+    expect(resolveInvoiceForm(undefined, scope)).toBe("B");
+  });
+});

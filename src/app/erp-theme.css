@@ -141,6 +141,7 @@
 .erp-u-mb-s4 { margin-bottom: var(--erp-space-4) !important; }
 .erp-u-mb-s5 { margin-bottom: var(--erp-space-5) !important; }
 .erp-u-minw-0 { min-width: 0 !important; }
+.erp-u-maxw-520 { max-width: 520px; }
 .erp-u-ml-20 { margin-left: 20px !important; }
 .erp-u-ml-4 { margin-left: 4px !important; }
 .erp-u-ml-6 { margin-left: 6px !important; }
@@ -10591,6 +10592,13 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   gap: var(--erp-space-2);
   flex: 0 0 100%;
   padding: var(--erp-space-1) 0;
+}
+
+/* 체크 칸 여러 개를 한 줄에 늘어놓는 묶음(플랫폼 관리자 인쇄 서식 지정 등) */
+.erp-fb-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--erp-space-2) var(--erp-space-4);
 }
 
 /* 조회 도구줄 안의 체크 한 칸(0건 제외 같은 켜고 끄는 조건) */

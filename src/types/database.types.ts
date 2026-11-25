@@ -1226,6 +1226,7 @@ export type Database = {
           is_platform_operator: boolean;
           is_sandbox: boolean;
           theme: string;
+          allowed_invoice_forms: string[] | null;
           industry: string | null;
         };
         Insert: {
@@ -1253,6 +1254,7 @@ export type Database = {
           is_platform_operator?: boolean;
           is_sandbox?: boolean;
           theme?: string;
+          allowed_invoice_forms?: string[] | null;
           industry?: string | null;
         };
         Update: {
@@ -1280,6 +1282,7 @@ export type Database = {
           is_platform_operator?: boolean;
           is_sandbox?: boolean;
           theme?: string;
+          allowed_invoice_forms?: string[] | null;
           industry?: string | null;
         };
         Relationships: [];
@@ -6717,6 +6720,14 @@ export type Database = {
       set_tenant_theme: {
         Args: { p_tenant_id: string; p_theme: string };
         Returns: void;
+      };
+      set_tenant_invoice_forms: {
+        Args: { p_tenant_id: string; p_forms: string[] | null };
+        Returns: void;
+      };
+      get_platform_tenant_invoice_forms: {
+        Args: Record<string, never>;
+        Returns: { tenant_id: string; allowed_invoice_forms: string[] | null }[];
       };
       apply_tenant_feature_preset: {
         Args: { p_tenant_id: string; p_industry: string; p_disable: string[]; p_enable: string[] };

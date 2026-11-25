@@ -5,6 +5,7 @@ import { FeatureToggle } from "@/components/feature-toggle";
 import { PlatformDefaultPlanSelect } from "@/components/platform-default-plan-select";
 import { MaintenanceModeForm } from "@/components/maintenance-mode-form";
 import { TenantThemeForm } from "@/components/tenant-theme-form";
+import { TenantInvoiceFormsForm } from "@/components/tenant-invoice-forms-form";
 import { DbLatencyProbe } from "@/components/db-latency-probe";
 import { TenantIndustryForm } from "@/components/tenant-industry-form";
 import { setPlatformDefaultFeatureEnabled } from "@/app/platform-admin/settings/actions";
@@ -23,6 +24,12 @@ export default async function PlatformSettingsPage() {
   const { data: tenantRows } = await supabase.rpc("get_platform_tenant_list");
   const tenants = (tenantRows ?? [])
     .map((t) => ({ id: t.id, name: t.name, theme: t.theme, industry: t.industry }))
+    .sort((a, b) => a.name.localeCompare(b.name, "ko"));
+  // 회사별로 지정한 인쇄 서식(migration 282) — 열이 아직 없는 DB에서는 읽기가 실패하므로 "지정 없음"으로 본다
+  const { data: invoiceFormRows } = await supabase.rpc("get_platform_tenant_invoice_forms");
+  const invoiceFormsByTenant = new Map((invoiceFormRows ?? []).map((r) => [r.tenant_id, r.allowed_invoice_forms]));
+  const invoiceTenants = (tenantRows ?? [])
+    .map((t) => ({ id: t.id, name: t.name, theme: t.theme, slug: t.slug, allowedForms: invoiceFormsByTenant.get(t.id) ?? null }))
     .sort((a, b) => a.name.localeCompare(b.name, "ko"));
 
   return (
@@ -76,6 +83,18 @@ export default async function PlatformSettingsPage() {
             매입/매출/메신저/게시판 등)에 바로 반영됩니다 — 회사마다 다른 테마를 줄 수 있습니다.
           </PageGuide>
           <TenantThemeForm tenants={tenants} />
+        </div>
+      </div>
+
+      <div className="erp-detail erp-u-mb-s5">
+        <div className="erp-detail-tabs">
+          <span className="erp-detail-tab active">인쇄 서식</span>
+        </div>
+        <div className="erp-detail-body">
+          <PageGuide className="mb-2">
+            회사(테넌트)를 고르고 그 회사가 쓸 명세표 인쇄 서식을 체크한 뒤 적용을 누르면, 그 회사 인쇄 화면의 서식 선택 줄에는 체크한 서식만 나옵니다.
+          </PageGuide>
+          <TenantInvoiceFormsForm tenants={invoiceTenants} />
         </div>
       </div>
 
