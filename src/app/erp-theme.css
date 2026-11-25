@@ -10656,6 +10656,22 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   flex: 1 1 160px;
   min-width: 0;
 }
+/* 필터 버튼의 "적용 중인 조건 수" 배지 */
+.erp-fb-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  margin-left: 6px;
+  border-radius: 9px;
+  background: var(--erp-primary);
+  color: var(--erp-on-primary, #fff);
+  font-size: var(--erp-font-xs);
+  font-weight: 700;
+  line-height: 1;
+}
 .erp-fb-period {
   position: relative;
   display: inline-flex;
@@ -10847,6 +10863,13 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
     background: currentColor;
     -webkit-mask: var(--erp-tb-ico-filter) center / contain no-repeat;
     mask: var(--erp-tb-ico-filter) center / contain no-repeat;
+  }
+  /* 필터 아이콘 오른쪽 위에 조건 수 배지 */
+  .erp-chrome-modern .erp-listtoolbar .erp-fb-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    margin: 0;
   }
   .erp-chrome-modern .erp-listtoolbar .erp-tb-export::before {
     -webkit-mask-image: var(--erp-tb-ico-download);

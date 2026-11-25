@@ -330,6 +330,9 @@ export function ExtraFilters({ formId, screenKey, defs, values }: { formId: stri
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [screenKey]);
 
+  // 지금 결과를 실제로 걸러내고 있는 추가 조건 수(조건 칸이 도구줄에 있고 값이 들어 있는 것) — 필터 버튼의 배지로 보여준다(좁은 화면은 아이콘뿐이라 이 숫자가 단서다).
+  const activeCount = defs.filter((d) => enabled.includes(d.key) && values[d.key]).length;
+
   function toggle(key: string) {
     const next = enabled.includes(key) ? enabled.filter((k) => k !== key) : [...enabled, key];
     setEnabled(next);
@@ -356,6 +359,11 @@ export function ExtraFilters({ formId, screenKey, defs, values }: { formId: stri
       <span className="erp-fb-period">
         <button type="button" className="erp-btn erp-u-nowrap" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
           필터 ＋
+          {activeCount > 0 && (
+            <span className="erp-fb-badge" aria-label={`적용 중인 추가 조건 ${activeCount}개`}>
+              {activeCount}
+            </span>
+          )}
         </button>
         {open && (
           <>
