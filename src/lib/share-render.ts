@@ -11,6 +11,9 @@ const HEAD_H = 40;
 const FOOT_LAST_H = 46;
 const FOOT_MORE_H = 26;
 const BAND_H = 26;
+const PARTY_H = 30; // 거래처 머리 띠 높이(카드형)
+const ONE_GAP_H = 6; // 한 줄 표형에서 거래처 사이 간격
+const GAP_H = 8; // 거래처 사이 간격
 const TH_H = 22;
 const ROW_H = 26;
 
@@ -101,12 +104,15 @@ export async function renderSharePages(model: ShareModel): Promise<Blob[]> {
   // ── 전표(= 한 덩어리, 장이 나뉠 때 쪼개지지 않는다)
   const entryBlock = (e: ShareEntry): Block => {
     if (oneLine) {
-      const h = e.items.length * ROW_H;
+      const h = e.items.length * ROW_H + ONE_GAP_H;
       return {
         h,
         band: e.date,
         isEntry: true,
         draw: (ctx, y) => {
+          // 거래처 묶음 표시 — 왼쪽 굵은 막대 + 아래 회색 간격
+          ctx.fillStyle = primary;
+          ctx.fillRect(0, y + 2, 4, e.items.length * ROW_H - 4);
           e.items.forEach((it, n) => {
             const top = y + n * ROW_H;
             ctx.strokeStyle = "#eef0f3";
@@ -118,8 +124,8 @@ export async function renderSharePages(model: ShareModel): Promise<Blob[]> {
             let x = PAD;
             if (n === 0) {
               ctx.textAlign = "left";
-              ctx.fillStyle = "#445";
-              ctx.font = font(family, 600, 13);
+              ctx.fillStyle = text;
+              ctx.font = font(family, 700, 13);
               ctx.fillText(fit(ctx, e.party, partyW - 6), x, top + ROW_H / 2);
             }
             x += partyW;
@@ -137,6 +143,14 @@ export async function renderSharePages(model: ShareModel): Promise<Blob[]> {
               x += w;
             }
           });
+          const gy = y + e.items.length * ROW_H;
+          ctx.fillStyle = "#eceff4";
+          ctx.fillRect(0, gy, W, ONE_GAP_H);
+          ctx.strokeStyle = "#d5dbe5";
+          ctx.beginPath();
+          ctx.moveTo(0, gy + 0.5);
+          ctx.lineTo(W, gy + 0.5);
+          ctx.stroke();
         },
       };
     }
@@ -165,24 +179,29 @@ export async function renderSharePages(model: ShareModel): Promise<Blob[]> {
     const lines = e.items.map((it) => lineOf(probe, it));
     const itemH = (l: (typeof lines)[number]) => 22 + (l.left2 || l.remark ? 18 : 0) + 6;
     const extraText = [e.docNo ? `전표 ${e.docNo}` : "", ...e.extras].filter(Boolean).join(" · ");
-    const h = 28 + lines.reduce((s, l) => s + itemH(l), 0) + 4;
+    const h = PARTY_H + lines.reduce((s, l) => s + itemH(l), 0) + 6 + GAP_H;
     return {
       h,
       band: e.date,
       isEntry: true,
       draw: (ctx, y) => {
+        // 거래처 머리 띠 — 옅은 바탕 + 왼쪽 굵은 막대로 한눈에 다음 거래처임을 알린다.
+        ctx.fillStyle = "#e9eef7";
+        ctx.fillRect(0, y, W, PARTY_H);
+        ctx.fillStyle = primary;
+        ctx.fillRect(0, y, 5, PARTY_H);
         ctx.textBaseline = "middle";
         ctx.fillStyle = text;
-        ctx.font = font(family, 700, 14);
+        ctx.font = font(family, 700, 15);
         ctx.textAlign = "left";
-        ctx.fillText(fit(ctx, e.party || "-", innerW * 0.55), PAD, y + 15);
+        ctx.fillText(fit(ctx, e.party || "-", innerW * 0.55), PAD + 2, y + PARTY_H / 2);
         if (extraText) {
-          ctx.fillStyle = "#8590a0";
+          ctx.fillStyle = "#667085";
           ctx.font = font(family, 400, 12);
           ctx.textAlign = "right";
-          ctx.fillText(fit(ctx, extraText, innerW * 0.42), W - PAD, y + 15);
+          ctx.fillText(fit(ctx, extraText, innerW * 0.42), W - PAD, y + PARTY_H / 2);
         }
-        let cy = y + 28;
+        let cy = y + PARTY_H + 4;
         e.items.forEach((it, n) => {
           const l = lines[n];
           if (n > 0) {
@@ -233,10 +252,13 @@ export async function renderSharePages(model: ShareModel): Promise<Blob[]> {
           }
           cy = next + 6;
         });
-        ctx.strokeStyle = "#e3e7ee";
+        // 거래처 사이 간격(회색 바탕) — 다음 거래처 띠와 확실히 갈라 보이게 한다.
+        ctx.fillStyle = "#eceff4";
+        ctx.fillRect(0, y + h - GAP_H, W, GAP_H);
+        ctx.strokeStyle = "#d5dbe5";
         ctx.beginPath();
-        ctx.moveTo(0, y + h - 0.5);
-        ctx.lineTo(W, y + h - 0.5);
+        ctx.moveTo(0, y + h - GAP_H + 0.5);
+        ctx.lineTo(W, y + h - GAP_H + 0.5);
         ctx.stroke();
       },
     };
