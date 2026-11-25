@@ -443,6 +443,7 @@ async function SalesPage({
     custom_name: string | null;
     sales_orders: {
       is_return: boolean;
+      is_carryover: boolean;
       memo: string | null;
       delivery_method: string | null;
       tax_type: "과세" | "면세" | "영세";
@@ -453,7 +454,7 @@ async function SalesPage({
     let totalsQuery = supabase
       .from("sales_order_items")
       .select(
-        "quantity, unit_price, spec, lot_number, remark, custom_name, sales_orders!inner(is_return, memo, delivery_method, tax_type, customers(name)), products(name, sku, spec, unit)",
+        "quantity, unit_price, spec, lot_number, remark, custom_name, sales_orders!inner(is_return, is_carryover, memo, delivery_method, tax_type, customers(name)), products(name, sku, spec, unit)",
       )
       .gte("sales_orders.order_date", effectiveFrom)
       .range(rangeFrom, rangeTo).order("id", { ascending: true });
@@ -480,6 +481,12 @@ async function SalesPage({
   // 반품 건은 매출 합계·세액에서 차감한다(재고는 별도로 늘어나므로
   // totalQuantity는 반품 수량도 그대로 더한다 — "이동한 총 수량"의 의미).
   const totalSupply = filteredTotalsRows.reduce((sum, row) => {
+    const supplyAmount = row.quantity * Number(row.unit_price);
+    return sum + (row.sales_orders?.is_return ? -supplyAmount : supplyAmount);
+  }, 0);
+  // "이번 달 실적" 안내문용 — 다음 달로 이월 표시한 전표는 리포트상 다음 달 실적이므로 신규에서 뺀다(목록 합계는 날짜 기준 그대로).
+  const reportNewSupply = filteredTotalsRows.reduce((sum, row) => {
+    if (row.sales_orders?.is_carryover) return sum;
     const supplyAmount = row.quantity * Number(row.unit_price);
     return sum + (row.sales_orders?.is_return ? -supplyAmount : supplyAmount);
   }, 0);
@@ -639,9 +646,9 @@ async function SalesPage({
 
       {carryoverRows.length > 0 && (
         <PageGuide tone="info" className="mb-2">
-          이번 달 매출 실적(리포트 기준) = 신규 {formatNumber(totalSupply)}원 + 전월 이월{" "}
+          이번 달 매출 실적(리포트 기준) = 신규 {formatNumber(reportNewSupply)}원 + 전월 이월{" "}
           {formatNumber(carryoverSupplyTotal)}원 ={" "}
-          <strong className="erp-u-color-primary">{formatNumber(totalSupply + carryoverSupplyTotal)}원</strong>{" "}
+          <strong className="erp-u-color-primary">{formatNumber(reportNewSupply + carryoverSupplyTotal)}원</strong>{" "}
           — 전월 이월분은 아래 목록 합계(날짜 기준)에는 포함되지 않고, 별도 구간으로만 표시됩니다.
         </PageGuide>
       )}

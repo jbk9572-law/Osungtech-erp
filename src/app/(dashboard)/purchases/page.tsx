@@ -422,6 +422,7 @@ async function PurchasesPage({
     remark: string | null;
     custom_name: string | null;
     purchase_orders: {
+      is_carryover: boolean;
       memo: string | null;
       delivery_method: string | null;
       tax_type: "과세" | "면세" | "영세";
@@ -432,7 +433,7 @@ async function PurchasesPage({
     let totalsQuery = supabase
       .from("purchase_order_items")
       .select(
-        "quantity, unit_cost, spec, lot_number, remark, custom_name, purchase_orders!inner(memo, delivery_method, tax_type, suppliers(name)), products(name, sku, spec, unit)",
+        "quantity, unit_cost, spec, lot_number, remark, custom_name, purchase_orders!inner(is_carryover, memo, delivery_method, tax_type, suppliers(name)), products(name, sku, spec, unit)",
       )
       .gte("purchase_orders.purchase_date", effectiveFrom)
       .range(rangeFrom, rangeTo).order("id", { ascending: true });
@@ -461,6 +462,11 @@ async function PurchasesPage({
   const carryoverQuantityLabel = quantityLabelByUnit([...carryoverQtyByOrder.values()].flat());
   const totalSupply = filteredTotalsRows.reduce(
     (sum, row) => sum + row.quantity * Number(row.unit_cost),
+    0,
+  );
+  // "이번 달 실적" 안내문용 — 다음 달로 이월 표시한 전표는 리포트상 다음 달 실적이므로 신규에서 뺀다(목록 합계는 날짜 기준 그대로).
+  const reportNewSupply = filteredTotalsRows.reduce(
+    (sum, row) => (row.purchase_orders?.is_carryover ? sum : sum + row.quantity * Number(row.unit_cost)),
     0,
   );
   const totalTax = filteredTotalsRows.reduce(
@@ -606,8 +612,8 @@ async function PurchasesPage({
 
       {carryoverRows.length > 0 && (
         <PageGuide tone="info" className="mb-2">
-          이번 달 매입 실적(리포트 기준) = 신규 {formatNumber(totalSupply)}원 + 전월 이월{" "}
-          {formatNumber(carryoverSupplyTotal)}원 = <strong>{formatNumber(totalSupply + carryoverSupplyTotal)}원</strong>{" "}
+          이번 달 매입 실적(리포트 기준) = 신규 {formatNumber(reportNewSupply)}원 + 전월 이월{" "}
+          {formatNumber(carryoverSupplyTotal)}원 = <strong>{formatNumber(reportNewSupply + carryoverSupplyTotal)}원</strong>{" "}
           — 전월 이월분은 아래 목록 합계(날짜 기준)에는 포함되지 않고, 별도 구간으로만 표시됩니다.
         </PageGuide>
       )}

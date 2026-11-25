@@ -70,6 +70,8 @@ export function ListActionToolbar({
     function onF4(e: KeyboardEvent) {
       if (e.key !== "F4") return;
       e.preventDefault();
+      // 목록 위에 입력·수정 모달이 떠 있으면 아래 목록의 F4는 쉰다(모달에서 누른 F4가 화면을 이동시키지 않게).
+      if (document.querySelector(".erp-modal-overlay")) return;
       startRouteProgress();
       router.push(editHref!);
     }

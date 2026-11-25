@@ -83,9 +83,11 @@ async function insertInventoryAdjustment(
 export function computePaperStockDelta(
   orderIdColumn: PaperOrderIdColumn,
   oldQuantity: number,
-  newQuantity: number
+  newQuantity: number,
+  isReturn = false
 ): number {
-  const sign = orderIdColumn === "sales_order_id" ? -1 : 1;
+  // 반품 매출은 물건이 돌아오므로 매입과 같은 방향(재고가 는다)이다.
+  const sign = (orderIdColumn === "sales_order_id") !== isReturn ? -1 : 1;
   return sign * (newQuantity - oldQuantity);
 }
 
@@ -101,9 +103,10 @@ async function applyPaperStockDelta(
   warehouseId: string,
   orderId: string,
   oldQuantity: number,
-  newQuantity: number
+  newQuantity: number,
+  isReturn = false
 ): Promise<string | null> {
-  const delta = computePaperStockDelta(orderIdColumn, oldQuantity, newQuantity);
+  const delta = computePaperStockDelta(orderIdColumn, oldQuantity, newQuantity, isReturn);
   return insertInventoryAdjustment(supabase, productId, warehouseId, delta, paperStockReference(orderIdColumn, orderId));
 }
 
@@ -139,7 +142,7 @@ async function getPaperProduct(
   return data;
 }
 
-type PaperOrderContext = { warehouseId: string; customerId: string | null };
+type PaperOrderContext = { warehouseId: string; customerId: string | null; isReturn: boolean };
 
 // 매출/매입 주문 테이블 자체가 다르고(거래처 컬럼명도 customer_id만
 // 존재), 조회 결과 모양도 달라서 이 부분만은 분기한다.
@@ -151,17 +154,17 @@ async function getPaperOrderContext(
   if (orderIdColumn === "sales_order_id") {
     const { data } = await supabase
       .from("sales_orders")
-      .select("customer_id, warehouse_id")
+      .select("customer_id, warehouse_id, is_return")
       .eq("id", orderId)
       .maybeSingle();
-    return data ? { warehouseId: data.warehouse_id, customerId: data.customer_id } : null;
+    return data ? { warehouseId: data.warehouse_id, customerId: data.customer_id, isReturn: data.is_return ?? false } : null;
   }
   const { data } = await supabase
     .from("purchase_orders")
     .select("warehouse_id")
     .eq("id", orderId)
     .maybeSingle();
-  return data ? { warehouseId: data.warehouse_id, customerId: null } : null;
+  return data ? { warehouseId: data.warehouse_id, customerId: null, isReturn: false } : null;
 }
 
 async function getExistingPaperItem(
@@ -292,7 +295,7 @@ async function syncPaperStockItem(
     if (!existingItem) return null;
     const deleteError = await deletePaperItem(supabase, orderIdColumn, existingItem.id);
     if (deleteError) return deleteError;
-    return applyPaperStockDelta(supabase, orderIdColumn, product.id, context.warehouseId, orderId, oldQuantity, 0);
+    return applyPaperStockDelta(supabase, orderIdColumn, product.id, context.warehouseId, orderId, oldQuantity, 0, context.isReturn);
   }
 
   if (existingItem) {
@@ -303,13 +306,13 @@ async function syncPaperStockItem(
 
     const updateError = await updatePaperItemQuantity(supabase, orderIdColumn, existingItem.id, totalReams);
     if (updateError) return updateError;
-    return applyPaperStockDelta(supabase, orderIdColumn, product.id, context.warehouseId, orderId, oldQuantity, totalReams);
+    return applyPaperStockDelta(supabase, orderIdColumn, product.id, context.warehouseId, orderId, oldQuantity, totalReams, context.isReturn);
   }
 
   const unitPrice = await resolveNewPaperItemUnitPrice(supabase, orderIdColumn, product, context);
   const insertError = await insertPaperItem(supabase, orderIdColumn, orderId, product.id, totalReams, unitPrice, product.cost);
   if (insertError) return insertError;
-  return applyPaperStockDelta(supabase, orderIdColumn, product.id, context.warehouseId, orderId, 0, totalReams);
+  return applyPaperStockDelta(supabase, orderIdColumn, product.id, context.warehouseId, orderId, 0, totalReams, context.isReturn);
 }
 
 async function insertPaperStockOverrideRow(
@@ -399,7 +402,8 @@ async function overridePaperStockQuantity(
     context.warehouseId,
     orderId,
     existingItem.quantity,
-    overrideQuantity
+    overrideQuantity,
+    context.isReturn
   );
 }
 

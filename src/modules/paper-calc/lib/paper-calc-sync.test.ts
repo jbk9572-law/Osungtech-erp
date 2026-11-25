@@ -29,6 +29,11 @@ describe("computePaperStockDelta", () => {
     expect(computePaperStockDelta("sales_order_id", 50, 0)).toBe(50);
   });
 
+  it("반품 매출: 방향이 뒤집혀 계산 수량만큼 재고가 는다(물건이 돌아온다)", () => {
+    expect(computePaperStockDelta("sales_order_id", 0, 50, true)).toBe(50);
+    expect(computePaperStockDelta("sales_order_id", 50, 0, true)).toBe(-50);
+  });
+
   it("매입: 새 TG0 줄을 처음 만들면(0 -> totalReams) 그만큼 재고가 는다", () => {
     expect(computePaperStockDelta("purchase_order_id", 0, 50)).toBe(50);
   });
