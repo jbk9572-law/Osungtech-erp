@@ -4,6 +4,7 @@
 //   · image/png   표 그림 — 카카오톡·슬랙·문서 등 그림을 붙여넣는 곳
 // 표의 칸은 입력칸(input)이라 화면에 보이는 값(input.value)을 읽는다. 그림은 선택 범위 위에 해당 열의 머리글 줄을 붙여 그린다.
 
+import { cellAtX, cellCenterX, headerCellAtX } from "@/lib/grid-range-select";
 import { findTotalLabel, isDateHead, isPartyHead, parseAmount, renderSharePng, SHARE_MAX_ROWS, type ShareData } from "@/lib/range-share-image";
 
 export type RangeMatrix = { header: string[]; rows: string[][] };
@@ -16,25 +17,11 @@ function cellText(td: HTMLTableCellElement): string {
   return (clone.textContent ?? "").replace(/\s+/g, " ").trim();
 }
 
-export function readRange(table: HTMLTableElement, r1: number, r2: number, c1: number, c2: number): RangeMatrix {
-  const body = table.tBodies[0];
-  const headRow = table.tHead?.rows[table.tHead.rows.length - 1];
-  const header: string[] = [];
-  const rows: string[][] = [];
-  const visibleCols: number[] = [];
-  for (let c = c1; c <= c2; c++) {
-    const h = headRow?.cells[c];
-    const probe = body?.rows[r1]?.cells[c];
-    if (probe && !probe.offsetParent) continue; // 숨긴 칸은 빼고
-    visibleCols.push(c);
-    header.push(h ? (h.textContent ?? "").trim() : "");
-  }
-  for (let r = r1; r <= r2; r++) {
-    const tr = body?.rows[r];
-    if (!tr) continue;
-    rows.push(visibleCols.map((c) => (tr.cells[c] ? cellText(tr.cells[c]) : "")));
-  }
-  return { header, rows };
+/** 고른 칸들(줄마다 한 묶음)을 머리글과 함께 읽는다. 머리글은 첫 줄의 칸 위치에 맞는 머리글 칸에서 가져온다. */
+export function readCells(table: HTMLTableElement, rows: HTMLTableCellElement[][]): RangeMatrix {
+  const first = rows[0] ?? [];
+  const header = first.map((td) => (headerCellAtX(table, cellCenterX(td))?.textContent ?? "").trim());
+  return { header, rows: rows.map((r) => r.map((td) => cellText(td))) };
 }
 
 export function toTsv(m: RangeMatrix): string {
@@ -50,20 +37,17 @@ export function toHtml(m: RangeMatrix): string {
 }
 
 /** 선택 범위를 그림(PNG)으로 — 화면에 보이는 칸 크기·글자 모양을 그대로 따라 그린다. 그릴 수 없으면 null. */
-export function renderRangePng(table: HTMLTableElement, r1: number, r2: number, c1: number, c2: number): Promise<Blob | null> {
+export function renderRangePng(table: HTMLTableElement, rows: HTMLTableCellElement[][]): Promise<Blob | null> {
   try {
-    const body = table.tBodies[0];
+    const first = rows[0];
+    if (!first || first.length === 0) return Promise.resolve(null);
+    const heads = first.map((td) => headerCellAtX(table, cellCenterX(td)));
     const headRow = table.tHead?.rows[table.tHead.rows.length - 1];
-    const cols: number[] = [];
-    for (let c = c1; c <= c2; c++) if (body?.rows[r1]?.cells[c]?.offsetParent) cols.push(c);
-    if (!body || cols.length === 0) return Promise.resolve(null);
-    const trs: HTMLTableRowElement[] = [];
-    if (headRow) trs.push(headRow);
-    for (let r = r1; r <= r2; r++) if (body.rows[r]) trs.push(body.rows[r]);
-    const widths = cols.map((c) => Math.ceil(body.rows[r1].cells[c].getBoundingClientRect().width));
-    const heights = trs.map((tr) => Math.ceil(tr.getBoundingClientRect().height));
+    const widths = first.map((td) => Math.ceil(td.getBoundingClientRect().width));
+    const bodyHeights = rows.map((r) => Math.ceil(r[0].parentElement!.getBoundingClientRect().height));
+    const headH = headRow ? Math.ceil(headRow.getBoundingClientRect().height) : 0;
     const totalW = widths.reduce((a, b) => a + b, 0);
-    const totalH = heights.reduce((a, b) => a + b, 0);
+    const totalH = headH + bodyHeights.reduce((a, b) => a + b, 0);
     const scale = 2;
     const canvas = document.createElement("canvas");
     canvas.width = totalW * scale;
@@ -73,42 +57,46 @@ export function renderRangePng(table: HTMLTableElement, r1: number, r2: number, 
     ctx.scale(scale, scale);
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, totalW, totalH);
+    const drawCell = (td: HTMLTableCellElement | null, text: string, x: number, y: number, w: number, h: number, isHead: boolean) => {
+      if (!td) return;
+      const st = getComputedStyle(td);
+      if (isHead && st.backgroundColor !== "rgba(0, 0, 0, 0)" && st.backgroundColor !== "transparent") {
+        ctx.fillStyle = st.backgroundColor;
+        ctx.fillRect(x, y, w, h);
+      }
+      ctx.strokeStyle = st.borderBottomColor || "#d3d8e0";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+      const input = td.querySelector("input");
+      const fs = input ? getComputedStyle(input) : st;
+      ctx.font = `${isHead ? "700" : fs.fontWeight} ${fs.fontSize} ${fs.fontFamily}`;
+      ctx.fillStyle = isHead ? st.color : fs.color;
+      ctx.textBaseline = "middle";
+      const align = (input ? fs.textAlign : st.textAlign) === "right" || td.classList.contains("num") ? "right" : "left";
+      ctx.textAlign = align;
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(x + 1, y, w - 2, h);
+      ctx.clip();
+      ctx.fillText(text, align === "right" ? x + w - 8 : x + 8, y + h / 2);
+      ctx.restore();
+    };
     let y = 0;
-    trs.forEach((tr, ri) => {
+    if (headRow) {
       let x = 0;
-      cols.forEach((c, ci) => {
-        const td = tr.cells[c];
-        const w = widths[ci];
-        const h = heights[ri];
-        if (td) {
-          const st = getComputedStyle(td);
-          const isHead = tr === headRow;
-          const bg = isHead ? st.backgroundColor : "rgba(0,0,0,0)";
-          if (bg !== "rgba(0, 0, 0, 0)" && bg !== "transparent") {
-            ctx.fillStyle = bg;
-            ctx.fillRect(x, y, w, h);
-          }
-          ctx.strokeStyle = st.borderBottomColor || "#d3d8e0";
-          ctx.lineWidth = 1;
-          ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
-          const text = isHead ? (td.textContent ?? "").trim() : cellText(td);
-          const input = td.querySelector("input");
-          const fs = input ? getComputedStyle(input) : st;
-          ctx.font = `${isHead ? "700" : fs.fontWeight} ${fs.fontSize} ${fs.fontFamily}`;
-          ctx.fillStyle = isHead ? st.color : fs.color;
-          ctx.textBaseline = "middle";
-          const align = (input ? fs.textAlign : st.textAlign) === "right" || td.classList.contains("num") ? "right" : "left";
-          ctx.textAlign = align;
-          ctx.save();
-          ctx.beginPath();
-          ctx.rect(x + 1, y, w - 2, h);
-          ctx.clip();
-          ctx.fillText(text, align === "right" ? x + w - 8 : x + 8, y + h / 2);
-          ctx.restore();
-        }
-        x += w;
+      heads.forEach((th, ci) => {
+        drawCell(th, (th?.textContent ?? "").trim(), x, y, widths[ci], headH, true);
+        x += widths[ci];
       });
-      y += heights[ri];
+      y += headH;
+    }
+    rows.forEach((r, ri) => {
+      let x = 0;
+      r.forEach((td, ci) => {
+        drawCell(td, cellText(td), x, y, widths[ci] ?? td.getBoundingClientRect().width, bodyHeights[ri], false);
+        x += widths[ci] ?? 0;
+      });
+      y += bodyHeights[ri];
     });
     return new Promise((resolve) => canvas.toBlob((b) => resolve(b), "image/png"));
   } catch {
@@ -117,30 +105,28 @@ export function renderRangePng(table: HTMLTableElement, r1: number, r2: number, 
 }
 
 /** 목록용 "공유 이미지" 재료 — 날짜·거래처 열은 고르지 않았어도 항상 넣고, 나머지 고른 칸은 이름표와 함께 둔다. */
-export function readShareData(table: HTMLTableElement, r1: number, r2: number, c1: number, c2: number): ShareData {
-  const body = table.tBodies[0];
+export function readShareData(table: HTMLTableElement, picked: HTMLTableCellElement[][]): ShareData {
   const headRow = table.tHead?.rows[table.tHead.rows.length - 1];
-  const headOf = (c: number) => (headRow?.cells[c]?.textContent ?? "").trim();
-  const colCount = headRow?.cells.length ?? 0;
-  let dateCol = -1;
-  let partyCol = -1;
-  for (let c = 0; c < colCount; c++) {
-    if (dateCol < 0 && isDateHead(headOf(c))) dateCol = c;
-    if (partyCol < 0 && isPartyHead(headOf(c))) partyCol = c;
-  }
-  const cols: number[] = [];
-  for (let c = c1; c <= c2; c++) {
-    if (c === dateCol || c === partyCol) continue;
-    if (body?.rows[r1]?.cells[c]?.offsetParent) cols.push(c);
-  }
-  const labels = cols.map(headOf);
-  const rows: ShareData["rows"] = [];
-  for (let r = r1; r <= r2; r++) {
-    const tr = body?.rows[r];
-    if (!tr) continue;
-    const at = (c: number) => (c >= 0 && tr.cells[c] ? cellText(tr.cells[c]) : "");
-    rows.push({ date: at(dateCol).replace(/\s+/g, ""), party: at(partyCol), values: cols.map((c) => at(c)) });
-  }
+  const headCells = Array.from(headRow?.cells ?? []);
+  const textOf = (th: HTMLTableCellElement) => (th.textContent ?? "").trim();
+  const dateTh = headCells.find((th) => isDateHead(textOf(th))) ?? null;
+  const partyTh = headCells.find((th) => isPartyHead(textOf(th))) ?? null;
+  const first = picked[0] ?? [];
+  const keepIdx: number[] = [];
+  first.forEach((td, i) => {
+    const th = headerCellAtX(table, cellCenterX(td));
+    if (th && (th === dateTh || th === partyTh)) return;
+    keepIdx.push(i);
+  });
+  const labels = keepIdx.map((i) => (headerCellAtX(table, cellCenterX(first[i]))?.textContent ?? "").trim());
+  const rows: ShareData["rows"] = picked.map((cells) => {
+    const tr = cells[0].parentElement as HTMLTableRowElement;
+    const at = (th: HTMLTableCellElement | null) => {
+      const td = th ? cellAtX(tr, cellCenterX(th)) : null;
+      return td ? cellText(td) : "";
+    };
+    return { date: at(dateTh).replace(/\s+/g, ""), party: at(partyTh), values: keepIdx.map((i) => (cells[i] ? cellText(cells[i]) : "")) };
+  });
   const ti = findTotalLabel(labels);
   let total: ShareData["total"] = null;
   if (ti >= 0) {
@@ -153,11 +139,11 @@ export function readShareData(table: HTMLTableElement, r1: number, r2: number, c
 }
 
 /** 세 형식으로 클립보드에 쓴다. 그림이 안 되는 브라우저면 글자·표만, 그것도 안 되면 글자만. 성공 여부를 돌려준다. */
-export async function copyRange(table: HTMLTableElement, r1: number, r2: number, c1: number, c2: number, mode: "table" | "share" = "table"): Promise<{ ok: boolean; image: boolean }> {
-  const m = readRange(table, r1, r2, c1, c2);
+export async function copyRange(table: HTMLTableElement, rows: HTMLTableCellElement[][], mode: "table" | "share" = "table"): Promise<{ ok: boolean; image: boolean }> {
+  const m = readCells(table, rows);
   const text = new Blob([toTsv(m)], { type: "text/plain" });
   const html = new Blob([toHtml(m)], { type: "text/html" });
-  const png = mode === "share" ? renderSharePng(readShareData(table, r1, r2, c1, c2)) : renderRangePng(table, r1, r2, c1, c2);
+  const png = mode === "share" ? renderSharePng(readShareData(table, rows)) : renderRangePng(table, rows);
   try {
     const pngBlob = await png;
     const items: Record<string, Blob> = { "text/plain": text, "text/html": html };

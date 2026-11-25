@@ -105,7 +105,7 @@ export default async function PaymentRequestsPage() {
     <RecordPageA
       title="보고서 &gt; 지급결의양식"
       basePath="/reports/payment-requests"
-      newLabel="글쓰기"
+      newLabel="새 지급결의"
       filters={
         <div className="erp-detail erp-u-mt-0 erp-u-mb-12">
           <div className="erp-detail-tabs">

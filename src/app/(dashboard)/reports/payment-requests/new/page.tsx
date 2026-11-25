@@ -12,7 +12,7 @@ export default async function NewPaymentRequestPage() {
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/reports/payment-requests" } }} />
-      <ListPageHeader title="보고서 > 지급결의양식 > 글쓰기" />
+      <ListPageHeader title="보고서 > 지급결의양식 > 새 지급결의" />
 
       <div className="erp-toolbar">
         <CloseButton href="/reports/payment-requests">ESC 목록으로</CloseButton>
