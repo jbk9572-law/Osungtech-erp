@@ -4,6 +4,9 @@
 -- 면세·영세 전표와 결제방법이 있는 전표(미수금에서 제외)는 기존과 같다. 보안 필터(is_demo_actor, current_tenant_id)는 원본 정의를 그대로 유지했다.
 -- 대상: get_customer_balances / get_supplier_balances / get_sales_order_payment_status / get_purchase_order_payment_status.
 
+-- 반환 형태가 DB마다 조금 다를 수 있어(개발 DB에서 'cannot change return type' 오류) 먼저 지우고 다시 만든다. 아래에서 권한을 다시 준다.
+drop function if exists public.get_customer_balances();
+
 create or replace function public.get_customer_balances()
 returns table (id uuid, name text, total numeric, paid numeric, balance numeric, oldest_unpaid_date date)
 language sql
@@ -90,6 +93,9 @@ $$;
 
 grant execute on function public.get_customer_balances() to authenticated;
 
+-- 반환 형태가 DB마다 조금 다를 수 있어(개발 DB에서 'cannot change return type' 오류) 먼저 지우고 다시 만든다. 아래에서 권한을 다시 준다.
+drop function if exists public.get_supplier_balances();
+
 create or replace function public.get_supplier_balances()
 returns table (id uuid, name text, total numeric, paid numeric, balance numeric, oldest_unpaid_date date)
 language sql
@@ -160,6 +166,9 @@ $$;
 
 grant execute on function public.get_supplier_balances() to authenticated;
 
+-- 반환 형태가 DB마다 조금 다를 수 있어(개발 DB에서 'cannot change return type' 오류) 먼저 지우고 다시 만든다. 아래에서 권한을 다시 준다.
+drop function if exists public.get_sales_order_payment_status(uuid[]);
+
 create or replace function public.get_sales_order_payment_status(p_order_ids uuid[])
 returns table (order_id uuid, outstanding numeric, status text)
 language sql
@@ -229,6 +238,9 @@ as $$
 $$;
 
 grant execute on function public.get_sales_order_payment_status(uuid[]) to authenticated;
+
+-- 반환 형태가 DB마다 조금 다를 수 있어(개발 DB에서 'cannot change return type' 오류) 먼저 지우고 다시 만든다. 아래에서 권한을 다시 준다.
+drop function if exists public.get_purchase_order_payment_status(uuid[]);
 
 create or replace function public.get_purchase_order_payment_status(p_order_ids uuid[])
 returns table (order_id uuid, outstanding numeric, status text)
