@@ -1,3 +1,4 @@
+import { quantityLabelByUnit } from "@/lib/quantity-by-unit";
 import Link from "next/link";
 import { GridBadge } from "@/components/grid/badge";
 import { formatNumOrDash } from "@/lib/format-num-or-dash";
@@ -18,7 +19,7 @@ export function OrderSidePanel({
   const items = selection?.items ?? [];
   const supply = items.reduce((s, i) => s + i.supplyAmount, 0);
   const tax = items.reduce((s, i) => s + i.taxAmount, 0);
-  const qty = items.reduce((s, i) => s + i.quantity, 0);
+  const qtyLabel = quantityLabelByUnit(items);
   const sign = selection?.isReturn ? "-" : "";
 
   return (
@@ -52,7 +53,7 @@ export function OrderSidePanel({
           )}
           <div className="erp-detail-side-sec">
             <h4>
-              품목내역 <em>{items.length}건 · 수량 {formatNumber(qty)}</em>
+              품목내역 <em>{items.length}건 · 수량 {qtyLabel}</em>
             </h4>
             {items.length === 0 ? (
               <p className="erp-detail-side-note">품목내역이 없습니다.</p>

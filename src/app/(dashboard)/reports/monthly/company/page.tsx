@@ -1,3 +1,4 @@
+import { quantityLabelByUnit } from "@/lib/quantity-by-unit";
 import { Fragment } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -127,15 +128,14 @@ export default async function MonthlyReportCompanyPage({
       a.productName.localeCompare(b.productName),
   );
 
-  const inQty = rows
-    .filter((t) => t.type === "in")
-    .reduce((sum, t) => sum + t.quantity, 0);
+  // 단위가 섞인 거래(ROLL·KG·EA)는 숫자만 더하면 의미가 없어 단위별로 나눠 적는다.
+  const inQty = rows.filter((t) => t.type === "in").reduce((sum, t) => sum + t.quantity, 0);
+  const inQtyLabel = quantityLabelByUnit(rows.filter((t) => t.type === "in"));
+  const outQtyLabel = quantityLabelByUnit(rows.filter((t) => t.type === "out"));
   const inAmount = rows
     .filter((t) => t.type === "in")
     .reduce((sum, t) => sum + t.amount, 0);
-  const outQty = rows
-    .filter((t) => t.type === "out")
-    .reduce((sum, t) => sum + t.quantity, 0);
+  const outQty = rows.filter((t) => t.type === "out").reduce((sum, t) => sum + t.quantity, 0);
   const outAmount = rows
     .filter((t) => t.type === "out")
     .reduce((sum, t) => sum + t.amount, 0);
@@ -267,9 +267,9 @@ export default async function MonthlyReportCompanyPage({
                   합계 ({rows.length}건)
                 </td>
                 <td className="num">
-                  {inQty > 0 && `입고 ${formatNumber(inQty)}`}
+                  {inQty > 0 && `입고 ${inQtyLabel}`}
                   {inQty > 0 && outQty > 0 && " / "}
-                  {outQty > 0 && `출고 ${formatNumber(outQty)}`}
+                  {outQty > 0 && `출고 ${outQtyLabel}`}
                 </td>
                 <td className="num">
                   {formatNumber((inAmount + outAmount))}

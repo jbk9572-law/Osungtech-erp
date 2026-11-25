@@ -1,3 +1,4 @@
+import { quantityLabelByUnit } from "@/lib/quantity-by-unit";
 import { Fragment } from "react";
 import { GridBadge, type BadgeTone } from "@/components/grid/badge";
 import { formatNumOrDash } from "@/lib/format-num-or-dash";
@@ -44,7 +45,8 @@ export function OrderDetailPanel({
   priceLabel: string;
   emptyMessage: string;
 }) {
-  const totalQuantity = selection?.items.reduce((sum, item) => sum + item.quantity, 0) ?? 0;
+  // 단위가 섞인 전표(ROLL+KG 등)는 숫자만 더하면 의미가 없어 단위별로 나눠 적는다.
+  const totalQuantityLabel = quantityLabelByUnit(selection?.items ?? []);
   const totalSupply = selection?.items.reduce((sum, item) => sum + item.supplyAmount, 0) ?? 0;
   const totalTax = selection?.items.reduce((sum, item) => sum + item.taxAmount, 0) ?? 0;
   const sign = selection?.isReturn ? "+" : "";
@@ -137,7 +139,7 @@ export function OrderDetailPanel({
               <tfoot>
                 <tr className="erp-u-bold erp-u-bg-page">
                   <td colSpan={3}>합계 ({selection.items.length}건)</td>
-                  <td className="num">{formatNumber(totalQuantity)}</td>
+                  <td className="num">{totalQuantityLabel}</td>
                   <td />
                   <td className="num">{formatNumber(totalSupply)}</td>
                   <td className="num">{formatNumber(totalTax)}</td>
@@ -219,7 +221,7 @@ export function OrderDetailPanel({
                 </div>
               ))}
               <div className="erp-row-card-foot erp-u-bold">
-                <span>합계 ({selection.items.length}건) · {formatNumber(totalQuantity)}개</span>
+                <span>합계 ({selection.items.length}건) · {totalQuantityLabel}</span>
                 <span className="erp-row-card-amount">
                   {formatNumber(totalSupply)}원
                 </span>

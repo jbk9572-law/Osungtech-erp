@@ -8,9 +8,12 @@ import { formatNumber } from "@/lib/format-number";
 //  · voucherLayout 테마: 표 칸에 맞춰 "합계 (N건)" · 수량 · 공급가액 · 세액 · 합계를 열마다 보여준다(스프레드시트 합계 줄).
 // 칸 수(span)는 표의 보이는 열 수와 맞아야 한다 — 호출부가 자기 표 구조에 맞게 넘긴다.
 export function OrderTotalsRow({
-  count, quantity, supply, tax, total, classicSpans, voucherLeadSpan, voucherTrailSpan, label = "합계", classicOnly = false,
+  count, quantity, quantityLabel, supply, tax, total, classicSpans, voucherLeadSpan, voucherTrailSpan, label = "합계", classicOnly = false,
 }: {
-  count: number; quantity: number; supply: number; tax: number; total: number;
+  count: number; quantity: number;
+  /** 단위가 섞인 전표는 "225 ROLL · 532 KG"처럼 단위별로 나눈 글자 — 주면 숫자 합계 대신 이것을 보여준다. */
+  quantityLabel?: string;
+  supply: number; tax: number; total: number;
   classicSpans: [number, number];
   voucherLeadSpan: number;
   voucherTrailSpan: number;
@@ -34,7 +37,7 @@ export function OrderTotalsRow({
   return (
     <tr className="erp-voucher-totals">
       <td colSpan={voucherLeadSpan}>합계 ({count}건)</td>
-      <td className="num">{formatNumber(quantity)}</td>
+      <td className="num">{quantityLabel ?? formatNumber(quantity)}</td>
       <td />
       <td className="num">{formatNumber(supply)}</td>
       <td className="num">{formatNumber(tax)}</td>
