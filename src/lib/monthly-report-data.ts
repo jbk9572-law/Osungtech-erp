@@ -121,7 +121,7 @@ export async function fetchMonthlyReportData(
       supabase
         .from("sales_order_items")
         .select(
-          "quantity, unit_price, product_id, sales_orders!inner(id, order_date, is_return, return_reason, is_carryover, tax_type, customers(id, name)), products(sku, name, spec, unit, categories(name))",
+          "quantity, unit_price, product_id, custom_name, spec, sales_orders!inner(id, order_date, is_return, return_reason, is_carryover, tax_type, customers(id, name)), products(sku, name, spec, unit, categories(name))",
         )
         .gte("sales_orders.order_date", lookbackFrom)
         .lte("sales_orders.order_date", to)
@@ -132,7 +132,7 @@ export async function fetchMonthlyReportData(
       supabase
         .from("purchase_order_items")
         .select(
-          "quantity, unit_cost, product_id, purchase_orders!inner(id, purchase_date, is_carryover, tax_type, suppliers(id, name)), products(sku, name, spec, unit, categories(name))",
+          "quantity, unit_cost, product_id, custom_name, spec, purchase_orders!inner(id, purchase_date, is_carryover, tax_type, suppliers(id, name)), products(sku, name, spec, unit, categories(name))",
         )
         .gte("purchase_orders.purchase_date", lookbackFrom)
         .lte("purchase_orders.purchase_date", to)
@@ -180,15 +180,26 @@ export async function fetchMonthlyReportData(
     return group;
   }
 
+  // 품목 없이 이름만 적은 줄(서비스·용역 등)도 빠뜨리지 않고 이름별로 묶어 넣는다.
+  const groupKeyOf = (row: { product_id: string | null; custom_name?: string | null }) =>
+    row.product_id ?? (row.custom_name?.trim() ? `custom:${row.custom_name.trim()}` : null);
+  const labelOf = (row: { products?: { sku?: string | null; name?: string | null; spec?: string | null } | null; custom_name?: string | null; spec?: string | null }) => ({
+    sku: row.products?.sku ?? "-",
+    name: row.products?.name ?? row.custom_name?.trim() ?? "-",
+    spec: row.products?.spec ?? row.spec?.trim() ?? "-",
+  });
+
   for (const row of purchaseRows) {
-    if (!row.product_id) continue;
+    const key = groupKeyOf(row);
+    if (!key) continue;
+    const label = labelOf(row);
     const supplier = row.purchase_orders?.suppliers;
     const amount = row.quantity * Number(row.unit_cost);
     const group = ensureGroup(
-      row.product_id,
-      row.products?.sku ?? "-",
-      row.products?.name ?? "-",
-      row.products?.spec ?? "-",
+      key,
+      label.sku,
+      label.name,
+      label.spec,
       row.products?.unit ?? null,
       row.products?.categories?.name ?? null,
     );
@@ -209,16 +220,18 @@ export async function fetchMonthlyReportData(
   }
 
   for (const row of salesRows) {
-    if (!row.product_id) continue;
+    const key = groupKeyOf(row);
+    if (!key) continue;
+    const label = labelOf(row);
     const customer = row.sales_orders?.customers;
     const sign = row.sales_orders?.is_return ? -1 : 1;
     const quantity = row.quantity * sign;
     const amount = row.quantity * Number(row.unit_price) * sign;
     const group = ensureGroup(
-      row.product_id,
-      row.products?.sku ?? "-",
-      row.products?.name ?? "-",
-      row.products?.spec ?? "-",
+      key,
+      label.sku,
+      label.name,
+      label.spec,
       row.products?.unit ?? null,
       row.products?.categories?.name ?? null,
     );
