@@ -9445,6 +9445,27 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   .erp-listtoolbar-sep {
     display: none;
   }
+  /* 좁은 화면 도구 줄의 균형 — 버튼이 글자 길이대로 들쭉날쭉 줄바꿈되지 않게 두 칸 격자로 같은 폭을 준다(조회·신규 / 엑셀·일괄 작업).
+     홀수 개면 마지막 버튼이 한 줄을 꽉 채운다. 단축키 표시(F5·Ctrl+Enter)는 폰에 키보드가 없어 지운다(버튼 폭만 들쭉날쭉하게 만든다). */
+  .erp-listtoolbar-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    flex: 1 0 100%;
+  }
+  .erp-listtoolbar-actions > :last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+  .erp-listtoolbar-actions > .erp-btn,
+  .erp-listtoolbar-actions > .erp-colmenu > .erp-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  .erp-listtoolbar-actions > .erp-colmenu {
+    display: block;
+  }
+  .erp-listtoolbar-key {
+    display: none;
+  }
 }
 
 /* ── 체크 목록 선택기(CheckListPicker) — 검색 + 전체 선택 + 선택 수 ───────────── */
@@ -10137,6 +10158,10 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
 .erp-chrome-modern .erp-page-guide {
   font-size: var(--erp-font-base);
   line-height: 1.5;
+  /* 좁은 화면에서 "포함되지 않 / 고,"처럼 단어 한가운데서 줄이 끊겨 여백이 들쭉날쭉했다 — 한글은 단어(띄어쓰기) 단위로만 줄바꿈하고, 줄 길이는 보기 좋게 고르게 맞춘다 */
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  text-wrap: pretty;
 }
 /* 모던: 안내(팁)는 박스 없이 흐린 한 덩어리 글로 — 화면 위쪽이 박스로 번잡해지지 않게. 경고·위험 톤은 박스 그대로(놓치면 안 되는 내용) */
 .erp-chrome-modern .erp-page-guide[data-tone="info"],
@@ -10688,6 +10713,23 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   .erp-listtoolbar-filters {
     flex: 1 0 100%;
     flex-wrap: wrap;
+  }
+  /* 첫 줄: [◀ 기간 ▶]가 남는 폭을 채우고 [필터 +] 같은 보조 버튼은 제 폭만 — 오른쪽이 휑하게 비지 않게. 검색칸은 다음 줄 전체 폭 */
+  .erp-listtoolbar-filters > .erp-fb-period:first-child {
+    display: flex;
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  .erp-listtoolbar-filters > .erp-fb-period:first-child > .erp-fb-period-main {
+    flex: 1 1 auto;
+    min-width: 0;
+    justify-content: center;
+  }
+  .erp-listtoolbar-filters > .erp-fb-period:not(:first-child) {
+    flex: none;
+  }
+  .erp-listtoolbar-filters > .erp-fb-search {
+    flex: 1 0 100%;
   }
 }
 
