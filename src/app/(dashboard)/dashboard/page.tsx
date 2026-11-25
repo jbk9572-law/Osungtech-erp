@@ -477,6 +477,12 @@ async function DashboardPage({
       // (order_date)가 작업일과 다를 때만, 전표날짜 쪽 캘린더에 "이월
       // 유입" 표시를 남긴다.
       const workDate = toKstDateStr(new Date(item.sales_orders.created_at));
+      // 예약(전표날짜가 입력한 날보다 뒤 — 미리 등록해 둔 건)은 "오늘 한 일"이 아니다. 이월 처리를 켰어도 예약한 날짜에 잡는다
+      // (안 그러면 내일로 예약한 전표가 오늘 리포트에 올라온다). 금액은 이월 규칙대로 합계에는 더하지 않는다.
+      if (orderDate > workDate) {
+        addSalesItem(item, orderDate, false);
+        continue;
+      }
       if (workDate !== orderDate) {
         addCarryoverIn(ensure(orderDate).carryoverInSales, workDate);
       }
@@ -487,6 +493,8 @@ async function DashboardPage({
 
   for (const item of carryoverWorkSales ?? []) {
     const workDate = toKstDateStr(new Date(item.sales_orders.created_at));
+    // 예약 건은 위(예약한 날짜)에서 이미 잡았다 — 입력한 날(오늘)에 또 올리지 않는다.
+    if (item.sales_orders.order_date > workDate) continue;
     addSalesItem(item, workDate, false);
   }
 
@@ -494,6 +502,11 @@ async function DashboardPage({
     const orderDate = item.purchase_orders.purchase_date;
     if (item.purchase_orders.is_carryover) {
       const workDate = toKstDateStr(new Date(item.purchase_orders.created_at));
+      // 예약(전표날짜가 입력한 날보다 뒤)은 예약한 날짜에 잡는다 — 매출과 같은 규칙.
+      if (orderDate > workDate) {
+        addPurchaseItem(item, orderDate, false);
+        continue;
+      }
       if (workDate !== orderDate) {
         addCarryoverIn(ensure(orderDate).carryoverInPurchases, workDate);
       }
@@ -504,6 +517,7 @@ async function DashboardPage({
 
   for (const item of carryoverWorkPurchases ?? []) {
     const workDate = toKstDateStr(new Date(item.purchase_orders.created_at));
+    if (item.purchase_orders.purchase_date > workDate) continue;
     addPurchaseItem(item, workDate, false);
   }
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { QuantityStack } from "@/components/grid/quantity-stack";
 import { buildShareItemsAttr } from "@/lib/share-items";
 import { formatKstDate } from "@/lib/kst-date";
 import { rowDay, rowDayClass } from "@/lib/row-day";
@@ -408,9 +409,7 @@ export function PurchaseGridTable({
           {row.lotNumber || "-"}
         </td>
         <td className="num">
-          {isPayment
-            ? "-"
-            : (row.quantityLabel ?? `${formatNumber(row.quantity)} ${row.unit ?? ""}`)}
+          {isPayment ? "-" : <QuantityStack text={row.quantityLabel ?? `${formatNumber(row.quantity)} ${row.unit ?? ""}`} />}
         </td>
         <td
           className="num"
@@ -618,7 +617,7 @@ export function PurchaseGridTable({
                   전월 이월 소계 ({carryoverRows.length}건)
                 </td>
                 <td className="num erp-u-muted erp-u-text-xs">
-                  {carryoverQuantityLabel ?? formatNumber(carryoverQuantity ?? 0)}
+                  <QuantityStack text={carryoverQuantityLabel ?? formatNumber(carryoverQuantity ?? 0)} />
                 </td>
                 <td style={colStyle("unitCost")} />
                 <td className="num erp-u-muted erp-u-text-xs">
@@ -658,7 +657,9 @@ export function PurchaseGridTable({
                   매입 합계 (
                   {sortedRows.filter((r) => r.kind === "purchase").length}건)
                 </td>
-                <td className="num">{totalQuantityLabel ?? formatNumber(totalQuantity)}</td>
+                <td className="num">
+                  <QuantityStack text={totalQuantityLabel ?? formatNumber(totalQuantity)} />
+                </td>
                 <td style={colStyle("unitCost")} />
                 <td className="num">{formatNumber(totalSupply)}</td>
                 <td className="num">{formatNumber(totalTax)}</td>

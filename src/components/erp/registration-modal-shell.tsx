@@ -66,6 +66,9 @@ export function RegistrationModalShell({
   const [closing, setClosing] = useState(() => typeof window !== "undefined" && wasJustClosed(window.location.pathname));
   // 모달 안에서 입력/저장/버튼 조작이 있었는지 — 없으면 닫을 때 배경 화면을 서버에서 다시 받지 않는다.
   const dirtyRef = useRef(false);
+  // 글자를 입력해 아직 저장하지 않은 내용이 있는가 — 배경을 잘못 눌러서(또는 Esc로) 닫을 때 확인을 받기 위한 값.
+  // 검색칸(type=search·combobox)에 친 글자는 "입력한 내용"으로 치지 않는다.
+  const editedRef = useRef(false);
   // 이 모달의 페이지가 KeyboardShortcuts를 통해 알려주는 "진짜 닫기
   // 목적지"(그 페이지의 Escape.href와 같은 값)로 덮어쓰기 전까지는
   // 위 closeHref prop을 기본값으로 쓴다 — 그래서 그 등록을 깜빡한
@@ -126,6 +129,13 @@ export function RegistrationModalShell({
     leave(target);
   }, [router, beginClosing, fallbackCloseHref, pathname]);
 
+  // 실수로 닫기(배경 클릭·Esc)는 입력한 내용이 있으면 확인을 받는다 — ✕ 버튼은 사용자가 뜻을 분명히 한 것이라 바로 닫는다.
+  // 매출·매입 등록처럼 임시저장이 있는 폼도 확인은 받는다(임시저장이 있어도 "닫았는데 사라졌다"는 착각을 줄인다).
+  const requestClose = useCallback(() => {
+    if (editedRef.current && !window.confirm("입력한 내용이 저장되지 않았습니다. 닫을까요?")) return;
+    close();
+  }, [close]);
+
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (e.key !== "Escape") return;
@@ -137,11 +147,11 @@ export function RegistrationModalShell({
           target.tagName === "SELECT" ||
           target.isContentEditable);
       if (isEditable) return;
-      close();
+      requestClose();
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [close]);
+  }, [requestClose]);
 
   useScrollLock(true);
 
@@ -170,6 +180,13 @@ export function RegistrationModalShell({
     return () => document.removeEventListener("click", onDocClick, true);
   }, [beginClosing]);
 
+  function markEdited(e: { target: EventTarget | null }) {
+    const el = e.target as HTMLElement | null;
+    if (!el?.closest?.("input, textarea, select, [contenteditable]")) return;
+    if (el.closest?.('[type="search"], [role="combobox"], [data-quick-add-search], [data-no-dirty]')) return;
+    editedRef.current = true;
+  }
+
   function markDirty(e: { target: EventTarget | null }) {
     const el = e.target as HTMLElement | null;
     if (el?.closest?.("[data-modal-close], .erp-modal-window-close")) return;
@@ -190,7 +207,7 @@ export function RegistrationModalShell({
     <div
       className={`erp-modal-overlay${closing ? " closing" : ""}`}
       onMouseDown={(e) => {
-        if (e.target === e.currentTarget) close();
+        if (e.target === e.currentTarget) requestClose();
       }}
     >
       <div
@@ -201,7 +218,11 @@ export function RegistrationModalShell({
         className={`erp-modal ${SIZE_CLASS[size]}${closing ? " closing" : ""}`}
         style={{ minHeight: 0, outline: "none" }}
         onClickCapture={handleClickCapture}
-        onChangeCapture={markDirty}
+        onChangeCapture={(e) => {
+          markDirty(e);
+          markEdited(e);
+        }}
+        onInputCapture={markEdited}
         onSubmitCapture={markDirty}
       >
         <button

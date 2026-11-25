@@ -13,7 +13,7 @@ let outsider: string; // 회사 B 소속 사용자
 beforeEach(async () => {
   h = await createHarness();
   await h.db.exec(`
-    create table public.payment_requests (id uuid primary key default gen_random_uuid(), status text not null default 'draft', tenant_id uuid default public.current_tenant_id());
+    create table public.payment_requests (id uuid primary key default gen_random_uuid(), status text not null default 'draft', requested_by uuid default auth.uid(), tenant_id uuid default public.current_tenant_id());
     create table public.payment_request_line_items (id uuid primary key default gen_random_uuid(), payment_request_id uuid not null, used_at date, vendor text, purpose text, amount numeric, remark text, sort_order integer, is_highlighted boolean, tenant_id uuid default public.current_tenant_id());
     create table public.payment_request_receipts (id uuid primary key default gen_random_uuid(), payment_request_id uuid not null, file_path text, file_url text, sort_order integer, created_by uuid, size_bytes integer, tenant_id uuid default public.current_tenant_id());
     create table public.platform_r2_ops_usage (year_month text primary key, class_a_count bigint not null default 0, updated_at timestamptz);
@@ -41,6 +41,22 @@ const addLine = (request: string) =>
   h.db.query(`select public.insert_payment_request_line_item($1, current_date, 'v', 'p', 100, null, false)`, [request]);
 const addReceipt = (request: string, createdBy: string) =>
   h.db.query(`select public.insert_payment_request_receipt($1, 'path', 'url', $2, 10)`, [request, createdBy]);
+
+describe("지급결의서 함수: 같은 회사 동료의 결의서는 작성자 본인 또는 관리자만", () => {
+  it("일반 직원은 다른 직원이 작성한 결의서에 내역·영수증을 끼워 넣을 수 없다", async () => {
+    await h.as(h.ids.admin);
+    const adminRequest = (await h.db.query<{ id: string }>(`insert into public.payment_requests default values returning id`)).rows[0].id;
+    await h.as(h.ids.staff);
+    await expect(addLine(adminRequest)).rejects.toThrow(/본인이 작성한/);
+    await expect(addReceipt(adminRequest, h.ids.staff)).rejects.toThrow(/본인이 작성한/);
+  });
+  it("관리자는 직원의 결의서에도 추가할 수 있다", async () => {
+    await h.as(h.ids.admin);
+    await addLine(requestA);
+    const r = await h.db.query(`select count(*)::int as n from public.payment_request_line_items where payment_request_id = $1`, [requestA]);
+    expect((r.rows[0] as { n: number }).n).toBe(1);
+  });
+});
 
 describe("지급결의서 함수: 다른 회사 결의서 접근 차단", () => {
   it("내 회사 결의서에는 내역을 추가할 수 있다", async () => {

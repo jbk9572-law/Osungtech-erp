@@ -1,5 +1,6 @@
 "use client";
 
+import { ModalOverlay } from "@/components/erp/modal-overlay";
 import { createPortal } from "react-dom";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -132,8 +133,7 @@ function UnifiedSaleModal({
   const [paymentCustomerId, setPaymentCustomerId] = useState("");
 
   return (
-    <div className="erp-modal-overlay" onClick={onClose}>
-      <div className="erp-modal erp-modal-xl" onClick={(e) => e.stopPropagation()}>
+    <ModalOverlay onClose={onClose} size="xl">
         <div className="erp-modal-title">
           통합 판매 거래 등록
           <button type="button" className="erp-modal-close" onClick={onClose} aria-label="닫기">
@@ -208,8 +208,7 @@ function UnifiedSaleModal({
             </div>
           )}
         </div>
-      </div>
-    </div>
+      </ModalOverlay>
   );
 }
 

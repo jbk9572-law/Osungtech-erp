@@ -1,5 +1,6 @@
 "use client";
 
+import { ModalOverlay } from "@/components/erp/modal-overlay";
 import { useState } from "react";
 import { PaperCalcClient, type PendingCalcPayload } from "@/modules/paper-calc/components/paper-calc-client";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
@@ -24,8 +25,7 @@ export function PaperCalcModalTrigger({
         모조지 계산
       </button>
       {open && (
-        <div className="erp-modal-overlay" onClick={() => setOpen(false)}>
-          <div className="erp-modal erp-modal-lg" onClick={(e) => e.stopPropagation()}>
+        <ModalOverlay onClose={() => setOpen(false)} size="lg">
             <div className="erp-modal-title">
               모조지 계산
               <button type="button" className="erp-modal-close" onClick={() => setOpen(false)} aria-label="닫기">
@@ -41,8 +41,7 @@ export function PaperCalcModalTrigger({
                 }}
               />
             </div>
-          </div>
-        </div>
+          </ModalOverlay>
       )}
     </>
   );

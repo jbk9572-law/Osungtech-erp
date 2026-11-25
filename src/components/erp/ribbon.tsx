@@ -1,5 +1,6 @@
 "use client";
 
+import { ModalOverlay } from "@/components/erp/modal-overlay";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
@@ -279,8 +280,7 @@ export function Ribbon({
       </button>
 
       {modal === "search" && (
-        <div className="erp-modal-overlay" onClick={() => setModal(null)}>
-          <div className="erp-modal" onClick={(e) => e.stopPropagation()}>
+        <ModalOverlay onClose={() => setModal(null)}>
             <div className="erp-modal-title">
               빠른 검색
               <button
@@ -324,13 +324,11 @@ export function Ribbon({
                 )}
               </div>
             </div>
-          </div>
-        </div>
+          </ModalOverlay>
       )}
 
       {modal === "tenants" && (
-        <div className="erp-modal-overlay" onClick={() => setModal(null)}>
-          <div className="erp-modal" onClick={(e) => e.stopPropagation()}>
+        <ModalOverlay onClose={() => setModal(null)}>
             <div className="erp-modal-title">
               회사 전환
               <button
@@ -370,13 +368,11 @@ export function Ribbon({
                 )}
               </div>
             </div>
-          </div>
-        </div>
+          </ModalOverlay>
       )}
 
       {modal === "help" && (
-        <div className="erp-modal-overlay" onClick={() => setModal(null)}>
-          <div className="erp-modal" onClick={(e) => e.stopPropagation()}>
+        <ModalOverlay onClose={() => setModal(null)}>
             <div className="erp-modal-title">
               도움말
               <button
@@ -432,8 +428,7 @@ export function Ribbon({
                 </table>
               </div>
             </div>
-          </div>
-        </div>
+          </ModalOverlay>
       )}
     </div>
   );

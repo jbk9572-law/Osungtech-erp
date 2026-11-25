@@ -1,5 +1,6 @@
 "use client";
 
+import { QuantityStack } from "@/components/grid/quantity-stack";
 import { buildShareItemsAttr } from "@/lib/share-items";
 import { formatKstDate } from "@/lib/kst-date";
 import { rowDay, rowDayClass } from "@/lib/row-day";
@@ -427,9 +428,14 @@ export function SalesGridTable({
           className="num"
           style={row.isReturn ? { color: "var(--erp-danger)" } : undefined}
         >
-          {isCollection
-            ? "-"
-            : `${row.isReturn ? "+" : ""}${row.quantityLabel ?? `${formatNumber(row.quantity)} ${row.unit ?? ""}`}`}
+          {isCollection ? (
+            "-"
+          ) : (
+            <>
+              {row.isReturn ? "+" : ""}
+              <QuantityStack text={row.quantityLabel ?? `${formatNumber(row.quantity)} ${row.unit ?? ""}`} />
+            </>
+          )}
         </td>
         <td
           className="num"
@@ -686,7 +692,7 @@ export function SalesGridTable({
                   전월 이월 소계 ({carryoverRows.length}건)
                 </td>
                 <td className="num erp-u-muted erp-u-text-xs">
-                  {carryoverQuantityLabel ?? formatNumber(carryoverQuantity ?? 0)}
+                  <QuantityStack text={carryoverQuantityLabel ?? formatNumber(carryoverQuantity ?? 0)} />
                 </td>
                 <td style={colStyle("unitPrice")} />
                 <td className="num erp-u-muted erp-u-text-xs">
@@ -726,7 +732,9 @@ export function SalesGridTable({
                   매출 합계 (
                   {sortedRows.filter((r) => r.kind === "sale").length}건)
                 </td>
-                <td className="num">{totalQuantityLabel ?? formatNumber(totalQuantity)}</td>
+                <td className="num">
+                  <QuantityStack text={totalQuantityLabel ?? formatNumber(totalQuantity)} />
+                </td>
                 <td style={colStyle("unitPrice")} />
                 <td className="num">{formatNumber(totalSupply)}</td>
                 <td className="num">{formatNumber(totalTax)}</td>

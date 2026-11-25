@@ -1,5 +1,6 @@
 "use client";
 
+import { ModalOverlay } from "@/components/erp/modal-overlay";
 import { useState } from "react";
 import { ManualLayoutClient } from "@/modules/paper-calc/components/manual-layout-client";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
@@ -44,8 +45,7 @@ export function ManualLayoutModalTrigger({
         재단 배치 시뮬레이터
       </button>
       {open && (
-        <div className="erp-modal-overlay" onClick={close}>
-          <div className="erp-modal erp-modal-xl" onClick={(e) => e.stopPropagation()}>
+        <ModalOverlay onClose={close} size="xl">
             <div className="erp-modal-title">
               재단 배치 시뮬레이터
               <button type="button" className="erp-modal-close" onClick={close} aria-label="닫기">
@@ -55,8 +55,7 @@ export function ManualLayoutModalTrigger({
             <div className="erp-modal-body">
               <ManualLayoutClient pendingFor={pendingFor} />
             </div>
-          </div>
-        </div>
+          </ModalOverlay>
       )}
     </>
   );
