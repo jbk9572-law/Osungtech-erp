@@ -1,3 +1,4 @@
+import { resolveInventoryReferences } from "@/lib/inventory-reference";
 import { formatKstDate } from "@/lib/kst-date";
 import { buildXlsxResponse } from "@/lib/xlsx-response";
 import { requireAuthedApiUser } from "@/lib/require-auth";
@@ -33,6 +34,7 @@ export async function GET(request: Request) {
     p_to: to,
   });
   const periodRows = ledgerRowsRaw ?? [];
+  const refInfo = await resolveInventoryReferences(supabase, periodRows.map((r) => r.reference));
 
   const openingBalance = periodRows.length > 0
     ? periodRows[0].balance_after - (periodRows[0].type === "out" ? -Math.abs(periodRows[0].quantity) : periodRows[0].quantity)
@@ -44,7 +46,7 @@ export async function GET(request: Request) {
       구분: TYPE_LABEL[r.type] ?? r.type,
       수량: delta,
       잔량: r.balance_after,
-      참조: r.reference ?? "-",
+      참조: (r.reference && refInfo.get(r.reference)?.label) || "-",
       비고: r.note ?? "-",
     };
   });

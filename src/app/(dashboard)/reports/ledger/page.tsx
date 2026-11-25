@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { formatKstDate } from "@/lib/kst-date";
+import { resolveInventoryReferences } from "@/lib/inventory-reference";
 import { createClient } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ListPageHeader } from "@/components/erp/page-header";
@@ -49,6 +51,9 @@ export default async function InventoryLedgerPage({
         })
       ).data ?? []
     : [];
+
+  // 참조는 시스템 문자열("purchase_order:uuid") 대신 "매입 #12 · 거래처"로 보여 준다
+  const refInfo = await resolveInventoryReferences(supabase, rawLedgerRows.map((r) => r.reference));
 
   const ledgerRows = rawLedgerRows.map((r) => {
     const delta = r.type === "out" ? -Math.abs(Number(r.quantity)) : Number(r.quantity);
@@ -192,7 +197,13 @@ export default async function InventoryLedgerPage({
                         {formatNumber(r.delta)}
                       </td>
                       <td className="num">{formatNumber(r.balance)}</td>
-                      <td className="erp-u-muted">{r.reference ?? "-"}</td>
+                      <td className="erp-u-muted">
+                        {(() => {
+                          const ref = r.reference ? refInfo.get(r.reference) : null;
+                          if (!ref) return "-";
+                          return ref.href ? <Link href={ref.href}>{ref.label}</Link> : ref.label;
+                        })()}
+                      </td>
                       <td className="erp-u-muted">{r.note ?? "-"}</td>
                     </tr>
                   ))}
