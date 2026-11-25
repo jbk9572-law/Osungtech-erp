@@ -1,14 +1,14 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PrintToolbar } from "@/components/erp/print-toolbar";
-import { PrintOptionBar } from "@/components/print-option-bar";
+import { InvoicePrintView } from "@/components/invoice/InvoicePrintView";
 import { DeliveryNoteDoc } from "@/components/delivery-note-doc";
 import {
   SnsFiltechCanvas,
   ZenithTechCanvas,
   KtSolutionCanvas,
 } from "@/components/delivery-note-v2/DeliveryNoteCanvas";
-import { InvoicePage, type InvoiceCopies, type InvoiceLayout } from "@/components/invoice/InvoicePage";
+import type { InvoiceCopies, InvoiceLayout } from "@/components/invoice/InvoicePage";
 import { toInvoiceParty, type InvoiceForm, type InvoiceItem } from "@/components/invoice/types";
 import { formatPaperCalcSizeLines, mergePaperCalcInputItems } from "@/modules/paper-calc/public";
 import { PAPER_STOCK_SKU } from "@/modules/paper-calc/public";
@@ -259,58 +259,24 @@ export default async function SalesPrintPage({
   });
 
   return (
-    <div
-      className={`mx-auto max-w-5xl print:mx-0 print:max-w-none ${layout === "half" ? "print-page-wrapper" : ""}`}
-    >
-      <PrintToolbar closeHref="/sales" title={`${docType} 인쇄`} autoPrint={false} />
-      <PrintOptionBar
-        basePath={`/sales/${id}/print`}
-        params={sp}
-        groups={[
-          ...(formGroup ? [formGroup] : []),
-          {
-            key: "copies",
-            label: "출력",
-            current: copies,
-            options: [
-              { value: "both", label: "양쪽 다" },
-              { value: "receiver", label: "공급받는자만" },
-              { value: "supplier", label: "공급자만" },
-            ],
-          },
-          {
-            key: "layout",
-            label: "용지",
-            current: layout,
-            options: [
-              { value: "half", label: "2연식" },
-              { value: "full", label: "전지" },
-            ],
-          },
-          {
-            key: "balance",
-            label: "미수금",
-            current: showBalance ? "show" : "hide",
-            options: [
-              { value: "hide", label: "표기 안함" },
-              { value: "show", label: "표기" },
-            ],
-          },
-        ]}
-      />
-      <InvoicePage
-        company={company}
-        customerName={order.customers?.name ?? ""}
-        orderDate={order.order_date}
-        docNumber={docNumber}
-        items={invoiceItems}
-        memo={order.memo}
-        copies={copies}
-        layout={layout}
-        form={form}
-        customer={toInvoiceParty(order.customers)}
-        balance={customerBalance}
-      />
-    </div>
+    <InvoicePrintView
+      basePath={`/sales/${id}/print`}
+      params={sp}
+      closeHref="/sales"
+      title={`${docType} 인쇄`}
+      balanceLabel="미수금"
+      formGroup={formGroup}
+      initial={{ form, copies, layout, showBalance }}
+      balance={customerBalance}
+      invoice={{
+        company,
+        customerName: order.customers?.name ?? "",
+        orderDate: order.order_date,
+        docNumber,
+        items: invoiceItems,
+        memo: order.memo,
+        customer: toInvoiceParty(order.customers),
+      }}
+    />
   );
 }

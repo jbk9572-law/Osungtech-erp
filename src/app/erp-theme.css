@@ -2002,8 +2002,10 @@ html:has(.erp) body {
     border-top: none;
   }
 
-  .erp-modal-body {
-    padding: 0;
+  /* 모던 테마는 ✕ 자리 때문에 모달 본문 위에 40px 띠(--erp-modal-close-band)를 두는데, 그 규칙이 이 인쇄 규칙보다 구체적이라 졌다 —
+     그래서 인쇄물 위쪽에 여백이 40px 더 붙어 명세표가 아래로 밀리고 두 번째 부가 종이 바닥에 붙었다. 인쇄에서는 !important 로 확실히 0. */
+  .erp-modal > .erp-modal-body {
+    padding: 0 !important;
     overflow: visible;
   }
 
@@ -10592,6 +10594,18 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   gap: var(--erp-space-2);
   flex: 0 0 100%;
   padding: var(--erp-space-1) 0;
+}
+
+/* 명세표 인쇄 화면(InvoicePrintView)의 바깥 틀 — 화면에서는 가운데 정렬 최대 1024px, 인쇄에서는 종이 폭을 다 쓴다 */
+.erp-print-sheet {
+  margin-inline: auto;
+  max-width: 64rem;
+}
+@media print {
+  .erp-print-sheet {
+    margin-inline: 0;
+    max-width: none;
+  }
 }
 
 /* 체크 칸 여러 개를 한 줄에 늘어놓는 묶음(플랫폼 관리자 인쇄 서식 지정 등) */

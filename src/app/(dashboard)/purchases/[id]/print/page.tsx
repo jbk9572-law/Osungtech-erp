@@ -1,13 +1,12 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { PrintOptionBar } from "@/components/print-option-bar";
-import { InvoicePage, type InvoiceCopies, type InvoiceLayout } from "@/components/invoice/InvoicePage";
+import { InvoicePrintView } from "@/components/invoice/InvoicePrintView";
+import type { InvoiceCopies, InvoiceLayout } from "@/components/invoice/InvoicePage";
 import { toInvoiceParty, type InvoiceForm, type InvoiceItem } from "@/components/invoice/types";
 import { formatPaperCalcSizeLines, mergePaperCalcInputItems } from "@/modules/paper-calc/public";
 import { PAPER_STOCK_SKU } from "@/modules/paper-calc/public";
 import { getSupplierBalance } from "@/lib/ar-ap";
 import { calcVatForTaxType } from "@/lib/tax";
-import { PrintToolbar } from "@/components/erp/print-toolbar";
 import { invoiceFormOptionGroup, resolveInvoiceForm } from "@/lib/invoice-form";
 import { getTenantInvoiceScope } from "@/lib/tenant-theme";
 
@@ -100,56 +99,24 @@ export default async function PurchasePrintPage({
   });
 
   return (
-    <div className={`mx-auto max-w-5xl print:mx-0 print:max-w-none ${layout === "half" ? "print-page-wrapper" : ""}`}>
-      <PrintToolbar closeHref="/purchases" title="입고명세표 인쇄" autoPrint={false} />
-      <PrintOptionBar
-        basePath={`/purchases/${id}/print`}
-        params={sp}
-        groups={[
-          ...(formGroup ? [formGroup] : []),
-          {
-            key: "copies",
-            label: "출력",
-            current: copies,
-            options: [
-              { value: "both", label: "양쪽 다" },
-              { value: "receiver", label: "공급받는자만" },
-              { value: "supplier", label: "공급자만" },
-            ],
-          },
-          {
-            key: "layout",
-            label: "용지",
-            current: layout,
-            options: [
-              { value: "half", label: "2연식" },
-              { value: "full", label: "전지" },
-            ],
-          },
-          {
-            key: "balance",
-            label: "미지급금",
-            current: showBalance ? "show" : "hide",
-            options: [
-              { value: "hide", label: "표기 안함" },
-              { value: "show", label: "표기" },
-            ],
-          },
-        ]}
-      />
-      <InvoicePage
-        company={company}
-        customerName={order.suppliers?.name ?? ""}
-        orderDate={order.purchase_date}
-        docNumber={docNumber}
-        items={invoiceItems}
-        memo={order.memo}
-        copies={copies}
-        layout={layout}
-        form={form}
-        customer={toInvoiceParty(order.suppliers)}
-        balance={supplierBalance}
-      />
-    </div>
+    <InvoicePrintView
+      basePath={`/purchases/${id}/print`}
+      params={sp}
+      closeHref="/purchases"
+      title="입고명세표 인쇄"
+      balanceLabel="미지급금"
+      formGroup={formGroup}
+      initial={{ form, copies, layout, showBalance }}
+      balance={supplierBalance}
+      invoice={{
+        company,
+        customerName: order.suppliers?.name ?? "",
+        orderDate: order.purchase_date,
+        docNumber,
+        items: invoiceItems,
+        memo: order.memo,
+        customer: toInvoiceParty(order.suppliers),
+      }}
+    />
   );
 }
