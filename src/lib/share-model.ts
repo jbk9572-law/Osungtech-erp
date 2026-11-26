@@ -114,6 +114,24 @@ export function buildShareModel(table: HTMLTableElement, picked: Cells[]): Share
   return { title, today, roles, entries, recognized: !!(dateTh || partyTh || thByRole.get("name")) };
 }
 
+/** 공유 이미지의 품목 줄 묶음 — 한 전표 안에서 입력 순서상 바로 이어진 같은 품명(2줄 이상)은 품명을 한 번만(head) 쓰고 나머지는 규격·수량만(sub).
+ *  순서를 바꿔서 합치지 않는다(중간에 다른 품명이 끼면 따로 묶임). 전표·날짜가 다르면 호출이 따로라 합쳐지지 않는다. */
+export type ShareRow = { kind: "single"; it: ShareItem } | { kind: "head"; name: string } | { kind: "sub"; it: ShareItem };
+export function groupRowsByName(items: ShareItem[]): ShareRow[] {
+  const key = (i: ShareItem) => i.name.trim();
+  const rows: ShareRow[] = [];
+  for (let a = 0; a < items.length; ) {
+    let b = a + 1;
+    while (b < items.length && key(items[a]) && key(items[a]) !== "-" && key(items[b]) === key(items[a])) b++;
+    if (b - a >= 2) {
+      rows.push({ kind: "head", name: items[a].name });
+      for (let k = a; k < b; k++) rows.push({ kind: "sub", it: items[k] });
+    } else rows.push({ kind: "single", it: items[a] });
+    a = b;
+  }
+  return rows;
+}
+
 /** 포함된 전표·품목만 — 이미지와 합계가 이것을 쓴다. */
 export function includedEntries(model: ShareModel): ShareEntry[] {
   return model.entries

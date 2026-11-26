@@ -1,4 +1,4 @@
-import { dateBandLabel, includedEntries, shareTotals, type ItemRole, type ShareEntry, type ShareItem, type ShareModel } from "@/lib/share-model";
+import { dateBandLabel, groupRowsByName, includedEntries, shareTotals, type ItemRole, type ShareEntry, type ShareItem, type ShareModel } from "@/lib/share-model";
 
 // "공유 이미지"를 폰에서 바로 읽기 좋은 그림(PNG)으로 그린다 — 폭 360px 고정(메신저가 폰 화면 폭에 맞춰 보여준다).
 //  · 날짜마다 파란 띠, 전표는 출고처 줄 + 품목.
@@ -133,10 +133,12 @@ export async function renderSharePages(model: ShareModel): Promise<Blob[]> {
               const w = r === "name" ? nameW : colW.get(r)!;
               ctx.fillStyle = r === "amount" ? text : "#334";
               ctx.font = font(family, r === "amount" || r === "name" ? 700 : 400, 13.5);
+              // 입력 순서상 바로 위 줄과 품명이 같으면 품명은 한 번만 쓴다.
+              const sameAsPrev = r === "name" && n > 0 && it.name.trim() !== "" && it.name.trim() === e.items[n - 1].name.trim();
               if (RIGHT_ROLES.includes(r)) {
                 ctx.textAlign = "right";
                 ctx.fillText(it[r], x + w - 4, top + ROW_H / 2);
-              } else {
+              } else if (!sameAsPrev) {
                 ctx.textAlign = "left";
                 ctx.fillText(fit(ctx, it[r], w - 6), x, top + ROW_H / 2);
               }
@@ -176,10 +178,30 @@ export async function renderSharePages(model: ShareModel): Promise<Blob[]> {
       const remark = has("remark") ? it.remark : "";
       return { amountText, sub1: fits ? sub1 : "", left2, remark };
     };
-    const lines = e.items.map((it) => lineOf(probe, it));
-    const itemH = (l: (typeof lines)[number]) => 22 + (l.left2 || l.remark ? 18 : 0) + 6;
+    // 묶음 줄(품명 한 번 + 규격·수량 줄들). 묶이지 않은 품목은 예전 모양 그대로.
+    type SubLine = { spec: string; right: string; left2: string; remark: string };
+    const subLineOf = (it: ShareItem): SubLine => {
+      const amount = has("amount") ? it.amount : "";
+      const qty = has("qty") ? it.qty : "";
+      const price = has("price") && it.price ? (qty ? `× ${it.price}` : it.price) : "";
+      const tax = has("tax") && it.tax ? `세액 ${it.tax}` : "";
+      // 오른쪽 끝에는 금액(있으면), 없으면 수량 — 규격 줄 한 줄에 "규격 …… 수량"이 되게 한다.
+      const right = amount || qty;
+      const left2 = [amount ? qty : "", price, tax].filter(Boolean).join("  ");
+      return { spec: [has("spec") ? it.spec : "", has("lot") ? it.lot : ""].filter(Boolean).join("  "), right, left2, remark: has("remark") ? it.remark : "" };
+    };
+    type Row = { kind: "single"; it: ShareItem; l: ReturnType<typeof lineOf>; h: number } | { kind: "head"; name: string; h: number } | { kind: "sub"; it: ShareItem; s: SubLine; h: number };
+    const rows: Row[] = groupRowsByName(e.items).map((r): Row => {
+      if (r.kind === "head") return { kind: "head", name: r.name, h: 24 };
+      if (r.kind === "sub") {
+        const s = subLineOf(r.it);
+        return { kind: "sub", it: r.it, s, h: 20 + (s.left2 || s.remark ? 18 : 0) + 4 };
+      }
+      const l = lineOf(probe, r.it);
+      return { kind: "single", it: r.it, l, h: 22 + (l.left2 || l.remark ? 18 : 0) + 6 };
+    });
     const extraText = [e.docNo ? `전표 ${e.docNo}` : "", ...e.extras].filter(Boolean).join(" · ");
-    const h = PARTY_H + lines.reduce((s, l) => s + itemH(l), 0) + 6 + GAP_H;
+    const h = PARTY_H + rows.reduce((sum, r) => sum + r.h, 0) + 6 + GAP_H;
     return {
       h,
       band: e.date,
@@ -202,17 +224,61 @@ export async function renderSharePages(model: ShareModel): Promise<Blob[]> {
           ctx.fillText(fit(ctx, extraText, innerW * 0.42), W - PAD, y + PARTY_H / 2);
         }
         let cy = y + PARTY_H + 4;
-        e.items.forEach((it, n) => {
-          const l = lines[n];
-          if (n > 0) {
-            ctx.strokeStyle = "#eef0f3";
-            ctx.setLineDash([3, 3]);
-            ctx.beginPath();
-            ctx.moveTo(PAD + 8, cy - 2.5);
-            ctx.lineTo(W - PAD, cy - 2.5);
-            ctx.stroke();
-            ctx.setLineDash([]);
+        const dashAbove = (indent: number) => {
+          ctx.strokeStyle = "#eef0f3";
+          ctx.setLineDash([3, 3]);
+          ctx.beginPath();
+          ctx.moveTo(PAD + indent, cy - 2.5);
+          ctx.lineTo(W - PAD, cy - 2.5);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        };
+        rows.forEach((row, n) => {
+          if (row.kind === "head") {
+            if (n > 0) dashAbove(8);
+            ctx.textAlign = "left";
+            ctx.fillStyle = text;
+            ctx.font = font(family, 700, 14);
+            ctx.fillText(fit(ctx, row.name || "-", innerW - 8), PAD + 8, cy + 11);
+            cy += row.h;
+            return;
           }
+          if (row.kind === "sub") {
+            const s = row.s;
+            if (n > 0 && rows[n - 1].kind === "sub") dashAbove(20);
+            ctx.textBaseline = "middle";
+            ctx.textAlign = "right";
+            ctx.fillStyle = text;
+            ctx.font = font(family, 700, 13.5);
+            const rightW = s.right ? ctx.measureText(s.right).width : 0;
+            if (s.right) ctx.fillText(s.right, W - PAD, cy + 9);
+            ctx.textAlign = "left";
+            ctx.fillStyle = "#4b5565";
+            ctx.font = font(family, 400, 13);
+            ctx.fillText(fit(ctx, s.spec || "-", innerW - 20 - rightW - 10), PAD + 20, cy + 9);
+            let sub = cy + 20;
+            if (s.left2 || s.remark) {
+              ctx.fillStyle = "#556";
+              ctx.font = font(family, 400, 12.5);
+              ctx.fillText(fit(ctx, s.left2, innerW - 20 - (s.remark ? 90 : 0)), PAD + 20, sub + 8);
+              if (s.remark) {
+                const rw = Math.min(ctx.measureText(s.remark).width + 14, innerW * 0.4);
+                ctx.fillStyle = "#fff2cc";
+                ctx.beginPath();
+                ctx.roundRect(W - PAD - rw, sub, rw, 17, 6);
+                ctx.fill();
+                ctx.fillStyle = "#8a5a00";
+                ctx.textAlign = "center";
+                ctx.fillText(fit(ctx, s.remark, rw - 10), W - PAD - rw / 2, sub + 8.5);
+              }
+              sub += 18;
+            }
+            cy = sub + 4;
+            return;
+          }
+          const it = row.it;
+          const l = row.l;
+          if (n > 0) dashAbove(8);
           ctx.textAlign = "left";
           ctx.fillStyle = text;
           ctx.font = font(family, 700, 14);

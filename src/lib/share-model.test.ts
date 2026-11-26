@@ -58,3 +58,27 @@ describe("공유 이미지 재료", () => {
     expect(shareTotals(m).amount).toBe(700);
   });
 });
+
+describe("공유 이미지 같은 품명 묶기 (groupRowsByName)", () => {
+  const item = (name: string, spec: string): import("@/lib/share-model").ShareItem => ({ name, spec, lot: "", qty: "1 EA", price: "", amount: "", tax: "", remark: "", include: true });
+  const kinds = (rows: import("@/lib/share-model").ShareRow[]) => rows.map((r) => (r.kind === "head" ? `H:${r.name}` : `${r.kind === "sub" ? "S" : "-"}:${r.it.spec}`));
+
+  it("입력 순서상 이어진 같은 품명 2줄 이상은 품명 한 번 + 규격 줄들로 묶는다", async () => {
+    const { groupRowsByName } = await import("@/lib/share-model");
+    const rows = groupRowsByName([item("P.P", "250"), item("P.P", "125"), item("P.P", "0.5"), item("SMC", "750"), item("SMC", "500")]);
+    expect(kinds(rows)).toEqual(["H:P.P", "S:250", "S:125", "S:0.5", "H:SMC", "S:750", "S:500"]);
+  });
+
+  it("중간에 다른 품명이 끼면 입력 순서를 지키려고 묶지 않는다", async () => {
+    const { groupRowsByName } = await import("@/lib/share-model");
+    const rows = groupRowsByName([item("P.P", "250"), item("SMC", "750"), item("P.P", "125")]);
+    expect(kinds(rows)).toEqual(["-:250", "-:750", "-:125"]);
+  });
+
+  it("품명이 비었거나 '-'이면 묶지 않고, 한 줄짜리는 그대로 둔다", async () => {
+    const { groupRowsByName } = await import("@/lib/share-model");
+    expect(kinds(groupRowsByName([item("", "a"), item("", "b"), item("-", "c"), item("-", "d")]))).toEqual(["-:a", "-:b", "-:c", "-:d"]);
+    expect(kinds(groupRowsByName([item("X", "1")]))).toEqual(["-:1"]);
+    expect(groupRowsByName([])).toEqual([]);
+  });
+});
