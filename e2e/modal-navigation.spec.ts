@@ -83,10 +83,18 @@ for (const base of ["/sales", "/purchases"]) {
 
   test(`${base}: 검색창에 커서가 있을 때 Ctrl+Enter(신규) → 모달(새 탭 아님)`, async ({ page, context }) => {
     await page.goto(`${base}?q=a`);
+    // 화면이 다 뜨기 전(단축키 리스너가 붙기 전)에 누르면 브라우저 기본 동작(폼 제출)이 나가므로, 준비를 기다린 뒤 누른다.
+    await page.waitForLoadState("networkidle");
     const search = page.locator('input[name="q"]').first();
     await search.focus();
     await search.press("Control+Enter");
-    await expect(page.locator(".erp-modal[role='dialog']")).toBeVisible({ timeout: 15000 });
+    try {
+      await expect(page.locator(".erp-modal[role='dialog']")).toBeVisible({ timeout: 15000 });
+    } catch (e) {
+      // 진단: 실패하면 탭 수와 주소를 로그로 남긴다(새 탭으로 열렸는지, 같은 화면에 그대로인지 구분).
+      console.log(`CTRL-ENTER-DIAG tabs=${context.pages().length} urls=${context.pages().map((p) => p.url()).join(" | ")}`);
+      throw e;
+    }
     expect(context.pages()).toHaveLength(1);
   });
 }

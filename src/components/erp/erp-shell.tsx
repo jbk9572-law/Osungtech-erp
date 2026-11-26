@@ -11,6 +11,7 @@ import { getThemeFeatures } from "@/lib/erp-theme-config";
 import { TOOLBAR_SLOT_ID } from "@/components/erp/list-toolbar";
 import { StatusBar } from "@/components/erp/status-bar";
 import { RouteProgressBar } from "@/components/erp/route-progress-bar";
+import { ModifierSubmitGuard } from "@/components/erp/modifier-submit-guard";
 import { NavTimingReporter } from "@/components/erp/nav-timing-reporter";
 import { MidnightRefresh } from "@/components/erp/midnight-refresh";
 import { GridCellRangeStats } from "@/components/erp/grid-cell-range";
@@ -198,6 +199,7 @@ export function ErpShell({
         />
         <div className="erp-workspace">
           <RouteProgressBar />
+          <ModifierSubmitGuard />
           <NavTimingReporter />
           <TabBar />
           {/* pathname을 key로 줘서 이동할 때마다 이 div를 새로 마운트시킨다 —
