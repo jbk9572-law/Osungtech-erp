@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   groupProductItemsByLabel,
-  sortSpecsByTrailingNumber,
+  buildReportDay,
   stripFilterUnitsForCopy,
   shouldStripBoxCountForCopy,
   shouldShowBoxCountOnDashboard,
@@ -165,47 +165,29 @@ describe("groupProductItemsByLabel — 매출(원재료), fifo_consumptions 기�
   });
 });
 
-describe("sortSpecsByTrailingNumber", () => {
-  it("* 뒤쪽 숫자가 같은 규격끼리 묶이고, 뒤쪽 숫자 오름차순으로 정렬된다", () => {
-    const specs = ["1㎛ * 250mm", "1㎛ * 500mm", "1㎛ * 750mm", "5㎛ * 500mm", "25㎛ * 750mm", "100㎛ * 500mm"];
-    expect(sortSpecsByTrailingNumber(specs)).toEqual([
-      "1㎛ * 250mm",
-      "1㎛ * 500mm",
-      "5㎛ * 500mm",
-      "100㎛ * 500mm",
-      "1㎛ * 750mm",
-      "25㎛ * 750mm",
-    ]);
+describe("오늘 리포트 — 규격 줄은 입력한 순서 그대로", () => {
+  const day = (items: ItemRow[]) =>
+    buildReportDay(
+      {
+        salesCount: 0, salesTotal: 0, salesItems: [], purchaseCount: 1, purchaseTotal: 0, purchaseItems: items,
+        salesPaperCalcByPartner: {}, purchasePaperCalcByPartner: {}, carryoverInSales: [], carryoverInPurchases: [],
+        notes: [], calendarItems: [], todoItems: [],
+      } as never,
+      "모조지",
+    );
+  const f = (spec: string, quantity: number, productName = "P.P depth filter") => row({ partnerName: "에스엔에스필텍(주)", productName, categoryName: "Filter", spec, unit: "EA", quantity });
+
+  it("화면 박스와 복사 글 모두 크기순이 아니라 입력 순서(250 → 125 → 500)로 나온다", () => {
+    const d = day([f("1㎛ * 250mm", 400), f("1㎛ * 125mm", 200), f("0.5㎛ * 500mm", 500)]);
+    expect(d.purchases[0].products[0].rows.map((r) => r.spec)).toEqual(["1㎛ * 250mm", "1㎛ * 125mm", "0.5㎛ * 500mm"]);
+    const specLines = d.purchaseLines.filter((l) => l.includes(" : ")).map((l) => l.trim().split(" : ")[0]);
+    expect(specLines).toEqual(["1 * 250", "1 * 125", "0.5 * 500"]);
   });
 
-  it("규격 중 하나라도 '숫자 * 숫자' 형태가 아니면 원래 순서 그대로 둔다", () => {
-    const specs = ["1㎛ * 250mm", "규격 미지정"];
-    expect(sortSpecsByTrailingNumber(specs)).toEqual(specs);
-  });
-
-  it("'G1㎛'처럼 숫자 앞에 등급 표기가 붙어도 정렬이 깨지지 않는다", () => {
-    // 실제로 "G1㎛ * 250mm" 하나 때문에 매칭 전체가 실패해 원래 순서로
-    // 되돌아가면서 500mm 그룹이 100,1,5 순서로(뒤죽박죽) 나오던 버그.
-    const specs = [
-      "1㎛ * 250mm",
-      "G1㎛ * 250mm",
-      "100㎛ * 250mm",
-      "100㎛ * 500mm",
-      "1㎛ * 500mm",
-      "5㎛ * 500mm",
-      "25㎛ * 750mm",
-      "1㎛ * 750mm",
-    ];
-    expect(sortSpecsByTrailingNumber(specs)).toEqual([
-      "1㎛ * 250mm",
-      "G1㎛ * 250mm",
-      "100㎛ * 250mm",
-      "1㎛ * 500mm",
-      "5㎛ * 500mm",
-      "100㎛ * 500mm",
-      "1㎛ * 750mm",
-      "25㎛ * 750mm",
-    ]);
+  it("같은 품명은 거래처 아래 한 번만 쓰고 품명별 합계가 유지된다", () => {
+    const d = day([f("1㎛ * 250mm", 400), f("750mm", 60, "SMC A/C Filter"), f("1㎛ * 125mm", 200)]);
+    expect(d.purchaseLines.filter((l) => l.includes("P.P depth filter"))).toHaveLength(1);
+    expect(d.purchaseLines.some((l) => l.includes("합계 - 600"))).toBe(true);
   });
 });
 

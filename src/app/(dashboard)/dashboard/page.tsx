@@ -250,10 +250,10 @@ async function DashboardPage({
   );
 
   // 오늘의 리포트(복사본 포함)는 한 전표 안의 품목이 "입력한 순서"(line_no)로 나와야 한다 — 위 조회는 페이지 나눔을 위해 id로 정렬해 순서가 뒤섞여 있다.
-  const salesItems = orderItemsByLine(salesItemsRaw ?? [], (r) => r.sales_order_id);
-  const purchaseItems = orderItemsByLine(purchaseItemsRaw ?? [], (r) => r.purchase_order_id);
-  const carryoverWorkSales = orderItemsByLine(carryoverWorkSalesRaw ?? [], (r) => r.sales_order_id);
-  const carryoverWorkPurchases = orderItemsByLine(carryoverWorkPurchasesRaw ?? [], (r) => r.purchase_order_id);
+  const salesItems = orderItemsByLine(salesItemsRaw ?? [], (r) => r.sales_order_id, (r) => r.sales_orders?.created_at);
+  const purchaseItems = orderItemsByLine(purchaseItemsRaw ?? [], (r) => r.purchase_order_id, (r) => r.purchase_orders?.created_at);
+  const carryoverWorkSales = orderItemsByLine(carryoverWorkSalesRaw ?? [], (r) => r.sales_order_id, (r) => r.sales_orders?.created_at);
+  const carryoverWorkPurchases = orderItemsByLine(carryoverWorkPurchasesRaw ?? [], (r) => r.purchase_order_id, (r) => r.purchase_orders?.created_at);
 
   const unreadAnnouncements = notifications.announcements;
   const dueSoonTodos = notifications.todos;

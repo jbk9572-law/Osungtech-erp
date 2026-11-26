@@ -467,31 +467,8 @@ export function groupProductItemsByLabel(
 // 비숫자 글자는 건너뛰고 첫 숫자부터 찾는다 — 안 그러면 이 규격 하나
 // 때문에 매칭 자체가 실패해서 전체 그룹이 정렬 없이 원래 순서로
 // 되돌아간다(실제로 100㎛이 1㎛보다 먼저 나오는 문제로 나타났다).
-function parseSpecTrailingNumber(spec: string): { left: number; right: number } | null {
-  const m = spec.match(/^[^\d]*?(\d+(?:\.\d+)?)[^\d*]*\*\s*(\d+(?:\.\d+)?)/);
-  return m ? { left: Number(m[1]), right: Number(m[2]) } : null;
-}
-
-// 카톡 복사 텍스트뿐 아니라 화면(오늘의 업무 패널)에도 똑같이 써야 한다 —
-// 예전에 "화면에 보이는 순서와 복사한 텍스트 순서가 다르다"는 문제를
-// 한 번 고쳤는데(이 함수를 카톡 복사 쪽에만 적용하면서) 화면 렌더링
-// 쪽은 못 맞춰서 다시 어긋났었다. items 자체를 정렬하려면 getSpec으로
-// 규격 문자열을 꺼내는 함수를 넘긴다.
-export function sortBySpecTrailingNumber<T>(items: T[], getSpec: (item: T) => string): T[] {
-  const parsed = items.map((item) => {
-    const n = parseSpecTrailingNumber(getSpec(item));
-    return n ? { item, ...n } : null;
-  });
-  if (parsed.some((p) => p === null)) return items;
-  return parsed
-    .map((p) => p!)
-    .sort((a, b) => a.right - b.right || a.left - b.left)
-    .map((p) => p.item);
-}
-
-export function sortSpecsByTrailingNumber(specs: string[]): string[] {
-  return sortBySpecTrailingNumber(specs, (spec) => spec);
-}
+// 규격 줄은 전표에 입력한 순서 그대로 보여준다(예전엔 "숫자 * 숫자" 규격을 크기순으로 다시 정렬했으나, 사용자가
+// "입력한 순서대로"를 요구해 없앴다). 품목(품명) 순서도 처음 입력된 순서다 — 순서의 기준은 품목 줄 번호(line_no)다.
 
 // Filter 카테고리 품목은 카톡 복사 텍스트에서 단위 기호("㎛"/"mm")를 빼고
 // 숫자만 남긴다("1㎛ * 250mm" -> "1 * 250") — 화면 표시는 그대로 두고
@@ -569,9 +546,7 @@ function buildProductLineGroups(product: ProductGroup, direction: "purchase" | "
       bySpec.get(key)!.push(li);
     }
 
-    const sortedOrder = sortSpecsByTrailingNumber(order);
-
-    for (const spec of sortedOrder) {
+    for (const spec of order) {
       const lis = bySpec.get(spec)!;
       const quantity = lis.reduce((sum, li) => sum + li.item.quantity, 0);
       const unit = lis[0]?.item.unit ?? "";
@@ -711,7 +686,7 @@ function buildReportPartners(
       const totals = productTotals(product.items);
       return {
         name: product.productName,
-        rows: sortBySpecTrailingNumber(rows, (row) => row.spec),
+        rows,
         total: rows.length > 1 ? `${formatNumber(totals.quantity)}${totals.unit}` : null,
       };
     });
