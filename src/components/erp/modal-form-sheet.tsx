@@ -20,6 +20,7 @@ export function ModalFormSheet({
   submitRef,
   submitLabel,
   secondary,
+  embedded,
   children,
 }: {
   title: string;
@@ -34,17 +35,19 @@ export function ModalFormSheet({
   submitLabel: string;
   /** 저장 버튼 앞에 놓는 보조 버튼·메시지(예: [임시저장]). 이 폼의 submit 버튼이면 formAction을 따로 줄 수 있다. */
   secondary?: ReactNode;
+  /** 상세 화면 안에 끼워 넣는 수정 폼 — 모달 틀(제목줄·하단 바·"Esc 닫기")과 안쪽 카드를 그리지 않고 입력 격자 + 저장 줄만 낸다. 저장해도 모달을 닫지 않는다(상세에 그대로 남는다). */
+  embedded?: boolean;
   children: ReactNode;
 }) {
   const sheetClass = useFormSheetClass();
   const close = useModalClose();
   // 모달 밖(목록 화면 안에 인라인으로 놓은 경우)에서는 모달 전용 띠(제목줄·하단 바)를 달지 않는다 — 카드 머리 + 카드 안 저장 버튼 줄만.
-  const inModal = close !== null;
+  const inModal = close !== null && !embedded;
   // 제목줄(VoucherTypeBar)이 이미 화면 이름을 보여주는 테마는 카드 머리 줄을 또 그리지 않는다 — 같은 말이 연달아 두 줄 나오지 않게
   const { voucherLayout } = useThemeFeatures();
   useEffect(() => {
-    if (state?.success) close?.();
-  }, [state, close]);
+    if (state?.success && !embedded) close?.();
+  }, [state, close, embedded]);
 
   const actions = (
     <div className="erp-form-actions">
@@ -61,6 +64,15 @@ export function ModalFormSheet({
       </button>
     </div>
   );
+
+  if (embedded) {
+    return (
+      <form ref={formRef} action={formAction}>
+        <div className="erp-field-grid">{children}</div>
+        {actions}
+      </form>
+    );
+  }
 
   return (
     <form ref={formRef} action={formAction} className={inModal ? sheetClass : undefined}>

@@ -11,10 +11,13 @@ export function AnnouncementForm({
   action,
   submitLabel = "등록",
   initial,
+  embedded,
 }: {
   action: (state: FormState, formData: FormData) => Promise<FormState>;
   submitLabel?: string;
   initial?: { id: string; title: string; content: string; pinned: boolean };
+  /** 상세 화면 안에 끼워 넣을 때(모달 틀 없이) */
+  embedded?: boolean;
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
   useFormRedirect(state);
@@ -24,6 +27,7 @@ export function AnnouncementForm({
 
   return (
     <ModalFormSheet
+      embedded={embedded}
       title={initial ? "공지 수정" : "새 공지"}
       tabLabel="공지 내용"
       formAction={formAction}

@@ -78,7 +78,16 @@ export async function createPortalAccount(_prevState: FormState, formData: FormD
 
   if (error || !created.user) {
     const isDuplicate = error?.message?.toLowerCase().includes("already");
-    return { error: isDuplicate ? "이미 사용 중인 아이디입니다." : (error?.message ?? "계정 생성에 실패했습니다.") };
+    if (isDuplicate) return { error: "이미 사용 중인 아이디입니다." };
+    // 계정 서버가 이유를 비워서("{}") 돌려주는 경우가 있어, 그대로 보여 주면 무슨 일인지 알 수 없다(실제로 빨간 칸에 "{}"만 떴다).
+    // 사유가 비었으면 그 사실을 말하고, 코드/상태를 덧붙여 원인을 좁힐 수 있게 한다. 서버 로그에도 남긴다.
+    const code = (error as { code?: string } | null)?.code;
+    const status = (error as { status?: number } | null)?.status;
+    console.error("[portal-account] createUser 실패", { kind, code, status, message: error?.message });
+    const raw = error?.message?.trim();
+    const readable = !raw || raw === "{}" ? "계정 서버가 이유를 알려주지 않고 거절했습니다" : raw;
+    const detail = [code, status].filter(Boolean).join("/");
+    return { error: `계정 생성에 실패했습니다: ${readable}${detail ? ` (코드 ${detail})` : ""}` };
   }
 
   revalidatePath(kind === "subcontractor" ? "/subcontractors" : "/customers");

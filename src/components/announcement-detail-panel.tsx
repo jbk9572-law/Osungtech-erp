@@ -109,6 +109,7 @@ export async function AnnouncementDetailPanel({ id, closeHref }: { id: string; c
             action={updateAnnouncement}
             submitLabel="수정"
             initial={{ id: row.id, title: row.title, content: row.content, pinned: row.pinned }}
+            embedded
           />
         ) : (
           <div>

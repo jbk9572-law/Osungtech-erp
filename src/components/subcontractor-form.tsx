@@ -19,18 +19,21 @@ export function SubcontractorForm({
   initial,
   submitLabel = "저장",
   idFieldValue,
+  embedded,
 }: {
   action: (state: FormState, formData: FormData) => Promise<FormState>;
   initial?: SubcontractorFormInitial;
   submitLabel?: string;
   idFieldValue?: string;
+  /** 상세 화면 안에 끼워 넣을 때(모달 틀 없이) */
+  embedded?: boolean;
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
   const submitRef = useRef<HTMLButtonElement>(null);
   useKeyShortcut("F7", submitRef);
 
   return (
-    <ModalFormSheet title="새 하청업체" tabLabel="하청업체 등록" formAction={formAction} state={state} pending={pending} submitRef={submitRef} submitLabel={`F7 ${submitLabel}`}>
+    <ModalFormSheet embedded={embedded} title={idFieldValue ? "하청업체 수정" : "새 하청업체"} tabLabel="하청업체 등록" formAction={formAction} state={state} pending={pending} submitRef={submitRef} submitLabel={`F7 ${submitLabel}`}>
       {idFieldValue && <input type="hidden" name="id" value={idFieldValue} />}
       <div className="erp-field erp-span-6">
         <label htmlFor="sc-name">업체명</label>

@@ -67,7 +67,7 @@ export async function SubcontractorDetailPanel({
           <span className="erp-detail-tab active">업체 정보</span>
         </div>
         <div className="erp-detail-body">
-          <SubcontractorForm action={updateSubcontractor} idFieldValue={subcontractor.id} initial={subcontractor} />
+          <SubcontractorForm action={updateSubcontractor} idFieldValue={subcontractor.id} initial={subcontractor} embedded />
         </div>
       </div>
 
