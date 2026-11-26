@@ -10976,8 +10976,11 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   border-radius: var(--erp-radius-md, 0);
   background: var(--erp-panel);
   color: var(--erp-primary);
-  font: inherit;
+  /* 글자 크기를 칸에서 물려받지 않고 고정한다 — 이월 소계 줄(작고 흐린 글씨)과 합계 줄(기본 글씨)에서 같은 단추가 서로 다른 크기로 보였다 */
+  font-family: inherit;
+  font-size: var(--erp-font-sm);
   font-weight: 700;
+  line-height: 1.5;
   padding: 0 var(--erp-space-2);
   cursor: pointer;
   white-space: nowrap;
@@ -10998,6 +11001,7 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   box-shadow: var(--erp-shadow-float);
   white-space: nowrap;
   font-weight: 400;
+  font-size: var(--erp-font-sm);
 }
 .erp-qty-chips {
   display: flex;
