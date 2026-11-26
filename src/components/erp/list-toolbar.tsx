@@ -29,7 +29,8 @@ export function ListToolbar({ actions, tools, filters, status, search }: { actio
     if (!el) return;
     const root = document.documentElement;
     const apply = () => {
-      const sticky = getComputedStyle(el).position === "sticky";
+      // 좁은 화면(모바일)에서는 오른쪽 상세 패널이 없으므로 도구 줄이 붙어 있어도 0이다.
+      const sticky = getComputedStyle(el).position === "sticky" && !window.matchMedia("(max-width: 768px)").matches;
       root.style.setProperty("--erp-detail-side-top", sticky ? `${Math.ceil(el.getBoundingClientRect().height) + 12}px` : "0px");
     };
     apply();
@@ -40,6 +41,43 @@ export function ListToolbar({ actions, tools, filters, status, search }: { actio
       ro.disconnect();
       window.removeEventListener("resize", apply);
       root.style.removeProperty("--erp-detail-side-top");
+    };
+  }, [slot, appChrome, listFrameV2]);
+
+  // 모바일: 도구 줄은 위에 붙어 있고, 아래로 스크롤하면 검색칸만 남기고 접는다(data-collapsed). 위로 올리면 다시 펼치고, 맨 위 근처(40px)에서도 펼친다.
+  // 숨김은 보이기만 감추고 높이는 그대로라 스크롤 위치가 흔들리지 않는다(CSS는 erp-theme.css의 "모바일 도구 줄 F1" 블록).
+  useEffect(() => {
+    const el = barRef.current;
+    if (!el) return;
+    const mq = window.matchMedia("(max-width: 768px)");
+    let lastY = 0;
+    let collapsed = false;
+    const set = (next: boolean) => {
+      if (next === collapsed) return;
+      collapsed = next;
+      el.dataset.collapsed = next ? "true" : "false";
+    };
+    const onScroll = (e: Event) => {
+      if (!mq.matches) {
+        set(false);
+        return;
+      }
+      const t = e.target;
+      if (t instanceof Element && !t.contains(el)) return; // 이 도구 줄과 상관없는 안쪽 스크롤 영역(표 등)은 무시
+      const y = t instanceof Element ? t.scrollTop : window.scrollY;
+      const dy = y - lastY;
+      lastY = y;
+      if (y <= 40) set(false);
+      else if (dy > 6) set(true);
+      else if (dy < -6) set(false);
+    };
+    const onMq = () => set(false);
+    document.addEventListener("scroll", onScroll, { capture: true, passive: true });
+    mq.addEventListener("change", onMq);
+    return () => {
+      document.removeEventListener("scroll", onScroll, true);
+      mq.removeEventListener("change", onMq);
+      delete el.dataset.collapsed;
     };
   }, [slot, appChrome, listFrameV2]);
 

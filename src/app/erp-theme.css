@@ -10761,7 +10761,10 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
     --erp-tb-ico-filter: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M4 6h16M7 12h10M10 18h4'/%3E%3C/svg%3E");
     --erp-tb-ico-download: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 4v11M7 10l5 5 5-5M5 20h14'/%3E%3C/svg%3E");
     --erp-tb-ico-more: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'%3E%3Ccircle cx='5' cy='12' r='2'/%3E%3Ccircle cx='12' cy='12' r='2'/%3E%3Ccircle cx='19' cy='12' r='2'/%3E%3C/svg%3E");
-    position: static;
+    /* 위에 붙어 따라다닌다. 아래로 스크롤하면 검색칸만 남기고 나머지는 숨기고(data-collapsed), 위로 올리면 다시 나타난다(ListToolbar가 방향을 재서 표시) */
+    position: sticky;
+    top: 0;
+    z-index: 5;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -10771,6 +10774,7 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
     border: 1px solid var(--erp-border-strong);
     border-radius: var(--erp-radius-3xl, 0);
     box-shadow: var(--erp-shadow-md);
+    transition: background-color 0.15s, border-color 0.15s, box-shadow 0.15s;
   }
   /* 묶음 상자를 없애 안의 버튼들이 한 줄 흐름에 직접 놓이게 한다 — 그래야 검색칸을 맨 위로, 기간·아이콘을 한 줄로 순서를 정할 수 있다 */
   .erp-chrome-modern .erp-listtoolbar-actions,
@@ -10915,6 +10919,31 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
     content: "+";
     font-size: var(--erp-font-xl, 20px);
     line-height: 1;
+  }
+  /* 접힌 상태(아래로 스크롤 중): 카드의 바탕·테두리를 걷고 검색칸 한 줄만 떠 있게 한다. 높이는 그대로 두고(레이아웃이 안 움직여 깜빡임이 없다) 나머지 칸만 투명하게 가린다.
+     카드 자리는 클릭이 통과하게(pointer-events) 하고, 검색칸과 떠 있는 [신규]만 눌린다. */
+  .erp-chrome-modern .erp-listtoolbar[role="toolbar"][data-collapsed="true"] {
+    /* 검색칸 윗부분(위 여백 + 검색칸 높이)만 화면 배경색으로 덮어 뒤에서 지나가는 목록 글자가 비치지 않게 하고, 그 아래 숨긴 칸 자리는 투명하게 둔다 */
+    background: linear-gradient(to bottom, var(--erp-bg) 0, var(--erp-bg) 58px, transparent 66px) border-box no-repeat;
+    border-color: transparent;
+    box-shadow: none;
+    pointer-events: none;
+  }
+  .erp-chrome-modern .erp-listtoolbar[data-collapsed="true"] .erp-listtoolbar-filters > :not(.erp-fb-search),
+  .erp-chrome-modern .erp-listtoolbar[data-collapsed="true"] .erp-listtoolbar-actions > :not(.erp-tb-new),
+  .erp-chrome-modern .erp-listtoolbar[data-collapsed="true"] .erp-listtoolbar-status,
+  .erp-chrome-modern .erp-listtoolbar[data-collapsed="true"] .erp-listtoolbar-sep {
+    visibility: hidden;
+    opacity: 0;
+  }
+  .erp-chrome-modern .erp-listtoolbar[data-collapsed="true"] .erp-fb-search,
+  .erp-chrome-modern .erp-listtoolbar[data-collapsed="true"] .erp-listtoolbar-search .erp-input {
+    pointer-events: auto;
+    background-color: var(--erp-panel);
+    box-shadow: var(--erp-shadow-md);
+  }
+  .erp-chrome-modern .erp-listtoolbar[data-collapsed="true"] .erp-tb-new {
+    pointer-events: auto;
   }
 }
 
