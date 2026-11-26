@@ -1,3 +1,4 @@
+import { DetailActionBar } from "@/components/detail-action-bar";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { isUuid } from "@/lib/is-uuid";
@@ -19,10 +20,10 @@ export default async function SubcontractorDetailPage({ params }: { params: Prom
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/subcontractors" } }} />
-      <div className="mb-1 flex justify-end">
-        <DeleteButton action={deleteSubcontractor} id={id} confirmMessage="이 업체를 삭제하시겠습니까? 발급된 포털 계정도 함께 삭제됩니다." />
-      </div>
       <SubcontractorDetailPanel key={id} id={id} selfHref={`/subcontractors/${id}`} />
+      <DetailActionBar closeHref={"/subcontractors"}>
+        <DeleteButton action={deleteSubcontractor} id={id} confirmMessage="이 업체를 삭제하시겠습니까? 발급된 포털 계정도 함께 삭제됩니다." />
+      </DetailActionBar>
     </div>
   );
 }

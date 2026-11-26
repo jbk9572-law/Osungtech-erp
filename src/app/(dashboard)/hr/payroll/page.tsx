@@ -54,6 +54,8 @@ export default async function PayrollPage({
   const supabase = await createClient();
   await requireFeatureEnabled(supabase, "hr");
   const { isAdmin } = await getCurrentActor(supabase);
+  const { data: isSandboxFlag, error: sandboxFlagError } = await supabase.rpc("is_sandbox_tenant");
+  const isSandbox = !sandboxFlagError && isSandboxFlag === true; // 판별에 실패하면 샘플 안내를 띄우지 않는다(실제 회사에 잘못 띄우는 것보다 낫다)
 
   if (!isAdmin) {
     return <AccessWall title="인사관리 > 급여관리" message="이 화면은 관리자만 볼 수 있습니다." backHref="/dashboard" />;
@@ -113,6 +115,11 @@ export default async function PayrollPage({
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/dashboard" } }} />
       <ListPageHeader title="인사관리 > 급여관리" />
+      {isSandbox && (
+        <PageGuide tone="warning">
+          샌드박스 회사의 <b>샘플 급여명세</b>입니다. 금액은 실제 원천징수 세율표가 아니라 단순 비율로 만든 예시 숫자이므로 실제 급여 계산에 쓰지 마세요.
+        </PageGuide>
+      )}
 
       <PageGuide>
         4대보험 요율/최저시급은 법정 고시 수치입니다. 고용노동부·국민연금공단·

@@ -1,3 +1,4 @@
+import { DetailActionBar } from "@/components/detail-action-bar";
 import { notFound } from "next/navigation";
 import { isUuid } from "@/lib/is-uuid";
 import { SupplierDetailPanel } from "@/components/supplier-detail-panel";
@@ -21,14 +22,14 @@ export default async function SupplierDetailPage({
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: closeHref } }} />
-      <div className="mb-1 flex justify-end">
+      <SupplierDetailPanel key={id} id={id} />
+      <DetailActionBar closeHref={closeHref}>
         <DeleteButton
           action={deleteSupplier}
           id={id}
           confirmMessage="이 공급처를 삭제하시겠습니까? 관련 매입/상품 내역이 있으면 삭제되지 않습니다."
         />
-      </div>
-      <SupplierDetailPanel key={id} id={id} />
+      </DetailActionBar>
     </div>
   );
 }

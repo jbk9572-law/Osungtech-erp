@@ -13,6 +13,7 @@ import { seedMessenger } from "@/lib/dev-seed/boards/messenger";
 import { seedCustomerOrders } from "@/lib/dev-seed/boards/customer-portal-orders";
 import { seedApprovalLinePresets, linkApprovalMatrixRules } from "@/lib/dev-seed/boards/approval-lines";
 import { seedOfficialDocumentsWithApproval } from "@/lib/dev-seed/boards/official-documents-approval";
+import { fillSandboxMenus, formatFillResults } from "@/lib/dev-seed/sandbox-fill";
 import type { ActingSession, DummyEmployee, PortalSession } from "@/lib/dev-seed/types";
 import type { FormState } from "@/components/form-message";
 
@@ -67,8 +68,10 @@ async function seedSandboxEmployees(): Promise<string | null> {
   const { supabase, isAdmin, selfId } = await requireAdmin();
   if (!isAdmin || !selfId) return null;
 
+  // 이미 다른 직원이 있어도 건너뛰지 않는다 — 예전엔 여기서 통째로 돌아가서, 직원을 한 번 만든 샌드박스는 메신저·발주승인·결재선·메일·캘린더 등이
+  // 비어 있어도 다시는 채워지지 않았다. 이제는 직원 계정은 다시 만들지 않고(비밀번호만 새로 정해 로그인 세션을 만든다) 비어 있는 메뉴만 채운다.
   const { data: others } = await supabase.from("profiles").select("id").neq("id", selfId).limit(1);
-  if (others && others.length > 0) return null; // 이미 다른 직원이 있으면 건너뜀
+  const alreadySeeded = !!(others && others.length > 0);
 
   const { data: myTenant } = await supabase.from("tenants").select("id, slug").maybeSingle();
   const { data: departments } = await supabase.from("departments").select("id, name").limit(500);
@@ -85,7 +88,7 @@ async function seedSandboxEmployees(): Promise<string | null> {
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   const createdEmployees: DummyEmployee[] = [];
-  for (const emp of SANDBOX_EMPLOYEES) {
+  for (const emp of alreadySeeded ? [] : SANDBOX_EMPLOYEES) {
     const deptId = departments.find((d) => d.name === emp.dept)?.id ?? null;
     const email = `${emp.username}@${myTenant.slug}.elvonix.local`;
     const password = `Sandbox-${Math.random().toString(36).slice(2, 10)}!`;
@@ -112,7 +115,26 @@ async function seedSandboxEmployees(): Promise<string | null> {
     });
   }
 
-  if (createdEmployees.length === 0) return null;
+  if (alreadySeeded) {
+    // 이미 만들어 둔 더미 사원: 로그인 세션을 만들려면 비밀번호가 필요한데 저장돼 있지 않다 — 새 비밀번호로 바꿔(서비스 키) 이번 요청 안에서만 쓴다.
+    for (const emp of SANDBOX_EMPLOYEES) {
+      const { data: prof } = await admin.from("profiles").select("id, department_id").eq("tenant_id", myTenant.id).eq("username", emp.username).maybeSingle();
+      if (!prof) continue;
+      const password = `Sandbox-${Math.random().toString(36).slice(2, 10)}!`;
+      const { error: pwError } = await admin.auth.admin.updateUserById(prof.id, { password });
+      if (pwError) continue;
+      createdEmployees.push({
+        id: prof.id,
+        email: `${emp.username}@${myTenant.slug}.elvonix.local`,
+        password,
+        fullName: emp.fullName,
+        username: emp.username,
+        departmentId: prof.department_id ?? departments.find((d) => d.name === emp.dept)?.id ?? null,
+      });
+    }
+  }
+
+  if (createdEmployees.length === 0) return alreadySeeded ? "이미 만들어 둔 더미 사원을 찾지 못해 건너뛰었습니다." : null;
 
   // 사내메신저 "전체" 채널에 이 사원들 이름으로 메시지를 몇 개 더
   // 추가해 혼자 떠드는 게 아니라 여러 명이 대화하는 것처럼 보이게
@@ -125,7 +147,7 @@ async function seedSandboxEmployees(): Promise<string | null> {
     .eq("tenant_id", myTenant.id)
     .eq("is_demo", false)
     .maybeSingle();
-  if (channel) {
+  if (channel && !alreadySeeded) {
     const { error: messageError } = await admin.from("messenger_messages").insert(
       EXTRA_MESSENGER_LINES.map((content, i) => ({
         sender_id: createdEmployees[i % createdEmployees.length].id,
@@ -160,17 +182,21 @@ async function seedSandboxEmployees(): Promise<string | null> {
   }
 
   const notes: string[] = [];
+  const rowCount = async (table: string) => {
+    const { count } = await supabase.from(table as "customers").select("*", { count: "exact", head: true });
+    return count ?? 0;
+  };
 
   // 전체 채널에 더 자연스러운 대화량을 더한다(위 고정 문구 외 추가).
-  const messengerResult = await seedMessenger(actors, 30);
+  const messengerResult = !alreadySeeded || (await rowCount("messenger_messages")) < 15 ? await seedMessenger(actors, 30) : { board: "메신저", created: 0 };
   if (messengerResult.error) notes.push(`메신저 추가 대화 일부 실패: ${messengerResult.error}`);
 
   // 전자결재 기안함.
-  const approvalsResult = await seedApprovals(createdEmployees, actors, [], 8);
+  const approvalsResult = alreadySeeded ? { board: "기안함", created: 0 } : await seedApprovals(createdEmployees, actors, [], 8);
   if (approvalsResult.error) notes.push(`기안함 일부 실패: ${approvalsResult.error}`);
 
   // 결재선(공유 프리셋) 6개 + 결재매트릭스 연결.
-  const linesResult = await seedApprovalLinePresets(createdEmployees, actors, 6);
+  const linesResult = !alreadySeeded || (await rowCount("approval_line_presets")) === 0 ? await seedApprovalLinePresets(createdEmployees, actors, 6) : { board: "결재선", created: 0 };
   if (linesResult.error) notes.push(`결재선 일부 실패: ${linesResult.error}`);
   // approval_matrix_rules insert/update는 is_admin()만 허용 — 지금 이
   // 액션을 실행 중인 관리자 본인의 실제 로그인 세션(supabase)으로 호출한다.
@@ -179,7 +205,7 @@ async function seedSandboxEmployees(): Promise<string | null> {
 
   // 인사문서(document_instances) — migration 221이 넣어둔 인사 템플릿
   // 기준으로 재직증명서 등을 실제로 몇 건 생성해둔다.
-  const hrDocsResult = await seedHrDocuments(createdEmployees, actors, 10);
+  const hrDocsResult = alreadySeeded ? { board: "인사문서", created: 0 } : await seedHrDocuments(createdEmployees, actors, 10);
   if (hrDocsResult.error) notes.push(`인사문서 일부 실패: ${hrDocsResult.error}`);
 
   // 공문(official_documents) — 기안→상신→결재까지 실제로 태운다(게시판
@@ -190,13 +216,14 @@ async function seedSandboxEmployees(): Promise<string | null> {
     .eq("category", "official")
     .eq("is_active", true)
     .limit(100);
-  const officialResult = await seedOfficialDocumentsWithApproval(createdEmployees, actors, officialTemplates ?? [], 8);
+  const officialResult = alreadySeeded ? { board: "공문", created: 0 } : await seedOfficialDocumentsWithApproval(createdEmployees, actors, officialTemplates ?? [], 8);
   if (officialResult.error) notes.push(`공문 결재 일부 실패: ${officialResult.error}`);
 
   // 거래처 발주승인 — migration 221이 판매단가를 넣어둔 거래처 중
   // 몇 곳에 포털 계정을 만들어 실제로 발주를 넣게 한 뒤, 절반 정도는
   // 직접 승인 처리해 "승인 대기"와 "승인 완료"를 함께 보여준다.
   try {
+    if (alreadySeeded && (await rowCount("customer_orders")) > 0) throw new Error("이미 발주 데이터가 있어 건너뜀");
     const { data: pricedCustomerRows } = await supabase
       .from("customer_product_prices")
       .select("customer_id, customers(id, name)")
@@ -240,11 +267,31 @@ async function seedSandboxEmployees(): Promise<string | null> {
       }
     }
   } catch (e) {
-    notes.push(`거래처 발주승인 더미 실패: ${e instanceof Error ? e.message : String(e)}`);
+    const msg = e instanceof Error ? e.message : String(e);
+    if (!msg.includes("건너뜀")) notes.push(`거래처 발주승인 더미 실패: ${msg}`);
   }
 
-  const base = `사원 계정 ${createdEmployees.length}명 생성 — 메신저 대화/전자결재 기안함/결재선/인사문서/공문 결재/거래처 발주승인까지 채웠습니다.`;
-  return notes.length > 0 ? `${base} (일부 보류: ${notes.join(" / ")})` : base;
+  // 메일·캘린더·근태·급여·창고이동·일시반출 — 예전엔 이 버튼이 채우지 않던 메뉴들. 결과는 메뉴별로 성공/실패를 그대로 보여 준다.
+  let fillSummary = "";
+  try {
+    const { data: authData } = await supabase.auth.getUser();
+    const { data: selfProfile } = await supabase.from("profiles").select("full_name").eq("id", selfId).maybeSingle();
+    const results = await fillSandboxMenus({
+      supabase,
+      admin,
+      tenantId: myTenant.id,
+      tenantSlug: myTenant.slug,
+      self: { id: selfId, email: authData.user?.email ?? `${selfId}@sandbox.local`, fullName: selfProfile?.full_name ?? "관리자" },
+      employees: createdEmployees,
+      actors,
+    });
+    fillSummary = formatFillResults(results);
+  } catch (e) {
+    fillSummary = `✗ 메일·캘린더·근태·급여·창고·일시반출: ${e instanceof Error ? e.message : String(e)}`;
+  }
+
+  const base = `${alreadySeeded ? "기존 더미 사원 " : "사원 계정 "}${createdEmployees.length}명 — 비어 있던 메뉴를 채웠습니다.`;
+  return `${base} ▶ ${fillSummary}${notes.length > 0 ? ` ▶ 일부 보류: ${notes.join(" / ")}` : ""}`;
 }
 
 export async function seedSandbox(_prevState: FormState, _formData: FormData): Promise<FormState> {

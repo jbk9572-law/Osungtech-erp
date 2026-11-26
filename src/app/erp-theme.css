@@ -11181,3 +11181,32 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   font-size: var(--erp-font-sm);
   color: var(--erp-text-muted);
 }
+
+
+/* 상세 화면 맨 아래 고정 바(DetailActionBar) — [삭제] 왼쪽 · [닫기] 오른쪽. 모달 본문을 스크롤해도 맨 아래에 남는다 */
+.erp-detail-actionbar {
+  position: sticky;
+  /* 모달 본문 아래 여백(16px)만큼 내려 붙여 바 아래로 내용이 비치는 틈이 없게 한다 */
+  bottom: calc(-1 * var(--erp-space-4));
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: var(--erp-space-2);
+  margin-top: var(--erp-space-3);
+  padding: var(--erp-space-2) 0 calc(var(--erp-space-2) + var(--erp-space-4));
+  background: var(--erp-panel);
+  border-top: 1px solid var(--erp-border);
+}
+.erp-detail-actionbar-main {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--erp-space-2);
+  min-width: 0;
+}
+@media (max-width: 768px) {
+  .erp-detail-actionbar .erp-btn {
+    min-height: 44px;
+  }
+}
