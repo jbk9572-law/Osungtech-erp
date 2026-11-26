@@ -25,6 +25,7 @@ const ALLOWLIST = {
   "app/api/backup/export/route.ts": ["user", "전체 데이터 내려받기(관리자)"],
   "app/api/calendar/feed/route.ts": ["user", "캘린더 구독 주소(토큰으로 인증)"],
   "app/login/actions.ts": ["system", "로그인 전 아이디→이메일 조회(서버에서만)"],
+  "app/portal/login/actions.ts": ["system", "포털 로그인 전 아이디→이메일 조회(서버에서만, service_role 전용 함수 get_portal_email_for_username)"],
   "app/platform-admin/actions.ts": ["user", "플랫폼 관리자 전용"],
   "app/platform-admin/stats/page.tsx": ["user", "플랫폼 관리자 통계"],
   "app/portal/(app)/assignments/actions.ts": ["elsewhere", "하청 포털 — 권한은 subcontractor_* DB 함수(portal_identity 확인)가 검사하고, 서비스 키는 그 결과의 회사 값으로 시스템 알림만 보낸다"],

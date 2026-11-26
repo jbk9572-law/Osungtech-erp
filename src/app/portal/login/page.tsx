@@ -28,8 +28,8 @@ function PortalLoginForm() {
         </p>
         <form action={formAction} className="flex flex-col gap-3">
           <div className="erp-field">
-            <label htmlFor="portal-email">이메일</label>
-            <input id="portal-email" name="email" type="email" autoComplete="username" required className="erp-input erp-u-w-full" />
+            <label htmlFor="portal-login-id">아이디</label>
+            <input id="portal-login-id" name="login_id" type="text" autoComplete="username" autoCapitalize="none" spellCheck={false} required className="erp-input erp-u-w-full" />
           </div>
           <div className="erp-field">
             <label htmlFor="portal-password">비밀번호</label>
