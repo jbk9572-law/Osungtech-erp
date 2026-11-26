@@ -93,7 +93,8 @@ export async function getPurchaseItemsForDate(date: string): Promise<TodayPurcha
       "id, product_id, quantity, spec, lot_number, purchase_order_id, products(sku, name, spec, unit), purchase_orders!inner(purchase_date, supplier_id, suppliers(name))"
     )
     .eq("purchase_orders.purchase_date", date)
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: true })
+    .order("line_no", { ascending: true });
 
   // 직접입력(품목 미연결) 줄은 연결할 품목이 없어 "가져오기" 대상이 될 수
   // 없으므로 제외한다.

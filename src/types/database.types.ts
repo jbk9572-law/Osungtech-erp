@@ -4048,6 +4048,7 @@ export type Database = {
           lot_number: string | null;
           source_purchase_item_id: string | null;
           created_at: string;
+          line_no: number | null;
         };
         Insert: {
           id?: string;
@@ -4062,6 +4063,7 @@ export type Database = {
           lot_number?: string | null;
           source_purchase_item_id?: string | null;
           created_at?: string;
+          line_no?: number | null;
         };
         Update: {
           id?: string;
@@ -4076,6 +4078,7 @@ export type Database = {
           lot_number?: string | null;
           source_purchase_item_id?: string | null;
           created_at?: string;
+          line_no?: number | null;
         };
         Relationships: [
           {
@@ -4365,6 +4368,7 @@ export type Database = {
           remark: string | null;
           lot_number: string | null;
           created_at: string;
+          line_no: number | null;
           remaining_quantity: number;
         };
         Insert: {
@@ -4378,6 +4382,7 @@ export type Database = {
           remark?: string | null;
           lot_number?: string | null;
           created_at?: string;
+          line_no?: number | null;
           remaining_quantity?: number;
         };
         Update: {
@@ -4391,6 +4396,7 @@ export type Database = {
           remark?: string | null;
           lot_number?: string | null;
           created_at?: string;
+          line_no?: number | null;
           remaining_quantity?: number;
         };
         Relationships: [

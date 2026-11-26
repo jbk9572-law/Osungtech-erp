@@ -61,6 +61,7 @@ export default async function SaleDetailPage({
       .from("sales_order_items")
       .select("*, products(sku, name, spec, unit, base_package_qty)")
       .eq("sales_order_id", id)
+      .order("line_no", { ascending: true })
       .order("created_at"),
     supabase
       .from("paper_calculations")

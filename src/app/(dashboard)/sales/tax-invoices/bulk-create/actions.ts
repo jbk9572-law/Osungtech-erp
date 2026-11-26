@@ -106,6 +106,7 @@ export async function bulkCreateTaxInvoices(
       .from("sales_order_items")
       .select("quantity, unit_price, spec, custom_name, products(name)")
       .eq("sales_order_id", orderId)
+      .order("line_no", { ascending: true })
       .order("created_at");
     const rows = (items ?? []).filter((it) => Number(it.quantity) > 0);
     if (rows.length === 0) {

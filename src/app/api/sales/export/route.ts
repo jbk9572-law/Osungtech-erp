@@ -54,6 +54,7 @@ export async function GET(request: Request) {
       .gte("sales_orders.order_date", from)
       .lte("sales_orders.order_date", to)
       .order("created_at")
+      .order("line_no", { ascending: true })
       .range(rangeFrom, rangeTo)
   );
 

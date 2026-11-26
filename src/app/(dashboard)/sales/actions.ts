@@ -470,7 +470,8 @@ export async function getSaleItemsForDate(date: string): Promise<ImportableOrder
     )
     .eq("sales_orders.order_date", date)
     .eq("sales_orders.is_return", false)
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: true })
+    .order("line_no", { ascending: true });
   // 직접입력(품목 미연결) 줄은 할일 품목으로 옮길 수 없어 제외한다.
   return (data ?? [])
     .filter((item): item is typeof item & { product_id: string } => item.product_id !== null)

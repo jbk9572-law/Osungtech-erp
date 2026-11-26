@@ -42,6 +42,7 @@ export default async function EditPurchasePage({
       .from("purchase_order_items")
       .select("product_id, custom_name, spec, quantity, unit_cost, remark, lot_number")
       .eq("purchase_order_id", id)
+      .order("line_no", { ascending: true })
       .order("created_at"),
     fetchAllRows<{ id: string; name: string; notes: string | null }>((from, to) =>
       supabase.from("suppliers").select("id, name, notes").order("name").range(from, to),

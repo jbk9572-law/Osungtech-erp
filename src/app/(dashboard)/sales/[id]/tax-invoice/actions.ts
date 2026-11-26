@@ -280,6 +280,7 @@ export async function issueTaxInvoiceViaMockApi(_prevState: FormState, formData:
     .from("sales_order_items")
     .select("quantity, unit_price, spec, custom_name, products(name)")
     .eq("sales_order_id", salesOrderId)
+    .order("line_no", { ascending: true })
     .order("created_at");
   if (!items || items.length === 0) return { error: "발행할 품목이 없습니다." };
 

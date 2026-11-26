@@ -29,6 +29,7 @@ import {
 import { fetchAllRows, selectInChunks } from "@/lib/fetch-all-rows";
 import { calcVatForTaxType } from "@/lib/tax";
 import { matchesSearch } from "@/lib/search-match";
+import { orderItemsByLine } from "@/lib/order-item-sort";
 import { buildExtraFilter } from "@/lib/extra-filters";
 import { formatNumber } from "@/lib/format-number";
 import { quantityLabelByUnit, type QtyItem } from "@/lib/quantity-by-unit";
@@ -84,6 +85,7 @@ async function PurchasesPage({
       .select(PURCHASE_ITEM_SELECT)
       .order("purchase_orders(purchase_date)", { ascending: false })
       .order("created_at", { ascending: false })
+      .order("line_no", { ascending: true })
       .gte("purchase_orders.purchase_date", effectiveFrom)
       .lte("purchase_orders.purchase_date", effectiveTo);
 
@@ -121,7 +123,7 @@ async function PurchasesPage({
   // 된다"). 검색 중일 때만 fetchAllRows로 조회기간 전체를 받고, 검색이
   // 없을 때는 기존처럼 DB에서 최근 limit건만 받아 일반 조회 성능을
   // 그대로 유지한다.
-  const [rawItems, rawPayments, rawCarryoverItems] = await Promise.all([
+  const [rawItemsUnsorted, rawPayments, rawCarryoverItemsUnsorted] = await Promise.all([
     keyword || extraFilter
       ? fetchAllRows((from, to) => buildItemQuery().range(from, to).order("id", { ascending: true }))
       : buildItemQuery()
@@ -140,6 +142,9 @@ async function PurchasesPage({
             .then((r) => r.data ?? [])
       : Promise.resolve([]),
   ]);
+  // 한 전표 안의 품목은 입력한 순서(line_no)로 — 대표 품목·공유 이미지·상세가 모두 이 순서를 따른다.
+  const rawItems = orderItemsByLine(rawItemsUnsorted, (r) => r.purchase_order_id);
+  const rawCarryoverItems = orderItemsByLine(rawCarryoverItemsUnsorted ?? [], (r) => r.purchase_order_id);
 
   const items = byExtra(keyword
     ? rawItems.filter((item) =>

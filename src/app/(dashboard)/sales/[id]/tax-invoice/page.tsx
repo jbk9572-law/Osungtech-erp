@@ -91,6 +91,7 @@ export default async function TaxInvoicePage({
           .from("sales_order_items")
           .select("quantity, unit_price, spec, custom_name, products(name)")
           .eq("sales_order_id", id)
+          .order("line_no", { ascending: true })
           .order("created_at"),
     existing
       ? supabase

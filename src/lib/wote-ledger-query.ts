@@ -34,6 +34,7 @@ export async function fetchWoteLedgerEntries(
         )
         .lte("purchase_orders.purchase_date", to)
         .order("created_at")
+        .order("line_no", { ascending: true })
         .range(from, rangeTo);
       // supabase가 SupabaseClient<any>라 관계 임베드 카디널리티를 알 수 없어
       // 배열로 추론된다 — 실제로는 !inner라 단일 객체임을 알고 캐스팅한다.
@@ -57,6 +58,7 @@ export async function fetchWoteLedgerEntries(
         )
         .lte("sales_orders.order_date", to)
         .order("created_at")
+        .order("line_no", { ascending: true })
         .range(from, rangeTo);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return q as any;

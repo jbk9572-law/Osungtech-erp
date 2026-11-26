@@ -46,6 +46,7 @@ export default async function EditSalePage({
       // 존재하지 않는 컬럼 때문에 조회가 통째로 실패해 품목이 비어 보이는 일이 없게(있으면 값이 오고 없으면 undefined).
       .select("*")
       .eq("sales_order_id", id)
+      .order("line_no", { ascending: true })
       .order("created_at"),
     fetchAllRows<{ id: string; name: string; notes: string | null }>((from, to) =>
       supabase.from("customers").select("id, name, notes").order("name").range(from, to),

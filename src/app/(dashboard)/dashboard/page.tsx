@@ -1,4 +1,4 @@
-import { withPageTiming } from "@/lib/page-timing";
+import { withPageTiming } from "@/lib/page-timing"; import { orderItemsByLine } from "@/lib/order-item-sort";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { DashboardCalendar } from "@/components/dashboard-calendar";
 import { OnboardingBanner } from "@/components/onboarding-banner";
@@ -114,10 +114,10 @@ async function DashboardPage({
   const { layout: dashboardLayout, companyLayout } = await layoutsP;
 
   const [
-    salesItems,
-    purchaseItems,
-    carryoverWorkSales,
-    carryoverWorkPurchases,
+    salesItemsRaw,
+    purchaseItemsRaw,
+    carryoverWorkSalesRaw,
+    carryoverWorkPurchasesRaw,
     salesPaperCalcs,
     purchasePaperCalcs,
     { data: paperStockProduct },
@@ -137,7 +137,7 @@ async function DashboardPage({
       supabase
         .from("sales_order_items")
         .select(
-          "id, quantity, unit_price, spec, remark, custom_name, sales_order_id, products(sku, name, unit, spec, base_package_qty, categories(name)), sales_orders!inner(order_date, is_return, is_carryover, created_at, customers(name))"
+          "id, line_no, quantity, unit_price, spec, remark, custom_name, sales_order_id, products(sku, name, unit, spec, base_package_qty, categories(name)), sales_orders!inner(order_date, is_return, is_carryover, created_at, customers(name))"
         )
         .gte("sales_orders.order_date", monthStart)
         .lte("sales_orders.order_date", monthEnd)
@@ -147,7 +147,7 @@ async function DashboardPage({
       supabase
         .from("purchase_order_items")
         .select(
-          "id, quantity, unit_cost, spec, remark, custom_name, purchase_order_id, products(sku, name, unit, spec, base_package_qty, categories(name)), purchase_orders!inner(purchase_date, is_carryover, created_at, suppliers(name))"
+          "id, line_no, quantity, unit_cost, spec, remark, custom_name, purchase_order_id, products(sku, name, unit, spec, base_package_qty, categories(name)), purchase_orders!inner(purchase_date, is_carryover, created_at, suppliers(name))"
         )
         .gte("purchase_orders.purchase_date", monthStart)
         .lte("purchase_orders.purchase_date", monthEnd)
@@ -161,7 +161,7 @@ async function DashboardPage({
       supabase
         .from("sales_order_items")
         .select(
-          "id, quantity, unit_price, spec, remark, custom_name, sales_order_id, products(sku, name, unit, spec, base_package_qty, categories(name)), sales_orders!inner(order_date, is_return, is_carryover, created_at, customers(name))"
+          "id, line_no, quantity, unit_price, spec, remark, custom_name, sales_order_id, products(sku, name, unit, spec, base_package_qty, categories(name)), sales_orders!inner(order_date, is_return, is_carryover, created_at, customers(name))"
         )
         .eq("sales_orders.is_carryover", true)
         .gte("sales_orders.created_at", workDateRange.start)
@@ -172,7 +172,7 @@ async function DashboardPage({
       supabase
         .from("purchase_order_items")
         .select(
-          "id, quantity, unit_cost, spec, remark, custom_name, purchase_order_id, products(sku, name, unit, spec, base_package_qty, categories(name)), purchase_orders!inner(purchase_date, is_carryover, created_at, suppliers(name))"
+          "id, line_no, quantity, unit_cost, spec, remark, custom_name, purchase_order_id, products(sku, name, unit, spec, base_package_qty, categories(name)), purchase_orders!inner(purchase_date, is_carryover, created_at, suppliers(name))"
         )
         .eq("purchase_orders.is_carryover", true)
         .gte("purchase_orders.created_at", workDateRange.start)
@@ -248,6 +248,12 @@ async function DashboardPage({
       ? getCalendarItems(supabase, { from: `${monthStart}T00:00:00`, to: `${monthEnd}T23:59:59`, tenantId: myProfile.tenant_id, isDemo: myProfile.is_demo })
       : Promise.resolve([] as CalendarItem[]),
   );
+
+  // 오늘의 리포트(복사본 포함)는 한 전표 안의 품목이 "입력한 순서"(line_no)로 나와야 한다 — 위 조회는 페이지 나눔을 위해 id로 정렬해 순서가 뒤섞여 있다.
+  const salesItems = orderItemsByLine(salesItemsRaw ?? [], (r) => r.sales_order_id);
+  const purchaseItems = orderItemsByLine(purchaseItemsRaw ?? [], (r) => r.purchase_order_id);
+  const carryoverWorkSales = orderItemsByLine(carryoverWorkSalesRaw ?? [], (r) => r.sales_order_id);
+  const carryoverWorkPurchases = orderItemsByLine(carryoverWorkPurchasesRaw ?? [], (r) => r.purchase_order_id);
 
   const unreadAnnouncements = notifications.announcements;
   const dueSoonTodos = notifications.todos;

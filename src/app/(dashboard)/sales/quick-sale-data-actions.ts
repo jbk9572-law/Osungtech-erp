@@ -29,6 +29,7 @@ export async function loadQuickSaleData(): Promise<QuickSaleData | null> {
       .from("sales_order_items")
       .select("product_id, unit_price, sales_orders!inner(customer_id, order_date)")
       .order("created_at", { ascending: false })
+      .order("line_no", { ascending: true })
       .limit(500),
   ]);
   const history = (historyRows ?? [])

@@ -48,6 +48,7 @@ export default async function SalesPrintPage({
       .from("sales_order_items")
       .select("*, products(sku, name, spec, unit, base_package_qty, categories(name))")
       .eq("sales_order_id", id)
+      .order("line_no", { ascending: true })
       .order("created_at"),
     supabase.from("company_profile").select("*").maybeSingle(),
     supabase.from("paper_calculations").select("input_items").eq("sales_order_id", id),
