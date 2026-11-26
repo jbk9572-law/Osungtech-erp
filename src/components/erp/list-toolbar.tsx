@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useThemeFeatures } from "@/lib/erp-theme-features";
 import { GuardedLink } from "@/components/erp/guarded-link";
@@ -21,8 +21,30 @@ export function ListToolbar({ actions, tools, filters, status, search }: { actio
     setSlot(appChrome && !listFrameV2 ? document.getElementById(TOOLBAR_SLOT_ID) : null);
   }, [appChrome, listFrameV2]);
 
+  // 도구 줄이 화면 위에 붙어 따라다니면(sticky) 오른쪽 상세 패널(.erp-detail-side)도 그 높이만큼 아래에 붙어야 서로 겹치지 않는다 —
+  // 도구 줄의 실제 높이(줄바꿈으로 달라진다)를 재서 --erp-detail-side-top 에 넣는다. 붙지 않는 모양(모바일·클래식)이면 0이다.
+  const barRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = barRef.current;
+    if (!el) return;
+    const root = document.documentElement;
+    const apply = () => {
+      const sticky = getComputedStyle(el).position === "sticky";
+      root.style.setProperty("--erp-detail-side-top", sticky ? `${Math.ceil(el.getBoundingClientRect().height) + 12}px` : "0px");
+    };
+    apply();
+    const ro = new ResizeObserver(apply);
+    ro.observe(el);
+    window.addEventListener("resize", apply);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", apply);
+      root.style.removeProperty("--erp-detail-side-top");
+    };
+  }, [slot, appChrome, listFrameV2]);
+
   const bar = (
-    <div className="erp-listtoolbar" role="toolbar" aria-label="목록 작업">
+    <div className="erp-listtoolbar" role="toolbar" aria-label="목록 작업" ref={barRef}>
       {actions && <div className="erp-listtoolbar-actions">{actions}</div>}
       {tools && (
         <>

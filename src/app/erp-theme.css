@@ -3775,8 +3775,10 @@ form.erp-field-grid {
   flex: 0 0 var(--erp-side-panel-w);
   width: var(--erp-side-panel-w);
   position: sticky;
-  top: 0;
-  max-height: var(--erp-side-panel-max-h);
+  /* 떠 있는 도구 줄(.erp-frame-v2 .erp-listtoolbar, 위에 붙어 따라다님)이 있으면 그 높이만큼 아래에 붙는다 — 안 그러면 도구 줄이 패널 윗부분(품목명·분류)을 덮는다.
+     값은 ListToolbar가 도구 줄의 실제 높이를 재서 --erp-detail-side-top 으로 넣는다(없으면 0). */
+  top: var(--erp-detail-side-top, 0px);
+  max-height: calc(var(--erp-side-panel-max-h) - var(--erp-detail-side-top, 0px));
   overflow: auto;
   background: var(--erp-panel);
   border: 1px solid var(--erp-border-strong);
