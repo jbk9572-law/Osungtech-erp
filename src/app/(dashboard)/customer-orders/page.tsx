@@ -1,3 +1,4 @@
+import { PortalLinkBar } from "@/components/portal-link-bar";
 import { selectInChunks } from "@/lib/fetch-all-rows";
 import { createClient } from "@/lib/supabase/server";
 import { GridBadge } from "@/components/grid/badge";
@@ -68,6 +69,8 @@ export default async function CustomerOrdersPage({
         따라 아래에서 생산지시 또는 판매로 전환하고, 배송 상태를 거래처
         포털에 보여줄 수 있습니다.
       </PageGuide>
+
+      <PortalLinkBar audience="거래처" />
 
       <nav className="erp-subtabs" aria-label="발주 상태">
         {TABS.map((t) => (

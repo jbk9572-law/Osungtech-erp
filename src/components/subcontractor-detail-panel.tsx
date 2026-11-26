@@ -1,3 +1,4 @@
+import { PortalLinkBar } from "@/components/portal-link-bar";
 import Link from "next/link";
 import { GridBadge } from "@/components/grid/badge";
 import { createClient } from "@/lib/supabase/server";
@@ -80,6 +81,7 @@ export async function SubcontractorDetailPanel({
             올릴 수 있는 포털 계정입니다. 거래처 포털과 같은 방식(아이디+
             비밀번호)으로 로그인하며, 내부 직원 계정과는 완전히 분리됩니다.
           </PageGuide>
+          <PortalLinkBar audience="하청업체" />
           <PortalAccountForm targetId={subcontractor.id} kind="subcontractor" />
           {portalAccounts && portalAccounts.length > 0 && (
             <div className="erp-grid-wrap erp-u-mt-12">

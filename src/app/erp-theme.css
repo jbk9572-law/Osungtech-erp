@@ -11145,3 +11145,39 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
 .erp-fb-select-wide {
   flex: 1 1 260px;
 }
+
+
+/* 포털 주소 바(PortalLinkBar) — 거래처·하청업체 상세의 포털 계정 카드, 거래처 발주 승인 화면 */
+.erp-portal-link {
+  margin-bottom: var(--erp-space-3);
+  padding: var(--erp-space-2) var(--erp-space-3);
+  background: var(--erp-bg-subtle);
+  border: 1px solid var(--erp-border);
+  border-radius: var(--erp-radius-xl, 0);
+}
+.erp-portal-link-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--erp-space-2);
+}
+.erp-portal-link-label {
+  font-weight: 700;
+  white-space: nowrap;
+}
+.erp-portal-link-url {
+  flex: 1 1 220px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: var(--erp-font-sm);
+  color: var(--erp-text);
+}
+.erp-portal-link-actions {
+  display: inline-flex;
+  gap: var(--erp-space-2);
+}
+.erp-portal-link-note {
+  margin: var(--erp-space-1) 0 0;
+  font-size: var(--erp-font-sm);
+  color: var(--erp-text-muted);
+}

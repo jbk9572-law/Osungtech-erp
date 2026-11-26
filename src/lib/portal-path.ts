@@ -17,3 +17,14 @@ export async function portalHref(path: string): Promise<string> {
   const hostname = hostHeader.split(":")[0];
   return hostname === portalHost ? path || "/" : `/portal${path}`;
 }
+
+// 거래처·하청업체에게 알려 줄 "포털 로그인 주소" — 전용 주소(PORTAL_HOSTNAME)가 켜져 있으면 그 주소, 아니면 지금 접속한 주소의 /portal/login.
+// 어느 쪽이든 "지금 실제로 열리는 주소"라서 화면의 [열기]·[주소 복사]가 항상 맞다. dedicated=false면 화면이 작은 안내를 덧붙인다.
+export async function portalLoginUrl(): Promise<{ url: string; dedicated: boolean }> {
+  const portalHost = process.env.PORTAL_HOSTNAME;
+  if (portalHost) return { url: `https://${portalHost}/login`, dedicated: true };
+  const h = await headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "";
+  const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") || host.startsWith("127.") ? "http" : "https");
+  return { url: `${proto}://${host}/portal/login`, dedicated: false };
+}
