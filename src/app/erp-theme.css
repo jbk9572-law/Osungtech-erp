@@ -11210,3 +11210,12 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
     min-height: 44px;
   }
 }
+
+/* 상세 안에 끼운 수정 폼(ModalFormSheet embedded)의 저장 줄 — 입력 격자와 간격을 두고 오른쪽 끝에 둔다(예전엔 간격이 0이라 저장 버튼이 마지막 입력칸에 붙어 겹쳐 보였다) */
+.erp-form-actions-embedded {
+  margin-top: var(--erp-space-3);
+  padding-top: var(--erp-space-2);
+}
+.erp-form-actions-embedded .erp-form-actions {
+  position: static;
+}

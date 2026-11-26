@@ -69,7 +69,7 @@ export function ModalFormSheet({
     return (
       <form ref={formRef} action={formAction}>
         <div className="erp-field-grid">{children}</div>
-        {actions}
+        <div className="erp-form-actions-embedded">{actions}</div>
       </form>
     );
   }
