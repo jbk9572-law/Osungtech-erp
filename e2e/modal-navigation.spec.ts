@@ -58,3 +58,35 @@ test("모달이 열린 채로 상단 탭을 눌러 이동하면 모달이 남지
   await expect(page).toHaveURL(/\/dashboard/, { timeout: 20000 });
   await noModal(page);
 });
+
+// 검색한 상태(주소에 ?q=…)에서 "신규"를 열어도 새 탭·전체 화면이 아니라 모달로 떠야 한다(전례: 이 경로는 시험이 없어 놓쳤다).
+// 매출·매입 둘 다, 버튼 클릭·검색창에서 Ctrl+Enter 두 가지 경로를 본다. 데이터는 만들지 않는다(열기만).
+for (const base of ["/sales", "/purchases"]) {
+  test(`${base}: 검색한 상태에서 신규 버튼 → 모달(새 탭 아님)`, async ({ page, context }) => {
+    await page.goto(`${base}?q=a`);
+    await page.locator(`a[href="${base}/new"]`).first().click();
+    await expect(page.locator(".erp-modal[role='dialog']")).toBeVisible({ timeout: 15000 });
+    expect(context.pages()).toHaveLength(1);
+    await expect(page).toHaveURL(new RegExp(`${base}/new`));
+  });
+
+  test(`${base}: 검색창에서 Enter로 검색한 뒤 신규 버튼 → 모달(새 탭 아님)`, async ({ page, context }) => {
+    await page.goto(base);
+    const search = page.locator('input[name="q"]').first();
+    await search.fill("a");
+    await search.press("Enter");
+    await expect(page).toHaveURL(/q=a/, { timeout: 15000 });
+    await page.locator(`a[href="${base}/new"]`).first().click();
+    await expect(page.locator(".erp-modal[role='dialog']")).toBeVisible({ timeout: 15000 });
+    expect(context.pages()).toHaveLength(1);
+  });
+
+  test(`${base}: 검색창에 커서가 있을 때 Ctrl+Enter(신규) → 모달(새 탭 아님)`, async ({ page, context }) => {
+    await page.goto(`${base}?q=a`);
+    const search = page.locator('input[name="q"]').first();
+    await search.focus();
+    await search.press("Control+Enter");
+    await expect(page.locator(".erp-modal[role='dialog']")).toBeVisible({ timeout: 15000 });
+    expect(context.pages()).toHaveLength(1);
+  });
+}
