@@ -1114,12 +1114,7 @@ export function NewPurchaseForm({
             <FormMessage state={messageDismissed ? undefined : state} />
           </div>
         )}
-        <NotesBanner
-          partyLabel="공급처"
-          partyNote={suppliers.find((x) => x.id === supplierId)?.notes}
-          items={noteItems}
-          extraParties={alsoCreateSale ? [{ label: "출고처", note: customers.find((x) => x.id === saleCustomerId)?.notes }] : []}
-        />
+        <NotesBanner partyLabel="공급처" partyNote={suppliers.find((x) => x.id === supplierId)?.notes} items={noteItems} extraParties={alsoCreateSale ? [{ label: "출고처", note: customers.find((x) => x.id === saleCustomerId)?.notes }] : []} />
         <div className="erp-field-grid">
           <div className="erp-field erp-vf-hide erp-span-2">
             <label htmlFor="purchase-docno">No</label>
@@ -1260,8 +1255,7 @@ export function NewPurchaseForm({
                       parties={customers}
                       value={saleCustomerId}
                       onChange={handleSaleCustomerChange}
-                      placeholder="출고처명 검색"
-                      hideNote
+                      placeholder="출고처명 검색" hideNote
                     />
                   </div>
                   <div className="erp-field erp-span-2">
