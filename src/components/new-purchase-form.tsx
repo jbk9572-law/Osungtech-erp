@@ -192,7 +192,7 @@ export function NewPurchaseForm({
   // 목록에서 검색/필터를 걸어둔 채로 상세 → 수정으로 들어온 경우, 저장 후
   // 그 목록으로 돌아가기 위해 서버 액션(updatePurchase)에 그대로 넘긴다.
   backParam?: string;
-  customers?: { id: string; name: string }[];
+  customers?: { id: string; name: string; notes?: string | null }[];
   // 재고 부족 자동 발주 제안 화면(/inventory/reorder-suggestions)에서
   // "매입 등록으로 보내기"로 넘어온 경우에만 쓴다 — 신규 등록(initial 없음)
   // 일 때만 적용하고, 수정 화면에서는 무시한다.
@@ -1114,7 +1114,12 @@ export function NewPurchaseForm({
             <FormMessage state={messageDismissed ? undefined : state} />
           </div>
         )}
-        <NotesBanner partyLabel="공급처" partyNote={suppliers.find((x) => x.id === supplierId)?.notes} items={noteItems} />
+        <NotesBanner
+          partyLabel="공급처"
+          partyNote={suppliers.find((x) => x.id === supplierId)?.notes}
+          items={noteItems}
+          extraParties={alsoCreateSale ? [{ label: "출고처", note: customers.find((x) => x.id === saleCustomerId)?.notes }] : []}
+        />
         <div className="erp-field-grid">
           <div className="erp-field erp-vf-hide erp-span-2">
             <label htmlFor="purchase-docno">No</label>
@@ -1256,6 +1261,7 @@ export function NewPurchaseForm({
                       value={saleCustomerId}
                       onChange={handleSaleCustomerChange}
                       placeholder="출고처명 검색"
+                      hideNote
                     />
                   </div>
                   <div className="erp-field erp-span-2">

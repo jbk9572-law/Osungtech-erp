@@ -29,31 +29,35 @@ export function usePartyProductNotes(
 // 전표(매출·매입)의 "특이사항" 배너 — 거래처 특이사항 + 품목별 특이사항을 한 곳에 모아 파란 띠 하나로 보여준다.
 // 접힌 상태는 2줄까지, 넘치거나 품목 메모가 있으면 [더 보기]로 그 자리에서 펼친다(팝업 없음).
 // 품목 줄에는 표 안에 글자를 끼우지 않고 작은 점(NoteDot)만 둔다 — 줄 높이가 메모 유무로 흔들리지 않게(개발헌법 3번, 매출·매입 공용).
-export function NotesBanner({ partyLabel, partyNote, items }: { partyLabel: string; partyNote?: string | null; items: NoteItem[] }) {
+export type ExtraPartyNote = { label: string; note?: string | null };
+
+// extraParties: 같은 전표에 거래처가 둘 이상일 때(매입 + 매출 동시등록의 출고처) 그 거래처들의 특이사항도 같은 띠 한 곳에 모은다.
+export function NotesBanner({ partyLabel, partyNote, items, extraParties = [] }: { partyLabel: string; partyNote?: string | null; items: NoteItem[]; extraParties?: ExtraPartyNote[] }) {
   const [open, setOpen] = useState(false);
   const [overflow, setOverflow] = useState(false);
   const bodyRef = useRef<HTMLDivElement>(null);
-  const party = partyNote?.trim() || "";
+  const partyRows = [{ label: partyLabel, note: partyNote?.trim() || "" }, ...extraParties.map((p) => ({ label: p.label, note: p.note?.trim() || "" }))].filter((p) => p.note);
+  const partyKey = partyRows.map((p) => `${p.label}:${p.note}`).join("|");
 
   useLayoutEffect(() => {
     const el = bodyRef.current;
     if (!el || open) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- 접힌 상태에서 글이 2줄을 넘는지 그린 뒤 한 번 잰다
     setOverflow(el.scrollHeight > el.clientHeight + 1);
-  }, [party, items, open]);
+  }, [partyKey, items, open]);
 
-  if (!party && items.length === 0) return null;
+  if (partyRows.length === 0 && items.length === 0) return null;
   const canToggle = open || overflow;
   return (
     <div className="erp-notes-banner" role="note">
       <b className="erp-notes-label">특이사항</b>
       <div ref={bodyRef} className={`erp-notes-body${open ? "" : " is-clamped"}`}>
-        {party && (
-          <div>
-            {partyLabel && <b>{partyLabel} </b>}
-            {party}
+        {partyRows.map((p) => (
+          <div key={p.label}>
+            {p.label && <b>{p.label} </b>}
+            {p.note}
           </div>
-        )}
+        ))}
         {items.length > 0 && !open && (
           <div>
             <b>품목 {items.length}건</b> {items[0].name} — {items[0].note}
